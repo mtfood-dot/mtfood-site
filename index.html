@@ -228,6 +228,9 @@
 
   .footer-note{max-width:960px;margin:24px auto 0;padding:0 16px;text-align:center;
     color:var(--muted);font-size:11.5px;font-weight:500;}
+  .driver-link{display:block;max-width:960px;margin:10px auto 0;padding:0 16px;text-align:center;}
+  .driver-link a{color:var(--blue-700);font-size:12.5px;font-weight:700;text-decoration:none;border-bottom:1px dashed var(--blue-700);}
+  .driver-link a:hover{color:var(--blue-900);}
 </style>
 </head>
 <body>
@@ -249,6 +252,7 @@
 </main>
 
 <div class="footer-note" id="footerNote">MT Delivery · Meftah, Blida · Paiement à la livraison uniquement</div>
+<div class="driver-link"><a id="driverLink" href="inscription-livreur.html">Tu veux devenir livreur ? Inscris-toi ici</a></div>
 
 <!-- Barre panier flottante -->
 <div class="cart-bar" id="cartBar">
@@ -352,6 +356,7 @@ const I18N = {
     toggleLabel: "AR",
     tagline: "Commandez, on vous livre",
     footerNote: "MT Delivery · Meftah, Blida · Paiement à la livraison uniquement",
+    driverLink: "Tu veux devenir livreur ? Inscris-toi ici",
     cartBarUnit: "article(s)",
     viewCart: "Voir mon panier",
     cartTitle: "Mon panier",
@@ -394,6 +399,7 @@ const I18N = {
     toggleLabel: "FR",
     tagline: "اطلب ونوصلك",
     footerNote: "إم تي دليفري · مفتاح، البليدة · الدفع عند الاستلام فقط",
+    driverLink: "تريد أن تصبح موصلاً؟ سجل هنا",
     cartBarUnit: "منتج (منتجات)",
     viewCart: "عرض سلتي",
     cartTitle: "سلتي",
@@ -471,6 +477,7 @@ function applyLanguage() {
   $("langToggle").textContent = t("toggleLabel");
   $("tagline").textContent = t("tagline");
   $("footerNote").textContent = t("footerNote");
+  $("driverLink").textContent = t("driverLink");
   $("cartBarUnit").textContent = t("cartBarUnit");
   $("openCartBtn").textContent = t("viewCart");
   $("cartTitle").textContent = t("cartTitle");
