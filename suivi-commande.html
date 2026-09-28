@@ -269,7 +269,13 @@ function ensureMap(lat, lng){
   $("map").classList.add("show");
   // Le conteneur peut avoir été caché (display:none) avant sa première
   // apparition ; Leaflet a besoin de recalculer sa taille une fois visible.
-  setTimeout(() => { if (MAP) MAP.invalidateSize(); }, 50);
+  // Le conteneur passe de display:none à visible juste avant, donc Leaflet
+  // doit recalculer sa taille une fois le layout stabilisé. Un seul appel
+  // différé n'est pas toujours suffisant (le navigateur peut ne pas avoir
+  // fini de réorganiser la page) : on réessaie donc à plusieurs échéances.
+  [0, 120, 400].forEach((delay) => {
+    setTimeout(() => { if (MAP) MAP.invalidateSize(); }, delay);
+  });
 }
 
 function render(data){
@@ -362,6 +368,9 @@ $("searchBtn").addEventListener("click", function(){
 });
 $("fNumero").addEventListener("keydown", function(e){
   if (e.key === "Enter") $("searchBtn").click();
+});
+window.addEventListener("resize", function(){
+  if (MAP) MAP.invalidateSize();
 });
 
 document.addEventListener("DOMContentLoaded", function(){
