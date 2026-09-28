@@ -162,6 +162,10 @@ const I18N = {
     waitAttente: "Ta commande n'a pas encore été prise en charge par un livreur.",
     waitNoPosition: "En attente que le livreur partage sa position…",
     livreeMsg: "Ta commande a été livrée. Merci pour ta confiance !",
+    statutAConfirmer: "En attente de confirmation",
+    waitAConfirmer: "Ta commande sera envoyée aux livreurs dès qu'elle sera confirmée. Pense à la confirmer sur WhatsApp.",
+    statutAnnulee: "Annulée",
+    annuleeMsg: "Cette commande a été annulée. Pour toute question, appelle-nous.",
     footerNote: "MT Delivery — البريد السريع · Meftah, Blida"
   },
   ar: {
@@ -182,6 +186,10 @@ const I18N = {
     waitAttente: "لم يتم تكليف عامل توصيل بطلبك بعد.",
     waitNoPosition: "بانتظار أن يشارك عامل التوصيل موقعه…",
     livreeMsg: "تم توصيل طلبك. شكراً لثقتك!",
+    statutAConfirmer: "بانتظار التأكيد",
+    waitAConfirmer: "سيُرسل طلبك إلى عمال التوصيل فور تأكيده. لا تنسَ تأكيده عبر واتساب.",
+    statutAnnulee: "ملغى",
+    annuleeMsg: "تم إلغاء هذا الطلب. لأي استفسار، اتصل بنا.",
     footerNote: "البريد السريع MT Delivery · مفتاح، البليدة"
   }
 };
@@ -235,6 +243,8 @@ let CURRENT_NUMERO = null;
 
 function statusMeta(statut){
   const s = String(statut || "").trim();
+  if (s === "À confirmer") return { cls: "status-attente", label: t("statutAConfirmer") };
+  if (s === "Annulée") return { cls: "status-attente", label: t("statutAnnulee") };
   if (s === "En attente") return { cls: "status-attente", label: t("statutEnAttente") };
   if (s === "En livraison") return { cls: "status-livraison", label: t("statutEnLivraison") };
   if (s === "Livrée") return { cls: "status-livree", label: t("statutLivree") };
@@ -294,6 +304,14 @@ function render(data){
   }
 
   const statut = String(data.statut || "").trim();
+
+  if (statut === "À confirmer" || statut === "Annulée") {
+    $("map").classList.remove("show");
+    $("waitNote").classList.remove("hidden");
+    $("waitNoteText").textContent = t(statut === "Annulée" ? "annuleeMsg" : "waitAConfirmer");
+    if (statut === "Annulée") stopPolling();
+    return;
+  }
 
   if (statut === "En attente") {
     $("map").classList.remove("show");
