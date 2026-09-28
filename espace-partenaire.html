@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>MT Delivery — Espace partenaire</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue-900:#0a2647;
+    --blue-800:#0f3562;
+    --blue-700:#134a8f;
+    --blue-600:#1a5cb0;
+    --blue-100:#e9f1fb;
+    --gold-600:#b8860f;
+    --gold-500:#d4a017;
+    --gold-400:#e8bb3d;
+    --gold-100:#fdf3d9;
+    --bg:#f3f5f9;
+    --card:#ffffff;
+    --text:#131b28;
+    --muted:#69748a;
+    --danger:#c0392b;
+    --green:#1a7d3a;
+    --border:#e6eaf1;
+    --radius-lg:20px;
+    --radius-md:14px;
+    --radius-sm:10px;
+    --shadow-sm:0 1px 2px rgba(16,24,40,.06);
+    --shadow-md:0 6px 20px -6px rgba(16,36,72,.16);
+    --shadow-lg:0 20px 40px -12px rgba(10,38,71,.25);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    padding-bottom:40px;-webkit-font-smoothing:antialiased;}
+  html[dir="rtl"] body{font-family:'Tajawal','Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;}
+  a{color:inherit;}
+  ::selection{background:var(--gold-100);color:var(--blue-900);}
+
+  header.top{
+    background:#ffffff;
+    padding:20px 0 22px;position:relative;overflow:hidden;
+    border-bottom:1px solid var(--border);text-align:center;
+  }
+  header.top .brand{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;z-index:1;width:100%;}
+  header.top .brand .logo-img{height:auto;width:100%;max-width:280px;display:block;margin:0 auto;}
+  header.top .tagline{font-size:13px;color:var(--blue-700);font-weight:700;letter-spacing:.2px;}
+  .lang-toggle{
+    position:absolute;top:14px;right:14px;z-index:2;
+    background:#fff;border:1.5px solid var(--gold-500);color:var(--blue-900);
+    padding:6px 12px;border-radius:999px;font-weight:800;font-size:12px;cursor:pointer;
+    font-family:inherit;
+  }
+  html[dir="rtl"] .lang-toggle{right:auto;left:14px;}
+
+  main{max-width:640px;margin:0 auto;padding:20px 16px 40px;}
+
+  .card{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);
+    border:1px solid var(--border);padding:22px;margin-bottom:16px;}
+
+  /* Écran de connexion */
+  .login-card h2{margin:0 0 6px;font-size:19px;color:var(--blue-900);font-weight:800;}
+  .login-card p{margin:0 0 18px;color:var(--muted);font-size:13.5px;line-height:1.6;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12.5px;font-weight:700;color:var(--blue-900);margin-bottom:6px;}
+  .field input,.field select,.field textarea{
+    width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+    font-size:15px;font-family:inherit;background:#fbfcfe;transition:border-color .15s ease;
+  }
+  .field textarea{resize:vertical;min-height:70px;}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--blue-600);}
+  .btn-primary{
+    width:100%;background:linear-gradient(135deg,var(--blue-700),var(--blue-900));color:#fff;border:none;
+    border-radius:13px;padding:14px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;
+  }
+  .btn-primary:disabled{opacity:.6;cursor:default;}
+  .error-box{background:#fdeceb;border:1px solid #f3c6c1;color:var(--danger);border-radius:var(--radius-sm);
+    padding:11px 14px;font-size:13px;margin-top:12px;line-height:1.5;display:none;}
+  .error-box.show{display:block;}
+  .success-box{background:#eaf7ee;border:1px solid #bfe6c9;color:var(--green);border-radius:var(--radius-sm);
+    padding:11px 14px;font-size:13px;margin-top:12px;line-height:1.5;display:none;}
+  .success-box.show{display:block;}
+
+  /* En-tête connecté */
+  .session-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    background:linear-gradient(135deg,var(--blue-900),var(--blue-700));color:#fff;border-radius:var(--radius-lg);
+    padding:16px 18px;margin-bottom:16px;box-shadow:var(--shadow-md);}
+  .session-bar .who{font-size:14px;font-weight:800;}
+  .session-bar .zone{font-size:12px;color:var(--gold-400);font-weight:600;}
+  .btn-logout{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.35);
+    border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;}
+
+  /* Onglets */
+  .tabs{display:flex;gap:8px;margin-bottom:16px;}
+  .tab-btn{flex:1;background:#fff;border:1.5px solid var(--border);border-radius:999px;
+    padding:10px 6px;font-weight:800;font-size:12.5px;color:var(--muted);cursor:pointer;font-family:inherit;
+    display:flex;align-items:center;justify-content:center;gap:5px;}
+  .tab-btn.active{background:var(--blue-900);color:#fff;border-color:var(--blue-900);}
+  .tab-btn .count{background:var(--gold-500);color:var(--blue-900);border-radius:999px;
+    min-width:18px;height:18px;font-size:11px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px;}
+  .tab-btn.active .count{background:var(--gold-400);}
+
+  .refresh-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;}
+  .btn-refresh{background:#fff;border:1px solid var(--border);border-radius:999px;padding:7px 14px;
+    font-size:12.5px;font-weight:700;color:var(--blue-700);cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .date-input{border:1.5px solid var(--border);border-radius:999px;padding:6px 12px;font-size:12.5px;
+    font-family:inherit;color:var(--blue-900);background:#fff;}
+
+  .item-card{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);
+    border:1px solid var(--border);padding:14px 16px;margin-bottom:10px;}
+  .item-card .row1{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .item-card .nom{font-size:15px;font-weight:800;margin-bottom:2px;}
+  .item-card .prix{font-size:14px;font-weight:800;color:var(--blue-900);white-space:nowrap;}
+  .item-card .desc{font-size:12.5px;color:var(--muted);margin-top:2px;line-height:1.5;}
+  .badge{display:inline-block;font-size:10.5px;font-weight:800;border-radius:999px;padding:3px 10px;margin-top:8px;}
+  .badge.publie{background:#eaf7ee;color:var(--green);}
+  .badge.attente{background:var(--gold-100);color:var(--gold-600);}
+  .badge.refuse{background:#fdeceb;color:var(--danger);}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;margin-top:10px;gap:10px;}
+  .toggle-label{font-size:12.5px;font-weight:700;color:var(--muted);}
+  .switch{position:relative;display:inline-block;width:44px;height:25px;flex-shrink:0;}
+  .switch input{opacity:0;width:0;height:0;}
+  .slider{position:absolute;cursor:pointer;inset:0;background:#d8dee8;transition:.15s;border-radius:999px;}
+  .slider:before{position:absolute;content:"";height:19px;width:19px;left:3px;bottom:3px;
+    background:#fff;transition:.15s;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.25);}
+  .switch input:checked + .slider{background:var(--green);}
+  .switch input:checked + .slider:before{transform:translateX(19px);}
+  html[dir="rtl"] .switch input:checked + .slider:before{transform:translateX(-19px);}
+
+  .order-card{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);
+    border:1px solid var(--border);padding:16px;margin-bottom:12px;}
+  .order-card .row1{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;}
+  .order-card .numero{font-size:11.5px;font-weight:800;color:var(--gold-600);letter-spacing:.3px;}
+  .order-card .total{font-size:16px;font-weight:800;color:var(--blue-900);}
+  .order-card .meta{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:4px;}
+  .order-card .articles{font-size:13px;color:var(--text);background:var(--bg);border-radius:var(--radius-sm);
+    padding:8px 10px;margin:8px 0;line-height:1.5;}
+
+  .empty-state{text-align:center;color:var(--muted);font-size:13.5px;padding:40px 20px;}
+  .empty-state .emoji{font-size:32px;display:block;margin-bottom:10px;}
+
+  .hidden{display:none !important;}
+
+  .footer-note{max-width:960px;margin:24px auto 0;padding:0 16px;text-align:center;
+    color:var(--muted);font-size:11.5px;font-weight:500;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <a href="index.html" aria-label="Retour à l'accueil" style="display:block;"><img class="logo-img" src="logo.png" alt="MT Delivery" width="316" height="158" loading="eager"></a>
+    <div class="tagline" id="tagline">Espace partenaire</div>
+  </div>
+  <button class="lang-toggle" id="langToggle" type="button">AR</button>
+</header>
+
+<main>
+
+  <!-- ================= ÉCRAN DE CONNEXION ================= -->
+  <section id="loginScreen" class="card login-card">
+    <h2 id="loginTitle">Connexion partenaire</h2>
+    <p id="loginSubtitle">Entre le numéro de téléphone utilisé pour ta demande de partenariat.</p>
+    <div class="field">
+      <label id="lblPhone">Numéro de téléphone</label>
+      <input type="tel" id="fPhone" placeholder="Ex: 0555 xx xx xx" inputmode="numeric">
+    </div>
+    <div class="field">
+      <label id="lblPin">Code PIN</label>
+      <input type="password" id="fPin" placeholder="Ex: 1234" inputmode="numeric" maxlength="4" autocomplete="off">
+    </div>
+    <button class="btn-primary" id="loginBtn" type="button">Se connecter</button>
+    <div class="error-box" id="loginError"></div>
+  </section>
+
+  <!-- ================= ESPACE CONNECTÉ ================= -->
+  <div id="appScreen" class="hidden">
+
+    <div class="session-bar">
+      <div>
+        <div class="who" id="whoText"></div>
+        <div class="zone" id="zoneText"></div>
+      </div>
+      <button class="btn-logout" id="logoutBtn" type="button">Déconnexion</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" id="tabMenu" type="button">
+        <span id="tabMenuLabel">Mon menu</span> <span class="count" id="countMenu">0</span>
+      </button>
+      <button class="tab-btn" id="tabOrders" type="button">
+        <span id="tabOrdersLabel">Commandes</span> <span class="count" id="countOrders">0</span>
+      </button>
+      <button class="tab-btn" id="tabPropose" type="button">
+        <span id="tabProposeLabel">Proposer</span>
+      </button>
+    </div>
+
+    <div id="errorBox" class="error-box"></div>
+    <div id="successBox" class="success-box"></div>
+
+    <!-- Onglet : Mon menu -->
+    <div id="panelMenu">
+      <div class="refresh-row">
+        <span></span>
+        <button class="btn-refresh" id="refreshMenuBtn" type="button"><span id="refreshMenuLabel">↻ Actualiser</span></button>
+      </div>
+      <div id="listMenu"></div>
+    </div>
+
+    <!-- Onglet : Commandes livrées -->
+    <div id="panelOrders" class="hidden">
+      <div class="refresh-row">
+        <input type="date" class="date-input" id="ordersDate">
+        <button class="btn-refresh" id="refreshOrdersBtn" type="button"><span id="refreshOrdersLabel">↻ Actualiser</span></button>
+      </div>
+      <div id="listOrders"></div>
+    </div>
+
+    <!-- Onglet : Proposer un plat -->
+    <div id="panelPropose" class="hidden">
+      <section class="card">
+        <div class="field">
+          <label id="lblNom">Nom du plat</label>
+          <input type="text" id="pNom" placeholder="Ex: Tacos poulet">
+        </div>
+        <div class="field">
+          <label id="lblCategorie">Catégorie</label>
+          <select id="pCategorie">
+            <option value="Pizza">Pizza</option>
+            <option value="Fast Food">Fast Food</option>
+            <option value="Plats">Plats</option>
+            <option value="Dessert">Dessert</option>
+            <option value="Boissons Chaudes">Boissons Chaudes</option>
+            <option value="Boissons Froides">Boissons Froides</option>
+            <option value="Autre" selected>Autre</option>
+          </select>
+        </div>
+        <div class="field">
+          <label id="lblPrix">Prix (DA)</label>
+          <input type="number" id="pPrix" placeholder="Ex: 450" inputmode="numeric">
+        </div>
+        <div class="field">
+          <label id="lblDescription">Description (optionnel)</label>
+          <textarea id="pDescription" placeholder="Ex: sauce maison, galette, frites..."></textarea>
+        </div>
+        <button class="btn-primary" id="proposeBtn" type="button">Envoyer la proposition</button>
+        <p id="proposeNote" style="margin:12px 0 0;font-size:12px;color:var(--muted);line-height:1.6;"></p>
+      </section>
+    </div>
+
+  </div>
+
+</main>
+
+<div class="footer-note" id="footerNote">MT Delivery · Meftah, Blida</div>
+
+<script>
+/* ============================================================
+   CONFIGURATION
+   ============================================================ */
+const CONFIG = {
+  API_URL: "https://script.google.com/macros/s/AKfycbwgXOyXERonv0Yk7X-uhoHuE1Fj26RiYHPR4Tnr7Z_1Ly8wWjsvlE5sp3JJRukRR4ZF/exec"
+};
+
+const LANG_KEY = "mtd_espace_partenaire_lang";
+const SESSION_KEY = "mtd_espace_partenaire_session";
+let LANG = localStorage.getItem(LANG_KEY) || "fr";
+let SESSION = null;
+try { SESSION = JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch(e) { SESSION = null; }
+let CURRENT_TAB = "menu";
+let MENU_ITEMS = [];
+let ORDERS = [];
+
+/* ============================================================
+   I18N
+   ============================================================ */
+const I18N = {
+  fr: {
+    tagline: "Espace partenaire",
+    toggleLabel: "AR",
+    loginTitle: "Connexion partenaire",
+    loginSubtitle: "Entre le numéro de téléphone utilisé pour ta demande de partenariat.",
+    lblPhone: "Numéro de téléphone",
+    phonePlaceholder: "Ex: 0555 xx xx xx",
+    lblPin: "Code PIN",
+    pinPlaceholder: "Ex: 1234",
+    loginBtn: "Se connecter",
+    logoutBtn: "Déconnexion",
+    tabMenuLabel: "Mon menu",
+    tabOrdersLabel: "Commandes",
+    tabProposeLabel: "Proposer",
+    refreshLabel: "↻ Actualiser",
+    footerNote: "MT Delivery · Meftah, Blida",
+    phoneRequired: "Merci d'entrer ton numéro de téléphone.",
+    pinRequired: "Merci d'entrer ton code PIN.",
+    loginFailedGeneric: "Erreur de connexion. Vérifie ta connexion internet et réessaie.",
+    loadFailedGeneric: "Impossible de charger les données. Vérifie ta connexion et réessaie.",
+    zoneLabel: "Zone",
+    noItems: "Tu n'as encore aucun plat sur le menu.",
+    noOrders: "Aucune commande livrée à cette date.",
+    dispoLabel: "Disponible",
+    statutPublie: "Publié",
+    statutAttente: "En attente de validation",
+    statutRefuse: "Refusé",
+    lblNom: "Nom du plat",
+    lblCategorie: "Catégorie",
+    lblPrix: "Prix (DA)",
+    lblDescription: "Description (optionnel)",
+    proposeBtn: "Envoyer la proposition",
+    proposeNote: "Ton plat sera visible sur le site après validation par MT Delivery.",
+    nomRequired: "Merci d'indiquer le nom du plat.",
+    prixRequired: "Merci d'indiquer un prix valide.",
+    proposeFailedGeneric: "Impossible d'envoyer la proposition. Réessaie.",
+    proposeSuccess: "Proposition envoyée ! Elle apparaîtra dans « Mon menu » avec le statut « En attente ».",
+    toggleFailedGeneric: "Impossible de mettre à jour la disponibilité. Réessaie.",
+  },
+  ar: {
+    tagline: "مساحة الشريك",
+    toggleLabel: "FR",
+    loginTitle: "تسجيل دخول الشريك",
+    loginSubtitle: "أدخل رقم الهاتف الذي استعملته في طلب الشراكة.",
+    lblPhone: "رقم الهاتف",
+    phonePlaceholder: "مثال: 0555 xx xx xx",
+    lblPin: "رمز PIN",
+    pinPlaceholder: "مثال: 1234",
+    loginBtn: "تسجيل الدخول",
+    logoutBtn: "تسجيل الخروج",
+    tabMenuLabel: "قائمتي",
+    tabOrdersLabel: "الطلبات",
+    tabProposeLabel: "اقتراح طبق",
+    refreshLabel: "↻ تحديث",
+    footerNote: "إم تي دليفري · مفتاح، البليدة",
+    phoneRequired: "الرجاء إدخال رقم هاتفك.",
+    pinRequired: "الرجاء إدخال رمز PIN الخاص بك.",
+    loginFailedGeneric: "خطأ في الاتصال. تحقق من اتصالك بالإنترنت وأعد المحاولة.",
+    loadFailedGeneric: "تعذر تحميل البيانات. تحقق من اتصالك وأعد المحاولة.",
+    zoneLabel: "المنطقة",
+    noItems: "ليس لديك أي طبق في القائمة بعد.",
+    noOrders: "لا توجد طلبات موصّلة في هذا التاريخ.",
+    dispoLabel: "متوفر",
+    statutPublie: "منشور",
+    statutAttente: "بانتظار الموافقة",
+    statutRefuse: "مرفوض",
+    lblNom: "اسم الطبق",
+    lblCategorie: "الفئة",
+    lblPrix: "السعر (دج)",
+    lblDescription: "الوصف (اختياري)",
+    proposeBtn: "إرسال الاقتراح",
+    proposeNote: "سيظهر طبقك في الموقع بعد موافقة إم تي دليفري.",
+    nomRequired: "الرجاء إدخال اسم الطبق.",
+    prixRequired: "الرجاء إدخال سعر صحيح.",
+    proposeFailedGeneric: "تعذر إرسال الاقتراح. أعد المحاولة.",
+    proposeSuccess: "تم إرسال الاقتراح! سيظهر في «قائمتي» بحالة «بانتظار الموافقة».",
+    toggleFailedGeneric: "تعذر تحديث التوفر. أعد المحاولة.",
+  }
+};
+
+function t(key) { return (I18N[LANG] && I18N[LANG][key]) || I18N.fr[key] || key; }
+function $(id) { return document.getElementById(id); }
+
+function applyLanguage() {
+  document.documentElement.lang = LANG;
+  document.documentElement.dir = LANG === "ar" ? "rtl" : "ltr";
+  $("tagline").textContent = t("tagline");
+  $("langToggle").textContent = t("toggleLabel");
+  $("loginTitle").textContent = t("loginTitle");
+  $("loginSubtitle").textContent = t("loginSubtitle");
+  $("lblPhone").textContent = t("lblPhone");
+  $("fPhone").placeholder = t("phonePlaceholder");
+  $("lblPin").textContent = t("lblPin");
+  $("fPin").placeholder = t("pinPlaceholder");
+  $("loginBtn").textContent = t("loginBtn");
+  $("logoutBtn").textContent = t("logoutBtn");
+  $("tabMenuLabel").textContent = t("tabMenuLabel");
+  $("tabOrdersLabel").textContent = t("tabOrdersLabel");
+  $("tabProposeLabel").textContent = t("tabProposeLabel");
+  $("refreshMenuLabel").textContent = t("refreshLabel");
+  $("refreshOrdersLabel").textContent = t("refreshLabel");
+  $("footerNote").textContent = t("footerNote");
+  $("lblNom").textContent = t("lblNom");
+  $("lblCategorie").textContent = t("lblCategorie");
+  $("lblPrix").textContent = t("lblPrix");
+  $("lblDescription").textContent = t("lblDescription");
+  $("proposeBtn").textContent = t("proposeBtn");
+  $("proposeNote").textContent = t("proposeNote");
+  if (SESSION) updateSessionBar();
+  renderMenu();
+  renderOrders();
+}
+
+$("langToggle").addEventListener("click", () => {
+  LANG = LANG === "fr" ? "ar" : "fr";
+  localStorage.setItem(LANG_KEY, LANG);
+  applyLanguage();
+});
+
+/* ============================================================
+   APPEL API
+   ============================================================ */
+async function apiGet(params) {
+  const qs = new URLSearchParams(params).toString();
+  const res = await fetch(CONFIG.API_URL + "?" + qs);
+  return res.json();
+}
+
+/* ============================================================
+   CONNEXION / SESSION
+   ============================================================ */
+function showError(box, msg) {
+  box.textContent = msg;
+  box.classList.add("show");
+}
+function hideError(box) {
+  box.classList.remove("show");
+  box.textContent = "";
+}
+function showSuccess(box, msg) {
+  box.textContent = msg;
+  box.classList.add("show");
+}
+function hideSuccess(box) {
+  box.classList.remove("show");
+  box.textContent = "";
+}
+
+$("loginBtn").addEventListener("click", doLogin);
+$("fPhone").addEventListener("keydown", (e) => { if (e.key === "Enter") $("fPin").focus(); });
+$("fPin").addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
+
+async function doLogin() {
+  const phone = $("fPhone").value.trim();
+  const pin = $("fPin").value.trim();
+  hideError($("loginError"));
+  if (!phone) {
+    showError($("loginError"), t("phoneRequired"));
+    return;
+  }
+  if (!pin) {
+    showError($("loginError"), t("pinRequired"));
+    return;
+  }
+  $("loginBtn").disabled = true;
+  $("loginBtn").textContent = "...";
+  try {
+    const data = await apiGet({ action: "partnerLogin", telephone: phone, pin: pin });
+    if (data.success) {
+      SESSION = { nom: data.nom, telephone: data.telephone, type: data.type, zone: data.zone };
+      localStorage.setItem(SESSION_KEY, JSON.stringify(SESSION));
+      enterApp();
+    } else {
+      showError($("loginError"), data.error || t("loginFailedGeneric"));
+    }
+  } catch (e) {
+    showError($("loginError"), t("loginFailedGeneric"));
+  } finally {
+    $("loginBtn").disabled = false;
+    $("loginBtn").textContent = t("loginBtn");
+  }
+}
+
+$("logoutBtn").addEventListener("click", () => {
+  SESSION = null;
+  localStorage.removeItem(SESSION_KEY);
+  $("appScreen").classList.add("hidden");
+  $("loginScreen").classList.remove("hidden");
+  $("fPhone").value = "";
+  $("fPin").value = "";
+});
+
+function updateSessionBar() {
+  $("whoText").textContent = SESSION.nom;
+  $("zoneText").textContent = t("zoneLabel") + " : " + SESSION.zone;
+}
+
+function todayStr() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+}
+
+function enterApp() {
+  $("loginScreen").classList.add("hidden");
+  $("appScreen").classList.remove("hidden");
+  updateSessionBar();
+  $("ordersDate").value = todayStr();
+  loadMenu();
+  loadOrders();
+}
+
+/* ============================================================
+   ONGLETS
+   ============================================================ */
+$("tabMenu").addEventListener("click", () => switchTab("menu"));
+$("tabOrders").addEventListener("click", () => switchTab("orders"));
+$("tabPropose").addEventListener("click", () => switchTab("propose"));
+
+function switchTab(tab) {
+  CURRENT_TAB = tab;
+  $("tabMenu").classList.toggle("active", tab === "menu");
+  $("tabOrders").classList.toggle("active", tab === "orders");
+  $("tabPropose").classList.toggle("active", tab === "propose");
+  $("panelMenu").classList.toggle("hidden", tab !== "menu");
+  $("panelOrders").classList.toggle("hidden", tab !== "orders");
+  $("panelPropose").classList.toggle("hidden", tab !== "propose");
+  hideError($("errorBox"));
+  hideSuccess($("successBox"));
+}
+
+$("refreshMenuBtn").addEventListener("click", loadMenu);
+$("refreshOrdersBtn").addEventListener("click", loadOrders);
+$("ordersDate").addEventListener("change", loadOrders);
+
+/* ============================================================
+   MON MENU
+   ============================================================ */
+async function loadMenu() {
+  hideError($("errorBox"));
+  try {
+    const data = await apiGet({ action: "getPartnerMenu", telephone: SESSION.telephone });
+    if (data.success) {
+      MENU_ITEMS = data.items;
+      renderMenu();
+    } else {
+      showError($("errorBox"), data.error || t("loadFailedGeneric"));
+    }
+  } catch (e) {
+    showError($("errorBox"), t("loadFailedGeneric"));
+  }
+}
+
+function renderMenu() {
+  $("countMenu").textContent = MENU_ITEMS.length;
+  $("listMenu").innerHTML = MENU_ITEMS.length
+    ? MENU_ITEMS.map(itemCardHtml).join("")
+    : emptyStateHtml(t("noItems"), "🍽️");
+
+  document.querySelectorAll("[data-toggle-id]").forEach(input => {
+    input.addEventListener("change", () => onToggle(input.dataset.toggleId, input.checked));
+  });
+}
+
+function badgeHtml(statut) {
+  const s = String(statut || "Publié").trim();
+  if (s === "En attente") return `<span class="badge attente">${escapeHtml(t("statutAttente"))}</span>`;
+  if (s === "Refusé" || s === "Refuse") return `<span class="badge refuse">${escapeHtml(t("statutRefuse"))}</span>`;
+  return `<span class="badge publie">${escapeHtml(t("statutPublie"))}</span>`;
+}
+
+function itemCardHtml(item) {
+  const checked = item.disponible ? "checked" : "";
+  return `
+    <div class="item-card">
+      <div class="row1">
+        <div>
+          <div class="nom">${escapeHtml(item.nom || "")}</div>
+          ${item.description ? `<div class="desc">${escapeHtml(item.description)}</div>` : ""}
+        </div>
+        <div class="prix">${escapeHtml(String(item.prix || 0))} DA</div>
+      </div>
+      ${badgeHtml(item.statut)}
+      <div class="toggle-row">
+        <span class="toggle-label">${escapeHtml(t("dispoLabel"))}</span>
+        <label class="switch">
+          <input type="checkbox" data-toggle-id="${escapeAttr(item.id)}" ${checked}>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  `;
+}
+
+async function onToggle(itemId, isChecked) {
+  hideError($("errorBox"));
+  try {
+    const data = await apiGet({
+      action: "toggleMenuAvailability",
+      telephone: SESSION.telephone,
+      itemId: itemId,
+      disponible: isChecked ? "OUI" : "NON"
+    });
+    if (!data.success) {
+      showError($("errorBox"), data.error || t("toggleFailedGeneric"));
+      await loadMenu();
+    } else {
+      const item = MENU_ITEMS.find(i => String(i.id) === String(itemId));
+      if (item) item.disponible = isChecked;
+    }
+  } catch (e) {
+    showError($("errorBox"), t("toggleFailedGeneric"));
+    await loadMenu();
+  }
+}
+
+/* ============================================================
+   COMMANDES LIVRÉES
+   ============================================================ */
+async function loadOrders() {
+  hideError($("errorBox"));
+  try {
+    const date = $("ordersDate").value || todayStr();
+    const data = await apiGet({ action: "getPartnerOrders", telephone: SESSION.telephone, date: date });
+    if (data.success) {
+      ORDERS = data.orders;
+      renderOrders();
+    } else {
+      showError($("errorBox"), data.error || t("loadFailedGeneric"));
+    }
+  } catch (e) {
+    showError($("errorBox"), t("loadFailedGeneric"));
+  }
+}
+
+function renderOrders() {
+  $("countOrders").textContent = ORDERS.length;
+  $("listOrders").innerHTML = ORDERS.length
+    ? ORDERS.map(orderCardHtml).join("")
+    : emptyStateHtml(t("noOrders"), "📦");
+}
+
+function orderCardHtml(o) {
+  return `
+    <div class="order-card">
+      <div class="row1">
+        <div class="numero">${escapeHtml(o.numero || "")}</div>
+        <div class="total">${escapeHtml(String(o.total || 0))} DA</div>
+      </div>
+      <div class="meta">${escapeHtml(o.horodatage || "")}</div>
+      <div class="articles">${escapeHtml(o.articles || "")}</div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   PROPOSER UN PLAT
+   ============================================================ */
+$("proposeBtn").addEventListener("click", onPropose);
+
+async function onPropose() {
+  hideError($("errorBox"));
+  hideSuccess($("successBox"));
+  const nom = $("pNom").value.trim();
+  const categorie = $("pCategorie").value;
+  const prix = $("pPrix").value.trim();
+  const description = $("pDescription").value.trim();
+
+  if (!nom) {
+    showError($("errorBox"), t("nomRequired"));
+    return;
+  }
+  if (!prix || isNaN(Number(prix)) || Number(prix) <= 0) {
+    showError($("errorBox"), t("prixRequired"));
+    return;
+  }
+
+  $("proposeBtn").disabled = true;
+  $("proposeBtn").textContent = "...";
+  try {
+    const payload = JSON.stringify({ nom, categorie, prix: Number(prix), description });
+    const data = await apiGet({ action: "proposeMenuItem", telephone: SESSION.telephone, payload });
+    if (data.success) {
+      showSuccess($("successBox"), t("proposeSuccess"));
+      $("pNom").value = "";
+      $("pPrix").value = "";
+      $("pDescription").value = "";
+      $("pCategorie").value = "Autre";
+      await loadMenu();
+    } else {
+      showError($("errorBox"), data.error || t("proposeFailedGeneric"));
+    }
+  } catch (e) {
+    showError($("errorBox"), t("proposeFailedGeneric"));
+  } finally {
+    $("proposeBtn").disabled = false;
+    $("proposeBtn").textContent = t("proposeBtn");
+  }
+}
+
+/* ============================================================
+   UTILITAIRES
+   ============================================================ */
+function emptyStateHtml(msg, emoji) {
+  return `<div class="empty-state"><span class="emoji">${emoji || "🍽️"}</span>${escapeHtml(msg)}</div>`;
+}
+function escapeHtml(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+function escapeAttr(s) { return escapeHtml(s); }
+
+/* ============================================================
+   DÉMARRAGE
+   ============================================================ */
+applyLanguage();
+if (SESSION && SESSION.telephone) {
+  enterApp();
+}
+</script>
+
+</body>
+</html>
