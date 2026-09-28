@@ -234,6 +234,11 @@
     margin-top:16px;background:linear-gradient(135deg,var(--gold-400),var(--gold-500));color:var(--blue-900);border:none;
     border-radius:11px;padding:12px 22px;font-weight:800;cursor:pointer;
   }
+  .track-link{
+    display:inline-block;margin-top:14px;color:var(--blue-700);font-weight:700;font-size:13.5px;
+    text-decoration:none;border:1.5px solid var(--blue-700);border-radius:11px;padding:10px 20px;
+  }
+  .track-link:hover{background:var(--blue-100);}
 
   .footer-note{max-width:960px;margin:24px auto 0;padding:0 16px;text-align:center;
     color:var(--muted);font-size:11.5px;font-weight:500;}
@@ -329,6 +334,8 @@
     <h2 id="orderSentTitle">Commande envoyée !</h2>
     <div class="order-no" id="orderNoDisplay"></div>
     <p id="thanksText">Merci ! Notre équipe va vous appeler pour confirmer votre commande avant de vous l'envoyer.<br>Paiement en espèces à la réception.</p>
+    <a href="suivi-commande.html" class="track-link" id="trackOrderLink">Suivre ma commande</a>
+    <br>
     <button class="close-btn" id="closeSuccessBtn" data-close="successOverlay">Fermer</button>
   </div>
 </div>
@@ -388,6 +395,7 @@ const I18N = {
     confirmOrder: "Confirmer la commande",
     sending: "Envoi en cours...",
     orderSentTitle: "Commande envoyée !",
+    trackOrder: "Suivre ma commande",
     thanksHtml: "Merci ! Notre équipe va vous appeler pour confirmer votre commande avant de vous l'envoyer.<br>Paiement en espèces à la réception.",
     close: "Fermer",
     add: "Ajouter",
@@ -432,6 +440,7 @@ const I18N = {
     confirmOrder: "تأكيد الطلب",
     sending: "جارٍ الإرسال...",
     orderSentTitle: "تم إرسال طلبكم!",
+    trackOrder: "تتبع طلبي",
     thanksHtml: "شكرًا لكم! سيتصل بكم فريقنا لتأكيد طلبكم قبل إرساله.<br>الدفع نقدًا عند الاستلام.",
     close: "إغلاق",
     add: "أضف",
@@ -511,6 +520,7 @@ function applyLanguage() {
   $("confirmOrderBtn").textContent = t("confirmOrder");
   $("orderSentTitle").textContent = t("orderSentTitle");
   $("thanksText").innerHTML = t("thanksHtml");
+  $("trackOrderLink").textContent = t("trackOrder");
   $("closeSuccessBtn").textContent = t("close");
 
   if (SELECTED_ZONE) updateCheckoutTotals();
@@ -829,6 +839,7 @@ function submitOrder() {
       if (!res.success) throw new Error(res.error || t("genericError"));
       closeOverlay("checkoutOverlay");
       $("orderNoDisplay").textContent = res.orderNumber;
+      $("trackOrderLink").href = "suivi-commande.html?cmd=" + encodeURIComponent(res.orderNumber);
       openOverlay("successOverlay");
       resetOrder();
     })
