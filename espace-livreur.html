@@ -89,6 +89,14 @@
   .session-bar .zone{font-size:12px;color:var(--gold-400);font-weight:600;}
   .btn-logout{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.35);
     border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .gps-badge{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--gold-400);font-weight:700;margin-top:4px;}
+  .gps-badge.hidden{display:none;}
+  .gps-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--gold-400);animation:gpsPulse 1.4s infinite;}
+  .btn-gps-enable{display:flex;align-items:center;gap:6px;background:var(--gold-400);color:var(--blue-900);
+    border:none;border-radius:999px;padding:6px 12px;font-size:11.5px;font-weight:800;cursor:pointer;
+    font-family:inherit;margin-top:6px;}
+  .btn-gps-enable.hidden{display:none;}
+  @keyframes gpsPulse{0%,100%{opacity:1;}50%{opacity:.3;}}
 
   /* Onglets */
   .tabs{display:flex;gap:8px;margin-bottom:16px;}
@@ -170,6 +178,8 @@
       <div>
         <div class="who" id="whoText"></div>
         <div class="zone" id="zoneText"></div>
+        <div class="gps-badge hidden" id="gpsBadge"><span class="dot"></span><span id="gpsBadgeText">Position partagée</span></div>
+        <button class="btn-gps-enable hidden" id="gpsEnableBtn" type="button">📍 <span id="gpsEnableBtnText">Activer le partage de position</span></button>
       </div>
       <button class="btn-logout" id="logoutBtn" type="button">Déconnexion</button>
     </div>
@@ -238,6 +248,9 @@ const I18N = {
     pinRequired: "Merci d'entrer ton code PIN.",
     loginFailedGeneric: "Erreur de connexion. Vérifie ta connexion internet et réessaie.",
     loadFailedGeneric: "Impossible de charger les commandes. Vérifie ta connexion et réessaie.",
+    gpsBadgeText: "Position partagée",
+    gpsEnableBtnText: "Activer le partage de position",
+    locationDenied: "Active la localisation pour partager ta position pendant la livraison.",
     noAvailable: "Aucune commande disponible pour le moment.",
     noMine: "Tu n'as aucune livraison en cours.",
     accept: "Accepter",
@@ -269,6 +282,9 @@ const I18N = {
     pinRequired: "الرجاء إدخال رمز PIN الخاص بك.",
     loginFailedGeneric: "خطأ في الاتصال. تحقق من اتصالك بالإنترنت وأعد المحاولة.",
     loadFailedGeneric: "تعذر تحميل الطلبات. تحقق من اتصالك وأعد المحاولة.",
+    gpsBadgeText: "الموقع قيد المشاركة",
+    gpsEnableBtnText: "تفعيل مشاركة الموقع",
+    locationDenied: "فعّل خدمة الموقع لمشاركة موقعك أثناء التوصيل.",
     noAvailable: "لا توجد طلبات متاحة حاليًا.",
     noMine: "ليس لديك أي توصيل قيد التنفيذ.",
     accept: "قبول",
@@ -302,6 +318,8 @@ function applyLanguage() {
   $("tabAvailableLabel").textContent = t("tabAvailableLabel");
   $("tabMineLabel").textContent = t("tabMineLabel");
   $("refreshBtn").textContent = t("refreshLabel");
+  $("gpsBadgeText").textContent = t("gpsBadgeText");
+  $("gpsEnableBtnText").textContent = t("gpsEnableBtnText");
   $("footerNote").textContent = t("footerNote");
   if (SESSION) updateSessionBar();
   renderOrders();
@@ -378,6 +396,7 @@ async function doLogin() {
 }
 
 $("logoutBtn").addEventListener("click", () => {
+  stopLocationSharing();
   SESSION = null;
   localStorage.removeItem(SESSION_KEY);
   $("appScreen").classList.add("hidden");
@@ -430,10 +449,91 @@ async function loadAll() {
       showError($("errorBox"), t("loadFailedGeneric"));
     }
     renderOrders();
+    ensureLocationSharing();
   } catch (e) {
     showError($("errorBox"), t("loadFailedGeneric"));
   }
 }
+
+/* ============================================================
+   SUIVI GPS : partage de position pendant une livraison en cours
+   ============================================================ */
+let LOCATION_INTERVAL_ID = null;
+let LOCATION_PERMISSION_DENIED = false;
+
+function ensureLocationSharing() {
+  const hasActive = MY_ORDERS && MY_ORDERS.length > 0;
+  if (hasActive && !LOCATION_INTERVAL_ID) {
+    // Tentative automatique (fonctionne sur Android/desktop, ou sur iOS si
+    // l'autorisation a déjà été accordée précédemment). Sur iOS Safari, la
+    // demande d'autorisation n'apparaît de façon fiable que suite à un geste
+    // utilisateur direct : on affiche donc aussi le bouton manuel en secours.
+    startLocationSharing();
+    $("gpsEnableBtn").classList.remove("hidden");
+  } else if (!hasActive && LOCATION_INTERVAL_ID) {
+    stopLocationSharing();
+  }
+  if (!hasActive) {
+    $("gpsEnableBtn").classList.add("hidden");
+  }
+}
+
+function startLocationSharing() {
+  if (!navigator.geolocation) return;
+  sendLocationOnce();
+  if (!LOCATION_INTERVAL_ID) {
+    LOCATION_INTERVAL_ID = setInterval(sendLocationOnce, 20000);
+  }
+}
+
+function stopLocationSharing() {
+  if (LOCATION_INTERVAL_ID) {
+    clearInterval(LOCATION_INTERVAL_ID);
+    LOCATION_INTERVAL_ID = null;
+  }
+  $("gpsBadge").classList.add("hidden");
+  $("gpsEnableBtn").classList.add("hidden");
+}
+
+function sendLocationOnce() {
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      try {
+        await apiGet({
+          action: "updateLocation",
+          telephone: SESSION.telephone,
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude
+        });
+        // Position envoyée avec succès : le partage est bien actif, on
+        // masque le bouton manuel et on affiche le badge.
+        $("gpsEnableBtn").classList.add("hidden");
+        $("gpsBadge").classList.remove("hidden");
+        LOCATION_PERMISSION_DENIED = false;
+      } catch (e) { /* silencieux : on retentera au prochain cycle */ }
+    },
+    () => {
+      // Autorisation refusée ou indisponible : on garde le bouton manuel
+      // visible (utile sur iOS Safari où l'appel automatique ne déclenche
+      // pas toujours la popup d'autorisation) et on affiche un message une
+      // seule fois pour ne pas spammer.
+      $("gpsBadge").classList.add("hidden");
+      $("gpsEnableBtn").classList.remove("hidden");
+      if (!LOCATION_PERMISSION_DENIED) {
+        LOCATION_PERMISSION_DENIED = true;
+        showError($("errorBox"), t("locationDenied"));
+      }
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+  );
+}
+
+$("gpsEnableBtn").addEventListener("click", () => {
+  // Appel synchrone déclenché directement par le tap : c'est ce qui permet
+  // à Safari iOS d'afficher la popup d'autorisation de localisation.
+  hideError($("errorBox"));
+  startLocationSharing();
+});
 
 function renderOrders() {
   $("countAvailable").textContent = AVAILABLE_ORDERS.length;
