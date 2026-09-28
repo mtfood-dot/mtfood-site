@@ -155,6 +155,14 @@ color:var(--muted);font-size:11.5px;font-weight:500;}
         </select>
       </div>
       <div class="field">
+        <label id="lblPin">Choisis un code PIN (4 chiffres)</label>
+        <input type="password" id="pin" required placeholder="Ex: 1234" inputmode="numeric" maxlength="4" autocomplete="off">
+      </div>
+      <div class="field">
+        <label id="lblPinConfirm">Confirme ton code PIN</label>
+        <input type="password" id="pinConfirm" required placeholder="Ex: 1234" inputmode="numeric" maxlength="4" autocomplete="off">
+      </div>
+      <div class="field">
         <label id="lblNotes">Remarques (optionnel)</label>
         <textarea id="notes" placeholder=""></textarea>
       </div>
@@ -194,12 +202,17 @@ const I18N = {
     lblDisponibilite: "Disponibilité",
     optPlein: "Temps plein",
     optPartiel: "Temps partiel",
+    lblPin: "Choisis un code PIN (4 chiffres)",
+    pinPlaceholder: "Ex: 1234",
+    lblPinConfirm: "Confirme ton code PIN",
     lblNotes: "Remarques (optionnel)",
     submitBtn: "Envoyer mon inscription",
     sending: "Envoi en cours…",
     successTitle: "Inscription envoyée !",
     successText: "Merci ! Nous allons examiner ton inscription et te contacter très bientôt par téléphone.",
     fillRequired: "Merci de remplir tous les champs obligatoires.",
+    pinInvalid: "Le code PIN doit contenir exactement 4 chiffres.",
+    pinMismatch: "Les deux codes PIN ne correspondent pas.",
     sendError: "Erreur d'envoi. Vérifie ta connexion et réessaie, ou appelle-nous directement.",
     footerNote: "MT Delivery — البريد السريع · Meftah, Blida"
   },
@@ -221,12 +234,17 @@ const I18N = {
     lblDisponibilite: "التوفر",
     optPlein: "دوام كامل",
     optPartiel: "دوام جزئي",
+    lblPin: "اختر رمز PIN (4 أرقام)",
+    pinPlaceholder: "مثال: 1234",
+    lblPinConfirm: "أكد رمز PIN الخاص بك",
     lblNotes: "ملاحظات (اختياري)",
     submitBtn: "إرسال التسجيل",
     sending: "جارٍ الإرسال…",
     successTitle: "تم إرسال التسجيل!",
     successText: "شكراً لك! سنراجع تسجيلك ونتواصل معك عبر الهاتف قريباً جداً.",
     fillRequired: "يرجى تعبئة جميع الحقول المطلوبة.",
+    pinInvalid: "يجب أن يتكون رمز PIN من 4 أرقام بالضبط.",
+    pinMismatch: "رمزا PIN غير متطابقين.",
     sendError: "خطأ في الإرسال. تحقق من اتصالك وحاول مرة أخرى، أو اتصل بنا مباشرة.",
     footerNote: "البريد السريع MT Delivery · مفتاح، البليدة"
   }
@@ -257,6 +275,10 @@ function applyLanguage(){
   document.getElementById("lblDisponibilite").textContent = t("lblDisponibilite");
   document.getElementById("optPlein").textContent = t("optPlein");
   document.getElementById("optPartiel").textContent = t("optPartiel");
+  document.getElementById("lblPin").textContent = t("lblPin");
+  document.getElementById("pin").placeholder = t("pinPlaceholder");
+  document.getElementById("lblPinConfirm").textContent = t("lblPinConfirm");
+  document.getElementById("pinConfirm").placeholder = t("pinPlaceholder");
   document.getElementById("lblNotes").textContent = t("lblNotes");
   document.getElementById("submitBtn").textContent = t("submitBtn");
   document.getElementById("successTitle").textContent = t("successTitle");
@@ -292,10 +314,24 @@ document.addEventListener("DOMContentLoaded", function(){
     const zone = document.getElementById("zone").value;
     const vehicule = document.getElementById("vehicule").value;
     const disponibilite = document.getElementById("disponibilite").value;
+    const pin = document.getElementById("pin").value.trim();
+    const pinConfirm = document.getElementById("pinConfirm").value.trim();
     const notes = document.getElementById("notes").value.trim();
 
-    if(!nom || !telephone || !zone || !vehicule || !disponibilite){
+    if(!nom || !telephone || !zone || !vehicule || !disponibilite || !pin || !pinConfirm){
       errorBox.textContent = t("fillRequired");
+      errorBox.classList.add("show");
+      return;
+    }
+
+    if(!/^[0-9]{4}$/.test(pin)){
+      errorBox.textContent = t("pinInvalid");
+      errorBox.classList.add("show");
+      return;
+    }
+
+    if(pin !== pinConfirm){
+      errorBox.textContent = t("pinMismatch");
       errorBox.classList.add("show");
       return;
     }
@@ -307,7 +343,7 @@ document.addEventListener("DOMContentLoaded", function(){
     try{
       const resp = await fetch(CONFIG.API_URL, {
         method: "POST",
-        body: JSON.stringify({ nom, telephone, zone, vehicule, disponibilite, notes })
+        body: JSON.stringify({ nom, telephone, zone, vehicule, disponibilite, pin, notes })
       });
       const data = await resp.json();
       if(data && data.ok){
