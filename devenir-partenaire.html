@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>MT Delivery — Devenir partenaire</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+--blue-900:#0a2647;
+--blue-800:#0f3562;
+--blue-700:#134a8f;
+--blue-600:#1a5cb0;
+--blue-100:#e9f1fb;
+--gold-600:#b8860f;
+--gold-500:#d4a017;
+--gold-400:#e8bb3d;
+--gold-100:#fdf3d9;
+--bg:#f3f5f9;
+--card:#ffffff;
+--text:#131b28;
+--muted:#69748a;
+--danger:#c0392b;
+--border:#e6eaf1;
+--radius-lg:20px;
+--radius-md:14px;
+--radius-sm:10px;
+--shadow-sm:0 1px 2px rgba(16,24,40,.06);
+--shadow-md:0 6px 20px -6px rgba(16,36,72,.16);
+--shadow-lg:0 20px 40px -12px rgba(10,38,71,.25);
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);
+font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+padding-bottom:40px;-webkit-font-smoothing:antialiased;}
+html[dir="rtl"] body{font-family:'Tajawal','Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;}
+a{color:inherit;}
+::selection{background:var(--gold-100);color:var(--blue-900);}
+
+header.top{
+background:#ffffff;
+padding:22px 0 26px;position:relative;overflow:hidden;
+border-bottom:1px solid var(--border);text-align:center;
+}
+header.top .brand{display:flex;flex-direction:column;align-items:center;gap:10px;position:relative;z-index:1;width:100%;}
+header.top .brand .logo-img{height:auto;width:100%;max-width:420px;display:block;margin:0 auto;}
+header.top .tagline{font-size:14px;color:var(--blue-700);font-weight:700;letter-spacing:.2px;padding:0 20px;}
+.lang-toggle{
+position:absolute;top:14px;right:14px;z-index:2;
+background:var(--blue-100);border:1px solid var(--blue-600);color:var(--blue-700);
+font-weight:800;font-size:12.5px;padding:7px 14px;border-radius:999px;cursor:pointer;
+font-family:inherit;
+}
+html[dir="rtl"] .lang-toggle{right:auto;left:14px;font-family:'Plus Jakarta Sans',sans-serif;}
+.lang-toggle:active{background:#ddeaf9;}
+
+main{padding:20px 16px 10px;max-width:520px;margin:0 auto;}
+
+.intro{background:var(--card);border-radius:var(--radius-lg);padding:20px 18px;margin-bottom:18px;
+box-shadow:var(--shadow-sm);border:1px solid var(--border);text-align:center;}
+.intro h1{margin:0 0 8px;font-size:19px;color:var(--blue-900);font-weight:800;letter-spacing:-.2px;}
+.intro p{margin:0;font-size:13.5px;color:var(--muted);line-height:1.55;}
+
+.form-card{background:var(--card);border-radius:var(--radius-lg);padding:22px 18px;
+box-shadow:var(--shadow-sm);border:1px solid var(--border);}
+
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:12.5px;font-weight:700;color:var(--blue-800);margin-bottom:6px;}
+.field input, .field select, .field textarea{
+width:100%;padding:12px 13px;border:1.5px solid var(--border);border-radius:10px;font-size:14.5px;
+font-family:inherit;background:#fbfcfe;transition:border-color .15s ease;
+}
+.field input:focus, .field select:focus, .field textarea:focus{outline:none;border-color:var(--blue-600);background:#fff;}
+.field textarea{resize:vertical;min-height:70px;}
+
+.submit-btn{
+width:100%;background:linear-gradient(135deg,var(--blue-700),var(--blue-900));color:#fff;border:none;border-radius:13px;
+padding:16px;font-size:15.5px;font-weight:800;cursor:pointer;margin-top:6px;
+box-shadow:0 8px 18px -6px rgba(19,74,143,.5);letter-spacing:.2px;
+}
+.submit-btn:disabled{opacity:.55;box-shadow:none;}
+
+.error-box{
+background:#fdecea;border:1px solid #f5c2be;color:var(--danger);font-size:13px;
+padding:11px 13px;border-radius:10px;margin-top:14px;display:none;font-weight:500;
+}
+.error-box.show{display:block;}
+
+.success-view{text-align:center;padding:34px 12px;}
+.success-view .check{
+width:72px;height:72px;border-radius:50%;background:#e5f6ea;color:#2e9e4d;
+display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 18px;
+box-shadow:0 8px 18px -6px rgba(46,158,77,.35);
+}
+.success-view h2{color:var(--blue-900);font-size:19px;margin:0 0 10px;}
+.success-view p{font-size:13.5px;color:var(--muted);line-height:1.65;margin:0;}
+.home-link{
+display:inline-block;margin-top:22px;color:var(--blue-700);font-weight:700;font-size:14px;
+text-decoration:none;border:1.5px solid var(--blue-700);border-radius:11px;padding:11px 22px;
+}
+.home-link:hover{background:var(--blue-100);}
+
+.footer-note{max-width:520px;margin:24px auto 0;padding:0 16px;text-align:center;
+color:var(--muted);font-size:11.5px;font-weight:500;}
+
+.hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<header class="top">
+<button class="lang-toggle" id="langToggle" type="button">AR</button>
+<div class="brand">
+<a href="index.html" aria-label="Retour à l'accueil" style="display:block;"><img class="logo-img" src="logo.png" alt="MT Delivery" width="316" height="158" loading="eager"></a>
+<div class="tagline" id="tagline">Rejoins notre réseau de partenaires</div>
+</div>
+</header>
+
+<main>
+  <div class="intro">
+    <h1 id="introTitle">Devenir partenaire MT Delivery</h1>
+    <p id="introText">Restaurant, cafétéria, pâtisserie, snack... Remplis ce formulaire et nous te contacterons rapidement pour rejoindre la plateforme.</p>
+  </div>
+
+  <div class="form-card" id="formCard">
+    <form id="registerForm">
+      <div class="field">
+        <label id="lblNom">Nom de l'établissement</label>
+        <input type="text" id="nom" required>
+      </div>
+      <div class="field">
+        <label id="lblType">Type d'établissement</label>
+        <select id="type" required>
+          <option value="Restaurant" id="optRestaurant">Restaurant</option>
+          <option value="Cafeteria" id="optCafeteria">Cafétéria</option>
+          <option value="Patisserie" id="optPatisserie">Pâtisserie</option>
+          <option value="Snack" id="optSnack">Snack</option>
+          <option value="Autre" id="optAutre">Autre</option>
+        </select>
+      </div>
+      <div class="field">
+        <label id="lblAdresse">Adresse</label>
+        <input type="text" id="adresse" required>
+      </div>
+      <div class="field">
+        <label id="lblZone">Zone de livraison</label>
+        <select id="zone" required>
+          <option value="Meftah Centre" id="optCentre">Meftah Centre</option>
+          <option value="Meftah Dehors" id="optDehors">Meftah Dehors</option>
+          <option value="Les deux" id="optLesDeux">Les deux</option>
+        </select>
+      </div>
+      <div class="field">
+        <label id="lblTelephone">Numéro de téléphone</label>
+        <input type="tel" id="telephone" required placeholder="05XX XX XX XX">
+      </div>
+      <div class="field">
+        <label id="lblHoraires">Horaires d'ouverture</label>
+        <input type="text" id="horaires" placeholder="Ex: 10h - 22h">
+      </div>
+      <div class="field">
+        <label id="lblDescription">Description (optionnel)</label>
+        <textarea id="description" placeholder=""></textarea>
+      </div>
+      <button type="submit" class="submit-btn" id="submitBtn">Envoyer ma demande</button>
+      <div class="error-box" id="errorBox"></div>
+    </form>
+  </div>
+
+  <div class="form-card hidden" id="successCard">
+    <div class="success-view">
+      <div class="check">✓</div>
+      <h2 id="successTitle">Demande envoyée !</h2>
+      <p id="successText">Merci ! Nous allons examiner ta demande et te contacter très bientôt par téléphone.</p>
+      <a href="index.html" class="home-link" id="homeLink">Retour à l'accueil</a>
+    </div>
+  </div>
+</main>
+
+<div class="footer-note" id="footerNote">MT Delivery — البريد السريع · Meftah, Blida</div>
+
+<script>
+const I18N = {
+  fr: {
+    tagline: "Rejoins notre réseau de partenaires",
+    introTitle: "Devenir partenaire MT Delivery",
+    introText: "Restaurant, cafétéria, pâtisserie, snack... Remplis ce formulaire et nous te contacterons rapidement pour rejoindre la plateforme.",
+    lblNom: "Nom de l'établissement",
+    lblType: "Type d'établissement",
+    optRestaurant: "Restaurant",
+    optCafeteria: "Cafétéria",
+    optPatisserie: "Pâtisserie",
+    optSnack: "Snack",
+    optAutre: "Autre",
+    lblAdresse: "Adresse",
+    lblZone: "Zone de livraison",
+    optCentre: "Meftah Centre",
+    optDehors: "Meftah Dehors",
+    optLesDeux: "Les deux",
+    lblTelephone: "Numéro de téléphone",
+    lblHoraires: "Horaires d'ouverture",
+    horairesPlaceholder: "Ex: 10h - 22h",
+    lblDescription: "Description (optionnel)",
+    submitBtn: "Envoyer ma demande",
+    sending: "Envoi en cours…",
+    successTitle: "Demande envoyée !",
+    successText: "Merci ! Nous allons examiner ta demande et te contacter très bientôt par téléphone.",
+    homeLink: "Retour à l'accueil",
+    fillRequired: "Merci de remplir tous les champs obligatoires.",
+    sendError: "Erreur d'envoi. Vérifie ta connexion et réessaie, ou appelle-nous directement.",
+    footerNote: "MT Delivery — البريد السريع · Meftah, Blida"
+  },
+  ar: {
+    tagline: "انضم إلى شبكة شركائنا",
+    introTitle: "كن شريكاً مع MT Delivery",
+    introText: "مطعم، كافتيريا، حلويات، سناك... املأ هذه الاستمارة وسنتواصل معك في أقرب وقت للانضمام إلى المنصة.",
+    lblNom: "اسم المحل",
+    lblType: "نوع المحل",
+    optRestaurant: "مطعم",
+    optCafeteria: "كافتيريا",
+    optPatisserie: "حلويات",
+    optSnack: "سناك",
+    optAutre: "أخرى",
+    lblAdresse: "العنوان",
+    lblZone: "منطقة التوصيل",
+    optCentre: "مفتاح المركز",
+    optDehors: "مفتاح خارج المركز",
+    optLesDeux: "كلاهما",
+    lblTelephone: "رقم الهاتف",
+    lblHoraires: "أوقات العمل",
+    horairesPlaceholder: "مثال: 10 صباحاً - 22 مساءً",
+    lblDescription: "وصف (اختياري)",
+    submitBtn: "إرسال طلبي",
+    sending: "جارٍ الإرسال…",
+    successTitle: "تم إرسال الطلب!",
+    successText: "شكراً لك! سنراجع طلبك ونتواصل معك عبر الهاتف قريباً جداً.",
+    homeLink: "العودة إلى الصفحة الرئيسية",
+    fillRequired: "يرجى تعبئة جميع الحقول المطلوبة.",
+    sendError: "خطأ في الإرسال. تحقق من اتصالك وحاول مرة أخرى، أو اتصل بنا مباشرة.",
+    footerNote: "البريد السريع MT Delivery · مفتاح، البليدة"
+  }
+};
+
+let LANG = localStorage.getItem("mtd_partner_lang") || "fr";
+
+function t(key){ return (I18N[LANG] && I18N[LANG][key]) || I18N.fr[key] || ""; }
+
+function applyLanguage(){
+  document.documentElement.lang = LANG;
+  document.documentElement.dir = LANG === "ar" ? "rtl" : "ltr";
+  document.getElementById("langToggle").textContent = LANG === "ar" ? "FR" : "AR";
+  document.getElementById("tagline").textContent = t("tagline");
+  document.getElementById("introTitle").textContent = t("introTitle");
+  document.getElementById("introText").textContent = t("introText");
+  document.getElementById("lblNom").textContent = t("lblNom");
+  document.getElementById("lblType").textContent = t("lblType");
+  document.getElementById("optRestaurant").textContent = t("optRestaurant");
+  document.getElementById("optCafeteria").textContent = t("optCafeteria");
+  document.getElementById("optPatisserie").textContent = t("optPatisserie");
+  document.getElementById("optSnack").textContent = t("optSnack");
+  document.getElementById("optAutre").textContent = t("optAutre");
+  document.getElementById("lblAdresse").textContent = t("lblAdresse");
+  document.getElementById("lblZone").textContent = t("lblZone");
+  document.getElementById("optCentre").textContent = t("optCentre");
+  document.getElementById("optDehors").textContent = t("optDehors");
+  document.getElementById("optLesDeux").textContent = t("optLesDeux");
+  document.getElementById("lblTelephone").textContent = t("lblTelephone");
+  document.getElementById("lblHoraires").textContent = t("lblHoraires");
+  document.getElementById("horaires").placeholder = t("horairesPlaceholder");
+  document.getElementById("lblDescription").textContent = t("lblDescription");
+  document.getElementById("submitBtn").textContent = t("submitBtn");
+  document.getElementById("successTitle").textContent = t("successTitle");
+  document.getElementById("successText").textContent = t("successText");
+  document.getElementById("homeLink").textContent = t("homeLink");
+  document.getElementById("footerNote").textContent = t("footerNote");
+}
+
+function toggleLanguage(){
+  LANG = LANG === "ar" ? "fr" : "ar";
+  localStorage.setItem("mtd_partner_lang", LANG);
+  applyLanguage();
+}
+
+const CONFIG = {
+  API_URL: "https://script.google.com/macros/s/AKfycbwgXOyXERonv0Yk7X-uhoHuE1Fj26RiYHPR4Tnr7Z_1Ly8wWjsvlE5sp3JJRukRR4ZF/exec"
+};
+
+async function apiGet(params) {
+  const qs = new URLSearchParams(params).toString();
+  const res = await fetch(CONFIG.API_URL + "?" + qs);
+  return res.json();
+}
+
+document.addEventListener("DOMContentLoaded", function(){
+  applyLanguage();
+  document.getElementById("langToggle").addEventListener("click", toggleLanguage);
+
+  const form = document.getElementById("registerForm");
+  const errorBox = document.getElementById("errorBox");
+  const submitBtn = document.getElementById("submitBtn");
+
+  form.addEventListener("submit", async function(e){
+    e.preventDefault();
+    errorBox.classList.remove("show");
+    errorBox.textContent = "";
+
+    const nom = document.getElementById("nom").value.trim();
+    const type = document.getElementById("type").value;
+    const adresse = document.getElementById("adresse").value.trim();
+    const zone = document.getElementById("zone").value;
+    const telephone = document.getElementById("telephone").value.trim();
+    const horaires = document.getElementById("horaires").value.trim();
+    const description = document.getElementById("description").value.trim();
+
+    if(!nom || !type || !adresse || !zone || !telephone){
+      errorBox.textContent = t("fillRequired");
+      errorBox.classList.add("show");
+      return;
+    }
+
+    submitBtn.disabled = true;
+    const originalLabel = submitBtn.textContent;
+    submitBtn.textContent = t("sending");
+
+    try{
+      const data = await apiGet({
+        action: "registerPartner",
+        payload: JSON.stringify({ nom, type, adresse, zone, telephone, horaires, description })
+      });
+      if(data && data.success){
+        document.getElementById("formCard").classList.add("hidden");
+        document.getElementById("successCard").classList.remove("hidden");
+      } else {
+        throw new Error((data && data.error) || "unknown");
+      }
+    } catch(err){
+      errorBox.textContent = t("sendError");
+      errorBox.classList.add("show");
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalLabel;
+    }
+  });
+});
+</script>
+</body>
+</html>
