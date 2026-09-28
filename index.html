@@ -76,6 +76,20 @@
     text-decoration:none;transition:background .15s ease;
   }
   header.top .driver-space-link-top:active{background:var(--blue-700);}
+  header.top .partner-link-top{
+    display:inline-flex;align-items:center;gap:6px;
+    background:#fff;border:1.5px solid var(--blue-600);color:var(--blue-700);
+    padding:7px 14px;border-radius:999px;font-weight:700;font-size:13px;
+    text-decoration:none;transition:background .15s ease;
+  }
+  header.top .partner-link-top:active{background:var(--blue-100);}
+  header.top .partner-space-link-top{
+    display:inline-flex;align-items:center;gap:6px;
+    background:var(--gold-500);border:1.5px solid var(--gold-500);color:var(--blue-900);
+    padding:7px 14px;border-radius:999px;font-weight:700;font-size:13px;
+    text-decoration:none;transition:background .15s ease;
+  }
+  header.top .partner-space-link-top:active{background:var(--gold-600);}
   .lang-toggle{
     position:absolute;top:14px;right:14px;z-index:2;
     background:var(--blue-100);border:1px solid var(--blue-600);color:var(--blue-700);
@@ -269,6 +283,8 @@
     <a class="phone-link" id="headerPhone" href="tel:0560 78 84 97">📞 0560 78 84 97</a>
     <a class="driver-link-top" id="driverLinkTop" href="inscription-livreur.html">🛵 Devenir livreur</a>
     <a class="driver-space-link-top" id="driverSpaceLinkTop" href="espace-livreur.html">🔑 Espace livreur</a>
+    <a class="partner-link-top" id="partnerLinkTop" href="devenir-partenaire.html">🤝 Devenir partenaire</a>
+    <a class="partner-space-link-top" id="partnerSpaceLinkTop" href="espace-partenaire.html">🏪 Espace partenaire</a>
   </div>
   <button class="lang-toggle" id="langToggle" type="button">AR</button>
 </header>
@@ -394,6 +410,8 @@ const I18N = {
     footerNote: "MT Delivery · Meftah, Blida · Paiement à la livraison uniquement",
     driverLinkTop: "🛵 Devenir livreur",
     driverSpaceLinkTop: "🔑 Espace livreur",
+    partnerLinkTop: "🤝 Devenir partenaire",
+    partnerSpaceLinkTop: "🏪 Espace partenaire",
     driverLink: "Tu veux devenir livreur ? Inscris-toi ici",
     cartBarUnit: "article(s)",
     viewCart: "Voir mon panier",
@@ -447,6 +465,8 @@ const I18N = {
     footerNote: "إم تي دليفري · مفتاح، البليدة · الدفع عند الاستلام فقط",
     driverLinkTop: "🛵 كن موصلاً",
     driverSpaceLinkTop: "🔑 مساحة الموصل",
+    partnerLinkTop: "🤝 كن شريكاً",
+    partnerSpaceLinkTop: "🏪 مساحة الشريك",
     driverLink: "تريد أن تصبح موصلاً؟ سجل هنا",
     cartBarUnit: "منتج (منتجات)",
     viewCart: "عرض سلتي",
@@ -535,6 +555,8 @@ function applyLanguage() {
   $("footerNote").textContent = t("footerNote");
   $("driverLinkTop").textContent = t("driverLinkTop");
   $("driverSpaceLinkTop").textContent = t("driverSpaceLinkTop");
+  $("partnerLinkTop").textContent = t("partnerLinkTop");
+  $("partnerSpaceLinkTop").textContent = t("partnerSpaceLinkTop");
   $("cartBarUnit").textContent = t("cartBarUnit");
   $("openCartBtn").textContent = t("viewCart");
   $("cartTitle").textContent = t("cartTitle");
