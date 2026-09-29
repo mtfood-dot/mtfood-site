@@ -146,6 +146,25 @@
   .btn-publish{background:var(--green);color:#fff;}
   .btn-reject{background:#fff;border-color:#f3c6c1;color:var(--danger);}
 
+  .subheading{font-size:12.5px;font-weight:800;color:var(--blue-900);margin:16px 0 10px;
+    text-transform:uppercase;letter-spacing:.4px;}
+  .subheading:first-child{margin-top:2px;}
+  .partner-card{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);
+    border:1px solid var(--border);padding:16px;margin-bottom:12px;}
+  .partner-card .nom{font-size:14.5px;font-weight:800;color:var(--text);}
+  .partner-card .meta{font-size:12.5px;color:var(--muted);margin:2px 0 8px;}
+  .status-badge{display:inline-block;font-size:10.5px;font-weight:800;border-radius:999px;padding:3px 10px;margin-bottom:10px;}
+  .status-badge.actif{background:#eaf7ee;color:var(--green);}
+  .status-badge.enattente{background:var(--gold-100);color:var(--gold-600);}
+  .status-badge.refuse{background:#fdeceb;color:var(--danger);}
+  .btn-activate{background:var(--green);color:#fff;}
+  .btn-deactivate{background:#fff;border-color:#f3c6c1;color:var(--danger);}
+  .pin-row{display:flex;gap:8px;margin-top:10px;align-items:center;}
+  .pin-row input{width:90px;padding:8px 10px;border:1.5px solid var(--border);border-radius:10px;
+    font-size:14px;font-family:inherit;background:#fbfcfe;letter-spacing:2px;text-align:center;}
+  .pin-row input:focus{outline:none;border-color:var(--blue-600);}
+  .btn-savepin{background:var(--blue-700);color:#fff;flex:none;padding:8px 14px;}
+
   .hidden{display:none !important;}
 
   .footer-note{max-width:960px;margin:24px auto 0;padding:0 16px;text-align:center;
@@ -192,6 +211,7 @@
     <div class="tab-bar" id="tabBar">
       <button class="tab-btn active" id="tabOrdersBtn" type="button"><span id="tabOrdersLabel"></span></button>
       <button class="tab-btn" id="tabModerationBtn" type="button"><span id="tabModerationLabel"></span><span id="modBadge" class="mod-badge hidden">0</span></button>
+      <button class="tab-btn" id="tabPartnersBtn" type="button"><span id="tabPartnersLabel"></span></button>
     </div>
 
     <div id="ordersView">
@@ -208,6 +228,17 @@
         <button class="btn-refresh" id="refreshModBtn" type="button"><span id="refreshModLabel">↻ Actualiser</span></button>
       </div>
       <div id="listModeration"></div>
+    </div>
+
+    <div id="partnersView" class="hidden">
+      <div class="refresh-row">
+        <div></div>
+        <button class="btn-refresh" id="refreshPartnersBtn" type="button"><span id="refreshPartnersLabel">↻ Actualiser</span></button>
+      </div>
+      <div class="subheading" id="subheadingPartners"></div>
+      <div id="listPartners"></div>
+      <div class="subheading" id="subheadingDrivers"></div>
+      <div id="listDrivers"></div>
     </div>
 
   </div>
@@ -234,6 +265,8 @@ try { SESSION_PASSWORD = localStorage.getItem(SESSION_KEY) || null; } catch(e) {
 try { SESSION_NAME = localStorage.getItem(SESSION_NAME_KEY) || null; } catch(e) { SESSION_NAME = null; }
 let ORDERS = [];
 let PENDING_ITEMS = [];
+let PARTNERS = [];
+let DRIVERS = [];
 let CURRENT_TAB = "orders";
 
 /* ============================================================
@@ -274,6 +307,24 @@ const I18N = {
     btnReject: "✕ Refuser",
     loadPendingFailedGeneric: "Impossible de charger les plats en attente. Réessaie.",
     moderateFailedGeneric: "Impossible de mettre à jour le plat. Réessaie.",
+    tabPartners: "Partenaires",
+    subheadingPartners: "Partenaires",
+    subheadingDrivers: "Livreurs",
+    noPartners: "Aucun partenaire.",
+    noDrivers: "Aucun livreur.",
+    statusActif: "Actif",
+    statusEnAttente: "En attente",
+    statusRefuse: "Refusé",
+    btnActivate: "✓ Activer",
+    btnDeactivate: "✕ Désactiver",
+    btnSavePin: "💾 Code PIN",
+    loadPartnersFailedGeneric: "Impossible de charger les partenaires. Réessaie.",
+    loadDriversFailedGeneric: "Impossible de charger les livreurs. Réessaie.",
+    updateStatusFailedGeneric: "Impossible de mettre à jour le statut. Réessaie.",
+    savePinFailedGeneric: "Impossible d'enregistrer le code PIN. Réessaie.",
+    pinInvalid: "Le code PIN doit contenir exactement 4 chiffres.",
+    pinSaved: "Code PIN enregistré.",
+    statusUpdated: "Statut mis à jour.",
   },
   ar: {
     tagline: "مساحة الإدارة",
@@ -309,6 +360,24 @@ const I18N = {
     btnReject: "✕ رفض",
     loadPendingFailedGeneric: "تعذر تحميل الأطباق بانتظار المراجعة. أعد المحاولة.",
     moderateFailedGeneric: "تعذر تحديث الطبق. أعد المحاولة.",
+    tabPartners: "الشركاء",
+    subheadingPartners: "الشركاء",
+    subheadingDrivers: "السائقون",
+    noPartners: "لا يوجد شركاء.",
+    noDrivers: "لا يوجد سائقون.",
+    statusActif: "نشط",
+    statusEnAttente: "قيد الانتظار",
+    statusRefuse: "مرفوض",
+    btnActivate: "✓ تفعيل",
+    btnDeactivate: "✕ تعطيل",
+    btnSavePin: "💾 رمز PIN",
+    loadPartnersFailedGeneric: "تعذر تحميل الشركاء. أعد المحاولة.",
+    loadDriversFailedGeneric: "تعذر تحميل السائقين. أعد المحاولة.",
+    updateStatusFailedGeneric: "تعذر تحديث الحالة. أعد المحاولة.",
+    savePinFailedGeneric: "تعذر حفظ رمز PIN. أعد المحاولة.",
+    pinInvalid: "يجب أن يتكون رمز PIN من 4 أرقام بالضبط.",
+    pinSaved: "تم حفظ رمز PIN.",
+    statusUpdated: "تم تحديث الحالة.",
   }
 };
 
@@ -331,8 +400,14 @@ function applyLanguage() {
   $("tabOrdersLabel").textContent = t("tabOrders");
   $("tabModerationLabel").textContent = t("tabModeration");
   $("refreshModLabel").textContent = t("refreshLabel");
+  $("tabPartnersLabel").textContent = t("tabPartners");
+  $("refreshPartnersLabel").textContent = t("refreshLabel");
+  $("subheadingPartners").textContent = t("subheadingPartners");
+  $("subheadingDrivers").textContent = t("subheadingDrivers");
   renderOrders();
   renderModeration();
+  renderPartners();
+  renderDrivers();
 }
 
 $("langToggle").addEventListener("click", () => {
@@ -431,16 +506,21 @@ $("ordersDate").addEventListener("change", loadOrders);
 $("refreshModBtn").addEventListener("click", loadPendingItems);
 $("tabOrdersBtn").addEventListener("click", () => switchTab("orders"));
 $("tabModerationBtn").addEventListener("click", () => switchTab("moderation"));
+$("tabPartnersBtn").addEventListener("click", () => switchTab("partners"));
+$("refreshPartnersBtn").addEventListener("click", () => { loadPartners(); loadDrivers(); });
 
 function switchTab(tab) {
   CURRENT_TAB = tab;
   $("tabOrdersBtn").classList.toggle("active", tab === "orders");
   $("tabModerationBtn").classList.toggle("active", tab === "moderation");
+  $("tabPartnersBtn").classList.toggle("active", tab === "partners");
   $("ordersView").classList.toggle("hidden", tab !== "orders");
   $("moderationView").classList.toggle("hidden", tab !== "moderation");
+  $("partnersView").classList.toggle("hidden", tab !== "partners");
   hideError($("errorBox"));
   hideSuccess($("successBox"));
   if (tab === "moderation") loadPendingItems();
+  if (tab === "partners") { loadPartners(); loadDrivers(); }
 }
 
 /* ============================================================
@@ -636,6 +716,153 @@ async function onModerate(itemId, decision, btnEl) {
     showError($("errorBox"), t("moderateFailedGeneric"));
   } finally {
     document.querySelectorAll("[data-mod-id]").forEach(b => b.disabled = false);
+  }
+}
+
+/* ============================================================
+   PARTENAIRES & LIVREURS
+   ============================================================ */
+async function loadPartners() {
+  try {
+    const data = await apiGet({ action: "getPartners", password: SESSION_PASSWORD });
+    if (data.success) {
+      PARTNERS = data.partners || [];
+      if (CURRENT_TAB === "partners") renderPartners();
+    } else if (CURRENT_TAB === "partners") {
+      showError($("errorBox"), data.error || t("loadPartnersFailedGeneric"));
+    }
+  } catch (e) {
+    if (CURRENT_TAB === "partners") showError($("errorBox"), t("loadPartnersFailedGeneric"));
+  }
+}
+
+async function loadDrivers() {
+  try {
+    const data = await apiGet({ action: "getDrivers", password: SESSION_PASSWORD });
+    if (data.success) {
+      DRIVERS = data.drivers || [];
+      if (CURRENT_TAB === "partners") renderDrivers();
+    } else if (CURRENT_TAB === "partners") {
+      showError($("errorBox"), data.error || t("loadDriversFailedGeneric"));
+    }
+  } catch (e) {
+    if (CURRENT_TAB === "partners") showError($("errorBox"), t("loadDriversFailedGeneric"));
+  }
+}
+
+function statusBadgeInfo(statut) {
+  const s = String(statut || "").trim().toLowerCase();
+  if (s === "actif") return { cls: "actif", label: t("statusActif") };
+  if (s === "refuse" || s === "refusé") return { cls: "refuse", label: t("statusRefuse") };
+  return { cls: "enattente", label: t("statusEnAttente") };
+}
+
+function entityCardHtml(kind, item, extraMeta) {
+  const b = statusBadgeInfo(item.statut);
+  const tel = escapeAttr(item.telephone);
+  const isActive = String(item.statut || "").trim().toLowerCase() === "actif";
+  const toggleLabel = isActive ? t("btnDeactivate") : t("btnActivate");
+  const toggleClass = isActive ? "btn-deactivate" : "btn-activate";
+  const newStatus = isActive ? "En attente" : "Actif";
+  return `
+    <div class="partner-card">
+      <div class="nom">${escapeHtml(item.nom || "")}</div>
+      <div class="meta">${extraMeta}</div>
+      <span class="status-badge ${b.cls}">${escapeHtml(b.label)}</span>
+      <div class="actions-row">
+        <button class="btn-action ${toggleClass}" type="button" data-toggle-kind="${kind}" data-toggle-tel="${tel}" data-new-status="${escapeAttr(newStatus)}">${escapeHtml(toggleLabel)}</button>
+      </div>
+      <div class="pin-row">
+        <input type="text" inputmode="numeric" maxlength="4" placeholder="${item.pin ? "••••" : "----"}">
+        <button class="btn-action btn-savepin" type="button" data-savepin-kind="${kind}" data-savepin-tel="${tel}">${escapeHtml(t("btnSavePin"))}</button>
+      </div>
+    </div>
+  `;
+}
+
+function partnerCardHtml(p) {
+  const meta = `${escapeHtml(p.type || "")} · ${escapeHtml(p.zone || "")} · ${escapeHtml(p.telephone || "")}`;
+  return entityCardHtml("partner", p, meta);
+}
+function driverCardHtml(d) {
+  const meta = `${escapeHtml(d.zone || "")} · ${escapeHtml(d.vehicule || "")} · ${escapeHtml(d.telephone || "")}`;
+  return entityCardHtml("driver", d, meta);
+}
+
+function wireEntityButtons(containerId) {
+  document.querySelectorAll("#" + containerId + " [data-toggle-kind]").forEach(btn => {
+    btn.addEventListener("click", () => onToggleStatus(btn.dataset.toggleKind, btn.dataset.toggleTel, btn.dataset.newStatus, btn));
+  });
+  document.querySelectorAll("#" + containerId + " [data-savepin-kind]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const input = btn.closest(".pin-row").querySelector("input");
+      onSavePin(btn.dataset.savepinKind, btn.dataset.savepinTel, input, btn);
+    });
+  });
+}
+
+function renderPartners() {
+  $("listPartners").innerHTML = PARTNERS.length
+    ? PARTNERS.map(partnerCardHtml).join("")
+    : emptyStateHtml(t("noPartners"), "🏪");
+  wireEntityButtons("listPartners");
+}
+
+function renderDrivers() {
+  $("listDrivers").innerHTML = DRIVERS.length
+    ? DRIVERS.map(driverCardHtml).join("")
+    : emptyStateHtml(t("noDrivers"), "🛵");
+  wireEntityButtons("listDrivers");
+}
+
+async function onToggleStatus(kind, telephone, newStatus, btnEl) {
+  hideError($("errorBox"));
+  hideSuccess($("successBox"));
+  btnEl.disabled = true;
+  try {
+    const action = kind === "partner" ? "updatePartnerStatus" : "updateDriverStatus";
+    const data = await apiGet({ action: action, password: SESSION_PASSWORD, telephone: telephone, newStatus: newStatus });
+    if (data.success) {
+      const list = kind === "partner" ? PARTNERS : DRIVERS;
+      const item = list.find(x => String(x.telephone) === String(telephone));
+      if (item) item.statut = newStatus;
+      if (kind === "partner") renderPartners(); else renderDrivers();
+      showSuccess($("successBox"), t("statusUpdated"));
+    } else {
+      showError($("errorBox"), data.error || t("updateStatusFailedGeneric"));
+    }
+  } catch (e) {
+    showError($("errorBox"), t("updateStatusFailedGeneric"));
+  } finally {
+    btnEl.disabled = false;
+  }
+}
+
+async function onSavePin(kind, telephone, inputEl, btnEl) {
+  hideError($("errorBox"));
+  hideSuccess($("successBox"));
+  const pin = inputEl ? inputEl.value.trim() : "";
+  if (!/^[0-9]{4}$/.test(pin)) {
+    showError($("errorBox"), t("pinInvalid"));
+    return;
+  }
+  btnEl.disabled = true;
+  try {
+    const action = kind === "partner" ? "setPartnerPin" : "setDriverPin";
+    const data = await apiGet({ action: action, password: SESSION_PASSWORD, telephone: telephone, pin: pin });
+    if (data.success) {
+      const list = kind === "partner" ? PARTNERS : DRIVERS;
+      const item = list.find(x => String(x.telephone) === String(telephone));
+      if (item) item.pin = pin;
+      if (kind === "partner") renderPartners(); else renderDrivers();
+      showSuccess($("successBox"), t("pinSaved"));
+    } else {
+      showError($("errorBox"), data.error || t("savePinFailedGeneric"));
+    }
+  } catch (e) {
+    showError($("errorBox"), t("savePinFailedGeneric"));
+  } finally {
+    btnEl.disabled = false;
   }
 }
 
