@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>MT Delivery — Espace admin</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue-900:#0a2647;
+    --blue-800:#0f3562;
+    --blue-700:#134a8f;
+    --blue-600:#1a5cb0;
+    --blue-100:#e9f1fb;
+    --gold-600:#b8860f;
+    --gold-500:#d4a017;
+    --gold-400:#e8bb3d;
+    --gold-100:#fdf3d9;
+    --bg:#f3f5f9;
+    --card:#ffffff;
+    --text:#131b28;
+    --muted:#69748a;
+    --danger:#c0392b;
+    --green:#1a7d3a;
+    --border:#e6eaf1;
+    --radius-lg:20px;
+    --radius-md:14px;
+    --radius-sm:10px;
+    --shadow-sm:0 1px 2px rgba(16,24,40,.06);
+    --shadow-md:0 6px 20px -6px rgba(16,36,72,.16);
+    --shadow-lg:0 20px 40px -12px rgba(10,38,71,.25);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    padding-bottom:40px;-webkit-font-smoothing:antialiased;}
+  html[dir="rtl"] body{font-family:'Tajawal','Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;}
+  a{color:inherit;}
+  ::selection{background:var(--gold-100);color:var(--blue-900);}
+
+  header.top{
+    background:#ffffff;
+    padding:20px 0 22px;position:relative;overflow:hidden;
+    border-bottom:1px solid var(--border);text-align:center;
+  }
+  header.top .brand{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;z-index:1;width:100%;}
+  header.top .brand .logo-img{height:auto;width:100%;max-width:280px;display:block;margin:0 auto;}
+  header.top .tagline{font-size:13px;color:var(--blue-700);font-weight:700;letter-spacing:.2px;}
+  .lang-toggle{
+    position:absolute;top:14px;right:14px;z-index:2;
+    background:#fff;border:1.5px solid var(--gold-500);color:var(--blue-900);
+    padding:6px 12px;border-radius:999px;font-weight:800;font-size:12px;cursor:pointer;
+    font-family:inherit;
+  }
+  html[dir="rtl"] .lang-toggle{right:auto;left:14px;}
+
+  main{max-width:640px;margin:0 auto;padding:20px 16px 40px;}
+
+  .card{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);
+    border:1px solid var(--border);padding:22px;margin-bottom:16px;}
+
+  /* Écran de connexion */
+  .login-card h2{margin:0 0 6px;font-size:19px;color:var(--blue-900);font-weight:800;}
+  .login-card p{margin:0 0 18px;color:var(--muted);font-size:13.5px;line-height:1.6;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12.5px;font-weight:700;color:var(--blue-900);margin-bottom:6px;}
+  .field input{
+    width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+    font-size:15px;font-family:inherit;background:#fbfcfe;transition:border-color .15s ease;
+  }
+  .field input:focus{outline:none;border-color:var(--blue-600);}
+  .btn-primary{
+    width:100%;background:linear-gradient(135deg,var(--blue-700),var(--blue-900));color:#fff;border:none;
+    border-radius:13px;padding:14px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;
+  }
+  .btn-primary:disabled{opacity:.6;cursor:default;}
+  .error-box{background:#fdeceb;border:1px solid #f3c6c1;color:var(--danger);border-radius:var(--radius-sm);
+    padding:11px 14px;font-size:13px;margin-top:12px;line-height:1.5;display:none;}
+  .error-box.show{display:block;}
+  .success-box{background:#eaf7ee;border:1px solid #bfe6c9;color:var(--green);border-radius:var(--radius-sm);
+    padding:11px 14px;font-size:13px;margin-top:12px;line-height:1.5;display:none;}
+  .success-box.show{display:block;}
+
+  /* En-tête connecté */
+  .session-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    background:linear-gradient(135deg,var(--blue-900),var(--blue-700));color:#fff;border-radius:var(--radius-lg);
+    padding:16px 18px;margin-bottom:16px;box-shadow:var(--shadow-md);}
+  .session-bar .who{font-size:14px;font-weight:800;}
+  .session-bar .zone{font-size:12px;color:var(--gold-400);font-weight:600;}
+  .btn-logout{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.35);
+    border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;}
+
+  .refresh-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;}
+  .btn-refresh{background:#fff;border:1px solid var(--border);border-radius:999px;padding:7px 14px;
+    font-size:12.5px;font-weight:700;color:var(--blue-700);cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .date-input{border:1.5px solid var(--border);border-radius:999px;padding:6px 12px;font-size:12.5px;
+    font-family:inherit;color:var(--blue-900);background:#fff;}
+
+  .order-card{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);
+    border:1px solid var(--border);padding:16px;margin-bottom:12px;}
+  .order-card .row1{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px;}
+  .order-card .numero{font-size:11.5px;font-weight:800;color:var(--gold-600);letter-spacing:.3px;}
+  .order-card .total{font-size:16px;font-weight:800;color:var(--blue-900);}
+  .order-card .meta{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:4px;}
+  .order-card .client{font-size:14.5px;font-weight:700;color:var(--text);}
+  .order-card .articles{font-size:13px;color:var(--text);background:var(--bg);border-radius:var(--radius-sm);
+    padding:8px 10px;margin:8px 0;line-height:1.5;}
+  .badge{display:inline-block;font-size:10.5px;font-weight:800;border-radius:999px;padding:3px 10px;margin:6px 0;}
+  .badge.aconfirmer{background:var(--gold-100);color:var(--gold-600);}
+  .badge.enattente{background:#e9f1fb;color:var(--blue-700);}
+  .badge.enlivraison{background:#e9f1fb;color:var(--blue-700);}
+  .badge.livree{background:#eaf7ee;color:var(--green);}
+  .badge.annulee{background:#fdeceb;color:var(--danger);}
+
+  .actions-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+  .btn-action{flex:1;min-width:110px;border-radius:10px;padding:9px 10px;font-size:12.5px;font-weight:800;
+    cursor:pointer;font-family:inherit;border:1.5px solid transparent;text-align:center;text-decoration:none;display:inline-block;}
+  .btn-confirm{background:var(--blue-700);color:#fff;}
+  .btn-cancel{background:#fff;border-color:#f3c6c1;color:var(--danger);}
+  .btn-deliver{background:var(--green);color:#fff;}
+  .btn-whatsapp{background:#25D366;color:#fff;}
+  .btn-action:disabled{opacity:.5;cursor:default;}
+
+  .empty-state{text-align:center;color:var(--muted);font-size:13.5px;padding:40px 20px;}
+  .empty-state .emoji{font-size:32px;display:block;margin-bottom:10px;}
+
+  .hidden{display:none !important;}
+
+  .footer-note{max-width:960px;margin:24px auto 0;padding:0 16px;text-align:center;
+    color:var(--muted);font-size:11.5px;font-weight:500;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <a href="index.html" aria-label="Retour à l'accueil" style="display:block;"><img class="logo-img" src="logo.png" alt="MT Delivery" width="316" height="158" loading="eager"></a>
+    <div class="tagline" id="tagline">Espace admin</div>
+  </div>
+  <button class="lang-toggle" id="langToggle" type="button">AR</button>
+</header>
+
+<main>
+
+  <!-- ================= ÉCRAN DE CONNEXION ================= -->
+  <section id="loginScreen" class="card login-card">
+    <h2 id="loginTitle">Connexion admin</h2>
+    <p id="loginSubtitle">Entre le mot de passe administrateur.</p>
+    <div class="field">
+      <label id="lblPassword">Mot de passe</label>
+      <input type="password" id="fPassword" placeholder="••••••••" autocomplete="off">
+    </div>
+    <button class="btn-primary" id="loginBtn" type="button">Se connecter</button>
+    <div class="error-box" id="loginError"></div>
+  </section>
+
+  <!-- ================= ESPACE CONNECTÉ ================= -->
+  <div id="appScreen" class="hidden">
+
+    <div class="session-bar">
+      <div>
+        <div class="who" id="whoText"></div>
+      </div>
+      <button class="btn-logout" id="logoutBtn" type="button">Déconnexion</button>
+    </div>
+
+    <div id="errorBox" class="error-box"></div>
+    <div id="successBox" class="success-box"></div>
+
+    <div class="refresh-row">
+      <input type="date" class="date-input" id="ordersDate">
+      <button class="btn-refresh" id="refreshBtn" type="button"><span id="refreshLabel">↻ Actualiser</span></button>
+    </div>
+    <div id="listOrders"></div>
+
+  </div>
+
+</main>
+
+<div class="footer-note" id="footerNote">MT Delivery · Meftah, Blida</div>
+
+<script>
+/* ============================================================
+   CONFIGURATION
+   ============================================================ */
+const CONFIG = {
+  API_URL: "https://script.google.com/macros/s/AKfycbwgXOyXERonv0Yk7X-uhoHuE1Fj26RiYHPR4Tnr7Z_1Ly8wWjsvlE5sp3JJRukRR4ZF/exec"
+};
+
+const LANG_KEY = "mtd_espace_admin_lang";
+const SESSION_KEY = "mtd_espace_admin_session";
+let LANG = localStorage.getItem(LANG_KEY) || "fr";
+let SESSION_PASSWORD = null;
+try { SESSION_PASSWORD = localStorage.getItem(SESSION_KEY) || null; } catch(e) { SESSION_PASSWORD = null; }
+let ORDERS = [];
+
+/* ============================================================
+   I18N
+   ============================================================ */
+const I18N = {
+  fr: {
+    tagline: "Espace admin",
+    toggleLabel: "AR",
+    loginTitle: "Connexion admin",
+    loginSubtitle: "Entre le mot de passe administrateur.",
+    lblPassword: "Mot de passe",
+    loginBtn: "Se connecter",
+    logoutBtn: "Déconnexion",
+    whoText: "Administrateur",
+    refreshLabel: "↻ Actualiser",
+    footerNote: "MT Delivery · Meftah, Blida",
+    passwordRequired: "Merci d'entrer le mot de passe.",
+    loginFailedGeneric: "Erreur de connexion. Vérifie ta connexion internet et réessaie.",
+    loadFailedGeneric: "Impossible de charger les commandes. Vérifie ta connexion et réessaie.",
+    noOrders: "Aucune commande à cette date.",
+    statutAconfirmer: "À confirmer",
+    statutEnattente: "En attente",
+    statutEnlivraison: "En livraison",
+    statutLivree: "Livrée",
+    statutAnnulee: "Annulée",
+    btnConfirm: "✓ Confirmer",
+    btnCancel: "✕ Annuler",
+    btnDeliver: "✓ Marquer livrée",
+    btnWhatsapp: "💬 WhatsApp",
+    updateFailedGeneric: "Impossible de mettre à jour la commande. Réessaie.",
+    waMsgIntro: "Bonjour, au sujet de votre commande",
+  },
+  ar: {
+    tagline: "مساحة الإدارة",
+    toggleLabel: "FR",
+    loginTitle: "تسجيل دخول الإدارة",
+    loginSubtitle: "أدخل كلمة مرور الإدارة.",
+    lblPassword: "كلمة المرور",
+    loginBtn: "تسجيل الدخول",
+    logoutBtn: "تسجيل الخروج",
+    whoText: "المدير",
+    refreshLabel: "↻ تحديث",
+    footerNote: "إم تي دليفري · مفتاح، البليدة",
+    passwordRequired: "الرجاء إدخال كلمة المرور.",
+    loginFailedGeneric: "خطأ في الاتصال. تحقق من اتصالك بالإنترنت وأعد المحاولة.",
+    loadFailedGeneric: "تعذر تحميل الطلبات. تحقق من اتصالك وأعد المحاولة.",
+    noOrders: "لا توجد طلبات في هذا التاريخ.",
+    statutAconfirmer: "بانتظار التأكيد",
+    statutEnattente: "قيد الانتظار",
+    statutEnlivraison: "قيد التوصيل",
+    statutLivree: "تم التوصيل",
+    statutAnnulee: "ملغاة",
+    btnConfirm: "✓ تأكيد",
+    btnCancel: "✕ إلغاء",
+    btnDeliver: "✓ تحديد كموصّلة",
+    btnWhatsapp: "💬 واتساب",
+    updateFailedGeneric: "تعذر تحديث الطلب. أعد المحاولة.",
+    waMsgIntro: "مرحباً، بخصوص طلبك",
+  }
+};
+
+function t(key) { return (I18N[LANG] && I18N[LANG][key]) || I18N.fr[key] || key; }
+function $(id) { return document.getElementById(id); }
+
+function applyLanguage() {
+  document.documentElement.lang = LANG;
+  document.documentElement.dir = LANG === "ar" ? "rtl" : "ltr";
+  $("tagline").textContent = t("tagline");
+  $("langToggle").textContent = t("toggleLabel");
+  $("loginTitle").textContent = t("loginTitle");
+  $("loginSubtitle").textContent = t("loginSubtitle");
+  $("lblPassword").textContent = t("lblPassword");
+  $("loginBtn").textContent = t("loginBtn");
+  $("logoutBtn").textContent = t("logoutBtn");
+  $("whoText").textContent = t("whoText");
+  $("refreshLabel").textContent = t("refreshLabel");
+  $("footerNote").textContent = t("footerNote");
+  renderOrders();
+}
+
+$("langToggle").addEventListener("click", () => {
+  LANG = LANG === "fr" ? "ar" : "fr";
+  localStorage.setItem(LANG_KEY, LANG);
+  applyLanguage();
+});
+
+/* ============================================================
+   APPEL API
+   ============================================================ */
+async function apiGet(params) {
+  const qs = new URLSearchParams(params).toString();
+  const res = await fetch(CONFIG.API_URL + "?" + qs);
+  return res.json();
+}
+
+/* ============================================================
+   CONNEXION / SESSION
+   ============================================================ */
+function showError(box, msg) {
+  box.textContent = msg;
+  box.classList.add("show");
+}
+function hideError(box) {
+  box.classList.remove("show");
+  box.textContent = "";
+}
+function showSuccess(box, msg) {
+  box.textContent = msg;
+  box.classList.add("show");
+}
+function hideSuccess(box) {
+  box.classList.remove("show");
+  box.textContent = "";
+}
+
+$("loginBtn").addEventListener("click", doLogin);
+$("fPassword").addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
+
+async function doLogin() {
+  const password = $("fPassword").value.trim();
+  hideError($("loginError"));
+  if (!password) {
+    showError($("loginError"), t("passwordRequired"));
+    return;
+  }
+  $("loginBtn").disabled = true;
+  $("loginBtn").textContent = "...";
+  try {
+    const data = await apiGet({ action: "adminLogin", password: password });
+    if (data.success) {
+      SESSION_PASSWORD = password;
+      localStorage.setItem(SESSION_KEY, password);
+      enterApp();
+    } else {
+      showError($("loginError"), data.error || t("loginFailedGeneric"));
+    }
+  } catch (e) {
+    showError($("loginError"), t("loginFailedGeneric"));
+  } finally {
+    $("loginBtn").disabled = false;
+    $("loginBtn").textContent = t("loginBtn");
+  }
+}
+
+$("logoutBtn").addEventListener("click", () => {
+  SESSION_PASSWORD = null;
+  localStorage.removeItem(SESSION_KEY);
+  $("appScreen").classList.add("hidden");
+  $("loginScreen").classList.remove("hidden");
+  $("fPassword").value = "";
+});
+
+function todayStr() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+}
+
+function enterApp() {
+  $("loginScreen").classList.add("hidden");
+  $("appScreen").classList.remove("hidden");
+  $("whoText").textContent = t("whoText");
+  $("ordersDate").value = todayStr();
+  loadOrders();
+}
+
+$("refreshBtn").addEventListener("click", loadOrders);
+$("ordersDate").addEventListener("change", loadOrders);
+
+/* ============================================================
+   COMMANDES
+   ============================================================ */
+async function loadOrders() {
+  hideError($("errorBox"));
+  try {
+    const date = $("ordersDate").value || todayStr();
+    const data = await apiGet({ action: "getAllOrders", password: SESSION_PASSWORD, date: date });
+    if (data.success) {
+      ORDERS = data.orders;
+      renderOrders();
+    } else {
+      showError($("errorBox"), data.error || t("loadFailedGeneric"));
+      if (data.error && /mot de passe|password/i.test(data.error)) {
+        $("logoutBtn").click();
+      }
+    }
+  } catch (e) {
+    showError($("errorBox"), t("loadFailedGeneric"));
+  }
+}
+
+function renderOrders() {
+  $("listOrders").innerHTML = ORDERS.length
+    ? ORDERS.map(orderCardHtml).join("")
+    : emptyStateHtml(t("noOrders"), "📦");
+
+  document.querySelectorAll("[data-action-order]").forEach(btn => {
+    btn.addEventListener("click", () => onUpdateStatus(btn.dataset.actionOrder, btn.dataset.newStatus, btn));
+  });
+}
+
+function badgeInfo(statut) {
+  const s = String(statut || "").trim();
+  if (s === "À confirmer") return { cls: "aconfirmer", label: t("statutAconfirmer") };
+  if (s === "En attente") return { cls: "enattente", label: t("statutEnattente") };
+  if (s === "En livraison") return { cls: "enlivraison", label: t("statutEnlivraison") };
+  if (s === "Livrée") return { cls: "livree", label: t("statutLivree") };
+  if (s === "Annulée") return { cls: "annulee", label: t("statutAnnulee") };
+  return { cls: "enattente", label: s };
+}
+
+function phoneToWaNumber(phone) {
+  let digits = String(phone == null ? "" : phone).replace(/\D/g, "");
+  digits = digits.replace(/^0+/, "");
+  if (!digits) return "";
+  if (digits.indexOf("213") === 0) return digits;
+  return "213" + digits;
+}
+
+function actionsHtml(o) {
+  const s = String(o.statut || "").trim();
+  const numero = escapeAttr(o.numero);
+  let buttons = "";
+  if (s === "À confirmer") {
+    buttons += `<button class="btn-action btn-confirm" type="button" data-action-order="${numero}" data-new-status="En attente">${escapeHtml(t("btnConfirm"))}</button>`;
+    buttons += `<button class="btn-action btn-cancel" type="button" data-action-order="${numero}" data-new-status="Annulée">${escapeHtml(t("btnCancel"))}</button>`;
+  } else if (s === "En attente" || s === "En livraison") {
+    buttons += `<button class="btn-action btn-deliver" type="button" data-action-order="${numero}" data-new-status="Livrée">${escapeHtml(t("btnDeliver"))}</button>`;
+    buttons += `<button class="btn-action btn-cancel" type="button" data-action-order="${numero}" data-new-status="Annulée">${escapeHtml(t("btnCancel"))}</button>`;
+  }
+  const waNumber = phoneToWaNumber(o.telephone);
+  if (waNumber) {
+    const msg = encodeURIComponent(t("waMsgIntro") + " N° " + (o.numero || ""));
+    buttons += `<a class="btn-action btn-whatsapp" href="https://wa.me/${waNumber}?text=${msg}" target="_blank" rel="noopener">${escapeHtml(t("btnWhatsapp"))}</a>`;
+  }
+  return buttons ? `<div class="actions-row">${buttons}</div>` : "";
+}
+
+function orderCardHtml(o) {
+  const b = badgeInfo(o.statut);
+  return `
+    <div class="order-card">
+      <div class="row1">
+        <div class="numero">${escapeHtml(o.numero || "")}</div>
+        <div class="total">${escapeHtml(String(o.total || 0))} DA</div>
+      </div>
+      <div class="client">${escapeHtml(o.client || "")} · ${escapeHtml(String(o.telephone || ""))}</div>
+      <div class="meta">${escapeHtml(o.adresse || "")} (${escapeHtml(o.zone || "")}) · ${escapeHtml(o.horodatage || "")}</div>
+      <div class="articles">${escapeHtml(o.articles || "")}</div>
+      <span class="badge ${b.cls}">${escapeHtml(b.label)}</span>
+      ${actionsHtml(o)}
+    </div>
+  `;
+}
+
+async function onUpdateStatus(orderNumber, newStatus, btnEl) {
+  hideError($("errorBox"));
+  hideSuccess($("successBox"));
+  const allBtns = document.querySelectorAll("[data-action-order]");
+  allBtns.forEach(b => b.disabled = true);
+  try {
+    const data = await apiGet({
+      action: "updateOrderStatus",
+      password: SESSION_PASSWORD,
+      orderNumber: orderNumber,
+      newStatus: newStatus
+    });
+    if (data.success) {
+      const o = ORDERS.find(x => String(x.numero) === String(orderNumber));
+      if (o) o.statut = newStatus;
+      renderOrders();
+    } else {
+      showError($("errorBox"), data.error || t("updateFailedGeneric"));
+    }
+  } catch (e) {
+    showError($("errorBox"), t("updateFailedGeneric"));
+  } finally {
+    document.querySelectorAll("[data-action-order]").forEach(b => b.disabled = false);
+  }
+}
+
+/* ============================================================
+   UTILITAIRES
+   ============================================================ */
+function emptyStateHtml(msg, emoji) {
+  return `<div class="empty-state"><span class="emoji">${emoji || "📦"}</span>${escapeHtml(msg)}</div>`;
+}
+function escapeHtml(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+function escapeAttr(s) { return escapeHtml(s); }
+
+/* ============================================================
+   DÉMARRAGE
+   ============================================================ */
+applyLanguage();
+if (SESSION_PASSWORD) {
+  enterApp();
+}
+</script>
+
+</body>
+</html>
