@@ -128,6 +128,24 @@
   .empty-state{text-align:center;color:var(--muted);font-size:13.5px;padding:40px 20px;}
   .empty-state .emoji{font-size:32px;display:block;margin-bottom:10px;}
 
+  .tab-bar{display:flex;gap:8px;margin-bottom:14px;}
+  .tab-btn{flex:1;background:#fff;border:1.5px solid var(--border);border-radius:999px;padding:9px 10px;
+    font-size:13px;font-weight:800;color:var(--muted);cursor:pointer;font-family:inherit;position:relative;}
+  .tab-btn.active{background:var(--blue-700);border-color:var(--blue-700);color:#fff;}
+  .mod-badge{position:absolute;top:-6px;right:-6px;background:var(--danger);color:#fff;font-size:10px;
+    font-weight:800;border-radius:999px;padding:2px 6px;min-width:16px;line-height:1.4;}
+  html[dir="rtl"] .mod-badge{right:auto;left:-6px;}
+
+  .dish-card{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);
+    border:1px solid var(--border);padding:16px;margin-bottom:12px;display:flex;gap:12px;}
+  .dish-card img{width:64px;height:64px;border-radius:10px;object-fit:cover;background:var(--bg);flex-shrink:0;}
+  .dish-card .info{flex:1;min-width:0;}
+  .dish-card .nom{font-size:14.5px;font-weight:800;color:var(--text);}
+  .dish-card .meta{font-size:12.5px;color:var(--muted);margin:2px 0 6px;}
+  .dish-card .prix{font-size:14px;font-weight:800;color:var(--blue-900);margin-bottom:8px;}
+  .btn-publish{background:var(--green);color:#fff;}
+  .btn-reject{background:#fff;border-color:#f3c6c1;color:var(--danger);}
+
   .hidden{display:none !important;}
 
   .footer-note{max-width:960px;margin:24px auto 0;padding:0 16px;text-align:center;
@@ -171,11 +189,26 @@
     <div id="errorBox" class="error-box"></div>
     <div id="successBox" class="success-box"></div>
 
-    <div class="refresh-row">
-      <input type="date" class="date-input" id="ordersDate">
-      <button class="btn-refresh" id="refreshBtn" type="button"><span id="refreshLabel">↻ Actualiser</span></button>
+    <div class="tab-bar" id="tabBar">
+      <button class="tab-btn active" id="tabOrdersBtn" type="button"><span id="tabOrdersLabel"></span></button>
+      <button class="tab-btn" id="tabModerationBtn" type="button"><span id="tabModerationLabel"></span><span id="modBadge" class="mod-badge hidden">0</span></button>
     </div>
-    <div id="listOrders"></div>
+
+    <div id="ordersView">
+      <div class="refresh-row">
+        <input type="date" class="date-input" id="ordersDate">
+        <button class="btn-refresh" id="refreshBtn" type="button"><span id="refreshLabel">↻ Actualiser</span></button>
+      </div>
+      <div id="listOrders"></div>
+    </div>
+
+    <div id="moderationView" class="hidden">
+      <div class="refresh-row">
+        <div></div>
+        <button class="btn-refresh" id="refreshModBtn" type="button"><span id="refreshModLabel">↻ Actualiser</span></button>
+      </div>
+      <div id="listModeration"></div>
+    </div>
 
   </div>
 
@@ -200,6 +233,8 @@ let SESSION_NAME = null;
 try { SESSION_PASSWORD = localStorage.getItem(SESSION_KEY) || null; } catch(e) { SESSION_PASSWORD = null; }
 try { SESSION_NAME = localStorage.getItem(SESSION_NAME_KEY) || null; } catch(e) { SESSION_NAME = null; }
 let ORDERS = [];
+let PENDING_ITEMS = [];
+let CURRENT_TAB = "orders";
 
 /* ============================================================
    I18N
@@ -231,6 +266,14 @@ const I18N = {
     btnWhatsapp: "💬 WhatsApp",
     updateFailedGeneric: "Impossible de mettre à jour la commande. Réessaie.",
     waMsgIntro: "Bonjour, au sujet de votre commande",
+    tabOrders: "Commandes",
+    tabModeration: "Modération",
+    noPendingItems: "Aucun plat en attente de validation.",
+    byPartner: "Par",
+    btnPublish: "✓ Publier",
+    btnReject: "✕ Refuser",
+    loadPendingFailedGeneric: "Impossible de charger les plats en attente. Réessaie.",
+    moderateFailedGeneric: "Impossible de mettre à jour le plat. Réessaie.",
   },
   ar: {
     tagline: "مساحة الإدارة",
@@ -258,6 +301,14 @@ const I18N = {
     btnWhatsapp: "💬 واتساب",
     updateFailedGeneric: "تعذر تحديث الطلب. أعد المحاولة.",
     waMsgIntro: "مرحباً، بخصوص طلبك",
+    tabOrders: "الطلبات",
+    tabModeration: "المراجعة",
+    noPendingItems: "لا توجد أطباق بانتظار المراجعة.",
+    byPartner: "من",
+    btnPublish: "✓ نشر",
+    btnReject: "✕ رفض",
+    loadPendingFailedGeneric: "تعذر تحميل الأطباق بانتظار المراجعة. أعد المحاولة.",
+    moderateFailedGeneric: "تعذر تحديث الطبق. أعد المحاولة.",
   }
 };
 
@@ -277,7 +328,11 @@ function applyLanguage() {
   $("whoText").textContent = SESSION_NAME ? (t("whoText") + " : " + SESSION_NAME) : t("whoText");
   $("refreshLabel").textContent = t("refreshLabel");
   $("footerNote").textContent = t("footerNote");
+  $("tabOrdersLabel").textContent = t("tabOrders");
+  $("tabModerationLabel").textContent = t("tabModeration");
+  $("refreshModLabel").textContent = t("refreshLabel");
   renderOrders();
+  renderModeration();
 }
 
 $("langToggle").addEventListener("click", () => {
@@ -368,10 +423,25 @@ function enterApp() {
   $("whoText").textContent = SESSION_NAME ? (t("whoText") + " : " + SESSION_NAME) : t("whoText");
   $("ordersDate").value = todayStr();
   loadOrders();
+  loadPendingItems();
 }
 
 $("refreshBtn").addEventListener("click", loadOrders);
 $("ordersDate").addEventListener("change", loadOrders);
+$("refreshModBtn").addEventListener("click", loadPendingItems);
+$("tabOrdersBtn").addEventListener("click", () => switchTab("orders"));
+$("tabModerationBtn").addEventListener("click", () => switchTab("moderation"));
+
+function switchTab(tab) {
+  CURRENT_TAB = tab;
+  $("tabOrdersBtn").classList.toggle("active", tab === "orders");
+  $("tabModerationBtn").classList.toggle("active", tab === "moderation");
+  $("ordersView").classList.toggle("hidden", tab !== "orders");
+  $("moderationView").classList.toggle("hidden", tab !== "moderation");
+  hideError($("errorBox"));
+  hideSuccess($("successBox"));
+  if (tab === "moderation") loadPendingItems();
+}
 
 /* ============================================================
    COMMANDES
@@ -482,6 +552,90 @@ async function onUpdateStatus(orderNumber, newStatus, btnEl) {
     showError($("errorBox"), t("updateFailedGeneric"));
   } finally {
     document.querySelectorAll("[data-action-order]").forEach(b => b.disabled = false);
+  }
+}
+
+/* ============================================================
+   MODÉRATION DU MENU
+   ============================================================ */
+async function loadPendingItems() {
+  try {
+    const data = await apiGet({ action: "getPendingMenuItems", password: SESSION_PASSWORD });
+    if (data.success) {
+      PENDING_ITEMS = data.items || [];
+      updateModBadge();
+      if (CURRENT_TAB === "moderation") renderModeration();
+    } else if (CURRENT_TAB === "moderation") {
+      showError($("errorBox"), data.error || t("loadPendingFailedGeneric"));
+    }
+  } catch (e) {
+    if (CURRENT_TAB === "moderation") showError($("errorBox"), t("loadPendingFailedGeneric"));
+  }
+}
+
+function updateModBadge() {
+  const n = PENDING_ITEMS.length;
+  const badge = $("modBadge");
+  if (n > 0) {
+    badge.textContent = String(n);
+    badge.classList.remove("hidden");
+  } else {
+    badge.classList.add("hidden");
+  }
+}
+
+function renderModeration() {
+  $("listModeration").innerHTML = PENDING_ITEMS.length
+    ? PENDING_ITEMS.map(dishCardHtml).join("")
+    : emptyStateHtml(t("noPendingItems"), "🍽️");
+
+  document.querySelectorAll("[data-mod-id]").forEach(btn => {
+    btn.addEventListener("click", () => onModerate(btn.dataset.modId, btn.dataset.decision, btn));
+  });
+}
+
+function dishCardHtml(item) {
+  const nom = (LANG === "ar" && item.nom_ar) ? item.nom_ar : item.nom;
+  const photo = item.photo ? `<img src="${escapeAttr(item.photo)}" alt="">` : "";
+  const id = escapeAttr(item.id);
+  return `
+    <div class="dish-card">
+      ${photo}
+      <div class="info">
+        <div class="nom">${escapeHtml(nom || "")}</div>
+        <div class="meta">${escapeHtml(t("byPartner"))} ${escapeHtml(item.partenaire || "")} · ${escapeHtml(item.categorie || "")}</div>
+        <div class="prix">${escapeHtml(String(item.prix || 0))} DA</div>
+        <div class="actions-row">
+          <button class="btn-action btn-publish" type="button" data-mod-id="${id}" data-decision="publier">${escapeHtml(t("btnPublish"))}</button>
+          <button class="btn-action btn-reject" type="button" data-mod-id="${id}" data-decision="refuser">${escapeHtml(t("btnReject"))}</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function onModerate(itemId, decision, btnEl) {
+  hideError($("errorBox"));
+  hideSuccess($("successBox"));
+  document.querySelectorAll("[data-mod-id]").forEach(b => b.disabled = true);
+  try {
+    const data = await apiGet({
+      action: "moderateMenuItem",
+      password: SESSION_PASSWORD,
+      itemId: itemId,
+      decision: decision
+    });
+    if (data.success) {
+      PENDING_ITEMS = PENDING_ITEMS.filter(x => String(x.id) !== String(itemId));
+      updateModBadge();
+      renderModeration();
+    } else {
+      showError($("errorBox"), data.error || t("moderateFailedGeneric"));
+    }
+  } catch (e) {
+    showError($("errorBox"), t("moderateFailedGeneric"));
+  } finally {
+    document.querySelectorAll("[data-mod-id]").forEach(b => b.disabled = false);
   }
 }
 
