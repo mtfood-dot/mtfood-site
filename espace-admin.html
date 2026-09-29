@@ -193,9 +193,12 @@ const CONFIG = {
 
 const LANG_KEY = "mtd_espace_admin_lang";
 const SESSION_KEY = "mtd_espace_admin_session";
+const SESSION_NAME_KEY = "mtd_espace_admin_session_nom";
 let LANG = localStorage.getItem(LANG_KEY) || "fr";
 let SESSION_PASSWORD = null;
+let SESSION_NAME = null;
 try { SESSION_PASSWORD = localStorage.getItem(SESSION_KEY) || null; } catch(e) { SESSION_PASSWORD = null; }
+try { SESSION_NAME = localStorage.getItem(SESSION_NAME_KEY) || null; } catch(e) { SESSION_NAME = null; }
 let ORDERS = [];
 
 /* ============================================================
@@ -271,7 +274,7 @@ function applyLanguage() {
   $("lblPassword").textContent = t("lblPassword");
   $("loginBtn").textContent = t("loginBtn");
   $("logoutBtn").textContent = t("logoutBtn");
-  $("whoText").textContent = t("whoText");
+  $("whoText").textContent = SESSION_NAME ? (t("whoText") + " : " + SESSION_NAME) : t("whoText");
   $("refreshLabel").textContent = t("refreshLabel");
   $("footerNote").textContent = t("footerNote");
   renderOrders();
@@ -328,7 +331,9 @@ async function doLogin() {
     const data = await apiGet({ action: "adminLogin", password: password });
     if (data.success) {
       SESSION_PASSWORD = password;
+      SESSION_NAME = data.nom || null;
       localStorage.setItem(SESSION_KEY, password);
+      if (SESSION_NAME) { localStorage.setItem(SESSION_NAME_KEY, SESSION_NAME); } else { localStorage.removeItem(SESSION_NAME_KEY); }
       enterApp();
     } else {
       showError($("loginError"), data.error || t("loginFailedGeneric"));
@@ -343,7 +348,9 @@ async function doLogin() {
 
 $("logoutBtn").addEventListener("click", () => {
   SESSION_PASSWORD = null;
+  SESSION_NAME = null;
   localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(SESSION_NAME_KEY);
   $("appScreen").classList.add("hidden");
   $("loginScreen").classList.remove("hidden");
   $("fPassword").value = "";
@@ -358,7 +365,7 @@ function todayStr() {
 function enterApp() {
   $("loginScreen").classList.add("hidden");
   $("appScreen").classList.remove("hidden");
-  $("whoText").textContent = t("whoText");
+  $("whoText").textContent = SESSION_NAME ? (t("whoText") + " : " + SESSION_NAME) : t("whoText");
   $("ordersDate").value = todayStr();
   loadOrders();
 }
