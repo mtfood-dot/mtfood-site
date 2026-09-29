@@ -173,6 +173,20 @@
   .stat-card .label{font-size:11px;color:var(--muted);font-weight:700;margin-top:6px;
     text-transform:uppercase;letter-spacing:.3px;}
 
+  .date-range-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .date-range-row .sep{color:var(--muted);font-size:12px;}
+  .compta-card{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);
+    border:1px solid var(--border);padding:16px;margin-bottom:12px;}
+  .compta-card .row1{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px;}
+  .compta-card .nom{font-size:14.5px;font-weight:800;color:var(--text);}
+  .compta-card .total{font-size:16px;font-weight:800;color:var(--blue-900);white-space:nowrap;}
+  .compta-card .meta{font-size:12.5px;color:var(--muted);}
+  .compta-total-row{background:linear-gradient(135deg,var(--blue-900),var(--blue-700));color:#fff;
+    border-radius:var(--radius-md);padding:14px 16px;margin-bottom:12px;display:flex;justify-content:space-between;
+    align-items:center;box-shadow:var(--shadow-md);}
+  .compta-total-row .label{font-size:12px;font-weight:700;color:var(--gold-400);}
+  .compta-total-row .value{font-size:18px;font-weight:800;}
+
   .hidden{display:none !important;}
 
   .footer-note{max-width:960px;margin:24px auto 0;padding:0 16px;text-align:center;
@@ -221,6 +235,7 @@
       <button class="tab-btn" id="tabModerationBtn" type="button"><span id="tabModerationLabel"></span><span id="modBadge" class="mod-badge hidden">0</span></button>
       <button class="tab-btn" id="tabPartnersBtn" type="button"><span id="tabPartnersLabel"></span></button>
       <button class="tab-btn" id="tabDashboardBtn" type="button"><span id="tabDashboardLabel"></span></button>
+      <button class="tab-btn" id="tabComptaBtn" type="button"><span id="tabComptaLabel"></span></button>
     </div>
 
     <div id="ordersView">
@@ -258,6 +273,19 @@
       <div id="dashboardStats"></div>
     </div>
 
+    <div id="comptaView" class="hidden">
+      <div class="refresh-row" style="flex-wrap:wrap;">
+        <div class="date-range-row">
+          <input type="date" class="date-input" id="comptaDateStart">
+          <span class="sep">→</span>
+          <input type="date" class="date-input" id="comptaDateEnd">
+        </div>
+        <button class="btn-refresh" id="refreshComptaBtn" type="button"><span id="refreshComptaLabel">↻ Actualiser</span></button>
+      </div>
+      <div id="comptaTotalRow"></div>
+      <div id="listCompta"></div>
+    </div>
+
   </div>
 
 </main>
@@ -285,6 +313,7 @@ let PENDING_ITEMS = [];
 let PARTNERS = [];
 let DRIVERS = [];
 let DASHBOARD_ORDERS = [];
+let COMPTA_PARTNERS = [];
 let CURRENT_TAB = "orders";
 
 /* ============================================================
@@ -349,6 +378,12 @@ const I18N = {
     statBestDish: "Plat le plus vendu",
     noBestDish: "—",
     loadDashboardFailedGeneric: "Impossible de charger le bilan. Réessaie.",
+    tabCompta: "Compta",
+    comptaTotalLabel: "Total période",
+    noComptaData: "Aucune commande livrée sur cette période.",
+    statNbCommandesShort: "commandes",
+    statNbPlatsShort: "plats",
+    loadComptaFailedGeneric: "Impossible de charger la comptabilité. Réessaie.",
   },
   ar: {
     tagline: "مساحة الإدارة",
@@ -408,6 +443,12 @@ const I18N = {
     statBestDish: "الطبق الأكثر مبيعاً",
     noBestDish: "—",
     loadDashboardFailedGeneric: "تعذر تحميل الملخص. أعد المحاولة.",
+    tabCompta: "المحاسبة",
+    comptaTotalLabel: "إجمالي الفترة",
+    noComptaData: "لا توجد طلبات موصّلة خلال هذه الفترة.",
+    statNbCommandesShort: "طلبات",
+    statNbPlatsShort: "أطباق",
+    loadComptaFailedGeneric: "تعذر تحميل المحاسبة. أعد المحاولة.",
   }
 };
 
@@ -436,11 +477,14 @@ function applyLanguage() {
   $("subheadingDrivers").textContent = t("subheadingDrivers");
   $("tabDashboardLabel").textContent = t("tabDashboard");
   $("refreshDashboardLabel").textContent = t("refreshLabel");
+  $("tabComptaLabel").textContent = t("tabCompta");
+  $("refreshComptaLabel").textContent = t("refreshLabel");
   renderOrders();
   renderModeration();
   renderPartners();
   renderDrivers();
   renderDashboard();
+  renderCompta();
 }
 
 $("langToggle").addEventListener("click", () => {
@@ -525,12 +569,20 @@ function todayStr() {
   return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
 }
 
+function firstDayOfMonthStr() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-01";
+}
+
 function enterApp() {
   $("loginScreen").classList.add("hidden");
   $("appScreen").classList.remove("hidden");
   $("whoText").textContent = SESSION_NAME ? (t("whoText") + " : " + SESSION_NAME) : t("whoText");
   $("ordersDate").value = todayStr();
   $("dashboardDate").value = todayStr();
+  $("comptaDateStart").value = firstDayOfMonthStr();
+  $("comptaDateEnd").value = todayStr();
   loadOrders();
   loadPendingItems();
 }
@@ -545,6 +597,10 @@ $("refreshPartnersBtn").addEventListener("click", () => { loadPartners(); loadDr
 $("tabDashboardBtn").addEventListener("click", () => switchTab("dashboard"));
 $("refreshDashboardBtn").addEventListener("click", loadDashboard);
 $("dashboardDate").addEventListener("change", loadDashboard);
+$("tabComptaBtn").addEventListener("click", () => switchTab("compta"));
+$("refreshComptaBtn").addEventListener("click", loadCompta);
+$("comptaDateStart").addEventListener("change", loadCompta);
+$("comptaDateEnd").addEventListener("change", loadCompta);
 
 function switchTab(tab) {
   CURRENT_TAB = tab;
@@ -552,15 +608,18 @@ function switchTab(tab) {
   $("tabModerationBtn").classList.toggle("active", tab === "moderation");
   $("tabPartnersBtn").classList.toggle("active", tab === "partners");
   $("tabDashboardBtn").classList.toggle("active", tab === "dashboard");
+  $("tabComptaBtn").classList.toggle("active", tab === "compta");
   $("ordersView").classList.toggle("hidden", tab !== "orders");
   $("moderationView").classList.toggle("hidden", tab !== "moderation");
   $("partnersView").classList.toggle("hidden", tab !== "partners");
   $("dashboardView").classList.toggle("hidden", tab !== "dashboard");
+  $("comptaView").classList.toggle("hidden", tab !== "compta");
   hideError($("errorBox"));
   hideSuccess($("successBox"));
   if (tab === "moderation") loadPendingItems();
   if (tab === "partners") { loadPartners(); loadDrivers(); }
   if (tab === "dashboard") loadDashboard();
+  if (tab === "compta") loadCompta();
 }
 
 /* ============================================================
@@ -972,6 +1031,52 @@ function renderDashboard() {
       </div>
     </div>
   `;
+}
+
+/* ============================================================
+   COMPTABILITÉ PAR PARTENAIRE
+   ============================================================ */
+async function loadCompta() {
+  hideError($("errorBox"));
+  try {
+    const ds = $("comptaDateStart").value || "";
+    const de = $("comptaDateEnd").value || "";
+    const data = await apiGet({ action: "getPartnerAccounting", password: SESSION_PASSWORD, dateStart: ds, dateEnd: de });
+    if (data.success) {
+      COMPTA_PARTNERS = data.partners || [];
+      renderCompta();
+    } else if (CURRENT_TAB === "compta") {
+      showError($("errorBox"), data.error || t("loadComptaFailedGeneric"));
+    }
+  } catch (e) {
+    if (CURRENT_TAB === "compta") showError($("errorBox"), t("loadComptaFailedGeneric"));
+  }
+}
+
+function comptaCardHtml(p) {
+  const total = Number(p.totalDA) || 0;
+  return `
+    <div class="compta-card">
+      <div class="row1">
+        <div class="nom">${escapeHtml(p.nom || "")}</div>
+        <div class="total">${total.toLocaleString("fr-FR")} DA</div>
+      </div>
+      <div class="meta">${Number(p.nbCommandes) || 0} ${escapeHtml(t("statNbCommandesShort"))} · ${Number(p.nbPlats) || 0} ${escapeHtml(t("statNbPlatsShort"))}</div>
+    </div>
+  `;
+}
+
+function renderCompta() {
+  const totalDA = COMPTA_PARTNERS.reduce((sum, p) => sum + (Number(p.totalDA) || 0), 0);
+  $("comptaTotalRow").innerHTML = COMPTA_PARTNERS.length ? `
+    <div class="compta-total-row">
+      <div class="label">${escapeHtml(t("comptaTotalLabel"))}</div>
+      <div class="value">${totalDA.toLocaleString("fr-FR")} DA</div>
+    </div>
+  ` : "";
+  $("listCompta").innerHTML = COMPTA_PARTNERS.length
+    ? COMPTA_PARTNERS.map(comptaCardHtml).join("")
+    : emptyStateHtml(t("noComptaData"), "🧾");
 }
 
 /* ============================================================
