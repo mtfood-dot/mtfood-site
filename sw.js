@@ -4,7 +4,7 @@
 // JAMAIS mis en cache : toujours réseau, pour ne jamais servir des
 // commandes/statuts périmés.
 
-const CACHE_NAME = "mtdelivery-v2";
+const CACHE_NAME = "mtdelivery-v3";
 const CORE_ASSETS = [
   "/index.html",
   "/offline.html",
@@ -81,12 +81,15 @@ self.addEventListener("push", (event) => {
   } catch (e) {
     data = { title: "MT Delivery", body: event.data ? event.data.text() : "" };
   }
-  const title = data.title || "MT Delivery";
+  // Format FCM : { notification: {title, body}, data: {url, ...} } ; format brut : {title, body, url}.
+  const n = data.notification || {};
+  const d = data.data || {};
+  const title = n.title || data.title || d.title || "MT Delivery";
   const options = {
-    body: data.body || "",
+    body: n.body || data.body || d.body || "",
     icon: "/icons/icon-192.png",
     badge: "/icons/icon-192.png",
-    data: { url: data.url || "/index.html" },
+    data: { url: d.url || data.url || "/index.html" },
   };
   event.waitUntil(self.registration.showNotification(title, options));
 });
