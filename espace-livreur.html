@@ -152,12 +152,16 @@
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
-    navigator.serviceWorker.register("/sw.js").catch(function (err) {
+    navigator.serviceWorker.register("/sw.js").then(function (reg) {
+      window.__mtSwReg = reg;
+    }).catch(function (err) {
       console.warn("Service worker non enregistré :", err);
     });
   });
 }
 </script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js"></script>
 </head>
 <body>
 
@@ -231,6 +235,41 @@ if ("serviceWorker" in navigator) {
 const CONFIG = {
   API_URL: "https://script.google.com/macros/s/AKfycbwgXOyXERonv0Yk7X-uhoHuE1Fj26RiYHPR4Tnr7Z_1Ly8wWjsvlE5sp3JJRukRR4ZF/exec"
 };
+
+/* ============================================================
+   NOTIFICATIONS PUSH (Firebase Cloud Messaging)
+   ============================================================ */
+const FCM_CONFIG = {
+  apiKey: "AIzaSyDh9Vrzfd4jC3OyxPPx5Xg0wo9nL0hNt5Q",
+  authDomain: "mt-delivery-489fa.firebaseapp.com",
+  projectId: "mt-delivery-489fa",
+  storageBucket: "mt-delivery-489fa.firebasestorage.app",
+  messagingSenderId: "1070331334746",
+  appId: "1:1070331334746:web:d559009457afd41a8fc863"
+};
+const FCM_VAPID_KEY = "BDZwk3KEyULhtVEn3kPDhpUc1hIEtdke835Os4u2NxqGomlRuEzLDwZXUzHMhVkal4r77N0fSCNq-bGu3lO5J_I";
+
+async function registerPushToken_(role, telephone, orderNumber) {
+  try {
+    if (!("Notification" in window) || !("serviceWorker" in navigator)) return;
+    if (typeof firebase === "undefined") return;
+    if (Notification.permission === "denied") return;
+    let permission = Notification.permission;
+    if (permission === "default") {
+      permission = await Notification.requestPermission();
+    }
+    if (permission !== "granted") return;
+
+    const reg = window.__mtSwReg || await navigator.serviceWorker.ready;
+    if (!firebase.apps.length) firebase.initializeApp(FCM_CONFIG);
+    const messaging = firebase.messaging();
+    const token = await messaging.getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: reg });
+    if (!token) return;
+    await apiGet({ action: "saveFcmToken", role: role, token: token, telephone: telephone || "", orderNumber: orderNumber || "" });
+  } catch (e) {
+    console.warn("Notifications push non activées :", e);
+  }
+}
 
 const LANG_KEY = "mtd_espace_livreur_lang";
 const SESSION_KEY = "mtd_espace_livreur_session";
@@ -431,6 +470,9 @@ function enterApp() {
   $("appScreen").classList.remove("hidden");
   updateSessionBar();
   loadAll();
+  if (SESSION && SESSION.telephone) {
+    registerPushToken_("driver", SESSION.telephone, "");
+  }
 }
 
 /* ============================================================
