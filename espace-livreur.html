@@ -392,7 +392,9 @@ $("langToggle").addEventListener("click", () => {
 async function apiGet(params) {
   const qs = new URLSearchParams(params).toString();
   const res = await fetch(CONFIG.API_URL + "?" + qs);
-  return res.json();
+  const txt = await res.text();
+  try { return JSON.parse(txt); }
+  catch (e) { throw new Error("HTTP " + res.status + " reponse non JSON : " + txt.slice(0, 120).replace(/\s+/g, " ")); }
 }
 
 async function apiPost(payload) {
@@ -443,7 +445,7 @@ async function doLogin() {
       showError($("loginError"), data.error || t("loginFailedGeneric"));
     }
   } catch (e) {
-    showError($("loginError"), t("loginFailedGeneric"));
+    showError($("loginError"), t("loginFailedGeneric") + " [" + (e && e.name) + ": " + (e && e.message) + "]");
   } finally {
     $("loginBtn").disabled = false;
     $("loginBtn").textContent = t("loginBtn");
