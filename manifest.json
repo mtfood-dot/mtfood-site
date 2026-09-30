@@ -2,6 +2,7 @@
   "name": "MT Delivery - البريد السريع",
   "short_name": "MT Delivery",
   "description": "Commande en ligne de repas, fast food et gâteaux à Meftah - paiement à la livraison",
+  "id": "/index.html",
   "start_url": "/index.html",
   "scope": "/",
   "display": "standalone",
@@ -10,6 +11,14 @@
   "theme_color": "#0a2647",
   "lang": "fr",
   "dir": "ltr",
+  "shortcuts": [
+    {
+      "name": "Suivre ma commande",
+      "short_name": "Suivi",
+      "url": "/suivi-commande.html",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
   "icons": [
     {
       "src": "/icons/icon-192.png",

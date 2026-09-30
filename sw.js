@@ -4,9 +4,10 @@
 // JAMAIS mis en cache : toujours réseau, pour ne jamais servir des
 // commandes/statuts périmés.
 
-const CACHE_NAME = "mtdelivery-v1";
+const CACHE_NAME = "mtdelivery-v2";
 const CORE_ASSETS = [
   "/index.html",
+  "/offline.html",
   "/logo.png",
   "/manifest.json",
   "/icons/icon-192.png",
@@ -56,7 +57,12 @@ self.addEventListener("fetch", (event) => {
           }
           return networkResponse;
         })
-        .catch(() => cached);
+        .catch(() => {
+          if (cached) return cached;
+          // Navigation sans cache ni réseau : page hors ligne.
+          if (event.request.mode === "navigate") return caches.match("/offline.html");
+          return Response.error();
+        });
       // Cache d'abord si disponible (rapide), sinon réseau.
       return cached || fetchPromise;
     })
