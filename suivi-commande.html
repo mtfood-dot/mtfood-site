@@ -274,10 +274,28 @@ async function registerPushToken_(role, telephone, orderNumber) {
   }
 }
 
-async function apiGet(params){
+// Secours JSONP : évite le blocage « Load failed » de Safari sur les appels entre domaines.
+function jsonpGet(params, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const cb = "mtcb_" + Date.now() + "_" + Math.floor(Math.random() * 1e6);
+    const script = document.createElement("script");
+    const timer = setTimeout(() => { cleanup(); reject(new Error("Delai depasse")); }, timeoutMs || 20000);
+    function cleanup() { clearTimeout(timer); delete window[cb]; script.remove(); }
+    window[cb] = (data) => { cleanup(); resolve(data); };
+    script.onerror = () => { cleanup(); reject(new Error("JSONP erreur reseau")); };
+    script.src = CONFIG.API_URL + "?" + new URLSearchParams(Object.assign({}, params, { callback: cb })).toString();
+    document.body.appendChild(script);
+  });
+}
+
+async function apiGet(params) {
   const qs = new URLSearchParams(params).toString();
-  const res = await fetch(CONFIG.API_URL + "?" + qs);
-  return res.json();
+  try {
+    const res = await fetch(CONFIG.API_URL + "?" + qs);
+    return await res.json();
+  } catch (e) {
+    return jsonpGet(params);
+  }
 }
 
 function showError(msg){
