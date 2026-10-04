@@ -327,6 +327,20 @@ function loadAds() {
 }
 
 /* ============================================================
+   ZONES DE LIVRAISON (chargées depuis l'admin, avec repli sur les
+   valeurs ci-dessus si l'appel échoue)
+   ============================================================ */
+function loadZones() {
+  jsonpRequest({ action: "getZones" })
+    .then(res => {
+      if (res && res.success && res.zones && res.zones.length) {
+        CONFIG.ZONES = res.zones.map(z => ({ id: z.id, label: z.nom, fee: z.frais }));
+      }
+    })
+    .catch(() => { /* on garde les zones par défaut ci-dessus */ });
+}
+
+/* ============================================================
    APPELS À L'API (JSONP)
    ============================================================ */
 let _jsonpCounter = 0;
@@ -397,6 +411,7 @@ document.addEventListener("DOMContentLoaded", () => {
   $("zoneCheckInput").addEventListener("keyup", (e) => { if (e.key === "Enter") checkZoneAvailability(); });
   applyLanguage();
   loadAds();
+  loadZones();
 });
 </script>
 
