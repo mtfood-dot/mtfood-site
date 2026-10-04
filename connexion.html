@@ -140,7 +140,7 @@
     </button>
 
     <p class="foot-row" id="noAccountRow">Pas encore de compte ? <a href="inscription.html" id="signupLink">Créer un compte</a></p>
-    <div class="guest-row"><a href="index.html" id="guestLink">Continuer sans compte</a></div>
+    <div class="guest-row"><a href="menu.html" id="guestLink">Continuer sans compte</a></div>
   </section>
 
   <p class="footer-note" id="legalNote">
@@ -196,6 +196,9 @@ const I18N = {
 function t(k){ return (I18N[LANG] && I18N[LANG][k]) || I18N.fr[k] || k; }
 function $(id){ return document.getElementById(id); }
 
+const NEXT_PARAM = new URLSearchParams(window.location.search).get("next");
+function signupHref(){ return NEXT_PARAM ? "inscription.html?next=" + encodeURIComponent(NEXT_PARAM) : "inscription.html"; }
+
 function applyLang(){
   document.documentElement.lang = LANG;
   document.documentElement.dir = LANG === "ar" ? "rtl" : "ltr";
@@ -208,7 +211,7 @@ function applyLang(){
   $("legalNote").innerHTML = t("legalNote1") + '<a href="cgu.html">' + t("legalLink1") + '</a>' +
     t("legalAnd") + '<a href="confidentialite.html">' + t("legalLink2") + '</a>' + t("legalNote2");
   const noAccount = $("noAccountRow");
-  noAccount.innerHTML = t("noAccountRow") + '<a href="inscription.html" id="signupLink">' + t("signupLink") + '</a>';
+  noAccount.innerHTML = t("noAccountRow") + '<a href="' + signupHref() + '" id="signupLink">' + t("signupLink") + '</a>';
 }
 $("langToggle").addEventListener("click", () => {
   LANG = LANG === "ar" ? "fr" : "ar";
@@ -223,9 +226,8 @@ try {
   if (existing && existing.clientId) { window.location.href = "espace-client.html"; }
 } catch(e) {}
 
-/* Si on arrive depuis le checkout (index.html), on garde une trace pour y revenir après connexion */
-const params = new URLSearchParams(window.location.search);
-const redirectTo = params.get("next") || "espace-client.html";
+/* Si on arrive depuis le checkout (menu.html), on garde une trace pour y revenir après connexion */
+const redirectTo = NEXT_PARAM || "espace-client.html";
 
 /* ============================================================
    AFFICHER / MASQUER LE MOT DE PASSE
