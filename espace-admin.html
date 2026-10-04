@@ -180,6 +180,30 @@
   .stat-card .label{font-size:11px;color:var(--muted);font-weight:700;margin-top:6px;
     text-transform:uppercase;letter-spacing:.3px;}
 
+  .period-toggle{display:flex;gap:6px;}
+  .period-btn{background:#fff;border:1.5px solid var(--border);border-radius:999px;padding:6px 14px;
+    font-size:12.5px;font-weight:800;color:var(--muted);cursor:pointer;font-family:inherit;}
+  .period-btn.active{background:var(--blue-700);border-color:var(--blue-700);color:#fff;}
+  .chart-card{padding:18px 14px 8px;}
+  .chart-svg{width:100%;height:auto;display:block;}
+  .chart-bar{fill:var(--blue-600);}
+  .chart-axis-label{font-size:9px;fill:var(--muted);font-family:'Plus Jakarta Sans',sans-serif;}
+  .chart-empty{text-align:center;color:var(--muted);font-size:12.5px;padding:20px 0;}
+  .top-client-card{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);
+    border:1px solid var(--border);padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;}
+  .top-client-card .rank{font-size:17px;font-weight:800;color:var(--gold-600);width:22px;flex-shrink:0;text-align:center;}
+  .top-client-card .info{flex:1;min-width:0;}
+  .top-client-card .nom{font-size:14px;font-weight:800;color:var(--text);}
+  .top-client-card .meta{font-size:12px;color:var(--muted);margin-top:2px;}
+  .top-client-card .total{font-size:14.5px;font-weight:800;color:var(--blue-900);white-space:nowrap;}
+  .stuck-alert{background:#fdeceb;border:1px solid #f3c6c1;border-radius:var(--radius-md);
+    padding:14px 16px;margin-bottom:14px;}
+  .stuck-alert .title{font-size:13px;font-weight:800;color:var(--danger);margin-bottom:8px;}
+  .stuck-alert .item{font-size:12.5px;color:var(--text);padding:6px 0;border-top:1px solid #f3c6c1;
+    display:flex;justify-content:space-between;gap:10px;}
+  .stuck-alert .item:first-of-type{border-top:none;}
+  .stuck-alert .item .when{color:var(--muted);white-space:nowrap;}
+
   .date-range-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
   .date-range-row .sep{color:var(--muted);font-size:12px;}
   .compta-card{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);
@@ -305,6 +329,20 @@ if ("serviceWorker" in navigator) {
         <button class="btn-refresh" id="refreshDashboardBtn" type="button"><span id="refreshDashboardLabel">↻ Actualiser</span></button>
       </div>
       <div id="dashboardStats"></div>
+
+      <div id="dashboardAlert"></div>
+
+      <div class="refresh-row">
+        <div class="subheading" id="subheadingEvolution" style="margin:0;"></div>
+        <div class="period-toggle" id="periodToggle">
+          <button class="period-btn active" id="period7Btn" type="button" data-days="7">7j</button>
+          <button class="period-btn" id="period30Btn" type="button" data-days="30">30j</button>
+        </div>
+      </div>
+      <div class="card chart-card" id="evolutionChartCard"></div>
+
+      <div class="subheading" id="subheadingTopClients"></div>
+      <div id="listTopClients"></div>
     </div>
 
     <div id="comptaView" class="hidden">
@@ -390,6 +428,8 @@ let PENDING_ITEMS = [];
 let PARTNERS = [];
 let DRIVERS = [];
 let DASHBOARD_ORDERS = [];
+let DASHBOARD_PERIOD_DAYS = 7;
+let DASHBOARD_STATS = null;
 let COMPTA_PARTNERS = [];
 let ADS = [];
 let CURRENT_TAB = "orders";
@@ -456,6 +496,15 @@ const I18N = {
     statBestDish: "Plat le plus vendu",
     noBestDish: "—",
     loadDashboardFailedGeneric: "Impossible de charger le bilan. Réessaie.",
+    subheadingEvolution: "Évolution des ventes",
+    subheadingTopClients: "Top 5 clients",
+    period7: "7j",
+    period30: "30j",
+    chartEmpty: "Aucune vente sur cette période.",
+    statNbCommandesClient: "commandes",
+    stuckAlertTitle: "commande(s) en attente depuis plus de 30 min",
+    loadDashboardStatsFailedGeneric: "Impossible de charger les statistiques. Réessaie.",
+    noTopClients: "Aucun client sur cette période.",
     tabCompta: "Compta",
     comptaTotalLabel: "Total période",
     noComptaData: "Aucune commande livrée sur cette période.",
@@ -543,6 +592,15 @@ const I18N = {
     statBestDish: "الطبق الأكثر مبيعاً",
     noBestDish: "—",
     loadDashboardFailedGeneric: "تعذر تحميل الملخص. أعد المحاولة.",
+    subheadingEvolution: "تطور المبيعات",
+    subheadingTopClients: "أفضل 5 عملاء",
+    period7: "7 أيام",
+    period30: "30 يوماً",
+    chartEmpty: "لا توجد مبيعات خلال هذه الفترة.",
+    statNbCommandesClient: "طلبات",
+    stuckAlertTitle: "طلب (طلبات) بانتظار التأكيد منذ أكثر من 30 دقيقة",
+    loadDashboardStatsFailedGeneric: "تعذر تحميل الإحصائيات. أعد المحاولة.",
+    noTopClients: "لا يوجد عملاء خلال هذه الفترة.",
     tabCompta: "المحاسبة",
     comptaTotalLabel: "إجمالي الفترة",
     noComptaData: "لا توجد طلبات موصّلة خلال هذه الفترة.",
@@ -599,6 +657,10 @@ function applyLanguage() {
   $("subheadingDrivers").textContent = t("subheadingDrivers");
   $("tabDashboardLabel").textContent = t("tabDashboard");
   $("refreshDashboardLabel").textContent = t("refreshLabel");
+  $("subheadingEvolution").textContent = t("subheadingEvolution");
+  $("subheadingTopClients").textContent = t("subheadingTopClients");
+  $("period7Btn").textContent = t("period7");
+  $("period30Btn").textContent = t("period30");
   $("tabComptaLabel").textContent = t("tabCompta");
   $("refreshComptaLabel").textContent = t("refreshLabel");
   $("tabPubLabel").textContent = t("tabPub");
@@ -618,6 +680,7 @@ function applyLanguage() {
   renderPartners();
   renderDrivers();
   renderDashboard();
+  renderDashboardStats();
   renderCompta();
   renderAdsAdmin();
 }
@@ -748,8 +811,10 @@ $("tabModerationBtn").addEventListener("click", () => switchTab("moderation"));
 $("tabPartnersBtn").addEventListener("click", () => switchTab("partners"));
 $("refreshPartnersBtn").addEventListener("click", () => { loadPartners(); loadDrivers(); });
 $("tabDashboardBtn").addEventListener("click", () => switchTab("dashboard"));
-$("refreshDashboardBtn").addEventListener("click", loadDashboard);
+$("refreshDashboardBtn").addEventListener("click", () => { loadDashboard(); loadDashboardStats(); });
 $("dashboardDate").addEventListener("change", loadDashboard);
+$("period7Btn").addEventListener("click", () => setDashboardPeriod(7));
+$("period30Btn").addEventListener("click", () => setDashboardPeriod(30));
 $("tabComptaBtn").addEventListener("click", () => switchTab("compta"));
 $("refreshComptaBtn").addEventListener("click", loadCompta);
 $("comptaDateStart").addEventListener("change", loadCompta);
@@ -775,7 +840,7 @@ function switchTab(tab) {
   hideSuccess($("successBox"));
   if (tab === "moderation") loadPendingItems();
   if (tab === "partners") { loadPartners(); loadDrivers(); }
-  if (tab === "dashboard") loadDashboard();
+  if (tab === "dashboard") { loadDashboard(); loadDashboardStats(); }
   if (tab === "compta") loadCompta();
   if (tab === "pub") loadAdsAdmin();
 }
@@ -1189,6 +1254,98 @@ function renderDashboard() {
       </div>
     </div>
   `;
+}
+
+function setDashboardPeriod(days) {
+  DASHBOARD_PERIOD_DAYS = days;
+  $("period7Btn").classList.toggle("active", days === 7);
+  $("period30Btn").classList.toggle("active", days === 30);
+  loadDashboardStats();
+}
+
+async function loadDashboardStats() {
+  hideError($("errorBox"));
+  try {
+    const data = await apiGet({ action: "getDashboardStats", password: SESSION_PASSWORD, days: DASHBOARD_PERIOD_DAYS });
+    if (data.success) {
+      DASHBOARD_STATS = data;
+      renderDashboardStats();
+    } else if (CURRENT_TAB === "dashboard") {
+      showError($("errorBox"), data.error || t("loadDashboardStatsFailedGeneric"));
+    }
+  } catch (e) {
+    if (CURRENT_TAB === "dashboard") showError($("errorBox"), t("loadDashboardStatsFailedGeneric"));
+  }
+}
+
+function evolutionChartSvg(daily) {
+  const w = 300, h = 120, padBottom = 16, padTop = 6;
+  const maxVal = Math.max.apply(null, daily.map(d => d.totalDA || 0));
+  if (!maxVal) return `<div class="chart-empty">${escapeHtml(t("chartEmpty"))}</div>`;
+  const n = daily.length;
+  const gap = 2;
+  const barW = (w - gap * (n - 1)) / n;
+  const bars = daily.map((d, i) => {
+    const val = d.totalDA || 0;
+    const barH = Math.max(1, Math.round((val / maxVal) * (h - padBottom - padTop)));
+    const x = i * (barW + gap);
+    const y = h - padBottom - barH;
+    const dt = new Date(d.date + "T00:00:00");
+    const label = String(dt.getDate()).padStart(2, "0") + "/" + String(dt.getMonth() + 1).padStart(2, "0");
+    const showLabel = n <= 10 || i % Math.ceil(n / 10) === 0;
+    return `
+      <rect class="chart-bar" x="${x.toFixed(1)}" y="${y}" width="${barW.toFixed(1)}" height="${barH}" rx="2">
+        <title>${escapeHtml(label)} : ${val.toLocaleString("fr-FR")} DA</title>
+      </rect>
+      ${showLabel ? `<text class="chart-axis-label" x="${(x + barW / 2).toFixed(1)}" y="${h - 3}" text-anchor="middle">${escapeHtml(label)}</text>` : ""}
+    `;
+  }).join("");
+  return `<svg class="chart-svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img">${bars}</svg>`;
+}
+
+function topClientCardHtml(c, i) {
+  const total = Number(c.totalDA) || 0;
+  return `
+    <div class="top-client-card">
+      <div class="rank">${i + 1}</div>
+      <div class="info">
+        <div class="nom">${escapeHtml(c.client || c.telephone || "")}</div>
+        <div class="meta">${escapeHtml(c.telephone || "")} · ${Number(c.nbCommandes) || 0} ${escapeHtml(t("statNbCommandesClient"))}</div>
+      </div>
+      <div class="total">${total.toLocaleString("fr-FR")} DA</div>
+    </div>
+  `;
+}
+
+function stuckAlertHtml(data) {
+  if (!data || !data.stuckCount) return "";
+  const items = (data.stuckOrders || []).map(o => `
+    <div class="item">
+      <span>${escapeHtml(o.numero || "")} · ${escapeHtml(o.client || "")}</span>
+      <span class="when">${escapeHtml(o.horodatage || "")}</span>
+    </div>
+  `).join("");
+  return `
+    <div class="stuck-alert">
+      <div class="title">⚠️ ${data.stuckCount} ${escapeHtml(t("stuckAlertTitle"))}</div>
+      ${items}
+    </div>
+  `;
+}
+
+function renderDashboardStats() {
+  if (!DASHBOARD_STATS) {
+    $("dashboardAlert").innerHTML = "";
+    $("evolutionChartCard").innerHTML = "";
+    $("listTopClients").innerHTML = "";
+    return;
+  }
+  $("dashboardAlert").innerHTML = stuckAlertHtml(DASHBOARD_STATS);
+  $("evolutionChartCard").innerHTML = evolutionChartSvg(DASHBOARD_STATS.daily || []);
+  const topClients = DASHBOARD_STATS.topClients || [];
+  $("listTopClients").innerHTML = topClients.length
+    ? topClients.map(topClientCardHtml).join("")
+    : emptyStateHtml(t("noTopClients"), "👥");
 }
 
 /* ============================================================
