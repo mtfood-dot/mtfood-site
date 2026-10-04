@@ -14,15 +14,30 @@ colle tout le bloc de la section 3 ci-dessous.
 
 ## 2. Routage dans `doGet`
 
-Dans la fonction `doGet(e)`, à côté des actions existantes, ajoute ces
-nouveaux cas (même modèle que les autres actions — réutilise la fonction
-d'envoi de réponse JSON déjà existante, ne la duplique pas) :
+Dans la fonction `doGet(e)`, ta chaîne `if (action === ...) { result = ... }
+else if (...) { ... }` se termine par un dernier `else` qui renvoie
+`{ success: false, error: 'Action inconnue' }`, puis un seul
+`return respond_(result, callback);` tout à la fin (c'est ce `respond_`
+commun, avec gestion du JSONP, qu'il faut réutiliser — il n'existe pas de
+fonction `respondJson_` dans ce projet).
+
+Trouve la toute dernière branche `else if` existante (juste avant le `else`
+final qui dit "Action inconnue") et ajoute tes nouveaux cas **avant** ce
+`else` final, en gardant exactement le même style (`result = ...`, pas de
+`return` direct) :
 
 ```js
-if (action === 'getAds')    return respondJson_(getAds_(e), e);
-if (action === 'getAllAds') return respondJson_(getAllAds_(e), e);
-if (action === 'saveAd')    return respondJson_(saveAd_(e), e);
-if (action === 'deleteAd')  return respondJson_(deleteAd_(e), e);
+  } else if (action === 'getAds') {
+    result = getAds_(e);
+  } else if (action === 'getAllAds') {
+    result = getAllAds_(e);
+  } else if (action === 'saveAd') {
+    result = saveAd_(e);
+  } else if (action === 'deleteAd') {
+    result = deleteAd_(e);
+  } else {
+    result = { success: false, error: 'Action inconnue' };
+  }
 ```
 
 `getAds` est **publique** (pas de mot de passe, appelée par la page d'accueil
