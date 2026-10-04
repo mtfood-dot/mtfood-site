@@ -782,6 +782,7 @@ document.addEventListener("DOMContentLoaded", () => {
   $("langToggle").addEventListener("click", toggleLanguage);
   applyLanguage();
   renderZoneOptions();
+  loadZones();
   loadMenu();
   bindGlobalEvents();
 });
@@ -1008,6 +1009,30 @@ function renderZoneOptions() {
       updateCheckoutTotals();
     });
   });
+}
+
+/* ============================================================
+   CHARGEMENT DES ZONES DEPUIS L'ADMIN (avec repli sur les valeurs
+   codées en dur ci-dessus si l'appel échoue)
+   ============================================================ */
+function loadZones() {
+  jsonpRequest({ action: "getZones" })
+    .then(res => {
+      if (!res || !res.success || !res.zones || !res.zones.length) return;
+      const previousId = SELECTED_ZONE ? SELECTED_ZONE.id : null;
+      CONFIG.ZONES = res.zones.map(z => ({ id: z.id, label: z.nom, fee: z.frais }));
+      renderZoneOptions();
+      if (previousId) {
+        const stillThere = CONFIG.ZONES.find(z => z.id === previousId);
+        SELECTED_ZONE = stillThere || null;
+        if (stillThere) {
+          const opt = Array.from($("zoneOptions").children).find(c => c.dataset.zone === stillThere.id);
+          if (opt) opt.classList.add("selected");
+        }
+        updateCheckoutTotals();
+      }
+    })
+    .catch(() => { /* on garde les zones par défaut ci-dessus */ });
 }
 
 function updateCheckoutTotals() {
