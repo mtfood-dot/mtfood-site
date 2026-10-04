@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/icons/icon-192.png">
+<title>MT Delivery — Conditions d'utilisation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{ --blue-900:#0a2647; --blue-700:#134a8f; --gold-500:#d4a017; --bg:#f3f5f9; --card:#fff; --text:#131b28; --muted:#69748a; --border:#e6eaf1; }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;padding-bottom:40px;}
+  html[dir="rtl"] body{font-family:'Tajawal','Plus Jakarta Sans',sans-serif;}
+  header.top{background:#fff;padding:20px 0 22px;border-bottom:1px solid var(--border);text-align:center;position:relative;}
+  header.top a{display:inline-block;color:var(--blue-700);font-weight:800;font-size:13px;text-decoration:none;}
+  .lang-toggle{position:absolute;top:14px;right:14px;background:#fff;border:1.5px solid var(--gold-500);color:var(--blue-900);
+    padding:6px 12px;border-radius:999px;font-weight:800;font-size:12px;cursor:pointer;font-family:inherit;}
+  html[dir="rtl"] .lang-toggle{right:auto;left:14px;}
+  main{max-width:680px;margin:0 auto;padding:24px 18px 40px;}
+  .card{background:var(--card);border-radius:20px;border:1px solid var(--border);padding:26px;box-shadow:0 1px 2px rgba(16,24,40,.06);}
+  h1{font-size:21px;color:var(--blue-900);margin:0 0 6px;}
+  .updated{font-size:12px;color:var(--muted);margin-bottom:22px;}
+  h2{font-size:15px;color:var(--blue-900);margin:22px 0 8px;}
+  p, li{font-size:13.5px;line-height:1.7;color:var(--text);}
+  .draft-note{background:#fdf3d9;border:1px solid #f0dca5;border-radius:12px;padding:12px 14px;font-size:12.5px;
+    color:#7a5c00;margin-bottom:20px;line-height:1.6;}
+</style>
+</head>
+<body>
+<header class="top">
+  <a href="index.html" id="back">← Retour à l'accueil</a>
+  <button class="lang-toggle" id="langToggle" type="button">AR</button>
+</header>
+<main>
+  <section class="card" id="content"></section>
+</main>
+<script>
+const LANG_KEY = "mtd_lang";
+let LANG = localStorage.getItem(LANG_KEY) || "fr";
+
+const TXT = {
+  fr: {
+    back: "← Retour à l'accueil",
+    draftNote: "⚠️ Modèle de départ à valider par MT Delivery avant publication réelle (coordonnées légales de l'entreprise à compléter : forme juridique, adresse, registre de commerce si applicable).",
+    title: "Conditions d'utilisation",
+    updated: "Dernière mise à jour : à compléter",
+    body: `
+      <h2>1. Objet</h2>
+      <p>MT Delivery met en relation des clients, des restaurants/commerces partenaires et des livreurs pour la commande et la livraison de repas dans les zones desservies (Meftah Centre, Meftah Dehors).</p>
+      <h2>2. Compte utilisateur</h2>
+      <p>La création d'un compte nécessite un prénom, un nom, un e-mail ou un numéro de téléphone, et un mot de passe. L'utilisateur est responsable de la confidentialité de ses identifiants.</p>
+      <h2>3. Commandes et paiement</h2>
+      <p>Les commandes sont payées en espèces à la livraison (paiement à la livraison). Toute commande peut être annulée par MT Delivery en cas de doute ou d'impossibilité de livrer dans la zone choisie.</p>
+      <h2>4. Livraison</h2>
+      <p>Les délais de livraison sont donnés à titre indicatif et peuvent varier selon la zone, la disponibilité des livreurs et les conditions de circulation.</p>
+      <h2>5. Responsabilité</h2>
+      <p>MT Delivery agit comme intermédiaire entre clients, partenaires et livreurs et ne saurait être tenu responsable de la qualité des plats préparés par les partenaires.</p>
+      <h2>6. Modification des conditions</h2>
+      <p>MT Delivery peut modifier les présentes conditions à tout moment ; les utilisateurs seront informés des changements importants.</p>
+      <h2>7. Contact</h2>
+      <p>Pour toute question : WhatsApp 0560 78 84 97.</p>
+    `
+  },
+  ar: {
+    back: "← الرجوع للصفحة الرئيسية",
+    draftNote: "⚠️ هذا نموذج أولي يجب أن توافق عليه MT Delivery قبل النشر الفعلي (يجب استكمال المعلومات القانونية للشركة: الشكل القانوني، العنوان، السجل التجاري إن وجد).",
+    title: "شروط الاستخدام",
+    updated: "آخر تحديث: يُستكمل لاحقًا",
+    body: `
+      <h2>1. الموضوع</h2>
+      <p>تقوم MT Delivery بربط العملاء بالمطاعم/المحلات الشريكة والموصلين من أجل طلب وتوصيل الوجبات في المناطق المخدومة (مفتاح وسط، مفتاح خارج).</p>
+      <h2>2. الحساب الشخصي</h2>
+      <p>يتطلب إنشاء الحساب الاسم الأول، اسم العائلة، بريد إلكتروني أو رقم هاتف، وكلمة مرور. المستخدم مسؤول عن سرية بيانات تسجيل الدخول الخاصة به.</p>
+      <h2>3. الطلبات والدفع</h2>
+      <p>يتم الدفع نقدًا عند التوصيل. يمكن لـ MT Delivery إلغاء أي طلب في حال وجود شك أو استحالة التوصيل في المنطقة المختارة.</p>
+      <h2>4. التوصيل</h2>
+      <p>مواعيد التوصيل تقديرية وقد تختلف حسب المنطقة وتوفر الموصلين وحالة الطرق.</p>
+      <h2>5. المسؤولية</h2>
+      <p>تعمل MT Delivery كوسيط بين العملاء والشركاء والموصلين ولا تتحمل مسؤولية جودة الأطباق التي يحضرها الشركاء.</p>
+      <h2>6. تعديل الشروط</h2>
+      <p>يمكن لـ MT Delivery تعديل هذه الشروط في أي وقت، وسيتم إخبار المستخدمين بالتغييرات المهمة.</p>
+      <h2>7. التواصل</h2>
+      <p>لأي استفسار: واتساب 0560 78 84 97.</p>
+    `
+  }
+};
+function $(id){ return document.getElementById(id); }
+function render(){
+  document.documentElement.lang = LANG;
+  document.documentElement.dir = LANG === "ar" ? "rtl" : "ltr";
+  $("langToggle").textContent = LANG === "ar" ? "FR" : "AR";
+  $("back").textContent = TXT[LANG].back;
+  $("content").innerHTML =
+    '<div class="draft-note">' + TXT[LANG].draftNote + '</div>' +
+    '<h1>' + TXT[LANG].title + '</h1>' +
+    '<div class="updated">' + TXT[LANG].updated + '</div>' +
+    TXT[LANG].body;
+}
+$("langToggle").addEventListener("click", () => { LANG = LANG === "ar" ? "fr" : "ar"; localStorage.setItem(LANG_KEY, LANG); render(); });
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0a2647">
+<meta name="robots" content="noindex, nofollow">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<link rel="icon" href="/icons/icon-192.png">
+<title>MT Delivery — Mon espace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue-900:#0a2647; --blue-700:#134a8f; --blue-600:#1a5cb0; --blue-100:#e9f1fb;
+    --gold-600:#b8860f; --gold-500:#d4a017; --gold-400:#e8bb3d;
+    --bg:#f3f5f9; --card:#ffffff; --text:#131b28; --muted:#69748a; --danger:#c0392b; --green:#1a7d3a;
+    --border:#e6eaf1; --radius-lg:20px; --radius-md:14px; --radius-sm:10px;
+    --shadow-sm:0 1px 2px rgba(16,24,40,.06); --shadow-md:0 6px 20px -6px rgba(16,36,72,.16);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;padding-bottom:40px;}
+  html[dir="rtl"] body{font-family:'Tajawal','Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;}
+  a{color:inherit;}
+  header.top{background:#fff;padding:20px 0 22px;position:relative;border-bottom:1px solid var(--border);text-align:center;}
+  header.top .brand{display:flex;flex-direction:column;align-items:center;gap:8px;}
+  header.top .brand .logo-img{width:100%;max-width:280px;display:block;margin:0 auto;}
+  header.top .tagline{font-size:13px;color:var(--blue-700);font-weight:700;}
+  .lang-toggle{position:absolute;top:14px;right:14px;background:#fff;border:1.5px solid var(--gold-500);
+    color:var(--blue-900);padding:6px 12px;border-radius:999px;font-weight:800;font-size:12px;cursor:pointer;font-family:inherit;}
+  html[dir="rtl"] .lang-toggle{right:auto;left:14px;}
+  main{max-width:640px;margin:0 auto;padding:20px 16px 40px;}
+
+  .session-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    background:linear-gradient(135deg,var(--blue-900),var(--blue-700));color:#fff;border-radius:var(--radius-lg);
+    padding:16px 18px;margin-bottom:16px;box-shadow:var(--shadow-md);}
+  .session-bar .who{font-size:14px;font-weight:800;}
+  .btn-logout{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.35);
+    border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;}
+
+  .cta-order{display:block;text-align:center;background:linear-gradient(135deg,var(--gold-400),var(--gold-500));
+    color:var(--blue-900);border-radius:14px;padding:13px;font-weight:800;font-size:14px;text-decoration:none;margin-bottom:16px;}
+
+  .tabs{display:flex;gap:8px;margin-bottom:16px;}
+  .tab-btn{flex:1;background:#fff;border:1.5px solid var(--border);border-radius:999px;
+    padding:10px 8px;font-weight:800;font-size:13px;color:var(--muted);cursor:pointer;font-family:inherit;}
+  .tab-btn.active{background:var(--blue-900);color:#fff;border-color:var(--blue-900);}
+
+  .order-card{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);
+    border:1px solid var(--border);padding:16px;margin-bottom:12px;}
+  .order-card .row1{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;}
+  .order-card .numero{font-size:11.5px;font-weight:800;color:var(--gold-600);letter-spacing:.3px;}
+  .order-card .total{font-size:16px;font-weight:800;color:var(--blue-900);}
+  .order-card .date{font-size:12.5px;color:var(--muted);margin-bottom:6px;}
+  .order-card .articles{font-size:13px;color:var(--text);background:var(--bg);border-radius:var(--radius-sm);
+    padding:8px 10px;margin:8px 0;line-height:1.5;}
+  .status-badge{display:inline-block;font-size:11px;font-weight:800;border-radius:999px;padding:4px 11px;}
+  .status-aconfirmer{background:#fdf3d9;color:var(--gold-600);}
+  .status-attente, .status-livraison{background:var(--blue-100);color:var(--blue-700);}
+  .status-livree{background:#eaf7ee;color:var(--green);}
+  .status-annulee{background:#fdeceb;color:var(--danger);}
+  .order-card .actions{display:flex;gap:8px;margin-top:10px;}
+  .btn-track{flex:1;background:var(--blue-900);color:#fff;border:none;border-radius:11px;padding:10px;
+    font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;text-decoration:none;text-align:center;}
+  .btn-reorder{flex:1;background:#fff;border:1.5px solid var(--gold-500);color:var(--blue-900);border-radius:11px;padding:10px;
+    font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;}
+
+  .empty-state{text-align:center;color:var(--muted);font-size:13.5px;padding:40px 20px;}
+  .empty-state .emoji{font-size:32px;display:block;margin-bottom:10px;}
+  .empty-state a{color:var(--blue-700);font-weight:700;text-decoration:none;}
+  .skeleton{background:var(--card);border-radius:var(--radius-md);border:1px solid var(--border);height:92px;
+    margin-bottom:12px;animation:pulse 1.2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+  .hidden{display:none !important;}
+  .footer-note{max-width:960px;margin:24px auto 0;padding:0 16px;text-align:center;color:var(--muted);font-size:11.5px;}
+  .footer-note a{color:var(--blue-700);font-weight:700;text-decoration:none;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <a href="index.html"><img class="logo-img" src="logo.png" alt="MT Delivery"></a>
+    <div class="tagline" id="tagline">Mon espace</div>
+  </div>
+  <button class="lang-toggle" id="langToggle" type="button">AR</button>
+</header>
+
+<main>
+  <div class="session-bar">
+    <div class="who" id="whoText">—</div>
+    <button class="btn-logout" id="logoutBtn" type="button">Déconnexion</button>
+  </div>
+
+  <a class="cta-order" href="index.html" id="ctaOrder">🛒 Commander</a>
+
+  <div class="tabs">
+    <button class="tab-btn active" id="tabCurrent" type="button">En cours</button>
+    <button class="tab-btn" id="tabHistory" type="button">Historique</button>
+  </div>
+
+  <div id="listCurrent"></div>
+  <div id="listHistory" class="hidden"></div>
+</main>
+
+<p class="footer-note" id="legalNote"></p>
+
+<script>
+const CONFIG = {
+  API_URL: "https://script.google.com/macros/s/AKfycbwgXOyXERonv0Yk7X-uhoHuE1Fj26RiYHPR4Tnr7Z_1Ly8wWjsvlE5sp3JJRukRR4ZF/exec"
+};
+const LANG_KEY = "mtd_lang";
+const SESSION_KEY = "mtd_client_session";
+let LANG = localStorage.getItem(LANG_KEY) || "fr";
+let SESSION = null;
+try { SESSION = JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch(e) { SESSION = null; }
+if (!SESSION || !SESSION.clientId) {
+  window.location.href = "connexion.html?next=espace-client.html";
+}
+
+const I18N = {
+  fr: {
+    tagline:"Mon espace", logoutBtn:"Déconnexion", ctaOrder:"🛒 Commander",
+    tabCurrent:"En cours", tabHistory:"Historique",
+    statusAconfirmer:"À confirmer", statusAttente:"En attente", statusLivraison:"En livraison",
+    statusLivree:"Livrée", statusAnnulee:"Annulée",
+    btnTrack:"Suivre", btnReorder:"Recommander",
+    emptyCurrent:"Aucune commande en cours pour le moment.", emptyCurrentCta:"Voir le menu",
+    emptyHistory:"Aucune commande précédente.",
+    loadError:"Impossible de charger tes commandes pour le moment.",
+    legal1:"Consulte nos ", legalLink1:"conditions d'utilisation", legalAnd:" et notre ",
+    legalLink2:"politique de confidentialité", legal2:"."
+  },
+  ar: {
+    tagline:"مساحتي", logoutBtn:"تسجيل الخروج", ctaOrder:"🛒 الطلب",
+    tabCurrent:"الحالية", tabHistory:"السابقة",
+    statusAconfirmer:"قيد التأكيد", statusAttente:"قيد الانتظار", statusLivraison:"قيد التوصيل",
+    statusLivree:"تم التوصيل", statusAnnulee:"ملغاة",
+    btnTrack:"تتبع", btnReorder:"إعادة الطلب",
+    emptyCurrent:"لا توجد طلبات حالية في الوقت الحالي.", emptyCurrentCta:"عرض القائمة",
+    emptyHistory:"لا توجد طلبات سابقة.",
+    loadError:"تعذر تحميل طلباتك حاليًا.",
+    legal1:"راجع ", legalLink1:"شروط الاستخدام", legalAnd:" و ",
+    legalLink2:"سياسة الخصوصية", legal2:"."
+  }
+};
+function t(k){ return (I18N[LANG] && I18N[LANG][k]) || I18N.fr[k] || k; }
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+function applyLang(){
+  document.documentElement.lang = LANG;
+  document.documentElement.dir = LANG === "ar" ? "rtl" : "ltr";
+  $("langToggle").textContent = LANG === "ar" ? "FR" : "AR";
+  ["tagline","logoutBtn","ctaOrder","tabCurrent","tabHistory"].forEach(id=>{ const el=$(id); if (el) el.textContent = t(id); });
+  $("legalNote").innerHTML = t("legal1") + '<a href="cgu.html">' + t("legalLink1") + '</a>' +
+    t("legalAnd") + '<a href="confidentialite.html">' + t("legalLink2") + '</a>' + t("legal2");
+  if (SESSION) $("whoText").textContent = (SESSION.prenom || "") + " " + (SESSION.nom || "");
+  render();
+}
+$("langToggle").addEventListener("click", () => { LANG = LANG === "ar" ? "fr" : "ar"; localStorage.setItem(LANG_KEY, LANG); applyLang(); });
+
+$("logoutBtn").addEventListener("click", () => {
+  localStorage.removeItem(SESSION_KEY);
+  window.location.href = "index.html";
+});
+
+const STATUS_MAP = {
+  "À confirmer": { cls: "status-aconfirmer", key: "statusAconfirmer" },
+  "En attente": { cls: "status-attente", key: "statusAttente" },
+  "En livraison": { cls: "status-livraison", key: "statusLivraison" },
+  "Livrée": { cls: "status-livree", key: "statusLivree" },
+  "Annulée": { cls: "status-annulee", key: "statusAnnulee" }
+};
+const ACTIVE_STATUSES = ["À confirmer", "En attente", "En livraison"];
+
+let ORDERS = { current: [], history: [] };
+let ACTIVE_TAB = "current";
+
+async function apiGet(p){ const qs = new URLSearchParams(p).toString(); const res = await fetch(CONFIG.API_URL + "?" + qs); return res.json(); }
+
+async function loadOrders(){
+  $("listCurrent").innerHTML = '<div class="skeleton"></div><div class="skeleton"></div>';
+  try {
+    // Action backend à ajouter : getClientOrders (retourne toutes les commandes du client)
+    const data = await apiGet({ action: "getClientOrders", clientId: SESSION.clientId });
+    const all = (data && data.success && data.orders) ? data.orders : [];
+    ORDERS.current = all.filter(o => ACTIVE_STATUSES.includes(o.statut));
+    ORDERS.history = all.filter(o => !ACTIVE_STATUSES.includes(o.statut));
+  } catch(e) {
+    ORDERS.current = []; ORDERS.history = [];
+  }
+  render();
+}
+
+function orderCardHtml(o, isHistory){
+  const st = STATUS_MAP[o.statut] || { cls: "status-attente", key: "statusAttente" };
+  const trackBtn = !isHistory
+    ? '<a class="btn-track" href="suivi-commande.html?cmd=' + encodeURIComponent(o.numero) + '">' + t("btnTrack") + '</a>'
+    : "";
+  const reorderBtn = isHistory
+    ? '<button class="btn-reorder" type="button" onclick="reorder(\'' + esc(o.numero) + '\')">' + t("btnReorder") + '</button>'
+    : "";
+  return '<div class="order-card">' +
+    '<div class="row1"><div class="numero">#' + esc(o.numero) + '</div><div class="total">' + esc(o.total) + ' DA</div></div>' +
+    '<div class="date">' + esc(o.date || "") + '</div>' +
+    '<span class="status-badge ' + st.cls + '">' + t(st.key) + '</span>' +
+    '<div class="articles">' + esc(o.articles || "") + '</div>' +
+    (trackBtn || reorderBtn ? '<div class="actions">' + trackBtn + reorderBtn + '</div>' : '') +
+    '</div>';
+}
+
+function render(){
+  const list = ACTIVE_TAB === "current" ? ORDERS.current : ORDERS.history;
+  const target = ACTIVE_TAB === "current" ? $("listCurrent") : $("listHistory");
+  if (!list.length) {
+    const emptyKey = ACTIVE_TAB === "current" ? "emptyCurrent" : "emptyHistory";
+    const cta = ACTIVE_TAB === "current" ? '<br><a href="index.html">' + t("emptyCurrentCta") + '</a>' : "";
+    target.innerHTML = '<div class="empty-state"><span class="emoji">' + (ACTIVE_TAB === "current" ? "🧾" : "📦") + '</span>' + t(emptyKey) + cta + '</div>';
+  } else {
+    target.innerHTML = list.map(o => orderCardHtml(o, ACTIVE_TAB === "history")).join("");
+  }
+}
+
+$("tabCurrent").addEventListener("click", () => {
+  ACTIVE_TAB = "current";
+  $("tabCurrent").classList.add("active"); $("tabHistory").classList.remove("active");
+  $("listCurrent").classList.remove("hidden"); $("listHistory").classList.add("hidden");
+  render();
+});
+$("tabHistory").addEventListener("click", () => {
+  ACTIVE_TAB = "history";
+  $("tabHistory").classList.add("active"); $("tabCurrent").classList.remove("active");
+  $("listHistory").classList.remove("hidden"); $("listCurrent").classList.add("hidden");
+  render();
+});
+
+async function reorder(numero){
+  // Action backend à ajouter : reorder (retourne le détail des articles de la
+  // commande "numero" pour pré-remplir un nouveau panier). En attendant, on
+  // renvoie simplement vers le menu avec le numéro en référence.
+  try {
+    const data = await apiGet({ action: "reorder", clientId: SESSION.clientId, numero });
+    if (data && data.success && data.panier) {
+      localStorage.setItem("mtd_reorder_cart", JSON.stringify(data.panier));
+    }
+  } catch(e) {}
+  window.location.href = "index.html?reorder=" + encodeURIComponent(numero);
+}
+window.reorder = reorder;
+
+if (SESSION) { applyLang(); loadOrders(); }
+</script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0a2647">
+<meta name="robots" content="noindex, nofollow">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<link rel="icon" href="/icons/icon-192.png">
+<title>MT Delivery — Mot de passe oublié</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue-900:#0a2647; --blue-700:#134a8f; --blue-600:#1a5cb0; --blue-100:#e9f1fb;
+    --gold-500:#d4a017;
+    --bg:#f3f5f9; --card:#ffffff; --text:#131b28; --muted:#69748a; --danger:#c0392b; --green:#1a7d3a;
+    --border:#e6eaf1; --radius-lg:20px; --radius-sm:10px; --shadow-sm:0 1px 2px rgba(16,24,40,.06);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;padding-bottom:40px;}
+  html[dir="rtl"] body{font-family:'Tajawal','Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;}
+  a{color:inherit;}
+  header.top{background:#fff;padding:20px 0 22px;position:relative;border-bottom:1px solid var(--border);text-align:center;}
+  header.top .brand{display:flex;flex-direction:column;align-items:center;gap:8px;}
+  header.top .brand .logo-img{width:100%;max-width:280px;display:block;margin:0 auto;}
+  header.top .tagline{font-size:13px;color:var(--blue-700);font-weight:700;}
+  .lang-toggle{position:absolute;top:14px;right:14px;background:#fff;border:1.5px solid var(--gold-500);
+    color:var(--blue-900);padding:6px 12px;border-radius:999px;font-weight:800;font-size:12px;cursor:pointer;font-family:inherit;}
+  html[dir="rtl"] .lang-toggle{right:auto;left:14px;}
+  main{max-width:460px;margin:0 auto;padding:28px 16px 40px;}
+  .card{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);
+    border:1px solid var(--border);padding:24px;margin-bottom:16px;}
+  .card h2{margin:0 0 6px;font-size:20px;color:var(--blue-900);font-weight:800;}
+  .card p.sub{margin:0 0 20px;color:var(--muted);font-size:13.5px;line-height:1.6;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12.5px;font-weight:700;color:var(--blue-900);margin-bottom:6px;}
+  .field input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+    font-size:15px;font-family:inherit;background:#fbfcfe;}
+  .field input:focus{outline:none;border-color:var(--blue-600);}
+  .channel-row{display:flex;gap:10px;margin-bottom:16px;}
+  .channel-btn{flex:1;background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:12px;
+    font-weight:700;font-size:13.5px;color:var(--muted);cursor:pointer;font-family:inherit;}
+  .channel-btn.active{border-color:var(--blue-600);color:var(--blue-700);background:var(--blue-100);}
+  .btn-primary{width:100%;background:linear-gradient(135deg,var(--blue-700),var(--blue-900));color:#fff;border:none;
+    border-radius:13px;padding:14px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;}
+  .btn-primary:disabled{opacity:.6;cursor:default;}
+  .error-box{background:#fdeceb;border:1px solid #f3c6c1;color:var(--danger);border-radius:var(--radius-sm);
+    padding:11px 14px;font-size:13px;margin-top:12px;display:none;}
+  .error-box.show{display:block;}
+  .success-box{background:#eaf7ee;border:1px solid #bfe6cb;color:var(--green);border-radius:var(--radius-sm);
+    padding:12px 14px;font-size:13.5px;margin-top:12px;display:none;line-height:1.5;}
+  .success-box.show{display:block;}
+  .foot-row{text-align:center;font-size:13.5px;color:var(--muted);margin-top:14px;}
+  .foot-row a{color:var(--blue-700);font-weight:700;text-decoration:none;}
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <a href="index.html"><img class="logo-img" src="logo.png" alt="MT Delivery"></a>
+    <div class="tagline" id="tagline">Mot de passe oublié</div>
+  </div>
+  <button class="lang-toggle" id="langToggle" type="button">AR</button>
+</header>
+
+<main>
+  <!-- ÉTAPE 1 : identifiant + choix du canal -->
+  <section class="card" id="step1">
+    <h2 id="t1Title">Mot de passe oublié</h2>
+    <p class="sub" id="t1Sub">Indique ton e-mail ou ton numéro de téléphone, on t'envoie un code.</p>
+    <div class="field">
+      <label id="lblIdentifier">E-mail ou téléphone</label>
+      <input type="text" id="fIdentifier" placeholder="ex: 0555 xx xx xx ou toi@email.com">
+    </div>
+    <div class="channel-row">
+      <button class="channel-btn active" id="channelEmail" type="button" data-channel="email">📧 <span id="channelEmailText">E-mail</span></button>
+      <button class="channel-btn" id="channelSms" type="button" data-channel="sms">📱 <span id="channelSmsText">SMS</span></button>
+    </div>
+    <button class="btn-primary" id="sendCodeBtn" type="button">Envoyer le code</button>
+    <div class="error-box" id="error1"></div>
+  </section>
+
+  <!-- ÉTAPE 2 : code + nouveau mot de passe -->
+  <section class="card hidden" id="step2">
+    <h2 id="t2Title">Nouveau mot de passe</h2>
+    <p class="sub" id="t2Sub">Entre le code reçu et choisis un nouveau mot de passe.</p>
+    <div class="field">
+      <label id="lblCode">Code reçu</label>
+      <input type="text" id="fCode" inputmode="numeric" maxlength="6" placeholder="------">
+    </div>
+    <div class="field">
+      <label id="lblNewPwd">Nouveau mot de passe</label>
+      <input type="password" id="fNewPwd" placeholder="8 caractères minimum">
+    </div>
+    <button class="btn-primary" id="resetBtn" type="button">Réinitialiser le mot de passe</button>
+    <div class="error-box" id="error2"></div>
+    <div class="success-box" id="success2"></div>
+  </section>
+
+  <p class="foot-row"><a href="connexion.html" id="backLink">← Retour à la connexion</a></p>
+</main>
+
+<script>
+const CONFIG = {
+  API_URL: "https://script.google.com/macros/s/AKfycbwgXOyXERonv0Yk7X-uhoHuE1Fj26RiYHPR4Tnr7Z_1Ly8wWjsvlE5sp3JJRukRR4ZF/exec"
+  // NOTE : l'envoi réel du code par e-mail nécessite un service comme Resend/SendGrid
+  // (clé API à créer), et par SMS un service comme Twilio (compte à créer, payant).
+  // Tant qu'aucun des deux n'est configuré côté Apps Script, l'action backend
+  // "requestPasswordReset" peut exister mais ne délivrera pas réellement le code.
+};
+const LANG_KEY = "mtd_lang";
+let LANG = localStorage.getItem(LANG_KEY) || "fr";
+let CHANNEL = "email";
+let IDENTIFIER = "";
+
+const I18N = {
+  fr: {
+    tagline:"Mot de passe oublié", t1Title:"Mot de passe oublié", t1Sub:"Indique ton e-mail ou ton numéro de téléphone, on t'envoie un code.",
+    lblIdentifier:"E-mail ou téléphone", channelEmailText:"E-mail", channelSmsText:"SMS", sendCodeBtn:"Envoyer le code",
+    t2Title:"Nouveau mot de passe", t2Sub:"Entre le code reçu et choisis un nouveau mot de passe.",
+    lblCode:"Code reçu", lblNewPwd:"Nouveau mot de passe", resetBtn:"Réinitialiser le mot de passe", backLink:"← Retour à la connexion",
+    needIdentifier:"Merci d'entrer ton e-mail ou ton numéro de téléphone.",
+    codeSent:"Code envoyé. Vérifie ta boîte de réception.",
+    needCode:"Merci d'entrer le code reçu.", needPwd:"Le mot de passe doit contenir au moins 8 caractères.",
+    pwdReset:"Mot de passe réinitialisé ! Tu peux te reconnecter.", networkError:"Erreur de connexion. Réessaie."
+  },
+  ar: {
+    tagline:"نسيت كلمة المرور", t1Title:"نسيت كلمة المرور", t1Sub:"أدخل بريدك الإلكتروني أو رقم هاتفك، سنرسل لك رمزًا.",
+    lblIdentifier:"البريد الإلكتروني أو الهاتف", channelEmailText:"البريد", channelSmsText:"رسالة SMS", sendCodeBtn:"إرسال الرمز",
+    t2Title:"كلمة مرور جديدة", t2Sub:"أدخل الرمز المستلم واختر كلمة مرور جديدة.",
+    lblCode:"الرمز المستلم", lblNewPwd:"كلمة المرور الجديدة", resetBtn:"إعادة تعيين كلمة المرور", backLink:"← الرجوع لتسجيل الدخول",
+    needIdentifier:"الرجاء إدخال بريدك الإلكتروني أو رقم هاتفك.",
+    codeSent:"تم إرسال الرمز. تحقق من بريدك.",
+    needCode:"الرجاء إدخال الرمز المستلم.", needPwd:"يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل.",
+    pwdReset:"تمت إعادة تعيين كلمة المرور! يمكنك تسجيل الدخول من جديد.", networkError:"خطأ في الاتصال. أعد المحاولة."
+  }
+};
+function t(k){ return (I18N[LANG] && I18N[LANG][k]) || I18N.fr[k] || k; }
+function $(id){ return document.getElementById(id); }
+function applyLang(){
+  document.documentElement.lang = LANG;
+  document.documentElement.dir = LANG === "ar" ? "rtl" : "ltr";
+  $("langToggle").textContent = LANG === "ar" ? "FR" : "AR";
+  ["tagline","t1Title","t1Sub","lblIdentifier","channelEmailText","channelSmsText","sendCodeBtn",
+   "t2Title","t2Sub","lblCode","lblNewPwd","resetBtn","backLink"].forEach(id=>{ const el=$(id); if (el) el.textContent = t(id); });
+}
+$("langToggle").addEventListener("click", () => { LANG = LANG === "ar" ? "fr" : "ar"; localStorage.setItem(LANG_KEY, LANG); applyLang(); });
+applyLang();
+
+document.querySelectorAll(".channel-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".channel-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    CHANNEL = btn.dataset.channel;
+  });
+});
+
+async function apiGet(p){ const qs = new URLSearchParams(p).toString(); const res = await fetch(CONFIG.API_URL + "?" + qs); return res.json(); }
+
+$("sendCodeBtn").addEventListener("click", async () => {
+  const box = $("error1"); box.classList.remove("show");
+  IDENTIFIER = $("fIdentifier").value.trim();
+  if (!IDENTIFIER) { box.textContent = t("needIdentifier"); box.classList.add("show"); return; }
+  $("sendCodeBtn").disabled = true; $("sendCodeBtn").textContent = "...";
+  try {
+    // Action backend à ajouter : requestPasswordReset (canal "email" ou "sms")
+    await apiGet({ action: "requestPasswordReset", identifiant: IDENTIFIER, canal: CHANNEL });
+    $("step1").classList.add("hidden");
+    $("step2").classList.remove("hidden");
+  } catch(e) {
+    box.textContent = t("networkError"); box.classList.add("show");
+  } finally {
+    $("sendCodeBtn").disabled = false; $("sendCodeBtn").textContent = t("sendCodeBtn");
+  }
+});
+
+$("resetBtn").addEventListener("click", async () => {
+  const box = $("error2"); box.classList.remove("show");
+  const ok2 = $("success2"); ok2.classList.remove("show");
+  const code = $("fCode").value.trim();
+  const pwd = $("fNewPwd").value;
+  if (!code) { box.textContent = t("needCode"); box.classList.add("show"); return; }
+  if (pwd.length < 8) { box.textContent = t("needPwd"); box.classList.add("show"); return; }
+  $("resetBtn").disabled = true; $("resetBtn").textContent = "...";
+  try {
+    // Action backend à ajouter : resetPassword
+    const data = await apiGet({ action: "resetPassword", identifiant: IDENTIFIER, code, nouveauMotDePasse: pwd });
+    if (data && data.success) {
+      ok2.textContent = t("pwdReset"); ok2.classList.add("show");
+      setTimeout(() => { window.location.href = "connexion.html"; }, 1800);
+    } else {
+      box.textContent = (data && data.error) || t("networkError"); box.classList.add("show");
+    }
+  } catch(e) {
+    box.textContent = t("networkError"); box.classList.add("show");
+  } finally {
+    $("resetBtn").disabled = false; $("resetBtn").textContent = t("resetBtn");
+  }
+});
+</script>
+</body>
+</html>
