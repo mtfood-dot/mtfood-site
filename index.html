@@ -347,10 +347,6 @@ if ("serviceWorker" in navigator) {
   </div>
   <div class="header-links">
     <a class="phone-link" id="headerPhone" href="tel:0560 78 84 97">📞 0560 78 84 97</a>
-    <a class="driver-link-top" id="driverLinkTop" href="inscription-livreur.html">🛵 Devenir livreur</a>
-    <a class="driver-space-link-top" id="driverSpaceLinkTop" href="espace-livreur.html">🔑 Espace livreur</a>
-    <a class="partner-link-top" id="partnerLinkTop" href="devenir-partenaire.html">🤝 Devenir partenaire</a>
-    <a class="partner-space-link-top" id="partnerSpaceLinkTop" href="espace-partenaire.html">🏪 Espace partenaire</a>
     <a class="account-link-top" id="accountLinkTop" href="connexion.html">👤 Mon compte</a>
   </div>
   <button class="lang-toggle" id="langToggle" type="button">AR</button>
@@ -406,15 +402,6 @@ if ("serviceWorker" in navigator) {
   <div class="sheet">
     <button class="close-x" data-close="checkoutOverlay">✕</button>
     <h2 id="checkoutTitle">Vos informations</h2>
-
-    <div class="account-banner hidden" id="accountBanner">
-      <div class="account-banner-text" id="accountBannerText">Connecte-toi pour retrouver tes commandes et aller plus vite la prochaine fois.</div>
-      <div class="account-banner-actions">
-        <a href="connexion.html?next=index.html" id="accountBannerLogin">Se connecter</a>
-        <a href="inscription.html?next=index.html" id="accountBannerSignup">Créer un compte</a>
-        <button type="button" id="accountBannerDismiss">✕</button>
-      </div>
-    </div>
 
     <div class="field">
       <label id="lblName">Nom et prénom</label>
@@ -681,14 +668,9 @@ function updateAccountLink() {
   }
 }
 
-function maybeShowAccountBanner() {
-  const session = getClientSession();
-  const dismissed = sessionStorage.getItem("mtd_account_banner_dismissed") === "1";
-  if (!session && !dismissed) {
-    $("accountBanner").classList.remove("hidden");
-  } else {
-    $("accountBanner").classList.add("hidden");
-  }
+function saveCartForAfterLogin() {
+  const panier = Object.values(CART).map(l => ({ id: l.item.id, nom: l.item.nom, qty: l.qty }));
+  try { localStorage.setItem("mtd_reorder_cart", JSON.stringify(panier)); } catch(e) {}
 }
 function prefillCheckoutFromSession() {
   const session = getClientSession();
@@ -742,10 +724,6 @@ function applyLanguage() {
   $("langToggle").textContent = t("toggleLabel");
   $("tagline").textContent = t("tagline");
   $("footerNote").textContent = t("footerNote");
-  $("driverLinkTop").textContent = t("driverLinkTop");
-  $("driverSpaceLinkTop").textContent = t("driverSpaceLinkTop");
-  $("partnerLinkTop").textContent = t("partnerLinkTop");
-  $("partnerSpaceLinkTop").textContent = t("partnerSpaceLinkTop");
   $("cartBarUnit").textContent = t("cartBarUnit");
   $("openCartBtn").textContent = t("viewCart");
   $("cartTitle").textContent = t("cartTitle");
@@ -779,9 +757,6 @@ function applyLanguage() {
   $("zoneCheckLabel").textContent = t("zoneCheckLabel");
   $("zoneCheckInput").placeholder = t("zoneCheckPlaceholder");
   $("zoneCheckBtn").textContent = t("zoneCheckBtn");
-  $("accountBannerText").textContent = t("accountBannerText");
-  $("accountBannerLogin").textContent = t("accountBannerLogin");
-  $("accountBannerSignup").textContent = t("accountBannerSignup");
   updateAccountLink();
 
   if (SELECTED_ZONE) updateCheckoutTotals();
@@ -1064,9 +1039,13 @@ function bindGlobalEvents() {
 
   $("goCheckoutBtn").addEventListener("click", () => {
     if (!Object.keys(CART).length) return;
+    if (!getClientSession()) {
+      saveCartForAfterLogin();
+      window.location.href = "connexion.html?next=index.html";
+      return;
+    }
     closeOverlay("cartOverlay");
     updateCheckoutTotals();
-    maybeShowAccountBanner();
     prefillCheckoutFromSession();
     openOverlay("checkoutOverlay");
   });
@@ -1079,11 +1058,6 @@ function bindGlobalEvents() {
   $("zoneCheckBtn").addEventListener("click", checkZoneAvailability);
   $("zoneCheckInput").addEventListener("keyup", (e) => { if (e.key === "Enter") checkZoneAvailability(); });
 
-  $("accountBannerDismiss").addEventListener("click", () => {
-    sessionStorage.setItem("mtd_account_banner_dismissed", "1");
-    $("accountBanner").classList.add("hidden");
-  });
-
   updateAccountLink();
 }
 
@@ -1091,6 +1065,12 @@ function bindGlobalEvents() {
    ENVOI DE LA COMMANDE
    ============================================================ */
 function submitOrder() {
+  if (!getClientSession()) {
+    saveCartForAfterLogin();
+    window.location.href = "connexion.html?next=index.html";
+    return;
+  }
+
   const name = $("fName").value.trim();
   const phone = $("fPhone").value.trim();
   const address = $("fAddress").value.trim();
