@@ -162,6 +162,8 @@
   .partner-card .meta{font-size:12.5px;color:var(--muted);margin:2px 0 8px;}
   .status-badge{display:inline-block;font-size:10.5px;font-weight:800;border-radius:999px;padding:3px 10px;margin-bottom:10px;}
   .status-badge.actif{background:#eaf7ee;color:var(--green);}
+  .status-badge.disponible{background:#eaf7ee;color:var(--green);}
+  .status-badge.enlivraison{background:#e9f1fb;color:var(--blue-700);}
   .status-badge.enattente{background:var(--gold-100);color:var(--gold-600);}
   .status-badge.refuse{background:#fdeceb;color:var(--danger);}
   .btn-activate{background:var(--green);color:#fff;}
@@ -203,6 +205,19 @@
     display:flex;justify-content:space-between;gap:10px;}
   .stuck-alert .item:first-of-type{border-top:none;}
   .stuck-alert .item .when{color:var(--muted);white-space:nowrap;}
+
+  .driver-form-card{padding-bottom:18px;}
+  .driver-form-row{display:flex;flex-direction:column;gap:12px;}
+  .edit-row{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+  .edit-row input{padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+    font-size:14px;font-family:inherit;background:#fbfcfe;}
+  .edit-row input:focus{outline:none;border-color:var(--blue-600);}
+  .assign-row{display:flex;gap:8px;margin-top:10px;align-items:center;}
+  .assign-row select{flex:1;padding:9px 10px;border:1.5px solid var(--border);border-radius:10px;
+    font-size:12.5px;font-family:inherit;background:#fbfcfe;color:var(--text);}
+  .btn-assign{background:var(--gold-500);color:#fff;flex:none;padding:9px 16px;border-radius:10px;
+    font-size:12.5px;font-weight:800;border:none;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .btn-assign:disabled{opacity:.5;cursor:default;}
 
   .date-range-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
   .date-range-row .sep{color:var(--muted);font-size:12px;}
@@ -319,7 +334,22 @@ if ("serviceWorker" in navigator) {
       </div>
       <div class="subheading" id="subheadingPartners"></div>
       <div id="listPartners"></div>
-      <div class="subheading" id="subheadingDrivers"></div>
+      <div class="refresh-row">
+        <div class="subheading" id="subheadingDrivers" style="margin:16px 0 10px;"></div>
+        <button class="btn-refresh" id="addDriverToggleBtn" type="button"><span id="addDriverToggleLabel"></span></button>
+      </div>
+      <div class="card driver-form-card hidden" id="driverFormCard">
+        <div class="driver-form-row">
+          <div class="field"><label id="lblDriverNom"></label><input type="text" id="driverFormNom"></div>
+          <div class="field"><label id="lblDriverTelephone"></label><input type="tel" id="driverFormTelephone"></div>
+          <div class="field"><label id="lblDriverZone"></label><input type="text" id="driverFormZone"></div>
+          <div class="field"><label id="lblDriverVehicule"></label><input type="text" id="driverFormVehicule"></div>
+        </div>
+        <div class="actions-row">
+          <button class="btn-action btn-confirm" type="button" id="driverFormSaveBtn"></button>
+          <button class="btn-action btn-cancel" type="button" id="driverFormCancelBtn"></button>
+        </div>
+      </div>
       <div id="listDrivers"></div>
     </div>
 
@@ -354,8 +384,13 @@ if ("serviceWorker" in navigator) {
         </div>
         <button class="btn-refresh" id="refreshComptaBtn" type="button"><span id="refreshComptaLabel">↻ Actualiser</span></button>
       </div>
+      <div class="period-toggle" id="comptaModeToggle" style="margin-bottom:12px;">
+        <button class="period-btn active" id="comptaModePartnersBtn" type="button"></button>
+        <button class="period-btn" id="comptaModeDriversBtn" type="button"></button>
+      </div>
       <div id="comptaTotalRow"></div>
       <div id="listCompta"></div>
+      <div id="listComptaDrivers" class="hidden"></div>
     </div>
 
     <div id="pubView" class="hidden">
@@ -431,6 +466,10 @@ let DASHBOARD_ORDERS = [];
 let DASHBOARD_PERIOD_DAYS = 7;
 let DASHBOARD_STATS = null;
 let COMPTA_PARTNERS = [];
+let COMPTA_DRIVERS = [];
+let COMPTA_MODE = "partners";
+let DRIVER_FORM_MODE = false;
+let EDITING_DRIVER_TEL = null;
 let ADS = [];
 let CURRENT_TAB = "orders";
 
@@ -487,6 +526,32 @@ const I18N = {
     loadDriversFailedGeneric: "Impossible de charger les livreurs. Réessaie.",
     updateStatusFailedGeneric: "Impossible de mettre à jour le statut. Réessaie.",
     savePinFailedGeneric: "Impossible d'enregistrer le code PIN. Réessaie.",
+    statusDisponible: "Disponible",
+    statusEnLivraison: "En livraison",
+    addDriverToggleOpen: "+ Ajouter un livreur",
+    addDriverToggleClose: "✕ Fermer",
+    lblDriverNom: "Nom",
+    lblDriverTelephone: "Téléphone",
+    lblDriverZone: "Zone",
+    lblDriverVehicule: "Véhicule",
+    btnDriverSave: "💾 Enregistrer",
+    btnDriverCancel: "Annuler",
+    btnDriverEdit: "✎ Modifier",
+    driverSaveRequired: "Le nom et le téléphone sont obligatoires.",
+    driverCreated: "Livreur ajouté.",
+    driverUpdated: "Livreur modifié.",
+    createDriverFailedGeneric: "Impossible d'ajouter le livreur. Réessaie.",
+    updateDriverFailedGeneric: "Impossible de modifier le livreur. Réessaie.",
+    comptaModePartners: "Partenaires",
+    comptaModeDrivers: "Livreurs",
+    noComptaDriversData: "Aucune livraison sur cette période.",
+    loadDriverStatsFailedGeneric: "Impossible de charger les statistiques livreurs. Réessaie.",
+    statNbLivraisonsShort: "livraisons",
+    assignLabel: "Assigner à un livreur",
+    chooseDriverPlaceholder: "Choisir un livreur…",
+    btnAssign: "Assigner",
+    orderAssigned: "Commande assignée.",
+    assignFailedGeneric: "Impossible d'assigner la commande. Réessaie.",
     pinInvalid: "Le code PIN doit contenir exactement 4 chiffres.",
     pinSaved: "Code PIN enregistré.",
     statusUpdated: "Statut mis à jour.",
@@ -583,6 +648,32 @@ const I18N = {
     loadDriversFailedGeneric: "تعذر تحميل السائقين. أعد المحاولة.",
     updateStatusFailedGeneric: "تعذر تحديث الحالة. أعد المحاولة.",
     savePinFailedGeneric: "تعذر حفظ رمز PIN. أعد المحاولة.",
+    statusDisponible: "متاح",
+    statusEnLivraison: "في التوصيل",
+    addDriverToggleOpen: "+ إضافة سائق",
+    addDriverToggleClose: "✕ إغلاق",
+    lblDriverNom: "الاسم",
+    lblDriverTelephone: "الهاتف",
+    lblDriverZone: "المنطقة",
+    lblDriverVehicule: "المركبة",
+    btnDriverSave: "💾 حفظ",
+    btnDriverCancel: "إلغاء",
+    btnDriverEdit: "✎ تعديل",
+    driverSaveRequired: "الاسم والهاتف إلزاميان.",
+    driverCreated: "تمت إضافة السائق.",
+    driverUpdated: "تم تعديل السائق.",
+    createDriverFailedGeneric: "تعذرت إضافة السائق. أعد المحاولة.",
+    updateDriverFailedGeneric: "تعذر تعديل السائق. أعد المحاولة.",
+    comptaModePartners: "الشركاء",
+    comptaModeDrivers: "السائقون",
+    noComptaDriversData: "لا توجد عمليات توصيل خلال هذه الفترة.",
+    loadDriverStatsFailedGeneric: "تعذر تحميل إحصائيات السائقين. أعد المحاولة.",
+    statNbLivraisonsShort: "توصيلات",
+    assignLabel: "إسناد إلى سائق",
+    chooseDriverPlaceholder: "اختر سائقاً…",
+    btnAssign: "إسناد",
+    orderAssigned: "تم إسناد الطلب.",
+    assignFailedGeneric: "تعذر إسناد الطلب. أعد المحاولة.",
     pinInvalid: "يجب أن يتكون رمز PIN من 4 أرقام بالضبط.",
     pinSaved: "تم حفظ رمز PIN.",
     statusUpdated: "تم تحديث الحالة.",
@@ -655,6 +746,15 @@ function applyLanguage() {
   $("refreshPartnersLabel").textContent = t("refreshLabel");
   $("subheadingPartners").textContent = t("subheadingPartners");
   $("subheadingDrivers").textContent = t("subheadingDrivers");
+  $("addDriverToggleLabel").textContent = DRIVER_FORM_MODE ? t("addDriverToggleClose") : t("addDriverToggleOpen");
+  $("lblDriverNom").textContent = t("lblDriverNom");
+  $("lblDriverTelephone").textContent = t("lblDriverTelephone");
+  $("lblDriverZone").textContent = t("lblDriverZone");
+  $("lblDriverVehicule").textContent = t("lblDriverVehicule");
+  $("driverFormSaveBtn").textContent = t("btnDriverSave");
+  $("driverFormCancelBtn").textContent = t("btnDriverCancel");
+  $("comptaModePartnersBtn").textContent = t("comptaModePartners");
+  $("comptaModeDriversBtn").textContent = t("comptaModeDrivers");
   $("tabDashboardLabel").textContent = t("tabDashboard");
   $("refreshDashboardLabel").textContent = t("refreshLabel");
   $("subheadingEvolution").textContent = t("subheadingEvolution");
@@ -682,6 +782,7 @@ function applyLanguage() {
   renderDashboard();
   renderDashboardStats();
   renderCompta();
+  renderComptaDrivers();
   renderAdsAdmin();
 }
 
@@ -801,6 +902,7 @@ function enterApp() {
   $("comptaDateEnd").value = todayStr();
   loadOrders();
   loadPendingItems();
+  loadDrivers();
 }
 
 $("refreshBtn").addEventListener("click", loadOrders);
@@ -816,9 +918,12 @@ $("dashboardDate").addEventListener("change", loadDashboard);
 $("period7Btn").addEventListener("click", () => setDashboardPeriod(7));
 $("period30Btn").addEventListener("click", () => setDashboardPeriod(30));
 $("tabComptaBtn").addEventListener("click", () => switchTab("compta"));
-$("refreshComptaBtn").addEventListener("click", loadCompta);
-$("comptaDateStart").addEventListener("change", loadCompta);
-$("comptaDateEnd").addEventListener("change", loadCompta);
+function refreshComptaCurrent() {
+  if (COMPTA_MODE === "drivers") loadComptaDrivers(); else loadCompta();
+}
+$("refreshComptaBtn").addEventListener("click", refreshComptaCurrent);
+$("comptaDateStart").addEventListener("change", refreshComptaCurrent);
+$("comptaDateEnd").addEventListener("change", refreshComptaCurrent);
 $("tabPubBtn").addEventListener("click", () => switchTab("pub"));
 $("refreshPubBtn").addEventListener("click", loadAdsAdmin);
 
@@ -841,7 +946,7 @@ function switchTab(tab) {
   if (tab === "moderation") loadPendingItems();
   if (tab === "partners") { loadPartners(); loadDrivers(); }
   if (tab === "dashboard") { loadDashboard(); loadDashboardStats(); }
-  if (tab === "compta") loadCompta();
+  if (tab === "compta") refreshComptaCurrent();
   if (tab === "pub") loadAdsAdmin();
 }
 
@@ -874,6 +979,12 @@ function renderOrders() {
 
   document.querySelectorAll("[data-action-order]").forEach(btn => {
     btn.addEventListener("click", () => onUpdateStatus(btn.dataset.actionOrder, btn.dataset.newStatus, btn));
+  });
+  document.querySelectorAll("[data-assign-order]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const select = btn.closest(".assign-row").querySelector("select");
+      onAssignOrder(btn.dataset.assignOrder, select ? select.value : "", btn);
+    });
   });
 }
 
@@ -914,6 +1025,27 @@ function actionsHtml(o) {
   return buttons ? `<div class="actions-row">${buttons}</div>` : "";
 }
 
+function assignRowHtml(o) {
+  const s = String(o.statut || "").trim();
+  if (s !== "En attente") return "";
+  const activeDrivers = DRIVERS.filter(d => String(d.statut || "").trim().toLowerCase() === "actif");
+  if (!activeDrivers.length) return "";
+  const numero = escapeAttr(o.numero);
+  const options = activeDrivers.map(d => {
+    const suffix = d.enLivraison ? " (" + t("statusEnLivraison") + ")" : "";
+    return `<option value="${escapeAttr(d.nom)}">${escapeHtml(d.nom + suffix)}</option>`;
+  }).join("");
+  return `
+    <div class="assign-row">
+      <select>
+        <option value="">${escapeHtml(t("chooseDriverPlaceholder"))}</option>
+        ${options}
+      </select>
+      <button class="btn-assign" type="button" data-assign-order="${numero}">${escapeHtml(t("btnAssign"))}</button>
+    </div>
+  `;
+}
+
 function orderCardHtml(o) {
   const b = badgeInfo(o.statut);
   return `
@@ -927,8 +1059,36 @@ function orderCardHtml(o) {
       <div class="articles">${escapeHtml(o.articles || "")}</div>
       <span class="badge ${b.cls}">${escapeHtml(b.label)}</span>
       ${actionsHtml(o)}
+      ${assignRowHtml(o)}
     </div>
   `;
+}
+
+async function onAssignOrder(numero, driverName, btnEl) {
+  hideError($("errorBox"));
+  hideSuccess($("successBox"));
+  if (!driverName) {
+    showError($("errorBox"), t("chooseDriverPlaceholder"));
+    return;
+  }
+  btnEl.disabled = true;
+  try {
+    const data = await apiGet({ action: "assignOrderToDriver", password: SESSION_PASSWORD, numero: numero, driverName: driverName });
+    if (data.success) {
+      const o = ORDERS.find(x => String(x.numero) === String(numero));
+      if (o) o.statut = "En livraison";
+      const item = DRIVERS.find(x => String(x.nom) === String(driverName));
+      if (item) item.enLivraison = true;
+      renderOrders();
+      showSuccess($("successBox"), t("orderAssigned"));
+    } else {
+      showError($("errorBox"), data.error || t("assignFailedGeneric"));
+    }
+  } catch (e) {
+    showError($("errorBox"), t("assignFailedGeneric"));
+  } finally {
+    btnEl.disabled = false;
+  }
 }
 
 async function onUpdateStatus(orderNumber, newStatus, btnEl) {
@@ -1060,10 +1220,11 @@ async function loadPartners() {
 
 async function loadDrivers() {
   try {
-    const data = await apiGet({ action: "getDrivers", password: SESSION_PASSWORD });
+    const data = await apiGet({ action: "getDriversExtended", password: SESSION_PASSWORD });
     if (data.success) {
       DRIVERS = data.drivers || [];
       if (CURRENT_TAB === "partners") renderDrivers();
+      if (CURRENT_TAB === "orders") renderOrders();
     } else if (CURRENT_TAB === "partners") {
       showError($("errorBox"), data.error || t("loadDriversFailedGeneric"));
     }
@@ -1106,9 +1267,49 @@ function partnerCardHtml(p) {
   const meta = `${escapeHtml(p.type || "")} · ${escapeHtml(p.zone || "")} · ${escapeHtml(p.telephone || "")}`;
   return entityCardHtml("partner", p, meta);
 }
+
+function driverStatusBadge(d) {
+  const isActive = String(d.statut || "").trim().toLowerCase() === "actif";
+  if (!isActive) return statusBadgeInfo(d.statut);
+  if (d.enLivraison) return { cls: "enlivraison", label: t("statusEnLivraison") };
+  return { cls: "disponible", label: t("statusDisponible") };
+}
+
 function driverCardHtml(d) {
-  const meta = `${escapeHtml(d.zone || "")} · ${escapeHtml(d.vehicule || "")} · ${escapeHtml(d.telephone || "")}`;
-  return entityCardHtml("driver", d, meta);
+  const tel = escapeAttr(d.telephone);
+  const isActive = String(d.statut || "").trim().toLowerCase() === "actif";
+  const toggleLabel = isActive ? t("btnDeactivate") : t("btnActivate");
+  const toggleClass = isActive ? "btn-deactivate" : "btn-activate";
+  const newStatus = isActive ? "En attente" : "Actif";
+  const b = driverStatusBadge(d);
+  const isEditing = EDITING_DRIVER_TEL === d.telephone;
+  const editSection = isEditing ? `
+    <div class="edit-row">
+      <input type="text" id="editDriverNom_${tel}" value="${escapeAttr(d.nom || "")}" placeholder="${escapeAttr(t("lblDriverNom"))}">
+      <input type="text" id="editDriverZone_${tel}" value="${escapeAttr(d.zone || "")}" placeholder="${escapeAttr(t("lblDriverZone"))}">
+      <input type="text" id="editDriverVehicule_${tel}" value="${escapeAttr(d.vehicule || "")}" placeholder="${escapeAttr(t("lblDriverVehicule"))}">
+      <div class="actions-row">
+        <button class="btn-action btn-confirm" type="button" data-savedriver-tel="${tel}">${escapeHtml(t("btnDriverSave"))}</button>
+        <button class="btn-action btn-cancel" type="button" data-canceledit-tel="${tel}">${escapeHtml(t("btnDriverCancel"))}</button>
+      </div>
+    </div>
+  ` : "";
+  return `
+    <div class="partner-card">
+      <div class="nom">${escapeHtml(d.nom || "")}</div>
+      <div class="meta">${escapeHtml(d.zone || "")} · ${escapeHtml(d.vehicule || "")} · ${escapeHtml(d.telephone || "")}</div>
+      <span class="status-badge ${b.cls}">${escapeHtml(b.label)}</span>
+      <div class="actions-row">
+        <button class="btn-action ${toggleClass}" type="button" data-toggle-kind="driver" data-toggle-tel="${tel}" data-new-status="${escapeAttr(newStatus)}">${escapeHtml(toggleLabel)}</button>
+        <button class="btn-action btn-edit" type="button" data-editdriver-tel="${tel}">${escapeHtml(t("btnDriverEdit"))}</button>
+      </div>
+      <div class="pin-row">
+        <input type="text" inputmode="numeric" maxlength="4" placeholder="${d.pin ? "••••" : "----"}">
+        <button class="btn-action btn-savepin" type="button" data-savepin-kind="driver" data-savepin-tel="${tel}">${escapeHtml(t("btnSavePin"))}</button>
+      </div>
+      ${editSection}
+    </div>
+  `;
 }
 
 function wireEntityButtons(containerId) {
@@ -1135,6 +1336,99 @@ function renderDrivers() {
     ? DRIVERS.map(driverCardHtml).join("")
     : emptyStateHtml(t("noDrivers"), "🛵");
   wireEntityButtons("listDrivers");
+  wireDriverEditButtons("listDrivers");
+}
+
+function wireDriverEditButtons(containerId) {
+  document.querySelectorAll("#" + containerId + " [data-editdriver-tel]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      EDITING_DRIVER_TEL = EDITING_DRIVER_TEL === btn.dataset.editdriverTel ? null : btn.dataset.editdriverTel;
+      renderDrivers();
+    });
+  });
+  document.querySelectorAll("#" + containerId + " [data-canceledit-tel]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      EDITING_DRIVER_TEL = null;
+      renderDrivers();
+    });
+  });
+  document.querySelectorAll("#" + containerId + " [data-savedriver-tel]").forEach(btn => {
+    btn.addEventListener("click", () => onUpdateDriver(btn.dataset.savedriverTel, btn));
+  });
+}
+
+async function onUpdateDriver(telephone, btnEl) {
+  hideError($("errorBox"));
+  hideSuccess($("successBox"));
+  const nomEl = document.getElementById("editDriverNom_" + telephone);
+  const zoneEl = document.getElementById("editDriverZone_" + telephone);
+  const vehiculeEl = document.getElementById("editDriverVehicule_" + telephone);
+  const nom = nomEl ? nomEl.value.trim() : "";
+  const zone = zoneEl ? zoneEl.value.trim() : "";
+  const vehicule = vehiculeEl ? vehiculeEl.value.trim() : "";
+  if (!nom) {
+    showError($("errorBox"), t("driverSaveRequired"));
+    return;
+  }
+  btnEl.disabled = true;
+  try {
+    const data = await apiGet({ action: "updateDriver", password: SESSION_PASSWORD, telephone: telephone, nom: nom, zone: zone, vehicule: vehicule });
+    if (data.success) {
+      const item = DRIVERS.find(x => String(x.telephone) === String(telephone));
+      if (item) { item.nom = nom; item.zone = zone; item.vehicule = vehicule; }
+      EDITING_DRIVER_TEL = null;
+      renderDrivers();
+      showSuccess($("successBox"), t("driverUpdated"));
+    } else {
+      showError($("errorBox"), data.error || t("updateDriverFailedGeneric"));
+    }
+  } catch (e) {
+    showError($("errorBox"), t("updateDriverFailedGeneric"));
+  } finally {
+    btnEl.disabled = false;
+  }
+}
+
+$("addDriverToggleBtn").addEventListener("click", () => {
+  DRIVER_FORM_MODE = !DRIVER_FORM_MODE;
+  $("driverFormCard").classList.toggle("hidden", !DRIVER_FORM_MODE);
+  $("addDriverToggleLabel").textContent = DRIVER_FORM_MODE ? t("addDriverToggleClose") : t("addDriverToggleOpen");
+  if (!DRIVER_FORM_MODE) {
+    $("driverFormNom").value = "";
+    $("driverFormTelephone").value = "";
+    $("driverFormZone").value = "";
+    $("driverFormVehicule").value = "";
+  }
+});
+$("driverFormCancelBtn").addEventListener("click", () => $("addDriverToggleBtn").click());
+$("driverFormSaveBtn").addEventListener("click", onCreateDriver);
+
+async function onCreateDriver() {
+  hideError($("errorBox"));
+  hideSuccess($("successBox"));
+  const nom = $("driverFormNom").value.trim();
+  const telephone = $("driverFormTelephone").value.trim();
+  const zone = $("driverFormZone").value.trim();
+  const vehicule = $("driverFormVehicule").value.trim();
+  if (!nom || !telephone) {
+    showError($("errorBox"), t("driverSaveRequired"));
+    return;
+  }
+  $("driverFormSaveBtn").disabled = true;
+  try {
+    const data = await apiGet({ action: "createDriver", password: SESSION_PASSWORD, nom: nom, telephone: telephone, zone: zone, vehicule: vehicule });
+    if (data.success) {
+      $("addDriverToggleBtn").click();
+      showSuccess($("successBox"), t("driverCreated"));
+      loadDrivers();
+    } else {
+      showError($("errorBox"), data.error || t("createDriverFailedGeneric"));
+    }
+  } catch (e) {
+    showError($("errorBox"), t("createDriverFailedGeneric"));
+  } finally {
+    $("driverFormSaveBtn").disabled = false;
+  }
 }
 
 async function onToggleStatus(kind, telephone, newStatus, btnEl) {
@@ -1392,6 +1686,55 @@ function renderCompta() {
   $("listCompta").innerHTML = COMPTA_PARTNERS.length
     ? COMPTA_PARTNERS.map(comptaCardHtml).join("")
     : emptyStateHtml(t("noComptaData"), "🧾");
+}
+
+function setComptaMode(mode) {
+  COMPTA_MODE = mode;
+  $("comptaModePartnersBtn").classList.toggle("active", mode === "partners");
+  $("comptaModeDriversBtn").classList.toggle("active", mode === "drivers");
+  $("comptaTotalRow").classList.toggle("hidden", mode !== "partners");
+  $("listCompta").classList.toggle("hidden", mode !== "partners");
+  $("listComptaDrivers").classList.toggle("hidden", mode !== "drivers");
+  if (mode === "drivers") loadComptaDrivers(); else loadCompta();
+}
+
+$("comptaModePartnersBtn").addEventListener("click", () => setComptaMode("partners"));
+$("comptaModeDriversBtn").addEventListener("click", () => setComptaMode("drivers"));
+
+async function loadComptaDrivers() {
+  hideError($("errorBox"));
+  try {
+    const ds = $("comptaDateStart").value || "";
+    const de = $("comptaDateEnd").value || "";
+    const data = await apiGet({ action: "getDriverStats", password: SESSION_PASSWORD, dateStart: ds, dateEnd: de });
+    if (data.success) {
+      COMPTA_DRIVERS = data.drivers || [];
+      renderComptaDrivers();
+    } else if (CURRENT_TAB === "compta") {
+      showError($("errorBox"), data.error || t("loadDriverStatsFailedGeneric"));
+    }
+  } catch (e) {
+    if (CURRENT_TAB === "compta") showError($("errorBox"), t("loadDriverStatsFailedGeneric"));
+  }
+}
+
+function comptaDriverCardHtml(d) {
+  const total = Number(d.totalDA) || 0;
+  return `
+    <div class="compta-card">
+      <div class="row1">
+        <div class="nom">${escapeHtml(d.nom || "")}</div>
+        <div class="total">${total.toLocaleString("fr-FR")} DA</div>
+      </div>
+      <div class="meta">${Number(d.nbLivraisons) || 0} ${escapeHtml(t("statNbLivraisonsShort"))}</div>
+    </div>
+  `;
+}
+
+function renderComptaDrivers() {
+  $("listComptaDrivers").innerHTML = COMPTA_DRIVERS.length
+    ? COMPTA_DRIVERS.map(comptaDriverCardHtml).join("")
+    : emptyStateHtml(t("noComptaDriversData"), "🛵");
 }
 
 /* ============================================================
