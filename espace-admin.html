@@ -194,6 +194,23 @@
   .compta-total-row .label{font-size:12px;font-weight:700;color:var(--gold-400);}
   .compta-total-row .value{font-size:18px;font-weight:800;}
 
+  .ad-form-card{padding-bottom:18px;}
+  .ad-form-row{display:flex;align-items:center;justify-content:space-between;gap:14px;}
+  .ad-form-ordre{display:flex;flex-direction:column;gap:6px;flex:none;}
+  .ad-form-ordre input{width:80px;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+    font-size:14px;font-family:inherit;background:#fbfcfe;}
+  .ad-form-actif{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--blue-900);cursor:pointer;}
+  .ad-form-actif input{width:18px;height:18px;}
+  .ad-card{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);
+    border:1px solid var(--border);padding:16px;margin-bottom:12px;display:flex;gap:12px;}
+  .ad-card .thumb{width:64px;height:64px;border-radius:10px;object-fit:cover;background:var(--bg);flex-shrink:0;}
+  .ad-card .info{flex:1;min-width:0;}
+  .ad-card .nom{font-size:14.5px;font-weight:800;color:var(--text);}
+  .ad-card .texte{font-size:12.5px;color:var(--muted);margin:2px 0 6px;}
+  .ad-card .ordre{font-size:11.5px;color:var(--muted);font-weight:700;}
+  .btn-edit{background:var(--blue-700);color:#fff;}
+  .btn-delete{background:#fff;border-color:#f3c6c1;color:var(--danger);}
+
   .hidden{display:none !important;}
 
   .footer-note{max-width:960px;margin:24px auto 0;padding:0 16px;text-align:center;
@@ -252,6 +269,7 @@ if ("serviceWorker" in navigator) {
       <button class="tab-btn" id="tabPartnersBtn" type="button"><span id="tabPartnersLabel"></span></button>
       <button class="tab-btn" id="tabDashboardBtn" type="button"><span id="tabDashboardLabel"></span></button>
       <button class="tab-btn" id="tabComptaBtn" type="button"><span id="tabComptaLabel"></span></button>
+      <button class="tab-btn" id="tabPubBtn" type="button"><span id="tabPubLabel"></span></button>
     </div>
 
     <div id="ordersView">
@@ -302,6 +320,49 @@ if ("serviceWorker" in navigator) {
       <div id="listCompta"></div>
     </div>
 
+    <div id="pubView" class="hidden">
+      <div class="refresh-row">
+        <div></div>
+        <button class="btn-refresh" id="refreshPubBtn" type="button"><span id="refreshPubLabel">↻ Actualiser</span></button>
+      </div>
+      <div class="card ad-form-card">
+        <div class="subheading" id="adFormTitle" style="margin-top:0;"></div>
+        <input type="hidden" id="adFormId" value="">
+        <div class="field">
+          <label id="lblAdNom"></label>
+          <input type="text" id="adFormNom" placeholder="">
+        </div>
+        <div class="field">
+          <label id="lblAdImage"></label>
+          <input type="text" id="adFormImage" placeholder="https://...">
+        </div>
+        <div class="field">
+          <label id="lblAdLien"></label>
+          <input type="text" id="adFormLien" placeholder="https://...">
+        </div>
+        <div class="field">
+          <label id="lblAdTexte"></label>
+          <input type="text" id="adFormTexte" placeholder="">
+        </div>
+        <div class="field ad-form-row">
+          <div class="ad-form-ordre">
+            <label id="lblAdOrdre"></label>
+            <input type="number" id="adFormOrdre" value="0" min="0" step="1">
+          </div>
+          <label class="ad-form-actif">
+            <input type="checkbox" id="adFormActif" checked>
+            <span id="lblAdActif"></span>
+          </label>
+        </div>
+        <div class="actions-row">
+          <button class="btn-action btn-confirm" id="adFormSaveBtn" type="button"></button>
+          <button class="btn-action btn-cancel hidden" id="adFormCancelBtn" type="button"></button>
+        </div>
+      </div>
+      <div class="subheading" id="subheadingAds"></div>
+      <div id="listAds"></div>
+    </div>
+
   </div>
 
 </main>
@@ -330,6 +391,7 @@ let PARTNERS = [];
 let DRIVERS = [];
 let DASHBOARD_ORDERS = [];
 let COMPTA_PARTNERS = [];
+let ADS = [];
 let CURRENT_TAB = "orders";
 
 /* ============================================================
@@ -400,6 +462,28 @@ const I18N = {
     statNbCommandesShort: "commandes",
     statNbPlatsShort: "plats",
     loadComptaFailedGeneric: "Impossible de charger la comptabilité. Réessaie.",
+    tabPub: "Publicités",
+    subheadingAds: "Espaces publicitaires",
+    noAds: "Aucune publicité pour le moment.",
+    adFormTitleNew: "Ajouter une publicité",
+    adFormTitleEdit: "Modifier la publicité",
+    lblAdNom: "Nom du restaurant",
+    lblAdImage: "Image (URL)",
+    lblAdLien: "Lien (URL, optionnel)",
+    lblAdTexte: "Texte (optionnel)",
+    lblAdOrdre: "Ordre",
+    lblAdActif: "Active",
+    btnAdSave: "💾 Enregistrer",
+    btnAdCancel: "Annuler",
+    btnAdEdit: "✎ Modifier",
+    btnAdDelete: "✕ Supprimer",
+    adSaveRequired: "Le nom du restaurant et l'image sont obligatoires.",
+    adSaved: "Publicité enregistrée.",
+    adDeleted: "Publicité supprimée.",
+    adDeleteConfirm: "Supprimer cette publicité ?",
+    loadAdsFailedGeneric: "Impossible de charger les publicités. Réessaie.",
+    saveAdFailedGeneric: "Impossible d'enregistrer la publicité. Réessaie.",
+    deleteAdFailedGeneric: "Impossible de supprimer la publicité. Réessaie.",
   },
   ar: {
     tagline: "مساحة الإدارة",
@@ -465,6 +549,28 @@ const I18N = {
     statNbCommandesShort: "طلبات",
     statNbPlatsShort: "أطباق",
     loadComptaFailedGeneric: "تعذر تحميل المحاسبة. أعد المحاولة.",
+    tabPub: "الإعلانات",
+    subheadingAds: "المساحات الإعلانية",
+    noAds: "لا توجد إعلانات حالياً.",
+    adFormTitleNew: "إضافة إعلان",
+    adFormTitleEdit: "تعديل الإعلان",
+    lblAdNom: "اسم المطعم",
+    lblAdImage: "الصورة (رابط)",
+    lblAdLien: "الرابط (اختياري)",
+    lblAdTexte: "نص (اختياري)",
+    lblAdOrdre: "الترتيب",
+    lblAdActif: "نشط",
+    btnAdSave: "💾 حفظ",
+    btnAdCancel: "إلغاء",
+    btnAdEdit: "✎ تعديل",
+    btnAdDelete: "✕ حذف",
+    adSaveRequired: "اسم المطعم والصورة إلزاميان.",
+    adSaved: "تم حفظ الإعلان.",
+    adDeleted: "تم حذف الإعلان.",
+    adDeleteConfirm: "هل تريد حذف هذا الإعلان؟",
+    loadAdsFailedGeneric: "تعذر تحميل الإعلانات. أعد المحاولة.",
+    saveAdFailedGeneric: "تعذر حفظ الإعلان. أعد المحاولة.",
+    deleteAdFailedGeneric: "تعذر حذف الإعلان. أعد المحاولة.",
   }
 };
 
@@ -495,12 +601,25 @@ function applyLanguage() {
   $("refreshDashboardLabel").textContent = t("refreshLabel");
   $("tabComptaLabel").textContent = t("tabCompta");
   $("refreshComptaLabel").textContent = t("refreshLabel");
+  $("tabPubLabel").textContent = t("tabPub");
+  $("refreshPubLabel").textContent = t("refreshLabel");
+  $("subheadingAds").textContent = t("subheadingAds");
+  $("lblAdNom").textContent = t("lblAdNom");
+  $("lblAdImage").textContent = t("lblAdImage");
+  $("lblAdLien").textContent = t("lblAdLien");
+  $("lblAdTexte").textContent = t("lblAdTexte");
+  $("lblAdOrdre").textContent = t("lblAdOrdre");
+  $("lblAdActif").textContent = t("lblAdActif");
+  $("adFormSaveBtn").textContent = t("btnAdSave");
+  $("adFormCancelBtn").textContent = t("btnAdCancel");
+  $("adFormTitle").textContent = $("adFormId").value ? t("adFormTitleEdit") : t("adFormTitleNew");
   renderOrders();
   renderModeration();
   renderPartners();
   renderDrivers();
   renderDashboard();
   renderCompta();
+  renderAdsAdmin();
 }
 
 $("langToggle").addEventListener("click", () => {
@@ -635,6 +754,8 @@ $("tabComptaBtn").addEventListener("click", () => switchTab("compta"));
 $("refreshComptaBtn").addEventListener("click", loadCompta);
 $("comptaDateStart").addEventListener("change", loadCompta);
 $("comptaDateEnd").addEventListener("change", loadCompta);
+$("tabPubBtn").addEventListener("click", () => switchTab("pub"));
+$("refreshPubBtn").addEventListener("click", loadAdsAdmin);
 
 function switchTab(tab) {
   CURRENT_TAB = tab;
@@ -643,17 +764,20 @@ function switchTab(tab) {
   $("tabPartnersBtn").classList.toggle("active", tab === "partners");
   $("tabDashboardBtn").classList.toggle("active", tab === "dashboard");
   $("tabComptaBtn").classList.toggle("active", tab === "compta");
+  $("tabPubBtn").classList.toggle("active", tab === "pub");
   $("ordersView").classList.toggle("hidden", tab !== "orders");
   $("moderationView").classList.toggle("hidden", tab !== "moderation");
   $("partnersView").classList.toggle("hidden", tab !== "partners");
   $("dashboardView").classList.toggle("hidden", tab !== "dashboard");
   $("comptaView").classList.toggle("hidden", tab !== "compta");
+  $("pubView").classList.toggle("hidden", tab !== "pub");
   hideError($("errorBox"));
   hideSuccess($("successBox"));
   if (tab === "moderation") loadPendingItems();
   if (tab === "partners") { loadPartners(); loadDrivers(); }
   if (tab === "dashboard") loadDashboard();
   if (tab === "compta") loadCompta();
+  if (tab === "pub") loadAdsAdmin();
 }
 
 /* ============================================================
@@ -1111,6 +1235,145 @@ function renderCompta() {
   $("listCompta").innerHTML = COMPTA_PARTNERS.length
     ? COMPTA_PARTNERS.map(comptaCardHtml).join("")
     : emptyStateHtml(t("noComptaData"), "🧾");
+}
+
+/* ============================================================
+   PUBLICITÉS
+   ============================================================ */
+async function loadAdsAdmin() {
+  hideError($("errorBox"));
+  try {
+    const data = await apiGet({ action: "getAllAds", password: SESSION_PASSWORD });
+    if (data.success) {
+      ADS = data.ads || [];
+      renderAdsAdmin();
+    } else if (CURRENT_TAB === "pub") {
+      showError($("errorBox"), data.error || t("loadAdsFailedGeneric"));
+    }
+  } catch (e) {
+    if (CURRENT_TAB === "pub") showError($("errorBox"), t("loadAdsFailedGeneric"));
+  }
+}
+
+function adCardHtml(ad) {
+  const id = escapeAttr(ad.id);
+  const thumb = ad.imageUrl ? `<img class="thumb" src="${escapeAttr(ad.imageUrl)}" alt="">` : "";
+  const statusLabel = ad.actif ? t("statusActif") : t("statusEnAttente");
+  const statusCls = ad.actif ? "actif" : "enattente";
+  return `
+    <div class="ad-card">
+      ${thumb}
+      <div class="info">
+        <div class="nom">${escapeHtml(ad.nomRestaurant || "")}</div>
+        ${ad.texte ? `<div class="texte">${escapeHtml(ad.texte)}</div>` : ""}
+        <span class="status-badge ${statusCls}">${escapeHtml(statusLabel)}</span>
+        <div class="ordre">${escapeHtml(t("lblAdOrdre"))} : ${escapeHtml(String(ad.ordre || 0))}</div>
+        <div class="actions-row">
+          <button class="btn-action btn-edit" type="button" data-edit-ad="${id}">${escapeHtml(t("btnAdEdit"))}</button>
+          <button class="btn-action btn-delete" type="button" data-delete-ad="${id}">${escapeHtml(t("btnAdDelete"))}</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderAdsAdmin() {
+  $("listAds").innerHTML = ADS.length
+    ? ADS.map(adCardHtml).join("")
+    : emptyStateHtml(t("noAds"), "📣");
+  document.querySelectorAll("#listAds [data-edit-ad]").forEach(btn => {
+    btn.addEventListener("click", () => onEditAd(btn.dataset.editAd));
+  });
+  document.querySelectorAll("#listAds [data-delete-ad]").forEach(btn => {
+    btn.addEventListener("click", () => onDeleteAd(btn.dataset.deleteAd, btn));
+  });
+}
+
+function onEditAd(id) {
+  const ad = ADS.find(x => String(x.id) === String(id));
+  if (!ad) return;
+  $("adFormId").value = ad.id;
+  $("adFormNom").value = ad.nomRestaurant || "";
+  $("adFormImage").value = ad.imageUrl || "";
+  $("adFormLien").value = ad.lienUrl || "";
+  $("adFormTexte").value = ad.texte || "";
+  $("adFormOrdre").value = ad.ordre || 0;
+  $("adFormActif").checked = !!ad.actif;
+  $("adFormTitle").textContent = t("adFormTitleEdit");
+  $("adFormCancelBtn").classList.remove("hidden");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function resetAdForm() {
+  $("adFormId").value = "";
+  $("adFormNom").value = "";
+  $("adFormImage").value = "";
+  $("adFormLien").value = "";
+  $("adFormTexte").value = "";
+  $("adFormOrdre").value = 0;
+  $("adFormActif").checked = true;
+  $("adFormTitle").textContent = t("adFormTitleNew");
+  $("adFormCancelBtn").classList.add("hidden");
+}
+
+$("adFormCancelBtn").addEventListener("click", resetAdForm);
+
+$("adFormSaveBtn").addEventListener("click", async () => {
+  hideError($("errorBox"));
+  hideSuccess($("successBox"));
+  const nomRestaurant = $("adFormNom").value.trim();
+  const imageUrl = $("adFormImage").value.trim();
+  if (!nomRestaurant || !imageUrl) {
+    showError($("errorBox"), t("adSaveRequired"));
+    return;
+  }
+  const btn = $("adFormSaveBtn");
+  btn.disabled = true;
+  try {
+    const data = await apiGet({
+      action: "saveAd",
+      password: SESSION_PASSWORD,
+      id: $("adFormId").value || "",
+      nomRestaurant: nomRestaurant,
+      imageUrl: imageUrl,
+      lienUrl: $("adFormLien").value.trim(),
+      texte: $("adFormTexte").value.trim(),
+      actif: $("adFormActif").checked ? "OUI" : "NON",
+      ordre: $("adFormOrdre").value || 0
+    });
+    if (data.success) {
+      showSuccess($("successBox"), t("adSaved"));
+      resetAdForm();
+      loadAdsAdmin();
+    } else {
+      showError($("errorBox"), data.error || t("saveAdFailedGeneric"));
+    }
+  } catch (e) {
+    showError($("errorBox"), t("saveAdFailedGeneric"));
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+async function onDeleteAd(id, btnEl) {
+  hideError($("errorBox"));
+  hideSuccess($("successBox"));
+  if (!window.confirm(t("adDeleteConfirm"))) return;
+  btnEl.disabled = true;
+  try {
+    const data = await apiGet({ action: "deleteAd", password: SESSION_PASSWORD, id: id });
+    if (data.success) {
+      ADS = ADS.filter(x => String(x.id) !== String(id));
+      renderAdsAdmin();
+      showSuccess($("successBox"), t("adDeleted"));
+    } else {
+      showError($("errorBox"), data.error || t("deleteAdFailedGeneric"));
+    }
+  } catch (e) {
+    showError($("errorBox"), t("deleteAdFailedGeneric"));
+  } finally {
+    btnEl.disabled = false;
+  }
 }
 
 /* ============================================================

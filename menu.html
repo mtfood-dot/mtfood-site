@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0a2647">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MT Delivery">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<link rel="icon" href="/icons/icon-192.png">
+<title>MT Delivery — Menu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     CONFIGURATION VISUELLE — bleu & or (charte MT Delivery)
+     ============================================================ */
+  :root{
+    --blue-900:#0a2647;
+    --blue-800:#0f3562;
+    --blue-700:#134a8f;
+    --blue-600:#1a5cb0;
+    --blue-100:#e9f1fb;
+    --gold-600:#b8860f;
+    --gold-500:#d4a017;
+    --gold-400:#e8bb3d;
+    --gold-100:#fdf3d9;
+    --bg:#f3f5f9;
+    --card:#ffffff;
+    --text:#131b28;
+    --muted:#69748a;
+    --danger:#c0392b;
+    --border:#e6eaf1;
+    --radius-lg:20px;
+    --radius-md:14px;
+    --radius-sm:10px;
+    --shadow-sm:0 1px 2px rgba(16,24,40,.06);
+    --shadow-md:0 6px 20px -6px rgba(16,36,72,.16);
+    --shadow-lg:0 20px 40px -12px rgba(10,38,71,.25);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    padding-bottom:96px;-webkit-font-smoothing:antialiased;}
+  html[dir="rtl"] body{font-family:'Tajawal','Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;}
+  a{color:inherit;}
+  ::selection{background:var(--gold-100);color:var(--blue-900);}
+
+  /* ---------- HEADER ---------- */
+  header.top{
+    background:#ffffff;
+    padding:22px 0 26px;position:relative;overflow:hidden;
+    border-bottom:1px solid var(--border);text-align:center;
+  }
+  header.top .brand{display:flex;flex-direction:column;align-items:center;gap:10px;position:relative;z-index:1;width:100%;}
+  header.top .brand .logo-img{height:auto;width:100%;max-width:420px;display:block;margin:0 auto;}
+  header.top .tagline{font-size:14px;color:var(--blue-700);font-weight:700;letter-spacing:.2px;}
+  header.top .phone-link{
+    margin-top:4px;display:inline-flex;align-items:center;gap:7px;position:relative;z-index:1;
+    background:var(--blue-100);
+    border:1px solid var(--blue-600);
+    padding:9px 16px;border-radius:999px;font-size:13.5px;font-weight:700;
+    text-decoration:none;color:var(--blue-700);transition:background .15s ease;
+  }
+  header.top .phone-link:active{background:#ddeaf9;}
+  header.top .header-links{margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;position:relative;z-index:1;}
+  header.top .header-links .phone-link{margin-top:0;}
+  header.top .driver-link-top{
+    display:inline-flex;align-items:center;gap:6px;
+    background:#fff;border:1.5px solid var(--gold-500);color:var(--blue-900);
+    padding:7px 14px;border-radius:999px;font-weight:700;font-size:13px;
+    text-decoration:none;transition:background .15s ease;
+  }
+  header.top .driver-link-top:active{background:#fff7e6;}
+  header.top .driver-space-link-top{
+    display:inline-flex;align-items:center;gap:6px;
+    background:var(--blue-900);border:1.5px solid var(--blue-900);color:#fff;
+    padding:7px 14px;border-radius:999px;font-weight:700;font-size:13px;
+    text-decoration:none;transition:background .15s ease;
+  }
+  header.top .driver-space-link-top:active{background:var(--blue-700);}
+  header.top .partner-link-top{
+    display:inline-flex;align-items:center;gap:6px;
+    background:#fff;border:1.5px solid var(--blue-600);color:var(--blue-700);
+    padding:7px 14px;border-radius:999px;font-weight:700;font-size:13px;
+    text-decoration:none;transition:background .15s ease;
+  }
+  header.top .partner-link-top:active{background:var(--blue-100);}
+  header.top .partner-space-link-top{
+    display:inline-flex;align-items:center;gap:6px;
+    background:var(--gold-500);border:1.5px solid var(--gold-500);color:var(--blue-900);
+    padding:7px 14px;border-radius:999px;font-weight:700;font-size:13px;
+    text-decoration:none;transition:background .15s ease;
+  }
+  header.top .partner-space-link-top:active{background:var(--gold-600);}
+  header.top .account-link-top{
+    display:inline-flex;align-items:center;gap:6px;
+    background:var(--blue-100);border:1.5px solid var(--blue-600);color:var(--blue-700);
+    padding:7px 14px;border-radius:999px;font-weight:700;font-size:13px;
+    text-decoration:none;transition:background .15s ease;
+  }
+  header.top .account-link-top:active{background:#ddeaf9;}
+
+  /* ---------- VÉRIFICATION DE ZONE ---------- */
+  .zone-check{max-width:960px;margin:14px auto 0;padding:0 16px;}
+  .zone-check-toggle{display:flex;align-items:center;gap:8px;margin:0 auto;background:#fff;
+    border:1.5px solid var(--border);border-radius:999px;padding:10px 18px;font-weight:700;font-size:13px;
+    color:var(--blue-700);cursor:pointer;font-family:inherit;}
+  .zone-check-panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);
+    padding:16px;margin-top:10px;box-shadow:var(--shadow-sm);}
+  .zone-check-panel label{display:block;font-size:12.5px;font-weight:700;color:var(--blue-900);margin-bottom:6px;}
+  .zone-check-row{display:flex;gap:8px;}
+  .zone-check-row input{flex:1;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+    font-size:14px;font-family:inherit;background:#fbfcfe;}
+  .zone-check-row button{background:var(--blue-900);color:#fff;border:none;border-radius:var(--radius-sm);
+    padding:0 18px;font-weight:800;font-size:13.5px;cursor:pointer;font-family:inherit;}
+  .zone-check-result{margin-top:10px;font-size:13.5px;line-height:1.6;border-radius:var(--radius-sm);padding:10px 12px;display:none;}
+  .zone-check-result.show{display:block;}
+  .zone-check-result.ok{background:#eaf7ee;color:var(--green,#1a7d3a);}
+  .zone-check-result.ko{background:#fdeceb;color:var(--danger);}
+
+  /* ---------- BANNIÈRE COMPTE AU CHECKOUT ---------- */
+  .account-banner{background:var(--blue-100);border:1px solid var(--blue-600);border-radius:var(--radius-md);
+    padding:12px 14px;margin-bottom:16px;}
+  .account-banner-text{font-size:13px;color:var(--blue-900);line-height:1.5;margin-bottom:10px;}
+  .account-banner-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .account-banner-actions a{background:var(--blue-900);color:#fff;border-radius:999px;padding:7px 14px;
+    font-size:12.5px;font-weight:700;text-decoration:none;}
+  .account-banner-actions a#accountBannerSignup{background:#fff;color:var(--blue-700);border:1.5px solid var(--blue-600);}
+  .account-banner-actions button{margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;}
+  html[dir="rtl"] .account-banner-actions button{margin-left:0;margin-right:auto;}
+  .lang-toggle{
+    position:absolute;top:14px;right:14px;z-index:2;
+    background:var(--blue-100);border:1px solid var(--blue-600);color:var(--blue-700);
+    font-weight:800;font-size:12.5px;padding:7px 14px;border-radius:999px;cursor:pointer;
+    font-family:inherit;
+  }
+  html[dir="rtl"] .lang-toggle{right:auto;left:14px;font-family:'Plus Jakarta Sans',sans-serif;}
+  .lang-toggle:active{background:#ddeaf9;}
+
+  /* Chiffres/prix toujours affichés de gauche à droite, même en arabe (RTL) */
+  html[dir="rtl"] .phone-link,
+  html[dir="rtl"] .price,
+  html[dir="rtl"] .fee,
+  html[dir="rtl"] #sumSubtotal,
+  html[dir="rtl"] #sumTotalCart,
+  html[dir="rtl"] #chkSubtotal,
+  html[dir="rtl"] #chkFee,
+  html[dir="rtl"] #chkTotal,
+  html[dir="rtl"] .order-no{
+    direction:ltr;unicode-bidi:isolate;
+  }
+
+  /* ---------- CATEGORY TABS ---------- */
+  .tabs{
+    display:flex;gap:8px;overflow-x:auto;padding:16px 16px 12px;
+    background:var(--bg);position:sticky;top:0;z-index:5;
+  }
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{
+    flex:0 0 auto;padding:9px 17px;border-radius:999px;font-size:13.5px;
+    background:#fff;border:1px solid var(--border);color:var(--blue-700);
+    font-weight:600;white-space:nowrap;cursor:pointer;transition:all .15s ease;
+    box-shadow:var(--shadow-sm);
+  }
+  .tab.active{background:var(--blue-700);border-color:var(--blue-700);color:#fff;box-shadow:0 6px 14px -4px rgba(19,74,143,.45);}
+
+  /* ---------- PRODUCT GRID ---------- */
+  main{padding:6px 16px 10px;max-width:960px;margin:0 auto;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(min-width:640px){.grid{grid-template-columns:repeat(3,1fr);}}
+  .card{
+    background:var(--card);border-radius:var(--radius-md);overflow:hidden;
+    box-shadow:var(--shadow-sm);display:flex;flex-direction:column;
+    border:1px solid var(--border);transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .card:active{transform:scale(.98);}
+  .card .photo{
+    width:100%;aspect-ratio:4/3;
+    background:linear-gradient(135deg,var(--blue-100),#f7f2e2) center/cover no-repeat;
+    display:flex;align-items:center;justify-content:center;color:var(--blue-600);font-size:30px;
+  }
+  .card .body{padding:12px 12px 14px;display:flex;flex-direction:column;gap:6px;flex:1;}
+  .card .name{font-size:14.5px;font-weight:700;line-height:1.25;letter-spacing:-.1px;}
+  .card .desc{font-size:12px;color:var(--muted);line-height:1.35;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .card .row-bottom{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:6px;padding-top:4px;}
+  .card .price{font-weight:800;color:var(--blue-700);font-size:14.5px;letter-spacing:-.2px;}
+  .add-btn{
+    background:linear-gradient(135deg,var(--gold-400),var(--gold-500));color:var(--blue-900);border:none;border-radius:9px;
+    padding:8px 14px;font-weight:700;font-size:12.5px;cursor:pointer;
+    box-shadow:0 3px 8px -2px rgba(212,160,23,.5);transition:transform .12s ease;
+  }
+  .add-btn:active{transform:scale(.94);}
+  .qty-stepper{display:flex;align-items:center;gap:10px;background:var(--blue-100);border-radius:9px;padding:5px 9px;}
+  .qty-stepper span{font-weight:800;font-size:13px;color:var(--blue-800);min-width:12px;text-align:center;}
+  .qty-stepper button{
+    width:23px;height:23px;border-radius:7px;border:none;background:var(--blue-700);color:#fff;
+    font-weight:700;cursor:pointer;font-size:14px;line-height:1;
+  }
+  .empty-msg{
+    text-align:center;color:var(--muted);padding:70px 24px;font-size:14.5px;line-height:1.7;
+    white-space:pre-line;
+  }
+
+  /* ---------- FLOATING CART BAR ---------- */
+  .cart-bar{
+    position:fixed;left:16px;right:16px;bottom:16px;z-index:20;
+    background:linear-gradient(135deg,var(--blue-900),var(--blue-700));color:#fff;padding:14px 18px;
+    display:none;align-items:center;justify-content:space-between;border-radius:16px;
+    box-shadow:var(--shadow-lg);
+  }
+  .cart-bar.show{display:flex;}
+  .cart-bar .info{font-size:13.5px;font-weight:500;}
+  .cart-bar .info b{color:var(--gold-400);font-size:14.5px;}
+  .cart-bar button{
+    background:linear-gradient(135deg,var(--gold-400),var(--gold-500));color:var(--blue-900);border:none;border-radius:11px;
+    padding:11px 18px;font-weight:800;font-size:13.5px;cursor:pointer;
+  }
+
+  /* ---------- MODAL / DRAWER ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(8,18,34,.6);backdrop-filter:blur(2px);z-index:30;
+    display:none;align-items:flex-end;justify-content:center;
+  }
+  .overlay.show{display:flex;}
+  @media(min-width:640px){.overlay{align-items:center;}}
+  .sheet{
+    background:#fff;border-radius:22px 22px 0 0;width:100%;max-width:480px;
+    max-height:90vh;overflow-y:auto;padding:22px 20px 26px;position:relative;
+  }
+  @media(min-width:640px){.sheet{border-radius:22px;}}
+  .sheet h2{margin:0 0 16px;font-size:18px;color:var(--blue-900);font-weight:800;letter-spacing:-.2px;}
+  .sheet .close-x{
+    position:absolute;top:16px;right:18px;background:var(--bg);border:none;font-size:16px;
+    color:var(--muted);cursor:pointer;width:30px;height:30px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+  }
+  html[dir="rtl"] .sheet .close-x{right:auto;left:18px;}
+  .cart-line{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--border);}
+  .cart-line .cl-name{flex:1;font-size:13.5px;font-weight:700;}
+  .cart-line .cl-price{font-size:12.5px;color:var(--muted);margin-top:2px;}
+  .cart-line .remove{background:none;border:none;color:var(--danger);font-size:18px;cursor:pointer;padding:0 4px;}
+
+  .totals{margin-top:16px;padding-top:14px;border-top:1.5px dashed var(--border);font-size:13.5px;}
+  .totals .line{display:flex;justify-content:space-between;padding:4px 0;color:var(--muted);}
+  .totals .line.total{color:var(--text);font-weight:800;font-size:17px;padding-top:8px;}
+
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12.5px;font-weight:700;color:var(--blue-800);margin-bottom:6px;}
+  .field input, .field textarea{
+    width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;
+    font-family:inherit;background:#fbfcfe;transition:border-color .15s ease;
+  }
+  .field input:focus, .field textarea:focus{outline:none;border-color:var(--blue-600);background:#fff;}
+  .zone-options{display:flex;flex-direction:column;gap:8px;}
+  .zone-opt{
+    display:flex;align-items:center;justify-content:space-between;border:1.5px solid var(--border);
+    border-radius:11px;padding:11px 13px;cursor:pointer;font-size:13.5px;font-weight:600;transition:all .15s ease;
+  }
+  .zone-opt.selected{border-color:var(--blue-600);background:var(--blue-100);}
+  .zone-opt .fee{font-weight:800;color:var(--blue-700);}
+
+  .cod-note{
+    background:var(--gold-100);border:1px solid #ecd48a;color:#7a5b00;font-size:12.5px;
+    padding:11px 13px;border-radius:11px;margin:16px 0;display:flex;gap:9px;align-items:flex-start;font-weight:500;
+  }
+
+  .submit-btn{
+    width:100%;background:linear-gradient(135deg,var(--blue-700),var(--blue-900));color:#fff;border:none;border-radius:13px;
+    padding:15px;font-size:15px;font-weight:800;cursor:pointer;margin-top:8px;
+    box-shadow:0 8px 18px -6px rgba(19,74,143,.5);letter-spacing:.2px;
+  }
+  .submit-btn:disabled{opacity:.55;box-shadow:none;}
+  .error-box{
+    background:#fdecea;border:1px solid #f5c2be;color:var(--danger);font-size:13px;
+    padding:11px 13px;border-radius:10px;margin-top:12px;display:none;font-weight:500;
+  }
+  .error-box.show{display:block;}
+
+  .success-view{text-align:center;padding:24px 8px;}
+  .success-view .check{
+    width:68px;height:68px;border-radius:50%;background:#e5f6ea;color:#2e9e4d;
+    display:flex;align-items:center;justify-content:center;font-size:34px;margin:0 auto 16px;
+    box-shadow:0 8px 18px -6px rgba(46,158,77,.35);
+  }
+  .success-view h2{color:var(--blue-900);}
+  .success-view .order-no{
+    display:inline-block;background:linear-gradient(135deg,var(--blue-900),var(--blue-700));color:var(--gold-400);
+    padding:8px 18px;border-radius:10px;font-weight:800;letter-spacing:.6px;margin:10px 0 18px;font-size:15px;
+  }
+  .success-view p{font-size:13.5px;color:var(--muted);line-height:1.65;}
+  .close-btn{
+    margin-top:16px;background:linear-gradient(135deg,var(--gold-400),var(--gold-500));color:var(--blue-900);border:none;
+    border-radius:11px;padding:12px 22px;font-weight:800;cursor:pointer;
+  }
+  .track-link{
+    display:inline-block;margin-top:14px;color:var(--blue-700);font-weight:700;font-size:13.5px;
+    text-decoration:none;border:1.5px solid var(--blue-700);border-radius:11px;padding:10px 20px;
+  }
+  .track-link:hover{background:var(--blue-100);}
+  .wa-confirm-btn{
+    display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin:16px 0 4px;
+    background:#25D366;color:#fff;font-weight:800;font-size:15px;text-decoration:none;
+    border-radius:13px;padding:15px 18px;box-shadow:0 8px 18px -6px rgba(37,211,102,.55);
+  }
+  .wa-confirm-btn:active{background:#1ebe5a;}
+  .wa-note{font-size:12.5px;color:var(--muted);margin:6px 0 0;}
+
+  .footer-note{max-width:960px;margin:24px auto 0;padding:0 16px;text-align:center;
+    color:var(--muted);font-size:11.5px;font-weight:500;}
+  .footer-legal-row{max-width:960px;margin:10px auto 0;padding:0 16px;text-align:center;font-size:11.5px;color:var(--muted);}
+  .footer-legal-row a{color:var(--blue-700);font-weight:700;text-decoration:none;}
+  .footer-admin-link{color:var(--muted);font-size:10.5px;text-decoration:none;opacity:.6;}
+  .footer-admin-link:active{opacity:1;}
+  .install-bar{display:none;position:fixed;left:12px;right:12px;bottom:12px;z-index:1000;max-width:480px;margin:0 auto;
+    background:var(--blue-900);color:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.3);
+    align-items:center;gap:12px;font-size:14px;}
+  .install-bar.show{display:flex;}
+  .install-bar img{width:40px;height:40px;border-radius:10px;}
+  .install-bar .txt{flex:1;line-height:1.3;}
+  .install-bar .txt small{display:block;opacity:.8;font-size:12px;}
+  .install-bar button{border:0;border-radius:10px;padding:9px 14px;font-weight:700;font-size:14px;cursor:pointer;}
+  .install-bar .go{background:var(--gold-500);color:var(--blue-900);}
+  .install-bar .no{background:transparent;color:#fff;opacity:.7;padding:9px 6px;}
+</style>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("/sw.js").catch(function (err) {
+      console.warn("Service worker non enregistré :", err);
+    });
+  });
+}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <a href="index.html" aria-label="Retour à l'accueil" style="display:block;"><img class="logo-img" src="logo.png" alt="MT Delivery" width="316" height="158" loading="eager"></a>
+    <div class="tagline" id="tagline">Commandez, on vous livre</div>
+  </div>
+  <div class="header-links">
+    <a class="phone-link" id="headerPhone" href="tel:0560 78 84 97">📞 0560 78 84 97</a>
+    <a class="account-link-top" id="accountLinkTop" href="connexion.html">👤 Mon compte</a>
+  </div>
+  <button class="lang-toggle" id="langToggle" type="button">AR</button>
+</header>
+
+<div class="zone-check" id="zoneCheck">
+  <button class="zone-check-toggle" id="zoneCheckToggle" type="button">📍 <span id="zoneCheckToggleText">Vérifier si on livre chez toi</span></button>
+  <div class="zone-check-panel hidden" id="zoneCheckPanel">
+    <label id="zoneCheckLabel">Ton adresse ou ton quartier</label>
+    <div class="zone-check-row">
+      <input type="text" id="zoneCheckInput" placeholder="Ex: Meftah Centre, Souakria...">
+      <button id="zoneCheckBtn" type="button">Vérifier</button>
+    </div>
+    <div class="zone-check-result" id="zoneCheckResult"></div>
+  </div>
+</div>
+
+<nav class="tabs" id="tabs"></nav>
+
+<main>
+  <div id="grid" class="grid"></div>
+  <div id="emptyMsg" class="empty-msg" style="display:none;"></div>
+</main>
+
+<div class="footer-note" id="footerNote">MT Delivery · Meftah, Blida · Paiement à la livraison uniquement</div>
+<div class="footer-legal-row" id="footerLegalRow">
+  <a href="cgu.html" id="footerCguLink">Conditions d'utilisation</a> · <a href="confidentialite.html" id="footerPrivacyLink">Confidentialité</a>
+</div>
+<div style="text-align:center;margin-top:6px;"><a class="footer-admin-link" href="espace-admin.html">Admin</a></div>
+
+<!-- Barre panier flottante -->
+<div class="cart-bar" id="cartBar">
+  <div class="info"><bdi dir="ltr"><b id="cartCount">0</b></bdi> <span id="cartBarUnit">article(s)</span> · <bdi dir="ltr"><b id="cartTotal">0</b> DA</bdi></div>
+  <button id="openCartBtn">Voir mon panier</button>
+</div>
+
+<!-- Overlay + panier -->
+<div class="overlay" id="cartOverlay">
+  <div class="sheet">
+    <button class="close-x" data-close="cartOverlay">✕</button>
+    <h2 id="cartTitle">Mon panier</h2>
+    <div id="cartLines"></div>
+    <div class="totals">
+      <div class="line"><span id="lblSubtotalCart">Sous-total</span><span id="sumSubtotal">0 DA</span></div>
+      <div class="line total"><span id="lblTotalCart">Total</span><span id="sumTotalCart">0 DA</span></div>
+    </div>
+    <button class="submit-btn" id="goCheckoutBtn">Passer la commande</button>
+  </div>
+</div>
+
+<!-- Overlay + formulaire de commande -->
+<div class="overlay" id="checkoutOverlay">
+  <div class="sheet">
+    <button class="close-x" data-close="checkoutOverlay">✕</button>
+    <h2 id="checkoutTitle">Vos informations</h2>
+
+    <div class="field">
+      <label id="lblName">Nom et prénom</label>
+      <input type="text" id="fName" placeholder="Ex:   Abdou ">
+    </div>
+    <div class="field">
+      <label id="lblPhone">Téléphone</label>
+      <input type="tel" id="fPhone" placeholder="Ex: 0555 xx xx xx">
+    </div>
+    <div class="field">
+      <label id="lblAddress">Adresse complète</label>
+      <textarea id="fAddress" rows="2" placeholder="Rue, quartier, repère..."></textarea>
+    </div>
+    <div class="field">
+      <label id="lblZone">Zone de livraison</label>
+      <div class="zone-options" id="zoneOptions"></div>
+    </div>
+    <div class="field">
+      <label id="lblNotes">Remarque (optionnel)</label>
+      <textarea id="fNotes" rows="2" placeholder="Ex: sans oignon, sonner à l'interphone..."></textarea>
+    </div>
+
+    <div class="totals">
+      <div class="line"><span id="lblSubtotalChk">Sous-total</span><span id="chkSubtotal">0 DA</span></div>
+      <div class="line"><span id="lblDeliveryChk">Livraison</span><span id="chkFee">—</span></div>
+      <div class="line total"><span id="lblTotalChk">Total à payer</span><span id="chkTotal">0 DA</span></div>
+    </div>
+
+    <div class="cod-note">💵 <span id="codNoteText">Paiement <b>à la livraison</b> (cash). Aucun paiement en ligne requis.</span></div>
+
+    <div class="error-box" id="chkError"></div>
+    <button class="submit-btn" id="confirmOrderBtn">Confirmer la commande</button>
+  </div>
+</div>
+
+<!-- Overlay + confirmation -->
+<div class="overlay" id="successOverlay">
+  <div class="sheet success-view">
+    <div class="check">✓</div>
+    <h2 id="orderSentTitle">Commande envoyée !</h2>
+    <div class="order-no" id="orderNoDisplay"></div>
+    <p id="thanksText">Merci ! Notre équipe va vous appeler pour confirmer votre commande avant de vous l'envoyer.<br>Paiement en espèces à la réception.</p>
+    <a href="#" class="wa-confirm-btn" id="waConfirmBtn" target="_blank" rel="noopener">✅ Confirmer ma commande sur WhatsApp</a>
+    <p class="wa-note" id="waNote">Un message déjà prêt s'ouvre : il suffit d'appuyer sur Envoyer.</p>
+    <a href="suivi-commande.html" class="track-link" id="trackOrderLink">Suivre ma commande</a>
+    <br>
+    <button class="close-btn" id="closeSuccessBtn" data-close="successOverlay">Fermer</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   CONFIGURATION — à modifier par MT Delivery
+   ============================================================ */
+const CONFIG = {
+  // Collez ici l'URL de votre Apps Script (se termine par /exec)
+  API_URL: "https://script.google.com/macros/s/AKfycbwgXOyXERonv0Yk7X-uhoHuE1Fj26RiYHPR4Tnr7Z_1Ly8wWjsvlE5sp3JJRukRR4ZF/exec",
+
+  // Numéro affiché pour commander par téléphone / en cas de souci
+  PHONE_DISPLAY: "0560 78 84 97",
+  PHONE_TEL: "0560 78 84 97",
+
+  // Numéro WhatsApp qui reçoit les confirmations de commande
+  // (format international sans + ni espaces : 213 + numéro sans le 0)
+  WHATSAPP_NUMBER: "213560788497",
+
+  // Zones de livraison et frais (en DA) — à ajuster
+  ZONES: [
+    { id: "centre", label: "Meftah Centre", fee: 200 },
+    { id: "Hopital", label: "Meftah Dehors", fee: 250 },
+    { id: "Souakria", label: "Meftah Dehors", fee: 300 }
+
+  ]
+};
+
+/* ============================================================
+   TRADUCTIONS (FR / AR)
+   ============================================================ */
+const ALL_CAT = "Tous"; // clé interne, jamais affichée directement
+
+const I18N = {
+  fr: {
+    toggleLabel: "AR",
+    tagline: "Commandez, on vous livre",
+    footerNote: "MT Delivery · Meftah, Blida · Paiement à la livraison uniquement",
+    driverLinkTop: "🛵 Devenir livreur",
+    driverSpaceLinkTop: "🔑 Espace livreur",
+    partnerLinkTop: "🤝 Devenir partenaire",
+    partnerSpaceLinkTop: "🏪 Espace partenaire",
+    driverLink: "Tu veux devenir livreur ? Inscris-toi ici",
+    cartBarUnit: "article(s)",
+    viewCart: "Voir mon panier",
+    cartTitle: "Mon panier",
+    subtotal: "Sous-total",
+    total: "Total",
+    checkoutBtn: "Passer la commande",
+    checkoutTitle: "Vos informations",
+    lblName: "Nom et prénom",
+    namePlaceholder: "Ex:   Abdou ",
+    lblPhone: "Téléphone",
+    phonePlaceholder: "Ex: 0555 xx xx xx",
+    lblAddress: "Adresse complète",
+    addressPlaceholder: "Rue, quartier, repère...",
+    lblZone: "Zone de livraison",
+    lblNotes: "Remarque (optionnel)",
+    notesPlaceholder: "Ex: sans oignon, sonner à l'interphone...",
+    delivery: "Livraison",
+    totalToPay: "Total à payer",
+    codNoteHtml: "Paiement <b>à la livraison</b> (cash). Aucun paiement en ligne requis.",
+    confirmOrder: "Confirmer la commande",
+    sending: "Envoi en cours...",
+    orderSentTitle: "Commande envoyée !",
+    trackOrder: "Suivre ma commande",
+    thanksHtml: "Dernière étape : confirmez votre commande sur WhatsApp pour que nous puissions la préparer.<br>Paiement en espèces à la réception.",
+    waConfirm: "✅ Confirmer ma commande sur WhatsApp",
+    waNote: "Un message déjà prêt s'ouvre : il suffit d'appuyer sur Envoyer.",
+    waMsgIntro: "Bonjour MT Delivery, je confirme ma commande",
+    waMsgName: "Nom",
+    waMsgAddress: "Adresse",
+    waMsgItems: "Articles",
+    waMsgTotal: "Total",
+    close: "Fermer",
+    add: "Ajouter",
+    allCat: "Tous",
+    cartEmpty: "Votre panier est vide.",
+    catalogUpdating: "Notre catalogue est en cours de mise à jour.\nAppelez-nous pour commander directement.",
+    loadError: "Impossible de charger le menu pour le moment.\nVérifiez votre connexion ou appelez-nous.",
+    fillRequired: "Merci de remplir le nom, le téléphone et l'adresse.",
+    chooseZone: "Merci de choisir une zone de livraison.",
+    emptyCartErr: "Votre panier est vide.",
+    sendError: "Erreur lors de l'envoi. Réessayez ou appelez-nous au ",
+    chooseZonePlaceholder: "— (choisir une zone)",
+    genericError: "Erreur inconnue",
+    networkError: "Erreur réseau",
+    timeoutError: "Délai dépassé",
+    accountLinkTop: "👤 Mon compte",
+    myAccountLinkTop: "👤 Mes commandes",
+    footerCguLink: "Conditions d'utilisation",
+    footerPrivacyLink: "Confidentialité",
+    zoneCheckToggleText: "Vérifier si on livre chez toi",
+    zoneCheckLabel: "Ton adresse ou ton quartier",
+    zoneCheckPlaceholder: "Ex: Meftah Centre, Souakria...",
+    zoneCheckBtn: "Vérifier",
+    zoneCheckEmpty: "Merci d'indiquer ton adresse ou ton quartier.",
+    zoneCheckOk: "On livre chez toi ! Zone : ",
+    zoneCheckKo: "On ne couvre pas encore cette adresse. Zones actuellement livrées : ",
+    accountBannerText: "Connecte-toi pour retrouver tes commandes et aller plus vite la prochaine fois.",
+    accountBannerLogin: "Se connecter",
+    accountBannerSignup: "Créer un compte"
+  },
+  ar: {
+    toggleLabel: "FR",
+    tagline: "اطلب ونوصلك",
+    footerNote: "إم تي دليفري · مفتاح، البليدة · الدفع عند الاستلام فقط",
+    driverLinkTop: "🛵 كن موصلاً",
+    driverSpaceLinkTop: "🔑 مساحة الموصل",
+    partnerLinkTop: "🤝 كن شريكاً",
+    partnerSpaceLinkTop: "🏪 مساحة الشريك",
+    driverLink: "تريد أن تصبح موصلاً؟ سجل هنا",
+    cartBarUnit: "منتج (منتجات)",
+    viewCart: "عرض سلتي",
+    cartTitle: "سلتي",
+    subtotal: "المجموع الفرعي",
+    total: "المجموع",
+    checkoutBtn: "إتمام الطلب",
+    checkoutTitle: "معلوماتك",
+    lblName: "الاسم واللقب",
+    namePlaceholder: "مثال: عبدو",
+    lblPhone: "الهاتف",
+    phonePlaceholder: "مثال: 0555 xx xx xx",
+    lblAddress: "العنوان الكامل",
+    addressPlaceholder: "الشارع، الحي، علامة مميزة...",
+    lblZone: "منطقة التوصيل",
+    lblNotes: "ملاحظة (اختياري)",
+    notesPlaceholder: "مثال: بدون بصل، اطرق الجرس...",
+    delivery: "التوصيل",
+    totalToPay: "المجموع الواجب دفعه",
+    codNoteHtml: "الدفع <b>عند الاستلام</b> (نقدًا). لا حاجة لأي دفع إلكتروني.",
+    confirmOrder: "تأكيد الطلب",
+    sending: "جارٍ الإرسال...",
+    orderSentTitle: "تم إرسال طلبكم!",
+    trackOrder: "تتبع طلبي",
+    thanksHtml: "الخطوة الأخيرة: أكّدوا طلبكم عبر واتساب حتى نتمكن من تحضيره.<br>الدفع نقدًا عند الاستلام.",
+    waConfirm: "✅ تأكيد طلبي عبر واتساب",
+    waNote: "ستُفتح رسالة جاهزة، يكفي الضغط على إرسال.",
+    waMsgIntro: "السلام عليكم MT Delivery، أؤكد طلبي",
+    waMsgName: "الاسم",
+    waMsgAddress: "العنوان",
+    waMsgItems: "الطلبات",
+    waMsgTotal: "المجموع",
+    close: "إغلاق",
+    add: "أضف",
+    allCat: "الكل",
+    cartEmpty: "سلتك فارغة.",
+    catalogUpdating: "قائمتنا قيد التحديث حاليًا.\nاتصلوا بنا للطلب مباشرة.",
+    loadError: "تعذر تحميل القائمة حاليًا.\nتحقق من اتصالك أو اتصل بنا.",
+    fillRequired: "الرجاء إدخال الاسم والهاتف والعنوان.",
+    chooseZone: "الرجاء اختيار منطقة التوصيل.",
+    emptyCartErr: "سلتك فارغة.",
+    sendError: "خطأ أثناء الإرسال. حاول مجددًا أو اتصل بنا على ",
+    chooseZonePlaceholder: "— (اختر منطقة)",
+    genericError: "خطأ غير معروف",
+    networkError: "خطأ في الشبكة",
+    timeoutError: "انتهت المهلة",
+    accountLinkTop: "👤 حسابي",
+    myAccountLinkTop: "👤 طلباتي",
+    footerCguLink: "شروط الاستخدام",
+    footerPrivacyLink: "الخصوصية",
+    zoneCheckToggleText: "تحقق هل نوصل عندك",
+    zoneCheckLabel: "عنوانك أو حيّك",
+    zoneCheckPlaceholder: "مثال: مفتاح وسط، سواقرية...",
+    zoneCheckBtn: "تحقق",
+    zoneCheckEmpty: "الرجاء إدخال عنوانك أو حيّك.",
+    zoneCheckOk: "نوصل عندك! المنطقة: ",
+    zoneCheckKo: "لا نغطي هذا العنوان حاليًا. المناطق المخدومة حاليًا: ",
+    accountBannerText: "سجّل الدخول لتتبع طلباتك والطلب بشكل أسرع المرة القادمة.",
+    accountBannerLogin: "تسجيل الدخول",
+    accountBannerSignup: "إنشاء حساب"
+  }
+};
+
+/* ============================================================
+   ÉTAT
+   ============================================================ */
+let MENU = [];
+let CART = {};           // { itemId: { item, qty } }
+let ACTIVE_CATEGORY = ALL_CAT;
+let SELECTED_ZONE = null;
+let EMPTY_MSG_KEY = null;
+let LANG = (function(){
+  try { return localStorage.getItem("mtd_lang") === "ar" ? "ar" : "fr"; }
+  catch(e) { return "fr"; }
+})();
+
+const $ = (id) => document.getElementById(id);
+function t(key) { return I18N[LANG][key]; }
+
+/* Nom / description / catégorie traduits si dispo, sinon on garde le français */
+function itemName(item) { return (LANG === "ar" && item.nom_ar) ? item.nom_ar : item.nom; }
+function itemDesc(item) { return (LANG === "ar" && item.description_ar) ? item.description_ar : item.description; }
+function catLabel(cat) {
+  if (cat === ALL_CAT) return t("allCat");
+  if (LANG !== "ar") return cat;
+  const found = MENU.find(i => (i.categorie || "Autre") === cat && i.categorie_ar);
+  return found ? found.categorie_ar : cat;
+}
+
+/* ============================================================
+   COMPTE CLIENT (connexion.html / inscription.html / espace-client.html)
+   ============================================================ */
+const CLIENT_SESSION_KEY = "mtd_client_session";
+function getClientSession() {
+  try { return JSON.parse(localStorage.getItem(CLIENT_SESSION_KEY) || "null"); } catch(e) { return null; }
+}
+function updateAccountLink() {
+  const session = getClientSession();
+  const link = $("accountLinkTop");
+  if (session && session.clientId) {
+    link.href = "espace-client.html";
+    link.textContent = t("myAccountLinkTop");
+  } else {
+    link.href = "connexion.html?next=menu.html";
+    link.textContent = t("accountLinkTop");
+  }
+}
+
+function saveCartForAfterLogin() {
+  const panier = Object.values(CART).map(l => ({ id: l.item.id, nom: l.item.nom, qty: l.qty }));
+  try { localStorage.setItem("mtd_reorder_cart", JSON.stringify(panier)); } catch(e) {}
+}
+function prefillCheckoutFromSession() {
+  const session = getClientSession();
+  if (session) {
+    if (session.prenom || session.nom) $("fName").value = ((session.prenom || "") + " " + (session.nom || "")).trim();
+    if (session.telephone) $("fPhone").value = session.telephone;
+  }
+}
+
+/* ============================================================
+   VÉRIFICATION DE ZONE DE LIVRAISON
+   ============================================================ */
+function normalizeForZoneSearch(s) {
+  return String(s || "").toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9؀-ۿ\s]/g, " ")
+    .trim();
+}
+function checkZoneAvailability() {
+  const raw = $("zoneCheckInput").value;
+  const box = $("zoneCheckResult");
+  box.classList.remove("show", "ok", "ko");
+  const query = normalizeForZoneSearch(raw);
+  if (!query) {
+    box.textContent = t("zoneCheckEmpty");
+    box.classList.add("show", "ko");
+    return;
+  }
+  const match = CONFIG.ZONES.find(z => {
+    const label = normalizeForZoneSearch(z.label);
+    return query.includes(label) || label.includes(query) || query.includes(normalizeForZoneSearch(z.id));
+  });
+  if (match) {
+    box.textContent = t("zoneCheckOk") + match.label + " (" + match.fee + " DA)";
+    box.classList.add("show", "ok");
+  } else {
+    const zoneNames = CONFIG.ZONES.map(z => z.label).join(", ");
+    box.textContent = t("zoneCheckKo") + zoneNames;
+    box.classList.add("show", "ko");
+  }
+}
+
+/* ============================================================
+   LANGUE (FR / AR)
+   ============================================================ */
+function applyLanguage() {
+  const html = document.documentElement;
+  html.lang = LANG;
+  html.dir = LANG === "ar" ? "rtl" : "ltr";
+
+  $("langToggle").textContent = t("toggleLabel");
+  $("tagline").textContent = t("tagline");
+  $("footerNote").textContent = t("footerNote");
+  $("cartBarUnit").textContent = t("cartBarUnit");
+  $("openCartBtn").textContent = t("viewCart");
+  $("cartTitle").textContent = t("cartTitle");
+  $("lblSubtotalCart").textContent = t("subtotal");
+  $("lblTotalCart").textContent = t("total");
+  $("goCheckoutBtn").textContent = t("checkoutBtn");
+  $("checkoutTitle").textContent = t("checkoutTitle");
+  $("lblName").textContent = t("lblName");
+  $("fName").placeholder = t("namePlaceholder");
+  $("lblPhone").textContent = t("lblPhone");
+  $("fPhone").placeholder = t("phonePlaceholder");
+  $("lblAddress").textContent = t("lblAddress");
+  $("fAddress").placeholder = t("addressPlaceholder");
+  $("lblZone").textContent = t("lblZone");
+  $("lblNotes").textContent = t("lblNotes");
+  $("fNotes").placeholder = t("notesPlaceholder");
+  $("lblSubtotalChk").textContent = t("subtotal");
+  $("lblDeliveryChk").textContent = t("delivery");
+  $("lblTotalChk").textContent = t("totalToPay");
+  $("codNoteText").innerHTML = t("codNoteHtml");
+  $("confirmOrderBtn").textContent = t("confirmOrder");
+  $("orderSentTitle").textContent = t("orderSentTitle");
+  $("thanksText").innerHTML = t("thanksHtml");
+  $("trackOrderLink").textContent = t("trackOrder");
+  $("waConfirmBtn").textContent = t("waConfirm");
+  $("waNote").textContent = t("waNote");
+  $("closeSuccessBtn").textContent = t("close");
+  $("footerCguLink").textContent = t("footerCguLink");
+  $("footerPrivacyLink").textContent = t("footerPrivacyLink");
+  $("zoneCheckToggleText").textContent = t("zoneCheckToggleText");
+  $("zoneCheckLabel").textContent = t("zoneCheckLabel");
+  $("zoneCheckInput").placeholder = t("zoneCheckPlaceholder");
+  $("zoneCheckBtn").textContent = t("zoneCheckBtn");
+  updateAccountLink();
+
+  if (SELECTED_ZONE) updateCheckoutTotals();
+  else $("chkFee").textContent = t("chooseZonePlaceholder");
+
+  if (MENU.length) { renderTabs(); renderGrid(); }
+  else if (EMPTY_MSG_KEY) { $("emptyMsg").textContent = t(EMPTY_MSG_KEY); }
+  renderCartLines();
+}
+
+function toggleLanguage() {
+  LANG = LANG === "fr" ? "ar" : "fr";
+  try { localStorage.setItem("mtd_lang", LANG); } catch(e) {}
+  applyLanguage();
+}
+
+/* ============================================================
+   INITIALISATION
+   ============================================================ */
+document.addEventListener("DOMContentLoaded", () => {
+  $("headerPhone").href = "tel:" + CONFIG.PHONE_TEL;
+  $("headerPhone").textContent = "📞 " + CONFIG.PHONE_DISPLAY;
+  $("langToggle").addEventListener("click", toggleLanguage);
+  applyLanguage();
+  renderZoneOptions();
+  loadMenu();
+  bindGlobalEvents();
+});
+
+function loadMenu() {
+  $("emptyMsg").style.display = "none";
+  EMPTY_MSG_KEY = null;
+  jsonpRequest({ action: "menu" })
+    .then(res => {
+      if (!res.success) throw new Error(res.error || t("genericError"));
+      MENU = res.items || [];
+      if (!MENU.length) {
+        showEmpty("catalogUpdating");
+        return;
+      }
+      renderTabs();
+      renderGrid();
+      applyReorderIfAny();
+    })
+    .catch(err => {
+      showEmpty("loadError");
+      console.error(err);
+    });
+}
+
+/* ============================================================
+   RECOMMANDER UNE COMMANDE PASSÉE (depuis espace-client.html)
+   ============================================================ */
+function applyReorderIfAny() {
+  let panier;
+  try { panier = JSON.parse(localStorage.getItem("mtd_reorder_cart") || "null"); } catch(e) { panier = null; }
+  if (!panier || !panier.length) return;
+  localStorage.removeItem("mtd_reorder_cart");
+  panier.forEach(line => {
+    const item = MENU.find(m => m.id === line.id || (m.nom || "").trim().toLowerCase() === (line.nom || "").trim().toLowerCase());
+    if (item) CART[item.id] = { item, qty: (CART[item.id] ? CART[item.id].qty : 0) + (line.qty || 1) };
+  });
+  updateCartBar();
+  if (Object.keys(CART).length) { renderCartLines(); openOverlay("cartOverlay"); }
+}
+
+/* ============================================================
+   APPELS À L'API (technique JSONP — évite les blocages CORS
+   des navigateurs quand le site n'est pas sur script.google.com)
+   ============================================================ */
+let _jsonpCounter = 0;
+function jsonpRequest(params, timeoutMs = 15000) {
+  return new Promise((resolve, reject) => {
+    const callbackName = "_mtdCallback_" + (_jsonpCounter++) + "_" + Date.now();
+    const script = document.createElement("script");
+    let timeoutId;
+
+    function cleanup() {
+      clearTimeout(timeoutId);
+      delete window[callbackName];
+      script.remove();
+    }
+
+    window[callbackName] = (data) => {
+      resolve(data);
+      cleanup();
+    };
+
+    script.onerror = () => {
+      reject(new Error("Erreur réseau"));
+      cleanup();
+    };
+
+    timeoutId = setTimeout(() => {
+      reject(new Error("Délai dépassé"));
+      cleanup();
+    }, timeoutMs);
+
+    const qs = new URLSearchParams({ ...params, callback: callbackName }).toString();
+    script.src = CONFIG.API_URL + "?" + qs;
+    document.body.appendChild(script);
+  });
+}
+
+function showEmpty(key) {
+  $("grid").innerHTML = "";
+  $("tabs").innerHTML = "";
+  EMPTY_MSG_KEY = key;
+  const el = $("emptyMsg");
+  el.style.display = "block";
+  el.textContent = t(key);
+}
+
+/* ============================================================
+   CATÉGORIES / ONGLETS
+   ============================================================ */
+function renderTabs() {
+  const cats = [ALL_CAT, ...new Set(MENU.map(i => i.categorie || "Autre"))];
+  $("tabs").innerHTML = cats.map(c =>
+    `<div class="tab ${c === ACTIVE_CATEGORY ? "active" : ""}" data-cat="${escapeAttr(c)}">${escapeHtml(catLabel(c))}</div>`
+  ).join("");
+
+  $("tabs").querySelectorAll(".tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      ACTIVE_CATEGORY = tab.dataset.cat;
+      renderTabs();
+      renderGrid();
+    });
+  });
+}
+
+/* ============================================================
+   GRILLE DE PRODUITS
+   ============================================================ */
+function renderGrid() {
+  const list = ACTIVE_CATEGORY === ALL_CAT
+    ? MENU
+    : MENU.filter(i => (i.categorie || "Autre") === ACTIVE_CATEGORY);
+
+  $("grid").innerHTML = list.map(item => {
+    const qty = CART[item.id] ? CART[item.id].qty : 0;
+    const photoStyle = item.photo ? `background-image:url('${escapeAttr(item.photo)}')` : "";
+    return `
+      <div class="card">
+        <div class="photo" style="${photoStyle}">${item.photo ? "" : "🍽️"}</div>
+        <div class="body">
+          <div class="name">${escapeHtml(itemName(item))}</div>
+          ${itemDesc(item) ? `<div class="desc">${escapeHtml(itemDesc(item))}</div>` : ""}
+          <div class="row-bottom">
+            <div class="price"><bdi dir="ltr">${item.prix} DA</bdi></div>
+            <div id="ctrl-${item.id}">${qty > 0 ? qtyStepperHtml(item.id, qty) : addBtnHtml(item.id)}</div>
+          </div>
+        </div>
+      </div>`;
+  }).join("");
+
+  bindCardEvents();
+}
+
+function addBtnHtml(id) {
+  return `<button class="add-btn" data-add="${id}">${t("add")}</button>`;
+}
+function qtyStepperHtml(id, qty) {
+  return `<div class="qty-stepper">
+    <button data-dec="${id}">−</button><span>${qty}</span><button data-inc="${id}">+</button>
+  </div>`;
+}
+
+function bindCardEvents() {
+  $("grid").querySelectorAll("[data-add]").forEach(b =>
+    b.addEventListener("click", () => changeQty(b.dataset.add, 1)));
+  $("grid").querySelectorAll("[data-inc]").forEach(b =>
+    b.addEventListener("click", () => changeQty(b.dataset.inc, 1)));
+  $("grid").querySelectorAll("[data-dec]").forEach(b =>
+    b.addEventListener("click", () => changeQty(b.dataset.dec, -1)));
+}
+
+function changeQty(id, delta) {
+  const item = MENU.find(i => String(i.id) === String(id));
+  if (!item) return;
+  const current = CART[id] ? CART[id].qty : 0;
+  const next = Math.max(0, current + delta);
+
+  if (next === 0) delete CART[id];
+  else CART[id] = { item, qty: next };
+
+  const ctrl = $("ctrl-" + id);
+  if (ctrl) ctrl.innerHTML = next > 0 ? qtyStepperHtml(id, next) : addBtnHtml(id);
+  bindCardEvents();
+  updateCartBar();
+}
+
+/* ============================================================
+   PANIER
+   ============================================================ */
+function cartTotals() {
+  let count = 0, subtotal = 0;
+  Object.values(CART).forEach(l => { count += l.qty; subtotal += l.qty * l.item.prix; });
+  return { count, subtotal };
+}
+
+function updateCartBar() {
+  const { count, subtotal } = cartTotals();
+  $("cartCount").textContent = count;
+  $("cartTotal").textContent = subtotal;
+  $("cartBar").classList.toggle("show", count > 0);
+}
+
+function renderCartLines() {
+  const lines = Object.entries(CART);
+  $("cartLines").innerHTML = lines.length
+    ? lines.map(([id, l]) => `
+        <div class="cart-line">
+          <div style="flex:1">
+            <div class="cl-name">${escapeHtml(itemName(l.item))}</div>
+            <div class="cl-price"><bdi dir="ltr">${l.qty} × ${l.item.prix} DA</bdi></div>
+          </div>
+          <div class="qty-stepper">
+            <button data-dec2="${id}">−</button><span>${l.qty}</span><button data-inc2="${id}">+</button>
+          </div>
+        </div>`).join("")
+    : `<p style="color:var(--muted);font-size:13.5px;">${t("cartEmpty")}</p>`;
+
+  const { subtotal } = cartTotals();
+  $("sumSubtotal").textContent = subtotal + " DA";
+  $("sumTotalCart").textContent = subtotal + " DA";
+
+  $("cartLines").querySelectorAll("[data-inc2]").forEach(b =>
+    b.addEventListener("click", () => { changeQty(b.dataset.inc2, 1); renderCartLines(); }));
+  $("cartLines").querySelectorAll("[data-dec2]").forEach(b =>
+    b.addEventListener("click", () => { changeQty(b.dataset.dec2, -1); renderCartLines(); }));
+}
+
+/* ============================================================
+   ZONES DE LIVRAISON
+   ============================================================ */
+function renderZoneOptions() {
+  $("zoneOptions").innerHTML = CONFIG.ZONES.map(z => `
+    <div class="zone-opt" data-zone="${z.id}">
+      <span>${escapeHtml(z.label)}</span>
+      <span class="fee">+${z.fee} DA</span>
+    </div>`).join("");
+
+  $("zoneOptions").querySelectorAll(".zone-opt").forEach(el => {
+    el.addEventListener("click", () => {
+      SELECTED_ZONE = CONFIG.ZONES.find(z => z.id === el.dataset.zone);
+      $("zoneOptions").querySelectorAll(".zone-opt").forEach(o => o.classList.remove("selected"));
+      el.classList.add("selected");
+      updateCheckoutTotals();
+    });
+  });
+}
+
+function updateCheckoutTotals() {
+  const { subtotal } = cartTotals();
+  $("chkSubtotal").textContent = subtotal + " DA";
+  if (SELECTED_ZONE) {
+    $("chkFee").textContent = SELECTED_ZONE.fee + " DA";
+    $("chkTotal").textContent = (subtotal + SELECTED_ZONE.fee) + " DA";
+  } else {
+    $("chkFee").textContent = t("chooseZonePlaceholder");
+    $("chkTotal").textContent = subtotal + " DA";
+  }
+}
+
+/* ============================================================
+   NAVIGATION ENTRE PANNEAUX
+   ============================================================ */
+function openOverlay(id) { $(id).classList.add("show"); }
+function closeOverlay(id) { $(id).classList.remove("show"); }
+
+function bindGlobalEvents() {
+  document.querySelectorAll("[data-close]").forEach(b =>
+    b.addEventListener("click", () => closeOverlay(b.dataset.close)));
+
+  $("openCartBtn").addEventListener("click", () => {
+    renderCartLines();
+    openOverlay("cartOverlay");
+  });
+
+  $("goCheckoutBtn").addEventListener("click", () => {
+    if (!Object.keys(CART).length) return;
+    if (!getClientSession()) {
+      saveCartForAfterLogin();
+      window.location.href = "connexion.html?next=menu.html";
+      return;
+    }
+    closeOverlay("cartOverlay");
+    updateCheckoutTotals();
+    prefillCheckoutFromSession();
+    openOverlay("checkoutOverlay");
+  });
+
+  $("confirmOrderBtn").addEventListener("click", submitOrder);
+
+  $("zoneCheckToggle").addEventListener("click", () => {
+    $("zoneCheckPanel").classList.toggle("hidden");
+  });
+  $("zoneCheckBtn").addEventListener("click", checkZoneAvailability);
+  $("zoneCheckInput").addEventListener("keyup", (e) => { if (e.key === "Enter") checkZoneAvailability(); });
+
+  updateAccountLink();
+}
+
+/* ============================================================
+   ENVOI DE LA COMMANDE
+   ============================================================ */
+function submitOrder() {
+  if (!getClientSession()) {
+    saveCartForAfterLogin();
+    window.location.href = "connexion.html?next=menu.html";
+    return;
+  }
+
+  const name = $("fName").value.trim();
+  const phone = $("fPhone").value.trim();
+  const address = $("fAddress").value.trim();
+  const notes = $("fNotes").value.trim();
+  const errBox = $("chkError");
+
+  errBox.classList.remove("show");
+
+  if (!name || !phone || !address) {
+    return showCheckoutError(t("fillRequired"));
+  }
+  if (!SELECTED_ZONE) {
+    return showCheckoutError(t("chooseZone"));
+  }
+  if (!Object.keys(CART).length) {
+    return showCheckoutError(t("emptyCartErr"));
+  }
+
+  const { subtotal } = cartTotals();
+  const total = subtotal + SELECTED_ZONE.fee;
+
+  const payload = {
+    customerName: name,
+    phone: phone,
+    address: address,
+    zone: SELECTED_ZONE.label,
+    deliveryFee: SELECTED_ZONE.fee,
+    notes: notes,
+    total: total,
+    items: Object.values(CART).map(l => ({ nom: l.item.nom, prix: l.item.prix, qty: l.qty }))
+  };
+
+  const btn = $("confirmOrderBtn");
+  btn.disabled = true;
+  btn.textContent = t("sending");
+
+  jsonpRequest({ action: "order", payload: JSON.stringify(payload) })
+    .then(res => {
+      if (!res.success) throw new Error(res.error || t("genericError"));
+      closeOverlay("checkoutOverlay");
+      $("orderNoDisplay").textContent = res.orderNumber;
+      $("trackOrderLink").href = "suivi-commande.html?cmd=" + encodeURIComponent(res.orderNumber);
+      $("waConfirmBtn").href = buildWhatsAppLink(res.orderNumber, payload);
+      openOverlay("successOverlay");
+      resetOrder();
+    })
+    .catch(err => {
+      showCheckoutError(t("sendError") + CONFIG.PHONE_DISPLAY + ".");
+      console.error(err);
+    })
+    .finally(() => {
+      btn.disabled = false;
+      btn.textContent = t("confirmOrder");
+    });
+}
+
+function buildWhatsAppLink(orderNumber, p) {
+  const lines = [
+    t("waMsgIntro") + " N° " + orderNumber,
+    "",
+    t("waMsgName") + " : " + p.customerName,
+    t("waMsgAddress") + " : " + p.address + " (" + p.zone + ")",
+    t("waMsgItems") + " :"
+  ];
+  p.items.forEach(i => lines.push("- " + i.qty + " x " + i.nom));
+  lines.push(t("waMsgTotal") + " : " + p.total + " DA");
+  return "https://wa.me/" + CONFIG.WHATSAPP_NUMBER + "?text=" + encodeURIComponent(lines.join("\n"));
+}
+
+function showCheckoutError(msg) {
+  const errBox = $("chkError");
+  errBox.textContent = msg;
+  errBox.classList.add("show");
+}
+
+function resetOrder() {
+  CART = {};
+  SELECTED_ZONE = null;
+  $("fName").value = "";
+  $("fPhone").value = "";
+  $("fAddress").value = "";
+  $("fNotes").value = "";
+  $("zoneOptions").querySelectorAll(".zone-opt").forEach(o => o.classList.remove("selected"));
+  updateCartBar();
+  renderGrid();
+}
+
+/* ============================================================
+   UTILITAIRES
+   ============================================================ */
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+function escapeAttr(s) { return escapeHtml(s); }
+</script>
+
+<div class="install-bar" id="installBar" role="dialog" aria-label="Installer l'application">
+  <img src="/icons/icon-192.png" alt="">
+  <div class="txt"><b>Installer MT Delivery</b><small id="installHint">Accès rapide depuis votre écran d'accueil</small></div>
+  <button class="go" id="installGo" type="button">Installer</button>
+  <button class="no" id="installNo" type="button" aria-label="Fermer">✕</button>
+</div>
+<script>
+(function () {
+  var bar = document.getElementById("installBar");
+  var deferred = null;
+  function dismissed() { try { return localStorage.getItem("mtInstallDismissed") === "1"; } catch (e) { return false; } }
+  function dismiss() { try { localStorage.setItem("mtInstallDismissed", "1"); } catch (e) {} bar.classList.remove("show"); }
+  var standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  if (standalone || dismissed()) return;
+  document.getElementById("installNo").onclick = dismiss;
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault(); deferred = e; bar.classList.add("show");
+  });
+  document.getElementById("installGo").onclick = function () {
+    if (deferred) {
+      deferred.prompt();
+      deferred.userChoice.then(function () { deferred = null; bar.classList.remove("show"); });
+    } else { dismiss(); }
+  };
+  window.addEventListener("appinstalled", function () { bar.classList.remove("show"); });
+  // iOS Safari : pas de prompt natif, on explique la marche à suivre.
+  var ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  if (ios) {
+    document.getElementById("installHint").textContent = "Touchez Partager puis « Sur l'écran d'accueil »";
+    document.getElementById("installGo").style.display = "none";
+    bar.classList.add("show");
+  }
+})();
+</script>
+</body>
+</html>

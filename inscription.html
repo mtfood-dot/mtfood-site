@@ -154,7 +154,7 @@
     </button>
 
     <p class="foot-row" id="hasAccountRow">Déjà un compte ? <a href="connexion.html" id="loginLink">Se connecter</a></p>
-    <div class="guest-row"><a href="index.html" id="guestLink">Continuer sans compte</a></div>
+    <div class="guest-row"><a href="menu.html" id="guestLink">Continuer sans compte</a></div>
   </section>
 
   <section class="card success-box" id="successCard">
@@ -222,6 +222,9 @@ try {
   if (existing && existing.clientId) { window.location.href = "espace-client.html"; }
 } catch(e) {}
 
+const INSCRIPTION_PARAMS = new URLSearchParams(window.location.search);
+const INSCRIPTION_NEXT = INSCRIPTION_PARAMS.get("next") || "espace-client.html";
+
 function togglePwd(inputId, btnId){
   const input = $(inputId);
   const show = input.type === "password";
@@ -263,7 +266,7 @@ async function doSignup(){
       localStorage.setItem(SESSION_KEY, JSON.stringify({
         clientId: data.clientId, prenom, nom, email: data.email || "", telephone: data.telephone || ""
       }));
-      setTimeout(() => { window.location.href = "espace-client.html"; }, 1600);
+      setTimeout(() => { window.location.href = INSCRIPTION_NEXT; }, 1600);
     } else {
       showError((data && data.error) || t("errExists"));
     }

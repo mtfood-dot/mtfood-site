@@ -95,7 +95,7 @@
     <button class="btn-logout" id="logoutBtn" type="button">Déconnexion</button>
   </div>
 
-  <a class="cta-order" href="index.html" id="ctaOrder">🛒 Commander</a>
+  <a class="cta-order" href="menu.html" id="ctaOrder">🛒 Commander</a>
 
   <div class="tabs">
     <button class="tab-btn active" id="tabCurrent" type="button">En cours</button>
@@ -218,7 +218,7 @@ function render(){
   const target = ACTIVE_TAB === "current" ? $("listCurrent") : $("listHistory");
   if (!list.length) {
     const emptyKey = ACTIVE_TAB === "current" ? "emptyCurrent" : "emptyHistory";
-    const cta = ACTIVE_TAB === "current" ? '<br><a href="index.html">' + t("emptyCurrentCta") + '</a>' : "";
+    const cta = ACTIVE_TAB === "current" ? '<br><a href="menu.html">' + t("emptyCurrentCta") + '</a>' : "";
     target.innerHTML = '<div class="empty-state"><span class="emoji">' + (ACTIVE_TAB === "current" ? "🧾" : "📦") + '</span>' + t(emptyKey) + cta + '</div>';
   } else {
     target.innerHTML = list.map(o => orderCardHtml(o, ACTIVE_TAB === "history")).join("");
@@ -248,7 +248,7 @@ async function reorder(numero){
       localStorage.setItem("mtd_reorder_cart", JSON.stringify(data.panier));
     }
   } catch(e) {}
-  window.location.href = "index.html?reorder=" + encodeURIComponent(numero);
+  window.location.href = "menu.html?reorder=" + encodeURIComponent(numero);
 }
 window.reorder = reorder;
 
