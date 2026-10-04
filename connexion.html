@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0a2647">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MT Delivery">
+<meta name="robots" content="noindex, nofollow">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<link rel="icon" href="/icons/icon-192.png">
+<title>MT Delivery — Connexion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue-900:#0a2647; --blue-800:#0f3562; --blue-700:#134a8f; --blue-600:#1a5cb0; --blue-100:#e9f1fb;
+    --gold-600:#b8860f; --gold-500:#d4a017; --gold-400:#e8bb3d; --gold-100:#fdf3d9;
+    --bg:#f3f5f9; --card:#ffffff; --text:#131b28; --muted:#69748a; --danger:#c0392b; --green:#1a7d3a;
+    --border:#e6eaf1; --radius-lg:20px; --radius-md:14px; --radius-sm:10px;
+    --shadow-sm:0 1px 2px rgba(16,24,40,.06); --shadow-md:0 6px 20px -6px rgba(16,36,72,.16);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    padding-bottom:40px;-webkit-font-smoothing:antialiased;}
+  html[dir="rtl"] body{font-family:'Tajawal','Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;}
+  a{color:inherit;}
+  ::selection{background:var(--gold-100);color:var(--blue-900);}
+
+  header.top{background:#ffffff;padding:20px 0 22px;position:relative;overflow:hidden;
+    border-bottom:1px solid var(--border);text-align:center;}
+  header.top .brand{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;z-index:1;width:100%;}
+  header.top .brand .logo-img{height:auto;width:100%;max-width:280px;display:block;margin:0 auto;}
+  header.top .tagline{font-size:13px;color:var(--blue-700);font-weight:700;letter-spacing:.2px;}
+  .lang-toggle{position:absolute;top:14px;right:14px;z-index:2;background:#fff;border:1.5px solid var(--gold-500);
+    color:var(--blue-900);padding:6px 12px;border-radius:999px;font-weight:800;font-size:12px;cursor:pointer;font-family:inherit;}
+  html[dir="rtl"] .lang-toggle{right:auto;left:14px;}
+
+  main{max-width:460px;margin:0 auto;padding:28px 16px 40px;}
+  .card{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);
+    border:1px solid var(--border);padding:24px;margin-bottom:16px;}
+  .card h2{margin:0 0 6px;font-size:20px;color:var(--blue-900);font-weight:800;}
+  .card p.sub{margin:0 0 20px;color:var(--muted);font-size:13.5px;line-height:1.6;}
+
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12.5px;font-weight:700;color:var(--blue-900);margin-bottom:6px;}
+  .field input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+    font-size:15px;font-family:inherit;background:#fbfcfe;transition:border-color .15s ease;}
+  .field input:focus{outline:none;border-color:var(--blue-600);}
+  .field.invalid input{border-color:var(--danger);}
+  .field .hint{font-size:11.5px;color:var(--danger);margin-top:5px;display:none;}
+  .field.invalid .hint{display:block;}
+
+  .pwd-wrap{position:relative;}
+  .pwd-wrap input{padding-right:44px;}
+  html[dir="rtl"] .pwd-wrap input{padding-right:14px;padding-left:44px;}
+  .pwd-toggle{position:absolute;right:6px;top:6px;bottom:6px;width:34px;background:none;border:none;
+    cursor:pointer;color:var(--muted);font-size:17px;display:flex;align-items:center;justify-content:center;}
+  html[dir="rtl"] .pwd-toggle{right:auto;left:6px;}
+
+  .row-link{display:flex;justify-content:flex-end;margin:-6px 0 16px;}
+  .row-link a{font-size:12.5px;font-weight:700;color:var(--blue-700);text-decoration:none;}
+
+  .btn-primary{width:100%;background:linear-gradient(135deg,var(--blue-700),var(--blue-900));color:#fff;border:none;
+    border-radius:13px;padding:14px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;}
+  .btn-primary:disabled{opacity:.6;cursor:default;}
+
+  .divider{display:flex;align-items:center;gap:10px;margin:18px 0;color:var(--muted);font-size:12px;font-weight:600;}
+  .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--border);}
+
+  .btn-google{width:100%;background:#fff;border:1.5px solid var(--border);color:var(--text);
+    border-radius:13px;padding:12px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;
+    display:flex;align-items:center;justify-content:center;gap:10px;}
+  .btn-google:disabled{opacity:.5;cursor:not-allowed;}
+  .btn-google .gicon{width:18px;height:18px;flex:0 0 auto;}
+
+  .error-box{background:#fdeceb;border:1px solid #f3c6c1;color:var(--danger);border-radius:var(--radius-sm);
+    padding:11px 14px;font-size:13px;margin-top:12px;line-height:1.5;display:none;}
+  .error-box.show{display:block;}
+
+  .foot-row{text-align:center;font-size:13.5px;color:var(--muted);margin-top:4px;}
+  .foot-row a{color:var(--blue-700);font-weight:700;text-decoration:none;}
+
+  .guest-row{text-align:center;margin-top:14px;}
+  .guest-row a{font-size:13px;color:var(--muted);text-decoration:underline;}
+
+  .hidden{display:none !important;}
+
+  .footer-note{max-width:460px;margin:24px auto 0;padding:0 16px;text-align:center;
+    color:var(--muted);font-size:11.5px;font-weight:500;}
+  .footer-note a{color:var(--blue-700);font-weight:700;text-decoration:none;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <a href="index.html" aria-label="Retour à l'accueil" style="display:block;"><img class="logo-img" src="logo.png" alt="MT Delivery" width="316" height="158" loading="eager"></a>
+    <div class="tagline" id="tagline">Connexion</div>
+  </div>
+  <button class="lang-toggle" id="langToggle" type="button">AR</button>
+</header>
+
+<main>
+  <section class="card">
+    <h2 id="loginTitle">Connexion</h2>
+    <p class="sub" id="loginSubtitle">Connecte-toi pour suivre tes commandes et commander plus vite.</p>
+
+    <div class="field" id="fieldIdentifier">
+      <label id="lblIdentifier">E-mail ou téléphone</label>
+      <input type="text" id="fIdentifier" placeholder="ex: 0555 xx xx xx ou toi@email.com" autocomplete="username">
+      <div class="hint" id="hintIdentifier">Merci d'entrer ton e-mail ou ton numéro de téléphone.</div>
+    </div>
+
+    <div class="field" id="fieldPassword">
+      <label id="lblPassword">Mot de passe</label>
+      <div class="pwd-wrap">
+        <input type="password" id="fPassword" placeholder="••••••••" autocomplete="current-password">
+        <button type="button" class="pwd-toggle" id="pwdToggle" aria-label="Afficher le mot de passe">👁</button>
+      </div>
+      <div class="hint" id="hintPassword">Merci d'entrer ton mot de passe.</div>
+    </div>
+
+    <div class="row-link">
+      <a href="mot-de-passe-oublie.html" id="forgotLink">Mot de passe oublié ?</a>
+    </div>
+
+    <button class="btn-primary" id="loginBtn" type="button">Se connecter</button>
+    <div class="error-box" id="loginError"></div>
+
+    <div class="divider" id="dividerText">ou</div>
+    <button class="btn-google" id="googleBtn" type="button" disabled title="Connexion Google : identifiants à configurer (voir note en bas de page)">
+      <svg class="gicon" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 18.9 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4c-7.4 0-13.8 4.1-17.1 10.7z"/><path fill="#4CAF50" d="M24 44c5.5 0 10.4-1.9 14.1-5.1l-6.5-5.4C29.5 35.1 26.9 36 24 36c-5.3 0-9.7-3.4-11.3-8l-6.6 5.1C9.1 39.6 15.9 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.2-4.1 5.6l6.5 5.4C41.5 35.9 44 30.5 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
+      <span id="googleBtnText">Continuer avec Google</span>
+    </button>
+
+    <p class="foot-row" id="noAccountRow">Pas encore de compte ? <a href="inscription.html" id="signupLink">Créer un compte</a></p>
+    <div class="guest-row"><a href="index.html" id="guestLink">Continuer sans compte</a></div>
+  </section>
+
+  <p class="footer-note" id="legalNote">
+    En continuant, tu acceptes les <a href="cgu.html">conditions d'utilisation</a> et la
+    <a href="confidentialite.html">politique de confidentialité</a>.
+  </p>
+</main>
+
+<script>
+/* ============================================================
+   CONFIGURATION
+   ============================================================ */
+const CONFIG = {
+  API_URL: "https://script.google.com/macros/s/AKfycbwgXOyXERonv0Yk7X-uhoHuE1Fj26RiYHPR4Tnr7Z_1Ly8wWjsvlE5sp3JJRukRR4ZF/exec",
+  // Connexion Google : coller ici l'ID client OAuth Google (Google Cloud Console)
+  // une fois créé. Tant que ce champ est vide, le bouton Google reste désactivé
+  // pour ne jamais prétendre offrir une fonctionnalité qui ne marche pas.
+  GOOGLE_CLIENT_ID: "" // TODO: coller l'ID client Google ici
+};
+
+const LANG_KEY = "mtd_lang";
+const SESSION_KEY = "mtd_client_session";
+let LANG = localStorage.getItem(LANG_KEY) || "fr";
+
+const I18N = {
+  fr: {
+    tagline: "Connexion", loginTitle: "Connexion", loginSubtitle: "Connecte-toi pour suivre tes commandes et commander plus vite.",
+    lblIdentifier: "E-mail ou téléphone", lblPassword: "Mot de passe",
+    hintIdentifier: "Merci d'entrer ton e-mail ou ton numéro de téléphone.",
+    hintPassword: "Merci d'entrer ton mot de passe.",
+    forgotLink: "Mot de passe oublié ?", loginBtn: "Se connecter", dividerText: "ou",
+    googleBtnText: "Continuer avec Google", noAccountRow: "Pas encore de compte ? ", signupLink: "Créer un compte",
+    guestLink: "Continuer sans compte",
+    legalNote1: "En continuant, tu acceptes les ", legalLink1: "conditions d'utilisation", legalAnd: " et la ",
+    legalLink2: "politique de confidentialité", legalNote2: ".",
+    loginFailedGeneric: "Identifiant ou mot de passe incorrect.",
+    networkError: "Erreur de connexion. Vérifie ta connexion internet et réessaie."
+  },
+  ar: {
+    tagline: "تسجيل الدخول", loginTitle: "تسجيل الدخول", loginSubtitle: "سجّل الدخول لتتابع طلباتك وتطلب أسرع.",
+    lblIdentifier: "البريد الإلكتروني أو الهاتف", lblPassword: "كلمة المرور",
+    hintIdentifier: "الرجاء إدخال بريدك الإلكتروني أو رقم هاتفك.",
+    hintPassword: "الرجاء إدخال كلمة المرور.",
+    forgotLink: "نسيت كلمة المرور؟", loginBtn: "تسجيل الدخول", dividerText: "أو",
+    googleBtnText: "الدخول عبر Google", noAccountRow: "ليس لديك حساب؟ ", signupLink: "إنشاء حساب",
+    guestLink: "المتابعة بدون حساب",
+    legalNote1: "بالمتابعة، أنت توافق على ", legalLink1: "شروط الاستخدام", legalAnd: " و ",
+    legalLink2: "سياسة الخصوصية", legalNote2: ".",
+    loginFailedGeneric: "البريد/الهاتف أو كلمة المرور غير صحيحة.",
+    networkError: "خطأ في الاتصال. تحقق من اتصالك بالإنترنت وأعد المحاولة."
+  }
+};
+function t(k){ return (I18N[LANG] && I18N[LANG][k]) || I18N.fr[k] || k; }
+function $(id){ return document.getElementById(id); }
+
+function applyLang(){
+  document.documentElement.lang = LANG;
+  document.documentElement.dir = LANG === "ar" ? "rtl" : "ltr";
+  $("langToggle").textContent = LANG === "ar" ? "FR" : "AR";
+  ["tagline","loginTitle","loginSubtitle","lblIdentifier","lblPassword","hintIdentifier","hintPassword",
+   "forgotLink","loginBtn","dividerText","googleBtnText","signupLink","guestLink"].forEach(id=>{
+    const el = $(id); if (el) el.textContent = t(id);
+  });
+  $("noAccountRow").textContent = t("noAccountRow");
+  $("legalNote").innerHTML = t("legalNote1") + '<a href="cgu.html">' + t("legalLink1") + '</a>' +
+    t("legalAnd") + '<a href="confidentialite.html">' + t("legalLink2") + '</a>' + t("legalNote2");
+  const noAccount = $("noAccountRow");
+  noAccount.innerHTML = t("noAccountRow") + '<a href="inscription.html" id="signupLink">' + t("signupLink") + '</a>';
+}
+$("langToggle").addEventListener("click", () => {
+  LANG = LANG === "ar" ? "fr" : "ar";
+  localStorage.setItem(LANG_KEY, LANG);
+  applyLang();
+});
+applyLang();
+
+/* Si déjà connecté, aller directement au tableau de bord */
+try {
+  const existing = JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
+  if (existing && existing.clientId) { window.location.href = "espace-client.html"; }
+} catch(e) {}
+
+/* Si on arrive depuis le checkout (index.html), on garde une trace pour y revenir après connexion */
+const params = new URLSearchParams(window.location.search);
+const redirectTo = params.get("next") || "espace-client.html";
+
+/* ============================================================
+   AFFICHER / MASQUER LE MOT DE PASSE
+   ============================================================ */
+$("pwdToggle").addEventListener("click", () => {
+  const input = $("fPassword");
+  const show = input.type === "password";
+  input.type = show ? "text" : "password";
+  $("pwdToggle").textContent = show ? "🙈" : "👁";
+});
+
+/* ============================================================
+   APPEL API
+   ============================================================ */
+async function apiGet(p) {
+  const qs = new URLSearchParams(p).toString();
+  const res = await fetch(CONFIG.API_URL + "?" + qs);
+  return res.json();
+}
+function showError(msg){ const b=$("loginError"); b.textContent=msg; b.classList.add("show"); }
+function hideError(){ const b=$("loginError"); b.classList.remove("show"); b.textContent=""; }
+function markInvalid(fieldId, invalid){ $(fieldId).classList.toggle("invalid", invalid); }
+
+async function doLogin() {
+  hideError();
+  const identifier = $("fIdentifier").value.trim();
+  const password = $("fPassword").value;
+  let ok = true;
+  markInvalid("fieldIdentifier", !identifier); if (!identifier) ok = false;
+  markInvalid("fieldPassword", !password); if (!password) ok = false;
+  if (!ok) return;
+
+  $("loginBtn").disabled = true;
+  $("loginBtn").textContent = "...";
+  try {
+    // Action backend à ajouter côté Apps Script : clientLogin
+    // (voir note de déploiement — pas encore actif côté serveur)
+    const data = await apiGet({ action: "clientLogin", identifiant: identifier, motDePasse: password });
+    if (data && data.success) {
+      localStorage.setItem(SESSION_KEY, JSON.stringify({
+        clientId: data.clientId, prenom: data.prenom, nom: data.nom,
+        email: data.email || "", telephone: data.telephone || ""
+      }));
+      window.location.href = redirectTo;
+    } else {
+      showError((data && data.error) || t("loginFailedGeneric"));
+    }
+  } catch(e) {
+    showError(t("networkError"));
+  } finally {
+    $("loginBtn").disabled = false;
+    $("loginBtn").textContent = t("loginBtn");
+  }
+}
+$("loginBtn").addEventListener("click", doLogin);
+$("fPassword").addEventListener("keyup", (e) => { if (e.key === "Enter") doLogin(); });
+
+/* ============================================================
+   CONNEXION GOOGLE — désactivée tant que GOOGLE_CLIENT_ID n'est pas renseigné
+   ============================================================ */
+if (CONFIG.GOOGLE_CLIENT_ID) {
+  $("googleBtn").disabled = false;
+  $("googleBtn").title = "";
+  // L'intégration complète (Google Identity Services) se branche ici une fois
+  // l'ID client disponible : charger https://accounts.google.com/gsi/client,
+  // initialiser avec CONFIG.GOOGLE_CLIENT_ID, puis envoyer le jeton obtenu à
+  // une nouvelle action backend (ex. "clientLoginGoogle") pour créer/retrouver
+  // le compte côté Sheet "Clients".
+}
+</script>
+</body>
+</html>

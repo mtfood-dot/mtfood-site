@@ -97,6 +97,42 @@
     text-decoration:none;transition:background .15s ease;
   }
   header.top .partner-space-link-top:active{background:var(--gold-600);}
+  header.top .account-link-top{
+    display:inline-flex;align-items:center;gap:6px;
+    background:var(--blue-100);border:1.5px solid var(--blue-600);color:var(--blue-700);
+    padding:7px 14px;border-radius:999px;font-weight:700;font-size:13px;
+    text-decoration:none;transition:background .15s ease;
+  }
+  header.top .account-link-top:active{background:#ddeaf9;}
+
+  /* ---------- VÉRIFICATION DE ZONE ---------- */
+  .zone-check{max-width:960px;margin:14px auto 0;padding:0 16px;}
+  .zone-check-toggle{display:flex;align-items:center;gap:8px;margin:0 auto;background:#fff;
+    border:1.5px solid var(--border);border-radius:999px;padding:10px 18px;font-weight:700;font-size:13px;
+    color:var(--blue-700);cursor:pointer;font-family:inherit;}
+  .zone-check-panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);
+    padding:16px;margin-top:10px;box-shadow:var(--shadow-sm);}
+  .zone-check-panel label{display:block;font-size:12.5px;font-weight:700;color:var(--blue-900);margin-bottom:6px;}
+  .zone-check-row{display:flex;gap:8px;}
+  .zone-check-row input{flex:1;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+    font-size:14px;font-family:inherit;background:#fbfcfe;}
+  .zone-check-row button{background:var(--blue-900);color:#fff;border:none;border-radius:var(--radius-sm);
+    padding:0 18px;font-weight:800;font-size:13.5px;cursor:pointer;font-family:inherit;}
+  .zone-check-result{margin-top:10px;font-size:13.5px;line-height:1.6;border-radius:var(--radius-sm);padding:10px 12px;display:none;}
+  .zone-check-result.show{display:block;}
+  .zone-check-result.ok{background:#eaf7ee;color:var(--green,#1a7d3a);}
+  .zone-check-result.ko{background:#fdeceb;color:var(--danger);}
+
+  /* ---------- BANNIÈRE COMPTE AU CHECKOUT ---------- */
+  .account-banner{background:var(--blue-100);border:1px solid var(--blue-600);border-radius:var(--radius-md);
+    padding:12px 14px;margin-bottom:16px;}
+  .account-banner-text{font-size:13px;color:var(--blue-900);line-height:1.5;margin-bottom:10px;}
+  .account-banner-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .account-banner-actions a{background:var(--blue-900);color:#fff;border-radius:999px;padding:7px 14px;
+    font-size:12.5px;font-weight:700;text-decoration:none;}
+  .account-banner-actions a#accountBannerSignup{background:#fff;color:var(--blue-700);border:1.5px solid var(--blue-600);}
+  .account-banner-actions button{margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;}
+  html[dir="rtl"] .account-banner-actions button{margin-left:0;margin-right:auto;}
   .lang-toggle{
     position:absolute;top:14px;right:14px;z-index:2;
     background:var(--blue-100);border:1px solid var(--blue-600);color:var(--blue-700);
@@ -277,6 +313,8 @@
 
   .footer-note{max-width:960px;margin:24px auto 0;padding:0 16px;text-align:center;
     color:var(--muted);font-size:11.5px;font-weight:500;}
+  .footer-legal-row{max-width:960px;margin:10px auto 0;padding:0 16px;text-align:center;font-size:11.5px;color:var(--muted);}
+  .footer-legal-row a{color:var(--blue-700);font-weight:700;text-decoration:none;}
   .footer-admin-link{color:var(--muted);font-size:10.5px;text-decoration:none;opacity:.6;}
   .footer-admin-link:active{opacity:1;}
   .install-bar{display:none;position:fixed;left:12px;right:12px;bottom:12px;z-index:1000;max-width:480px;margin:0 auto;
@@ -313,9 +351,22 @@ if ("serviceWorker" in navigator) {
     <a class="driver-space-link-top" id="driverSpaceLinkTop" href="espace-livreur.html">🔑 Espace livreur</a>
     <a class="partner-link-top" id="partnerLinkTop" href="devenir-partenaire.html">🤝 Devenir partenaire</a>
     <a class="partner-space-link-top" id="partnerSpaceLinkTop" href="espace-partenaire.html">🏪 Espace partenaire</a>
+    <a class="account-link-top" id="accountLinkTop" href="connexion.html">👤 Mon compte</a>
   </div>
   <button class="lang-toggle" id="langToggle" type="button">AR</button>
 </header>
+
+<div class="zone-check" id="zoneCheck">
+  <button class="zone-check-toggle" id="zoneCheckToggle" type="button">📍 <span id="zoneCheckToggleText">Vérifier si on livre chez toi</span></button>
+  <div class="zone-check-panel hidden" id="zoneCheckPanel">
+    <label id="zoneCheckLabel">Ton adresse ou ton quartier</label>
+    <div class="zone-check-row">
+      <input type="text" id="zoneCheckInput" placeholder="Ex: Meftah Centre, Souakria...">
+      <button id="zoneCheckBtn" type="button">Vérifier</button>
+    </div>
+    <div class="zone-check-result" id="zoneCheckResult"></div>
+  </div>
+</div>
 
 <nav class="tabs" id="tabs"></nav>
 
@@ -325,6 +376,9 @@ if ("serviceWorker" in navigator) {
 </main>
 
 <div class="footer-note" id="footerNote">MT Delivery · Meftah, Blida · Paiement à la livraison uniquement</div>
+<div class="footer-legal-row" id="footerLegalRow">
+  <a href="cgu.html" id="footerCguLink">Conditions d'utilisation</a> · <a href="confidentialite.html" id="footerPrivacyLink">Confidentialité</a>
+</div>
 <div style="text-align:center;margin-top:6px;"><a class="footer-admin-link" href="espace-admin.html">Admin</a></div>
 
 <!-- Barre panier flottante -->
@@ -352,6 +406,15 @@ if ("serviceWorker" in navigator) {
   <div class="sheet">
     <button class="close-x" data-close="checkoutOverlay">✕</button>
     <h2 id="checkoutTitle">Vos informations</h2>
+
+    <div class="account-banner hidden" id="accountBanner">
+      <div class="account-banner-text" id="accountBannerText">Connecte-toi pour retrouver tes commandes et aller plus vite la prochaine fois.</div>
+      <div class="account-banner-actions">
+        <a href="connexion.html?next=index.html" id="accountBannerLogin">Se connecter</a>
+        <a href="inscription.html?next=index.html" id="accountBannerSignup">Créer un compte</a>
+        <button type="button" id="accountBannerDismiss">✕</button>
+      </div>
+    </div>
 
     <div class="field">
       <label id="lblName">Nom et prénom</label>
@@ -486,7 +549,21 @@ const I18N = {
     chooseZonePlaceholder: "— (choisir une zone)",
     genericError: "Erreur inconnue",
     networkError: "Erreur réseau",
-    timeoutError: "Délai dépassé"
+    timeoutError: "Délai dépassé",
+    accountLinkTop: "👤 Mon compte",
+    myAccountLinkTop: "👤 Mes commandes",
+    footerCguLink: "Conditions d'utilisation",
+    footerPrivacyLink: "Confidentialité",
+    zoneCheckToggleText: "Vérifier si on livre chez toi",
+    zoneCheckLabel: "Ton adresse ou ton quartier",
+    zoneCheckPlaceholder: "Ex: Meftah Centre, Souakria...",
+    zoneCheckBtn: "Vérifier",
+    zoneCheckEmpty: "Merci d'indiquer ton adresse ou ton quartier.",
+    zoneCheckOk: "On livre chez toi ! Zone : ",
+    zoneCheckKo: "On ne couvre pas encore cette adresse. Zones actuellement livrées : ",
+    accountBannerText: "Connecte-toi pour retrouver tes commandes et aller plus vite la prochaine fois.",
+    accountBannerLogin: "Se connecter",
+    accountBannerSignup: "Créer un compte"
   },
   ar: {
     toggleLabel: "FR",
@@ -541,7 +618,21 @@ const I18N = {
     chooseZonePlaceholder: "— (اختر منطقة)",
     genericError: "خطأ غير معروف",
     networkError: "خطأ في الشبكة",
-    timeoutError: "انتهت المهلة"
+    timeoutError: "انتهت المهلة",
+    accountLinkTop: "👤 حسابي",
+    myAccountLinkTop: "👤 طلباتي",
+    footerCguLink: "شروط الاستخدام",
+    footerPrivacyLink: "الخصوصية",
+    zoneCheckToggleText: "تحقق هل نوصل عندك",
+    zoneCheckLabel: "عنوانك أو حيّك",
+    zoneCheckPlaceholder: "مثال: مفتاح وسط، سواقرية...",
+    zoneCheckBtn: "تحقق",
+    zoneCheckEmpty: "الرجاء إدخال عنوانك أو حيّك.",
+    zoneCheckOk: "نوصل عندك! المنطقة: ",
+    zoneCheckKo: "لا نغطي هذا العنوان حاليًا. المناطق المخدومة حاليًا: ",
+    accountBannerText: "سجّل الدخول لتتبع طلباتك والطلب بشكل أسرع المرة القادمة.",
+    accountBannerLogin: "تسجيل الدخول",
+    accountBannerSignup: "إنشاء حساب"
   }
 };
 
@@ -569,6 +660,75 @@ function catLabel(cat) {
   if (LANG !== "ar") return cat;
   const found = MENU.find(i => (i.categorie || "Autre") === cat && i.categorie_ar);
   return found ? found.categorie_ar : cat;
+}
+
+/* ============================================================
+   COMPTE CLIENT (connexion.html / inscription.html / espace-client.html)
+   ============================================================ */
+const CLIENT_SESSION_KEY = "mtd_client_session";
+function getClientSession() {
+  try { return JSON.parse(localStorage.getItem(CLIENT_SESSION_KEY) || "null"); } catch(e) { return null; }
+}
+function updateAccountLink() {
+  const session = getClientSession();
+  const link = $("accountLinkTop");
+  if (session && session.clientId) {
+    link.href = "espace-client.html";
+    link.textContent = t("myAccountLinkTop");
+  } else {
+    link.href = "connexion.html?next=index.html";
+    link.textContent = t("accountLinkTop");
+  }
+}
+
+function maybeShowAccountBanner() {
+  const session = getClientSession();
+  const dismissed = sessionStorage.getItem("mtd_account_banner_dismissed") === "1";
+  if (!session && !dismissed) {
+    $("accountBanner").classList.remove("hidden");
+  } else {
+    $("accountBanner").classList.add("hidden");
+  }
+}
+function prefillCheckoutFromSession() {
+  const session = getClientSession();
+  if (session) {
+    if (session.prenom || session.nom) $("fName").value = ((session.prenom || "") + " " + (session.nom || "")).trim();
+    if (session.telephone) $("fPhone").value = session.telephone;
+  }
+}
+
+/* ============================================================
+   VÉRIFICATION DE ZONE DE LIVRAISON
+   ============================================================ */
+function normalizeForZoneSearch(s) {
+  return String(s || "").toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9؀-ۿ\s]/g, " ")
+    .trim();
+}
+function checkZoneAvailability() {
+  const raw = $("zoneCheckInput").value;
+  const box = $("zoneCheckResult");
+  box.classList.remove("show", "ok", "ko");
+  const query = normalizeForZoneSearch(raw);
+  if (!query) {
+    box.textContent = t("zoneCheckEmpty");
+    box.classList.add("show", "ko");
+    return;
+  }
+  const match = CONFIG.ZONES.find(z => {
+    const label = normalizeForZoneSearch(z.label);
+    return query.includes(label) || label.includes(query) || query.includes(normalizeForZoneSearch(z.id));
+  });
+  if (match) {
+    box.textContent = t("zoneCheckOk") + match.label + " (" + match.fee + " DA)";
+    box.classList.add("show", "ok");
+  } else {
+    const zoneNames = CONFIG.ZONES.map(z => z.label).join(", ");
+    box.textContent = t("zoneCheckKo") + zoneNames;
+    box.classList.add("show", "ko");
+  }
 }
 
 /* ============================================================
@@ -613,6 +773,16 @@ function applyLanguage() {
   $("waConfirmBtn").textContent = t("waConfirm");
   $("waNote").textContent = t("waNote");
   $("closeSuccessBtn").textContent = t("close");
+  $("footerCguLink").textContent = t("footerCguLink");
+  $("footerPrivacyLink").textContent = t("footerPrivacyLink");
+  $("zoneCheckToggleText").textContent = t("zoneCheckToggleText");
+  $("zoneCheckLabel").textContent = t("zoneCheckLabel");
+  $("zoneCheckInput").placeholder = t("zoneCheckPlaceholder");
+  $("zoneCheckBtn").textContent = t("zoneCheckBtn");
+  $("accountBannerText").textContent = t("accountBannerText");
+  $("accountBannerLogin").textContent = t("accountBannerLogin");
+  $("accountBannerSignup").textContent = t("accountBannerSignup");
+  updateAccountLink();
 
   if (SELECTED_ZONE) updateCheckoutTotals();
   else $("chkFee").textContent = t("chooseZonePlaceholder");
@@ -654,11 +824,28 @@ function loadMenu() {
       }
       renderTabs();
       renderGrid();
+      applyReorderIfAny();
     })
     .catch(err => {
       showEmpty("loadError");
       console.error(err);
     });
+}
+
+/* ============================================================
+   RECOMMANDER UNE COMMANDE PASSÉE (depuis espace-client.html)
+   ============================================================ */
+function applyReorderIfAny() {
+  let panier;
+  try { panier = JSON.parse(localStorage.getItem("mtd_reorder_cart") || "null"); } catch(e) { panier = null; }
+  if (!panier || !panier.length) return;
+  localStorage.removeItem("mtd_reorder_cart");
+  panier.forEach(line => {
+    const item = MENU.find(m => m.id === line.id || (m.nom || "").trim().toLowerCase() === (line.nom || "").trim().toLowerCase());
+    if (item) CART[item.id] = { item, qty: (CART[item.id] ? CART[item.id].qty : 0) + (line.qty || 1) };
+  });
+  updateCartBar();
+  if (Object.keys(CART).length) { renderCartLines(); openOverlay("cartOverlay"); }
 }
 
 /* ============================================================
@@ -879,10 +1066,25 @@ function bindGlobalEvents() {
     if (!Object.keys(CART).length) return;
     closeOverlay("cartOverlay");
     updateCheckoutTotals();
+    maybeShowAccountBanner();
+    prefillCheckoutFromSession();
     openOverlay("checkoutOverlay");
   });
 
   $("confirmOrderBtn").addEventListener("click", submitOrder);
+
+  $("zoneCheckToggle").addEventListener("click", () => {
+    $("zoneCheckPanel").classList.toggle("hidden");
+  });
+  $("zoneCheckBtn").addEventListener("click", checkZoneAvailability);
+  $("zoneCheckInput").addEventListener("keyup", (e) => { if (e.key === "Enter") checkZoneAvailability(); });
+
+  $("accountBannerDismiss").addEventListener("click", () => {
+    sessionStorage.setItem("mtd_account_banner_dismissed", "1");
+    $("accountBanner").classList.add("hidden");
+  });
+
+  updateAccountLink();
 }
 
 /* ============================================================
