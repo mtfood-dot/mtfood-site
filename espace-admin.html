@@ -135,8 +135,8 @@
   .empty-state{text-align:center;color:var(--muted);font-size:13.5px;padding:40px 20px;}
   .empty-state .emoji{font-size:32px;display:block;margin-bottom:10px;}
 
-  .tab-bar{display:flex;gap:8px;margin-bottom:14px;}
-  .tab-btn{flex:1;background:#fff;border:1.5px solid var(--border);border-radius:999px;padding:9px 10px;
+  .tab-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+  .tab-btn{flex:1 1 auto;min-width:92px;background:#fff;border:1.5px solid var(--border);border-radius:999px;padding:9px 10px;
     font-size:13px;font-weight:800;color:var(--muted);cursor:pointer;font-family:inherit;position:relative;}
   .tab-btn.active{background:var(--blue-700);border-color:var(--blue-700);color:#fff;}
   .mod-badge{position:absolute;top:-6px;right:-6px;background:var(--danger);color:#fff;font-size:10px;
@@ -309,6 +309,7 @@ if ("serviceWorker" in navigator) {
       <button class="tab-btn" id="tabDashboardBtn" type="button"><span id="tabDashboardLabel"></span></button>
       <button class="tab-btn" id="tabComptaBtn" type="button"><span id="tabComptaLabel"></span></button>
       <button class="tab-btn" id="tabPubBtn" type="button"><span id="tabPubLabel"></span></button>
+      <button class="tab-btn" id="tabZonesBtn" type="button"><span id="tabZonesLabel"></span></button>
     </div>
 
     <div id="ordersView">
@@ -436,6 +437,41 @@ if ("serviceWorker" in navigator) {
       <div id="listAds"></div>
     </div>
 
+    <div id="zonesView" class="hidden">
+      <div class="refresh-row">
+        <div></div>
+        <button class="btn-refresh" id="refreshZonesBtn" type="button"><span id="refreshZonesLabel">↻ Actualiser</span></button>
+      </div>
+      <div class="card ad-form-card">
+        <div class="subheading" id="zoneFormTitle" style="margin-top:0;"></div>
+        <input type="hidden" id="zoneFormId" value="">
+        <div class="field">
+          <label id="lblZoneNom"></label>
+          <input type="text" id="zoneFormNom" placeholder="">
+        </div>
+        <div class="field ad-form-row">
+          <div class="ad-form-ordre">
+            <label id="lblZoneFrais"></label>
+            <input type="number" id="zoneFormFrais" value="0" min="0" step="10">
+          </div>
+          <div class="ad-form-ordre">
+            <label id="lblZoneOrdre"></label>
+            <input type="number" id="zoneFormOrdre" value="0" min="0" step="1">
+          </div>
+          <label class="ad-form-actif">
+            <input type="checkbox" id="zoneFormActif" checked>
+            <span id="lblZoneActif"></span>
+          </label>
+        </div>
+        <div class="actions-row">
+          <button class="btn-action btn-confirm" id="zoneFormSaveBtn" type="button"></button>
+          <button class="btn-action btn-cancel hidden" id="zoneFormCancelBtn" type="button"></button>
+        </div>
+      </div>
+      <div class="subheading" id="subheadingZones"></div>
+      <div id="listZones"></div>
+    </div>
+
   </div>
 
 </main>
@@ -471,6 +507,7 @@ let COMPTA_MODE = "partners";
 let DRIVER_FORM_MODE = false;
 let EDITING_DRIVER_TEL = null;
 let ADS = [];
+let ZONES = [];
 let CURRENT_TAB = "orders";
 
 /* ============================================================
@@ -598,6 +635,26 @@ const I18N = {
     loadAdsFailedGeneric: "Impossible de charger les publicités. Réessaie.",
     saveAdFailedGeneric: "Impossible d'enregistrer la publicité. Réessaie.",
     deleteAdFailedGeneric: "Impossible de supprimer la publicité. Réessaie.",
+    tabZones: "Zones",
+    subheadingZones: "Zones de livraison",
+    noZones: "Aucune zone configurée.",
+    zoneFormTitleNew: "Ajouter une zone",
+    zoneFormTitleEdit: "Modifier la zone",
+    lblZoneNom: "Nom de la zone",
+    lblZoneFrais: "Frais (DA)",
+    lblZoneOrdre: "Ordre",
+    lblZoneActif: "Active",
+    btnZoneSave: "💾 Enregistrer",
+    btnZoneCancel: "Annuler",
+    btnZoneEdit: "✎ Modifier",
+    btnZoneDelete: "✕ Supprimer",
+    zoneSaveRequired: "Le nom de la zone est obligatoire.",
+    zoneSaved: "Zone enregistrée.",
+    zoneDeleted: "Zone supprimée.",
+    zoneDeleteConfirm: "Supprimer cette zone ?",
+    loadZonesFailedGeneric: "Impossible de charger les zones. Réessaie.",
+    saveZoneFailedGeneric: "Impossible d'enregistrer la zone. Réessaie.",
+    deleteZoneFailedGeneric: "Impossible de supprimer la zone. Réessaie.",
   },
   ar: {
     tagline: "مساحة الإدارة",
@@ -720,6 +777,26 @@ const I18N = {
     loadAdsFailedGeneric: "تعذر تحميل الإعلانات. أعد المحاولة.",
     saveAdFailedGeneric: "تعذر حفظ الإعلان. أعد المحاولة.",
     deleteAdFailedGeneric: "تعذر حذف الإعلان. أعد المحاولة.",
+    tabZones: "المناطق",
+    subheadingZones: "مناطق التوصيل",
+    noZones: "لا توجد مناطق مضافة.",
+    zoneFormTitleNew: "إضافة منطقة",
+    zoneFormTitleEdit: "تعديل المنطقة",
+    lblZoneNom: "اسم المنطقة",
+    lblZoneFrais: "الرسوم (دج)",
+    lblZoneOrdre: "الترتيب",
+    lblZoneActif: "نشطة",
+    btnZoneSave: "💾 حفظ",
+    btnZoneCancel: "إلغاء",
+    btnZoneEdit: "✎ تعديل",
+    btnZoneDelete: "✕ حذف",
+    zoneSaveRequired: "اسم المنطقة إلزامي.",
+    zoneSaved: "تم حفظ المنطقة.",
+    zoneDeleted: "تم حذف المنطقة.",
+    zoneDeleteConfirm: "هل تريد حذف هذه المنطقة؟",
+    loadZonesFailedGeneric: "تعذر تحميل المناطق. أعد المحاولة.",
+    saveZoneFailedGeneric: "تعذر حفظ المنطقة. أعد المحاولة.",
+    deleteZoneFailedGeneric: "تعذر حذف المنطقة. أعد المحاولة.",
   }
 };
 
@@ -775,6 +852,16 @@ function applyLanguage() {
   $("adFormSaveBtn").textContent = t("btnAdSave");
   $("adFormCancelBtn").textContent = t("btnAdCancel");
   $("adFormTitle").textContent = $("adFormId").value ? t("adFormTitleEdit") : t("adFormTitleNew");
+  $("tabZonesLabel").textContent = t("tabZones");
+  $("refreshZonesLabel").textContent = t("refreshLabel");
+  $("subheadingZones").textContent = t("subheadingZones");
+  $("lblZoneNom").textContent = t("lblZoneNom");
+  $("lblZoneFrais").textContent = t("lblZoneFrais");
+  $("lblZoneOrdre").textContent = t("lblZoneOrdre");
+  $("lblZoneActif").textContent = t("lblZoneActif");
+  $("zoneFormSaveBtn").textContent = t("btnZoneSave");
+  $("zoneFormCancelBtn").textContent = t("btnZoneCancel");
+  $("zoneFormTitle").textContent = $("zoneFormId").value ? t("zoneFormTitleEdit") : t("zoneFormTitleNew");
   renderOrders();
   renderModeration();
   renderPartners();
@@ -784,6 +871,7 @@ function applyLanguage() {
   renderCompta();
   renderComptaDrivers();
   renderAdsAdmin();
+  renderZonesAdmin();
 }
 
 $("langToggle").addEventListener("click", () => {
@@ -926,6 +1014,8 @@ $("comptaDateStart").addEventListener("change", refreshComptaCurrent);
 $("comptaDateEnd").addEventListener("change", refreshComptaCurrent);
 $("tabPubBtn").addEventListener("click", () => switchTab("pub"));
 $("refreshPubBtn").addEventListener("click", loadAdsAdmin);
+$("tabZonesBtn").addEventListener("click", () => switchTab("zones"));
+$("refreshZonesBtn").addEventListener("click", loadZonesAdmin);
 
 function switchTab(tab) {
   CURRENT_TAB = tab;
@@ -935,12 +1025,14 @@ function switchTab(tab) {
   $("tabDashboardBtn").classList.toggle("active", tab === "dashboard");
   $("tabComptaBtn").classList.toggle("active", tab === "compta");
   $("tabPubBtn").classList.toggle("active", tab === "pub");
+  $("tabZonesBtn").classList.toggle("active", tab === "zones");
   $("ordersView").classList.toggle("hidden", tab !== "orders");
   $("moderationView").classList.toggle("hidden", tab !== "moderation");
   $("partnersView").classList.toggle("hidden", tab !== "partners");
   $("dashboardView").classList.toggle("hidden", tab !== "dashboard");
   $("comptaView").classList.toggle("hidden", tab !== "compta");
   $("pubView").classList.toggle("hidden", tab !== "pub");
+  $("zonesView").classList.toggle("hidden", tab !== "zones");
   hideError($("errorBox"));
   hideSuccess($("successBox"));
   if (tab === "moderation") loadPendingItems();
@@ -948,6 +1040,7 @@ function switchTab(tab) {
   if (tab === "dashboard") { loadDashboard(); loadDashboardStats(); }
   if (tab === "compta") refreshComptaCurrent();
   if (tab === "pub") loadAdsAdmin();
+  if (tab === "zones") loadZonesAdmin();
 }
 
 /* ============================================================
@@ -1871,6 +1964,136 @@ async function onDeleteAd(id, btnEl) {
     }
   } catch (e) {
     showError($("errorBox"), t("deleteAdFailedGeneric"));
+  } finally {
+    btnEl.disabled = false;
+  }
+}
+
+/* ============================================================
+   ZONES DE LIVRAISON
+   ============================================================ */
+async function loadZonesAdmin() {
+  hideError($("errorBox"));
+  try {
+    const data = await apiGet({ action: "getAllZones", password: SESSION_PASSWORD });
+    if (data.success) {
+      ZONES = data.zones || [];
+      renderZonesAdmin();
+    } else if (CURRENT_TAB === "zones") {
+      showError($("errorBox"), data.error || t("loadZonesFailedGeneric"));
+    }
+  } catch (e) {
+    if (CURRENT_TAB === "zones") showError($("errorBox"), t("loadZonesFailedGeneric"));
+  }
+}
+
+function zoneCardHtml(zone) {
+  const id = escapeAttr(zone.id);
+  const statusLabel = zone.actif ? t("statusActif") : t("statusEnAttente");
+  const statusCls = zone.actif ? "actif" : "enattente";
+  return `
+    <div class="ad-card">
+      <div class="info">
+        <div class="nom">${escapeHtml(zone.nom || "")}</div>
+        <div class="texte">${escapeHtml(t("lblZoneFrais"))} : ${escapeHtml(String(zone.frais || 0))} DA</div>
+        <span class="status-badge ${statusCls}">${escapeHtml(statusLabel)}</span>
+        <div class="ordre">${escapeHtml(t("lblZoneOrdre"))} : ${escapeHtml(String(zone.ordre || 0))}</div>
+        <div class="actions-row">
+          <button class="btn-action btn-edit" type="button" data-edit-zone="${id}">${escapeHtml(t("btnZoneEdit"))}</button>
+          <button class="btn-action btn-delete" type="button" data-delete-zone="${id}">${escapeHtml(t("btnZoneDelete"))}</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderZonesAdmin() {
+  $("listZones").innerHTML = ZONES.length
+    ? ZONES.map(zoneCardHtml).join("")
+    : emptyStateHtml(t("noZones"), "🗺️");
+  document.querySelectorAll("#listZones [data-edit-zone]").forEach(btn => {
+    btn.addEventListener("click", () => onEditZone(btn.dataset.editZone));
+  });
+  document.querySelectorAll("#listZones [data-delete-zone]").forEach(btn => {
+    btn.addEventListener("click", () => onDeleteZone(btn.dataset.deleteZone, btn));
+  });
+}
+
+function onEditZone(id) {
+  const zone = ZONES.find(x => String(x.id) === String(id));
+  if (!zone) return;
+  $("zoneFormId").value = zone.id;
+  $("zoneFormNom").value = zone.nom || "";
+  $("zoneFormFrais").value = zone.frais || 0;
+  $("zoneFormOrdre").value = zone.ordre || 0;
+  $("zoneFormActif").checked = !!zone.actif;
+  $("zoneFormTitle").textContent = t("zoneFormTitleEdit");
+  $("zoneFormCancelBtn").classList.remove("hidden");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function resetZoneForm() {
+  $("zoneFormId").value = "";
+  $("zoneFormNom").value = "";
+  $("zoneFormFrais").value = 0;
+  $("zoneFormOrdre").value = 0;
+  $("zoneFormActif").checked = true;
+  $("zoneFormTitle").textContent = t("zoneFormTitleNew");
+  $("zoneFormCancelBtn").classList.add("hidden");
+}
+
+$("zoneFormCancelBtn").addEventListener("click", resetZoneForm);
+
+$("zoneFormSaveBtn").addEventListener("click", async () => {
+  hideError($("errorBox"));
+  hideSuccess($("successBox"));
+  const nom = $("zoneFormNom").value.trim();
+  if (!nom) {
+    showError($("errorBox"), t("zoneSaveRequired"));
+    return;
+  }
+  const btn = $("zoneFormSaveBtn");
+  btn.disabled = true;
+  try {
+    const data = await apiGet({
+      action: "saveZone",
+      password: SESSION_PASSWORD,
+      id: $("zoneFormId").value || "",
+      nom: nom,
+      frais: $("zoneFormFrais").value || 0,
+      actif: $("zoneFormActif").checked ? "OUI" : "NON",
+      ordre: $("zoneFormOrdre").value || 0
+    });
+    if (data.success) {
+      showSuccess($("successBox"), t("zoneSaved"));
+      resetZoneForm();
+      loadZonesAdmin();
+    } else {
+      showError($("errorBox"), data.error || t("saveZoneFailedGeneric"));
+    }
+  } catch (e) {
+    showError($("errorBox"), t("saveZoneFailedGeneric"));
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+async function onDeleteZone(id, btnEl) {
+  hideError($("errorBox"));
+  hideSuccess($("successBox"));
+  if (!window.confirm(t("zoneDeleteConfirm"))) return;
+  btnEl.disabled = true;
+  try {
+    const data = await apiGet({ action: "deleteZone", password: SESSION_PASSWORD, id: id });
+    if (data.success) {
+      ZONES = ZONES.filter(x => String(x.id) !== String(id));
+      renderZonesAdmin();
+      showSuccess($("successBox"), t("zoneDeleted"));
+    } else {
+      showError($("errorBox"), data.error || t("deleteZoneFailedGeneric"));
+    }
+  } catch (e) {
+    showError($("errorBox"), t("deleteZoneFailedGeneric"));
   } finally {
     btnEl.disabled = false;
   }
