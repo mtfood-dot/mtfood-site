@@ -459,8 +459,9 @@ function renderBoost(list) {
   if (!list || !list.length) { box.classList.add("hidden"); $("boostStrip").innerHTML = ""; return; }
   $("boostBoxTitle").textContent = t("boostTitle");
   $("boostStrip").innerHTML = shuffled(list).map(p => {
-    const href = /^https:\/\//i.test(p.lienUrl || "") ? p.lienUrl : "menu.html";
-    const ext = href !== "menu.html" ? ' target="_blank" rel="noopener"' : "";
+    const ext = !p.itemId && /^https:\/\//i.test(p.lienUrl || "") ? ' target="_blank" rel="noopener"' : "";
+    const href = p.itemId ? "menu.html?item=" + encodeURIComponent(p.itemId)
+      : (ext ? p.lienUrl : "menu.html");
     const price = p.prixPlat === "" || p.prixPlat == null ? "" : `<div class="boost-price">${Number(p.prixPlat).toLocaleString("fr-FR")} DA</div>`;
     return `<a class="boost-item" href="${escapeAttr(href)}"${ext}>
       <div class="boost-img" style="background-image:url('${escapeAttr(p.imageUrl)}')"></div>
