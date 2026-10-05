@@ -641,7 +641,7 @@ function emptyStateHtml(msg) {
 }
 
 function orderCardHtml(o, kind) {
-  const telHref = "tel:" + String(o.telephone).replace(/[^0-9+]/g, "");
+  const telHref = "tel:" + fmtPhone(o.telephone).replace(/[^0-9+]/g, "");
   const actionBtn = kind === "available"
     ? `<button class="btn-accept" data-accept="${escapeAttr(o.numero)}">${escapeHtml(t("accept"))}</button>`
     : `<button class="btn-delivered" data-deliver="${escapeAttr(o.numero)}">${escapeHtml(t("markDelivered"))}</button>`;
@@ -709,6 +709,15 @@ async function onDeliver(numero) {
   } finally {
     if (btn) { btn.disabled = false; }
   }
+}
+
+/* Téléphone : Google Sheets perd le 0 initial des numéros enregistrés comme nombres. */
+function fmtPhone(v) {
+  let d = String(v == null ? "" : v).replace(/[^\d+]/g, "");
+  if (!d) return "";
+  if (/^\+?213\d{8,9}$/.test(d)) d = "0" + d.replace(/^\+?213/, "");
+  else if (/^\d{8,9}$/.test(d) && d[0] !== "0") d = "0" + d;
+  return /^0\d{9}$/.test(d) ? d.replace(/^(\d{4})(\d{2})(\d{2})(\d{2})$/, "$1 $2 $3 $4") : d;
 }
 
 function escapeHtml(s) {
