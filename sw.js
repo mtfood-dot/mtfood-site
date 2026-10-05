@@ -4,7 +4,7 @@
 // JAMAIS mis en cache : toujours réseau, pour ne jamais servir des
 // commandes/statuts périmés.
 
-const CACHE_NAME = "mtdelivery-v3";
+const CACHE_NAME = "mtdelivery-v4";
 const CORE_ASSETS = [
   "/index.html",
   "/offline.html",
@@ -47,6 +47,32 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET" || url.origin !== self.location.origin)
     return;
 
+  // Pages HTML : RÉSEAU D'ABORD (toujours la dernière version déployée), cache
+  // seulement en secours hors-ligne. Évite de servir une ancienne page après
+  // une mise à jour du site.
+  const isPage = event.request.mode === "navigate" || url.pathname.endsWith(".html") || url.pathname === "/";
+  if (isPage) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return networkResponse;
+        })
+        .catch(() =>
+          caches.match(event.request).then((cached) => {
+            if (cached) return cached;
+            if (event.request.mode === "navigate") return caches.match("/offline.html");
+            return Response.error();
+          })
+        )
+    );
+    return;
+  }
+
+  // Autres fichiers statiques (images, icônes) : cache d'abord, mis à jour en arrière-plan.
   event.respondWith(
     caches.match(event.request).then((cached) => {
       const fetchPromise = fetch(event.request)
@@ -57,13 +83,7 @@ self.addEventListener("fetch", (event) => {
           }
           return networkResponse;
         })
-        .catch(() => {
-          if (cached) return cached;
-          // Navigation sans cache ni réseau : page hors ligne.
-          if (event.request.mode === "navigate") return caches.match("/offline.html");
-          return Response.error();
-        });
-      // Cache d'abord si disponible (rapide), sinon réseau.
+        .catch(() => cached || Response.error());
       return cached || fetchPromise;
     })
   );
