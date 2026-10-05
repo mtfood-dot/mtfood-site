@@ -41,6 +41,9 @@
     background:var(--blue-100);border:1px solid var(--blue-600);padding:9px 16px;border-radius:999px;
     font-size:13.5px;font-weight:700;text-decoration:none;color:var(--blue-700);}
   header.top .header-links{margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;position:relative;z-index:1;}
+  header.top .join-links-top{margin-top:8px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap;position:relative;z-index:1;}
+  header.top .join-links-top a{display:inline-flex;align-items:center;gap:6px;background:var(--gold-500);color:var(--blue-900);
+    padding:7px 14px;border-radius:999px;font-weight:800;font-size:12.5px;text-decoration:none;}
   header.top .account-link-top{display:inline-flex;align-items:center;gap:6px;
     background:var(--blue-100);border:1.5px solid var(--blue-600);color:var(--blue-700);
     padding:7px 14px;border-radius:999px;font-weight:700;font-size:13px;text-decoration:none;}
@@ -160,6 +163,10 @@ if ("serviceWorker" in navigator) {
     <a class="phone-link" id="headerPhone" href="tel:0560 78 84 97">📞 0560 78 84 97</a>
     <a class="account-link-top" id="accountLinkTop" href="connexion.html">👤 Mon compte</a>
   </div>
+  <div class="join-links-top">
+    <a href="devenir-partenaire.html">🍽️ <span id="headJoinPartner">Devenir partenaire</span></a>
+    <a href="inscription-livreur.html">🛵 <span id="headJoinDriver">Devenir livreur</span></a>
+  </div>
   <button class="lang-toggle" id="langToggle" type="button">AR</button>
 </header>
 
@@ -244,6 +251,8 @@ const I18N = {
     ctaOrder: "🛒 Voir le menu",
     accountLinkTop: "👤 Mon compte",
     myAccountLinkTop: "👤 Mes commandes",
+    headJoinPartner: "Devenir partenaire",
+    headJoinDriver: "Devenir livreur",
     footerNote: "MT Delivery · Meftah, Blida · Paiement à la livraison uniquement",
     footerCguLink: "Conditions d'utilisation",
     joinTitle: "Rejoins MT Delivery",
@@ -278,6 +287,8 @@ const I18N = {
     ctaOrder: "🛒 عرض القائمة",
     accountLinkTop: "👤 حسابي",
     myAccountLinkTop: "👤 طلباتي",
+    headJoinPartner: "كن شريكًا",
+    headJoinDriver: "كن موصّلًا",
     footerNote: "إم تي دليفري · مفتاح، البليدة · الدفع عند الاستلام فقط",
     footerCguLink: "شروط الاستخدام",
     joinTitle: "انضم إلى إم تي دليفري",
@@ -471,6 +482,8 @@ function applyLanguage() {
   $("heroSub").textContent = t("heroSub");
   $("ctaOrder").textContent = t("ctaOrder");
   $("footerNote").textContent = t("footerNote");
+  $("headJoinPartner").textContent = t("headJoinPartner");
+  $("headJoinDriver").textContent = t("headJoinDriver");
   $("footerCguLink").textContent = t("footerCguLink");
   Object.keys(['joinTitle', 'joinPartnerTitle', 'joinPartnerText', 'joinPartnerCta', 'joinDriverTitle', 'joinDriverText', 'joinDriverCta', 'joinPartnerLogin', 'joinDriverLogin']).forEach(function(k){ var el = $(k); if (el) el.textContent = t(k); });
   $("footerPrivacyLink").textContent = t("footerPrivacyLink");
