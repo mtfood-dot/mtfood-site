@@ -169,6 +169,21 @@
   .btn-activate{background:var(--green);color:#fff;}
   .tab-count{display:inline-block;min-width:18px;height:18px;line-height:18px;padding:0 5px;margin-inline-start:6px;
     border-radius:9px;background:var(--danger);color:#fff;font-size:11px;font-weight:800;text-align:center;vertical-align:middle;}
+  .boost-card{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);border:1px solid var(--border);padding:14px;margin-bottom:12px;}
+  .boost-head{display:flex;gap:12px;}
+  .boost-thumb{width:84px;height:84px;border-radius:12px;object-fit:cover;background:var(--bg);flex-shrink:0;border:1px solid var(--border);}
+  .boost-main{flex:1;min-width:0;}
+  .boost-main .nom{font-size:15px;font-weight:800;color:var(--text);}
+  .boost-meta{font-size:12px;color:var(--muted);line-height:1.6;margin-top:2px;}
+  .boost-sum{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+  .boost-sum span{background:#fff;border:1px solid var(--border);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:800;color:var(--blue-900);}
+  .boost-form{margin-top:12px;border-top:1px dashed var(--border);padding-top:12px;}
+  .boost-form label{display:block;font-size:12px;font-weight:700;color:var(--blue-900);margin:8px 0 4px;}
+  .boost-form input[type=date],.boost-form textarea{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:8px 10px;font-family:inherit;font-size:13px;background:#fff;color:var(--text);}
+  .boost-form textarea{min-height:52px;resize:vertical;}
+  .boost-check{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;margin-top:10px;}
+  .boost-hist{margin-top:10px;font-size:11.5px;color:var(--muted);line-height:1.6;background:var(--bg);border-radius:8px;padding:8px 10px;}
+  .boost-filter{border:1.5px solid var(--border);border-radius:999px;padding:7px 12px;font-size:12.5px;font-family:inherit;background:#fff;color:var(--blue-900);}
   .requests-block{background:#fff8e6;border:1.5px solid #f4d58d;border-radius:var(--radius-md);padding:12px 12px 2px;margin-bottom:16px;}
   .requests-block .subheading{margin-top:0;}
   .btn-refuse{background:#fff;border-color:#f3c6c1;color:var(--danger);}
@@ -314,6 +329,7 @@ if ("serviceWorker" in navigator) {
       <button class="tab-btn" id="tabDashboardBtn" type="button"><span id="tabDashboardLabel"></span></button>
       <button class="tab-btn" id="tabComptaBtn" type="button"><span id="tabComptaLabel"></span></button>
       <button class="tab-btn" id="tabPubBtn" type="button"><span id="tabPubLabel"></span></button>
+      <button class="tab-btn" id="tabBoostBtn" type="button"><span id="tabBoostLabel"></span><span id="boostBadge" class="tab-count hidden">0</span></button>
       <button class="tab-btn" id="tabZonesBtn" type="button"><span id="tabZonesLabel"></span></button>
     </div>
 
@@ -451,6 +467,15 @@ if ("serviceWorker" in navigator) {
       <div id="listAds"></div>
     </div>
 
+    <div id="boostView" class="hidden">
+      <div class="refresh-row">
+        <select class="boost-filter" id="boostFilter"></select>
+        <button class="btn-refresh" id="refreshBoostBtn" type="button"><span id="refreshBoostLabel">↻ Actualiser</span></button>
+      </div>
+      <div class="boost-sum" id="boostSummary"></div>
+      <div id="listBoostAdmin"></div>
+    </div>
+
     <div id="zonesView" class="hidden">
       <div class="refresh-row">
         <div></div>
@@ -505,6 +530,8 @@ const SESSION_KEY = "mtd_espace_admin_session";
 const SESSION_NAME_KEY = "mtd_espace_admin_session_nom";
 let LANG = localStorage.getItem(LANG_KEY) || "fr";
 let SESSION_PASSWORD = null;
+let BOOST_REQS = [];
+let BOOST_MAX = 6;
 let SESSION_NAME = null;
 try { SESSION_PASSWORD = localStorage.getItem(SESSION_KEY) || null; } catch(e) { SESSION_PASSWORD = null; }
 try { SESSION_NAME = localStorage.getItem(SESSION_NAME_KEY) || null; } catch(e) { SESSION_NAME = null; }
@@ -646,6 +673,48 @@ const I18N = {
     statNbPlatsShort: "plats",
     loadComptaFailedGeneric: "Impossible de charger la comptabilité. Réessaie.",
     tabPub: "Publicités",
+    tabBoost: "À la une",
+    boostAll: "Toutes les demandes",
+    boostFPending: "En attente de décision",
+    boostFLive: "En ligne",
+    boostFPlanned: "Planifiées",
+    boostFReturned: "À modifier",
+    boostFDone: "Terminées / refusées",
+    boostSumLive: "En ligne",
+    boostSumPending: "En attente",
+    boostSumCash: "Encaissé",
+    boostNone: "Aucune demande.",
+    boostRestaurant: "Restaurant",
+    boostDuration: "Durée",
+    boostWishedStart: "Début souhaité",
+    boostStartLabel: "Date de début",
+    boostPaidNow: "Déjà payé (espèces reçues)",
+    boostCommentLabel: "Commentaire pour le partenaire",
+    boostAccept: "Accepter",
+    boostReturn: "Renvoyer pour modification",
+    boostReject: "Refuser",
+    boostMarkPaid: "Marquer payé",
+    boostMarkUnpaid: "Marquer non payé",
+    boostSuspend: "Suspendre",
+    boostReactivate: "Réactiver",
+    boostHistory: "Historique",
+    boostNoHistory: "Aucun historique.",
+    boostPaid: "Payé",
+    boostUnpaid: "Non payé",
+    boostPeriod: "Diffusion",
+    boostCommentRequired: "Écris un commentaire pour le partenaire.",
+    boostDone: "Décision enregistrée.",
+    boostUpdated: "Mise à jour effectuée.",
+    boostFailed: "Action impossible. Réessaie.",
+    boostLoadFailed: "Impossible de charger les demandes.",
+    bst_en_attente: "En attente",
+    bst_a_modifier: "À modifier",
+    bst_refusee: "Refusée",
+    bst_approuvee: "Approuvée",
+    bst_planifiee: "Planifiée",
+    bst_active: "En ligne",
+    bst_suspendue: "Suspendue",
+    bst_expiree: "Expirée",
     subheadingAds: "Espaces publicitaires",
     noAds: "Aucune publicité pour le moment.",
     adFormTitleNew: "Ajouter une publicité",
@@ -803,6 +872,48 @@ const I18N = {
     statNbPlatsShort: "أطباق",
     loadComptaFailedGeneric: "تعذر تحميل المحاسبة. أعد المحاولة.",
     tabPub: "الإعلانات",
+    tabBoost: "في الواجهة",
+    boostAll: "كل الطلبات",
+    boostFPending: "في انتظار القرار",
+    boostFLive: "معروضة الآن",
+    boostFPlanned: "مبرمجة",
+    boostFReturned: "تحتاج تعديلًا",
+    boostFDone: "منتهية / مرفوضة",
+    boostSumLive: "معروضة الآن",
+    boostSumPending: "قيد الانتظار",
+    boostSumCash: "المحصَّل",
+    boostNone: "لا توجد طلبات.",
+    boostRestaurant: "المطعم",
+    boostDuration: "المدة",
+    boostWishedStart: "البدء المطلوب",
+    boostStartLabel: "تاريخ البدء",
+    boostPaidNow: "تم الدفع (استلام نقدًا)",
+    boostCommentLabel: "تعليق للشريك",
+    boostAccept: "قبول",
+    boostReturn: "إرجاع للتعديل",
+    boostReject: "رفض",
+    boostMarkPaid: "تسجيل كمدفوع",
+    boostMarkUnpaid: "تسجيل كغير مدفوع",
+    boostSuspend: "إيقاف مؤقت",
+    boostReactivate: "إعادة التفعيل",
+    boostHistory: "السجل",
+    boostNoHistory: "لا يوجد سجل.",
+    boostPaid: "مدفوع",
+    boostUnpaid: "غير مدفوع",
+    boostPeriod: "مدة العرض",
+    boostCommentRequired: "اكتب تعليقًا للشريك.",
+    boostDone: "تم تسجيل القرار.",
+    boostUpdated: "تم التحديث.",
+    boostFailed: "تعذر تنفيذ الإجراء. حاول مجددًا.",
+    boostLoadFailed: "تعذر تحميل الطلبات.",
+    bst_en_attente: "قيد المراجعة",
+    bst_a_modifier: "يحتاج تعديلًا",
+    bst_refusee: "مرفوض",
+    bst_approuvee: "مقبول",
+    bst_planifiee: "مبرمج",
+    bst_active: "معروض الآن",
+    bst_suspendue: "موقوف مؤقتًا",
+    bst_expiree: "منتهي",
     subheadingAds: "المساحات الإعلانية",
     noAds: "لا توجد إعلانات حالياً.",
     adFormTitleNew: "إضافة إعلان",
@@ -893,6 +1004,7 @@ function applyLanguage() {
   $("tabComptaLabel").textContent = t("tabCompta");
   $("refreshComptaLabel").textContent = t("refreshLabel");
   $("tabPubLabel").textContent = t("tabPub");
+  applyBoostAdminLabels();
   $("refreshPubLabel").textContent = t("refreshLabel");
   $("subheadingAds").textContent = t("subheadingAds");
   $("lblAdNom").textContent = t("lblAdNom");
@@ -1045,6 +1157,7 @@ function enterApp() {
   loadDrivers();
   loadPartners();
   loadDuplicates();
+  loadBoostAdmin();
 }
 
 $("refreshBtn").addEventListener("click", loadOrders);
@@ -1068,6 +1181,7 @@ $("comptaDateStart").addEventListener("change", refreshComptaCurrent);
 $("comptaDateEnd").addEventListener("change", refreshComptaCurrent);
 $("tabPubBtn").addEventListener("click", () => switchTab("pub"));
 $("refreshPubBtn").addEventListener("click", loadAdsAdmin);
+$("tabBoostBtn").addEventListener("click", () => switchTab("boost"));
 $("tabZonesBtn").addEventListener("click", () => switchTab("zones"));
 $("refreshZonesBtn").addEventListener("click", loadZonesAdmin);
 
@@ -1079,6 +1193,7 @@ function switchTab(tab) {
   $("tabDashboardBtn").classList.toggle("active", tab === "dashboard");
   $("tabComptaBtn").classList.toggle("active", tab === "compta");
   $("tabPubBtn").classList.toggle("active", tab === "pub");
+  $("tabBoostBtn").classList.toggle("active", tab === "boost");
   $("tabZonesBtn").classList.toggle("active", tab === "zones");
   $("ordersView").classList.toggle("hidden", tab !== "orders");
   $("moderationView").classList.toggle("hidden", tab !== "moderation");
@@ -1086,6 +1201,7 @@ function switchTab(tab) {
   $("dashboardView").classList.toggle("hidden", tab !== "dashboard");
   $("comptaView").classList.toggle("hidden", tab !== "compta");
   $("pubView").classList.toggle("hidden", tab !== "pub");
+  $("boostView").classList.toggle("hidden", tab !== "boost");
   $("zonesView").classList.toggle("hidden", tab !== "zones");
   hideError($("errorBox"));
   hideSuccess($("successBox"));
@@ -1094,6 +1210,7 @@ function switchTab(tab) {
   if (tab === "dashboard") { loadDashboard(); loadDashboardStats(); loadTopRankings(); }
   if (tab === "compta") refreshComptaCurrent();
   if (tab === "pub") loadAdsAdmin();
+  if (tab === "boost") loadBoostAdmin();
   if (tab === "zones") loadZonesAdmin();
 }
 
@@ -2286,6 +2403,181 @@ async function onDeleteZone(id, btnEl) {
     btnEl.disabled = false;
   }
 }
+
+/* ============================================================
+   PUBLICITÉS « À LA UNE » (demandes des partenaires)
+   Classes boost-* : éviter les noms bloqués par les bloqueurs de pub.
+   ============================================================ */
+function applyBoostAdminLabels() {
+  $("tabBoostLabel").textContent = t("tabBoost");
+  $("refreshBoostLabel").textContent = t("refreshLabel");
+  const sel = $("boostFilter");
+  const cur = sel.value || "pending";
+  sel.innerHTML = [
+    ["pending", "boostFPending"], ["live", "boostFLive"], ["planned", "boostFPlanned"],
+    ["returned", "boostFReturned"], ["done", "boostFDone"], ["all", "boostAll"]
+  ].map(o => `<option value="${o[0]}">${escapeHtml(t(o[1]))}</option>`).join("");
+  sel.value = cur;
+  renderBoostAdmin();
+}
+
+async function loadBoostAdmin() {
+  try {
+    const data = await apiGet({ action: "getAllPubRequests", password: SESSION_PASSWORD });
+    if (data.success) {
+      BOOST_REQS = data.requests || [];
+      BOOST_MAX = data.maxSlots || 6;
+      renderBoostAdmin();
+    } else if (CURRENT_TAB === "boost") {
+      showError($("errorBox"), data.error || t("boostLoadFailed"));
+    }
+  } catch (e) {
+    if (CURRENT_TAB === "boost") showError($("errorBox"), t("boostLoadFailed"));
+  }
+}
+
+function boostMatches(r, f) {
+  if (f === "all") return true;
+  if (f === "pending") return r.etat === "en_attente";
+  if (f === "live") return r.etat === "active";
+  if (f === "planned") return r.etat === "planifiee" || r.etat === "approuvee";
+  if (f === "returned") return r.etat === "a_modifier";
+  if (f === "done") return r.etat === "expiree" || r.etat === "refusee" || r.etat === "suspendue";
+  return true;
+}
+
+function boostBadgeCls(r) {
+  if (r.etat === "active") return "actif";
+  if (r.etat === "refusee") return "refuse";
+  return "enattente";
+}
+
+function boostCardHtml(r) {
+  const id = escapeAttr(r.id);
+  const price = r.prixPlat === "" || r.prixPlat == null ? "" : ` · ${Number(r.prixPlat).toLocaleString("fr-FR")} DA`;
+  const period = r.debut && r.fin ? `<div>${escapeHtml(t("boostPeriod"))} : ${escapeHtml(r.debut)} → ${escapeHtml(r.fin)}</div>` : "";
+  const paid = r.statut === "approuvee"
+    ? `<span class="status-badge ${r.paye ? "actif" : "enattente"}">${escapeHtml(r.paye ? t("boostPaid") : t("boostUnpaid"))}</span>` : "";
+  let actions = "";
+  if (r.etat === "en_attente") {
+    actions = `
+      <div class="boost-form">
+        <label>${escapeHtml(t("boostStartLabel"))}</label>
+        <input type="date" class="b-debut" value="${escapeAttr(r.debutSouhaite || "")}">
+        <label class="boost-check"><input type="checkbox" class="b-paye"> ${escapeHtml(t("boostPaidNow"))}</label>
+        <label>${escapeHtml(t("boostCommentLabel"))}</label>
+        <textarea class="b-comment"></textarea>
+        <div class="actions-row">
+          <button class="btn-action btn-activate" type="button" data-bact="approve" data-bid="${id}">${escapeHtml(t("boostAccept"))}</button>
+          <button class="btn-action btn-confirm" type="button" data-bact="modify" data-bid="${id}">${escapeHtml(t("boostReturn"))}</button>
+          <button class="btn-action btn-refuse" type="button" data-bact="refuse" data-bid="${id}">${escapeHtml(t("boostReject"))}</button>
+        </div>
+      </div>`;
+  } else if (r.statut === "approuvee") {
+    const live = r.etat !== "expiree";
+    actions = `<div class="actions-row">
+      <button class="btn-action btn-confirm" type="button" data-bact="pay" data-bid="${id}" data-pay="${r.paye ? "NON" : "OUI"}">${escapeHtml(r.paye ? t("boostMarkUnpaid") : t("boostMarkPaid"))}</button>
+      ${live ? `<button class="btn-action ${r.suspendue ? "btn-activate" : "btn-refuse"}" type="button" data-bact="suspend" data-bid="${id}" data-susp="${r.suspendue ? "NON" : "OUI"}">${escapeHtml(r.suspendue ? t("boostReactivate") : t("boostSuspend"))}</button>` : ""}
+    </div>`;
+  }
+  const comment = r.commentaire && r.etat !== "en_attente" ? `<div class="boost-meta">💬 ${escapeHtml(r.commentaire)}</div>` : "";
+  return `
+    <div class="boost-card" data-card="${id}">
+      <div class="boost-head">
+        <img class="boost-thumb" src="${escapeAttr(r.imageUrl)}" alt="" loading="lazy">
+        <div class="boost-main">
+          <div class="nom">${escapeHtml(r.nomPlat)}${escapeHtml(price)}</div>
+          <div class="boost-meta">
+            <div>${escapeHtml(t("boostRestaurant"))} : <b>${escapeHtml(r.restaurant)}</b> · ${escapeHtml(r.telephone)}</div>
+            <div>${escapeHtml(r.id)} · ${escapeHtml(t("boostDuration"))} : ${r.dureeJours} · ${Number(r.prixDA).toLocaleString("fr-FR")} DA</div>
+            <div>${escapeHtml(t("boostWishedStart"))} : ${escapeHtml(r.debutSouhaite)}</div>
+            ${period}
+            ${r.texte ? `<div>« ${escapeHtml(r.texte)} »</div>` : ""}
+          </div>
+          <span class="status-badge ${boostBadgeCls(r)}">${escapeHtml(t("bst_" + r.etat))}</span> ${paid}
+        </div>
+      </div>
+      ${comment}
+      ${actions}
+      <div class="actions-row"><button class="btn-action" type="button" data-bact="history" data-bid="${id}">${escapeHtml(t("boostHistory"))}</button></div>
+      <div class="boost-hist hidden" data-hist="${id}"></div>
+    </div>`;
+}
+
+function renderBoostAdmin() {
+  const list = $("listBoostAdmin");
+  if (!list) return;
+  const pending = BOOST_REQS.filter(r => r.etat === "en_attente").length;
+  const live = BOOST_REQS.filter(r => r.etat === "active").length;
+  const cash = BOOST_REQS.filter(r => r.statut === "approuvee" && r.paye).reduce((a, r) => a + Number(r.prixDA || 0), 0);
+  const badge = $("boostBadge");
+  badge.textContent = pending;
+  badge.classList.toggle("hidden", pending === 0);
+  $("boostSummary").innerHTML =
+    `<span>${escapeHtml(t("boostSumLive"))} : ${live}/${BOOST_MAX}</span>` +
+    `<span>${escapeHtml(t("boostSumPending"))} : ${pending}</span>` +
+    `<span>${escapeHtml(t("boostSumCash"))} : ${cash.toLocaleString("fr-FR")} DA</span>`;
+  const f = $("boostFilter").value || "pending";
+  const rows = BOOST_REQS.filter(r => boostMatches(r, f));
+  list.innerHTML = rows.length ? rows.map(boostCardHtml).join("") : emptyStateHtml(t("boostNone"), "📣");
+}
+
+$("boostFilter").addEventListener("change", renderBoostAdmin);
+$("refreshBoostBtn").addEventListener("click", loadBoostAdmin);
+
+$("listBoostAdmin").addEventListener("click", async ev => {
+  const btn = ev.target.closest("[data-bact]");
+  if (!btn) return;
+  const act = btn.getAttribute("data-bact");
+  const id = btn.getAttribute("data-bid");
+  const card = btn.closest(".boost-card");
+  hideError($("errorBox"));
+  hideSuccess($("successBox"));
+
+  if (act === "history") {
+    const box = card.querySelector("[data-hist]");
+    if (!box.classList.contains("hidden")) { box.classList.add("hidden"); return; }
+    box.textContent = "...";
+    box.classList.remove("hidden");
+    try {
+      const d = await apiGet({ action: "getPubHistory", password: SESSION_PASSWORD, id: id });
+      const h = d.success ? d.history : [];
+      box.innerHTML = h.length
+        ? h.map(x => `${escapeHtml(x.date)} · ${escapeHtml(x.acteur)} · <b>${escapeHtml(x.action)}</b>${x.commentaire ? " · " + escapeHtml(x.commentaire) : ""}`).join("<br>")
+        : escapeHtml(t("boostNoHistory"));
+    } catch (e) { box.textContent = t("boostFailed"); }
+    return;
+  }
+
+  let params;
+  if (act === "pay") {
+    params = { action: "setPubPaid", password: SESSION_PASSWORD, id: id, paye: btn.getAttribute("data-pay") };
+  } else if (act === "suspend") {
+    params = { action: "setPubSuspended", password: SESSION_PASSWORD, id: id, suspendue: btn.getAttribute("data-susp") };
+  } else {
+    const comment = card.querySelector(".b-comment").value.trim();
+    if ((act === "modify" || act === "refuse") && !comment) {
+      showError($("errorBox"), t("boostCommentRequired"));
+      return;
+    }
+    params = { action: "decidePubRequest", password: SESSION_PASSWORD, id: id, decision: act, comment: comment,
+      debut: card.querySelector(".b-debut").value, paye: card.querySelector(".b-paye").checked ? "OUI" : "NON" };
+  }
+  btn.disabled = true;
+  try {
+    const d = await apiGet(params);
+    if (d.success) {
+      showSuccess($("successBox"), act === "pay" || act === "suspend" ? t("boostUpdated") : t("boostDone"));
+      await loadBoostAdmin();
+    } else {
+      showError($("errorBox"), d.error || t("boostFailed"));
+    }
+  } catch (e) {
+    showError($("errorBox"), t("boostFailed"));
+  } finally {
+    btn.disabled = false;
+  }
+});
 
 /* ============================================================
    UTILITAIRES

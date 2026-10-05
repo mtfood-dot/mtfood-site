@@ -78,6 +78,20 @@
   .zone-check-result.ko{background:#fdeceb;color:var(--danger);}
   .hidden{display:none !important;}
 
+  /* À la une : plats mis en avant (classes boost-*, éviter les noms bloqués par les bloqueurs de pub) */
+  .boost-box{max-width:720px;margin:22px auto 0;}
+  .boost-box-title{font-size:13px;font-weight:800;color:var(--blue-900);text-align:center;margin-bottom:10px;}
+  .boost-strip{display:flex;gap:12px;overflow-x:auto;padding:4px 4px 10px;scroll-snap-type:x proximity;
+    -webkit-overflow-scrolling:touch;justify-content:safe center;}
+  .boost-item{flex:0 0 150px;scroll-snap-align:start;display:block;text-decoration:none;color:inherit;background:var(--card);
+    border-radius:var(--radius-md);box-shadow:var(--shadow-sm);border:1px solid var(--border);overflow:hidden;position:relative;}
+  .boost-item .boost-img{width:100%;aspect-ratio:1/1;background:var(--blue-100) center/cover no-repeat;}
+  .boost-item .boost-tag{position:absolute;top:6px;inset-inline-start:6px;background:rgba(15,40,80,.78);color:#fff;
+    font-size:9.5px;font-weight:800;border-radius:999px;padding:2px 8px;}
+  .boost-item .boost-info{padding:8px 10px 10px;}
+  .boost-item .boost-dish{font-size:13px;font-weight:800;color:var(--blue-900);line-height:1.3;}
+  .boost-item .boost-price{font-size:12.5px;font-weight:800;color:var(--gold-600);margin-top:2px;}
+  .boost-item .boost-resto{font-size:11.5px;color:var(--muted);margin-top:2px;}
   .promo-section{margin-top:34px;}
   .promo-title{font-size:13px;font-weight:800;color:var(--blue-900);text-transform:uppercase;
     letter-spacing:.4px;margin-bottom:12px;text-align:center;}
@@ -143,6 +157,10 @@ if ("serviceWorker" in navigator) {
     <h1 id="heroTitle">Fast food, repas, gâteaux — livrés chez toi</h1>
     <p id="heroSub">Parcours le menu, ajoute au panier, connecte-toi en 30 secondes pour valider.</p>
     <a class="cta-order" href="menu.html" id="ctaOrder">🛒 Voir le menu</a>
+    <div class="boost-box hidden" id="boostBox">
+      <div class="boost-box-title" id="boostBoxTitle">À la une</div>
+      <div class="boost-strip" id="boostStrip"></div>
+    </div>
   </div>
 
   <div class="zone-check" id="zoneCheck">
@@ -205,6 +223,8 @@ const I18N = {
     zoneCheckOk: "On livre chez toi ! Zone : ",
     zoneCheckKo: "On ne couvre pas encore cette adresse. Zones actuellement livrées : ",
     adsTitle: "Nos partenaires",
+    boostTitle: "À la une",
+    boostTag: "Sponsorisé",
     adPlaceholderTitle: "Espace publicitaire disponible",
     adPlaceholderText: "Fais connaître ton restaurant ou ta pâtisserie à nos clients.",
     adPlaceholderCta: "📞 Contacter MT Delivery"
@@ -228,6 +248,8 @@ const I18N = {
     zoneCheckOk: "نوصل عندك! المنطقة: ",
     zoneCheckKo: "لا نغطي هذا العنوان حاليًا. المناطق المخدومة حاليًا: ",
     adsTitle: "شركاؤنا",
+    boostTitle: "في الواجهة",
+    boostTag: "إعلان",
     adPlaceholderTitle: "مساحة إعلانية متاحة",
     adPlaceholderText: "عرّف عملاءنا بمطعمك أو محل حلوياتك.",
     adPlaceholderCta: "📞 تواصل مع MT Delivery"
@@ -414,6 +436,60 @@ function toggleLanguage() {
   applyLanguage();
   // Reconstruit les cartes de pub affichées (textes traduits pour le placeholder)
   loadAds();
+  loadBoost();
+}
+
+/* ============================================================
+   À LA UNE (plats mis en avant par les restaurants partenaires)
+   ============================================================ */
+const BOOST_CACHE_KEY = "mtd_boost_cache";
+function readBoostCache() {
+  try { const v = JSON.parse(localStorage.getItem(BOOST_CACHE_KEY) || "null"); return Array.isArray(v) ? v : null; } catch (e) { return null; }
+}
+function writeBoostCache(list) {
+  try { localStorage.setItem(BOOST_CACHE_KEY, JSON.stringify(list)); } catch (e) {}
+}
+function shuffled(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+function renderBoost(list) {
+  const box = $("boostBox");
+  if (!list || !list.length) { box.classList.add("hidden"); $("boostStrip").innerHTML = ""; return; }
+  $("boostBoxTitle").textContent = t("boostTitle");
+  $("boostStrip").innerHTML = shuffled(list).map(p => {
+    const href = /^https:\/\//i.test(p.lienUrl || "") ? p.lienUrl : "menu.html";
+    const ext = href !== "menu.html" ? ' target="_blank" rel="noopener"' : "";
+    const price = p.prixPlat === "" || p.prixPlat == null ? "" : `<div class="boost-price">${Number(p.prixPlat).toLocaleString("fr-FR")} DA</div>`;
+    return `<a class="boost-item" href="${escapeAttr(href)}"${ext}>
+      <div class="boost-img" style="background-image:url('${escapeAttr(p.imageUrl)}')"></div>
+      <span class="boost-tag">${escapeHtml(t("boostTag"))}</span>
+      <div class="boost-info">
+        <div class="boost-dish">${escapeHtml(p.nomPlat)}</div>${price}
+        <div class="boost-resto">${escapeHtml(p.restaurant)}</div>
+      </div></a>`;
+  }).join("");
+  box.classList.remove("hidden");
+}
+let _boostLoadId = 0;
+function loadBoost() {
+  const myId = ++_boostLoadId;
+  const cached = readBoostCache();
+  if (cached && cached.length) renderBoost(cached);
+  let attempt = 0;
+  const tryLoad = () => {
+    attempt++;
+    jsonpRequest({ action: "getFeaturedPubs" }, 20000)
+      .then(res => {
+        if (myId !== _boostLoadId) return;
+        const list = res && res.success ? (res.pubs || []) : [];
+        writeBoostCache(list);
+        renderBoost(list);
+      })
+      .catch(() => { if (myId === _boostLoadId && attempt < 2) setTimeout(tryLoad, 1500); });
+  };
+  tryLoad();
 }
 
 /* ============================================================
@@ -438,6 +514,7 @@ document.addEventListener("DOMContentLoaded", () => {
   $("zoneCheckInput").addEventListener("keyup", (e) => { if (e.key === "Enter") checkZoneAvailability(); });
   applyLanguage();
   loadAds();
+  loadBoost();
   loadZones();
 });
 </script>
