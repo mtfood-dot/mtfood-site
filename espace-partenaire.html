@@ -561,28 +561,16 @@ $("langToggle").addEventListener("click", () => {
 /* ============================================================
    APPEL API
    ============================================================ */
-// Secours JSONP : évite le blocage « Load failed » de Safari sur les appels entre domaines.
-function jsonpGet(params, timeoutMs) {
-  return new Promise((resolve, reject) => {
-    const cb = "mtcb_" + Date.now() + "_" + Math.floor(Math.random() * 1e6);
-    const script = document.createElement("script");
-    const timer = setTimeout(() => { cleanup(); reject(new Error("Delai depasse")); }, timeoutMs || 20000);
-    function cleanup() { clearTimeout(timer); delete window[cb]; script.remove(); }
-    window[cb] = (data) => { cleanup(); resolve(data); };
-    script.onerror = () => { cleanup(); reject(new Error("JSONP erreur reseau")); };
-    script.src = CONFIG.API_URL + "?" + new URLSearchParams(Object.assign({}, params, { callback: cb })).toString();
-    document.body.appendChild(script);
-  });
-}
-
 async function apiGet(params) {
-  const qs = new URLSearchParams(params).toString();
-  try {
-    const res = await fetch(CONFIG.API_URL + "?" + qs);
-    return await res.json();
-  } catch (e) {
-    return jsonpGet(params);
-  }
+  // Envoi en POST : mots de passe et codes PIN ne passent plus dans l'URL.
+  const res = await fetch(CONFIG.API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(params)
+  });
+  const txt = await res.text();
+  try { return JSON.parse(txt); }
+  catch (e) { throw new Error("Réponse invalide du serveur"); }
 }
 
 /* ============================================================

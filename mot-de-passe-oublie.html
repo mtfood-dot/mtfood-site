@@ -162,7 +162,17 @@ document.querySelectorAll(".channel-btn").forEach(btn => {
   });
 });
 
-async function apiGet(p){ const qs = new URLSearchParams(p).toString(); const res = await fetch(CONFIG.API_URL + "?" + qs); return res.json(); }
+async function apiGet(params) {
+  // Envoi en POST : mots de passe et codes PIN ne passent plus dans l'URL.
+  const res = await fetch(CONFIG.API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(params)
+  });
+  const txt = await res.text();
+  try { return JSON.parse(txt); }
+  catch (e) { throw new Error("Réponse invalide du serveur"); }
+}
 
 $("sendCodeBtn").addEventListener("click", async () => {
   const box = $("error1"); box.classList.remove("show");
