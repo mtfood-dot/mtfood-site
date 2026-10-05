@@ -338,6 +338,7 @@ if ("serviceWorker" in navigator) {
         <div></div>
         <button class="btn-refresh" id="refreshPartnersBtn" type="button"><span id="refreshPartnersLabel">↻ Actualiser</span></button>
       </div>
+      <div id="duplicatesAlert"></div>
       <div class="requests-block hidden" id="requestsBlock">
         <div class="subheading" id="subheadingRequests"></div>
         <div id="listRequests"></div>
@@ -513,6 +514,7 @@ let PARTNERS = [];
 let DRIVERS = [];
 let DASHBOARD_ORDERS = [];
 let DASHBOARD_PERIOD_DAYS = 7;
+let DUPLICATES = [];
 let TOP_DRIVERS = [];
 let TOP_PARTNERS = [];
 let DASHBOARD_STATS = null;
@@ -567,6 +569,10 @@ const I18N = {
     subheadingPartners: "Partenaires",
     subheadingDrivers: "Livreurs",
     subheadingRequests: "Demandes en attente",
+    dupTitle: "doublon(s) détecté(s) — un même téléphone/e-mail sur plusieurs comptes",
+    dupKindPartner: "Partenaires",
+    dupKindDriver: "Livreurs",
+    dupKindClient: "Clients",
     btnAccept: "✓ Accepter",
     btnRefuse: "✕ Refuser",
     kindDriver: "Livreur",
@@ -720,6 +726,10 @@ const I18N = {
     subheadingPartners: "الشركاء",
     subheadingDrivers: "السائقون",
     subheadingRequests: "طلبات قيد الانتظار",
+    dupTitle: "تكرار مكتشف — نفس الهاتف/البريد في عدة حسابات",
+    dupKindPartner: "الشركاء",
+    dupKindDriver: "السائقون",
+    dupKindClient: "العملاء",
     btnAccept: "✓ قبول",
     btnRefuse: "✕ رفض",
     kindDriver: "سائق",
@@ -1034,6 +1044,7 @@ function enterApp() {
   loadPendingItems();
   loadDrivers();
   loadPartners();
+  loadDuplicates();
 }
 
 $("refreshBtn").addEventListener("click", loadOrders);
@@ -1079,7 +1090,7 @@ function switchTab(tab) {
   hideError($("errorBox"));
   hideSuccess($("successBox"));
   if (tab === "moderation") loadPendingItems();
-  if (tab === "partners") { loadPartners(); loadDrivers(); }
+  if (tab === "partners") { loadPartners(); loadDrivers(); loadDuplicates(); }
   if (tab === "dashboard") { loadDashboard(); loadDashboardStats(); loadTopRankings(); }
   if (tab === "compta") refreshComptaCurrent();
   if (tab === "pub") loadAdsAdmin();
@@ -1460,6 +1471,36 @@ function wireEntityButtons(containerId) {
       onSavePin(btn.dataset.savepinKind, btn.dataset.savepinTel, input, btn);
     });
   });
+}
+
+/* ---- Doublons de comptes (même téléphone / e-mail) ---- */
+function renderDuplicates() {
+  const el = $("duplicatesAlert");
+  if (!el) return;
+  if (!DUPLICATES.length) { el.innerHTML = ""; return; }
+  const kindLabel = { partner: t("dupKindPartner"), driver: t("dupKindDriver"), client: t("dupKindClient") };
+  const items = DUPLICATES.map(g => `
+    <div class="item">
+      <span>${escapeHtml(kindLabel[g.type] || g.type)} · ${escapeHtml(g.value)}</span>
+      <span class="when">${escapeHtml((g.names || []).join(" / "))}</span>
+    </div>
+  `).join("");
+  el.innerHTML = `
+    <div class="stuck-alert">
+      <div class="title">⚠️ ${DUPLICATES.length} ${escapeHtml(t("dupTitle"))}</div>
+      ${items}
+    </div>
+  `;
+}
+
+async function loadDuplicates() {
+  try {
+    const data = await apiGet({ action: "getDuplicates", password: SESSION_PASSWORD });
+    DUPLICATES = data && data.success ? (data.duplicates || []) : [];
+  } catch (e) {
+    DUPLICATES = [];
+  }
+  renderDuplicates();
 }
 
 /* ---- Demandes en attente (livreurs + partenaires) ---- */

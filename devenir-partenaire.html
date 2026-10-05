@@ -226,6 +226,7 @@ const I18N = {
     successText: "Merci ! Nous allons examiner ta demande et te contacter très bientôt par téléphone.",
     homeLink: "Retour à l'accueil",
     fillRequired: "Merci de remplir tous les champs obligatoires.",
+    duplicateError: "Un partenaire est déjà inscrit avec ce numéro de téléphone.",
     sendError: "Erreur d'envoi. Vérifie ta connexion et réessaie, ou appelle-nous directement.",
     footerNote: "MT Delivery — البريد السريع · Meftah, Blida"
   },
@@ -255,6 +256,7 @@ const I18N = {
     successText: "شكراً لك! سنراجع طلبك ونتواصل معك عبر الهاتف قريباً جداً.",
     homeLink: "العودة إلى الصفحة الرئيسية",
     fillRequired: "يرجى تعبئة جميع الحقول المطلوبة.",
+    duplicateError: "يوجد شريك مسجل بهذا الرقم بالفعل.",
     sendError: "خطأ في الإرسال. تحقق من اتصالك وحاول مرة أخرى، أو اتصل بنا مباشرة.",
     footerNote: "البريد السريع MT Delivery · مفتاح، البليدة"
   }
@@ -368,10 +370,12 @@ document.addEventListener("DOMContentLoaded", function(){
         document.getElementById("formCard").classList.add("hidden");
         document.getElementById("successCard").classList.remove("hidden");
       } else {
-        throw new Error((data && data.error) || "unknown");
+        const e = new Error((data && data.error) || "unknown");
+        e.code = data && data.code;
+        throw e;
       }
     } catch(err){
-      errorBox.textContent = t("sendError");
+      errorBox.textContent = (err && err.code === "DUPLICATE") ? t("duplicateError") : t("sendError");
       errorBox.classList.add("show");
       submitBtn.disabled = false;
       submitBtn.textContent = originalLabel;
