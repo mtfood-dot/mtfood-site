@@ -111,6 +111,33 @@
     min-width:18px;height:18px;font-size:11px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px;}
   .tab-btn.active .count{background:var(--gold-400);}
 
+
+  /* Onglet Publicité (classes boost-* : éviter les noms bloqués par les bloqueurs de pub) */
+  .tabs{overflow-x:auto;}
+  .tab-btn{min-width:fit-content;white-space:nowrap;}
+  .boost-info{background:var(--gold-100);color:var(--blue-900);border-radius:var(--radius-md);padding:12px 14px;
+    font-size:12.5px;line-height:1.6;margin-bottom:14px;}
+  .boost-title{font-size:13.5px;font-weight:800;color:var(--blue-900);margin:4px 0 8px;}
+  .boost-offers{display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:8px;margin-bottom:6px;}
+  .boost-offer{background:#fff;border:1.5px solid var(--border);border-radius:var(--radius-md);padding:12px 8px;
+    text-align:center;cursor:pointer;font-family:inherit;color:var(--blue-900);}
+  .boost-offer .d{display:block;font-size:13px;font-weight:800;}
+  .boost-offer .p{display:block;font-size:12.5px;color:var(--muted);margin-top:3px;font-weight:700;}
+  .boost-offer.sel{border-color:var(--blue-900);background:var(--blue-900);color:#fff;}
+  .boost-offer.sel .p{color:var(--gold-400);}
+  .boost-hint{font-size:11.5px;color:var(--muted);margin:2px 0 12px;line-height:1.5;}
+  .boost-preview{width:100%;max-width:220px;aspect-ratio:1/1;object-fit:cover;border-radius:var(--radius-md);
+    border:1px solid var(--border);display:none;margin:0 0 14px;background:#f1f3f7;}
+  .boost-preview.on{display:block;}
+  .boost-note{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5;}
+  .boost-comment{background:#fff7e6;border-left:3px solid var(--gold-500);padding:8px 10px;font-size:12.5px;
+    margin-top:8px;border-radius:6px;line-height:1.5;}
+  .boost-actions{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;}
+  .btn-small{background:var(--blue-900);color:#fff;border:0;border-radius:999px;padding:8px 16px;
+    font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;}
+  .badge.on{background:#eaf7ee;color:var(--green);}
+  .badge.grey{background:#eef0f4;color:var(--muted);}
+
   .refresh-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;}
   .btn-refresh{background:#fff;border:1px solid var(--border);border-radius:999px;padding:7px 14px;
     font-size:12.5px;font-weight:700;color:var(--blue-700);cursor:pointer;font-family:inherit;white-space:nowrap;}
@@ -214,6 +241,9 @@ if ("serviceWorker" in navigator) {
       <button class="tab-btn" id="tabPropose" type="button">
         <span id="tabProposeLabel">Proposer</span>
       </button>
+      <button class="tab-btn" id="tabBoost" type="button">
+        <span id="tabBoostLabel">Publicité</span> <span class="count" id="countBoost" style="display:none">0</span>
+      </button>
     </div>
 
     <div id="errorBox" class="error-box"></div>
@@ -269,6 +299,45 @@ if ("serviceWorker" in navigator) {
       </section>
     </div>
 
+    <!-- Onglet : Publicité (mise à la une) -->
+    <div id="panelBoost" class="hidden">
+      <div class="boost-info" id="boostInfo"></div>
+      <section class="card">
+        <div class="boost-title" id="boostOffersTitle"></div>
+        <div class="boost-offers" id="boostOffers"></div>
+        <div class="boost-hint" id="boostFormatHint"></div>
+        <div class="field">
+          <label id="lblBNom"></label>
+          <input type="text" id="bNom" maxlength="60">
+        </div>
+        <div class="field">
+          <label id="lblBPrix"></label>
+          <input type="number" id="bPrix" inputmode="numeric">
+        </div>
+        <div class="field">
+          <label id="lblBTexte"></label>
+          <input type="text" id="bTexte" maxlength="120">
+        </div>
+        <div class="field">
+          <label id="lblBImage"></label>
+          <input type="url" id="bImage" placeholder="https://...">
+        </div>
+        <img id="boostPreview" class="boost-preview" alt="">
+        <div class="field">
+          <label id="lblBLien"></label>
+          <input type="url" id="bLien" placeholder="https://...">
+        </div>
+        <div class="field">
+          <label id="lblBDebut"></label>
+          <input type="date" id="bDebut">
+        </div>
+        <button class="btn-primary" id="boostSendBtn" type="button"></button>
+        <button class="btn-refresh" id="boostCancelBtn" type="button" style="display:none;margin-top:10px;"></button>
+      </section>
+      <div class="boost-title" style="margin-top:18px;" id="boostMyTitle"></div>
+      <div id="listBoost"></div>
+    </div>
+
   </div>
 
 </main>
@@ -291,6 +360,10 @@ try { SESSION = JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch
 let CURRENT_TAB = "menu";
 let MENU_ITEMS = [];
 let ORDERS = [];
+let BOOST_OFFERS = [];
+let BOOST_REQS = [];
+let BOOST_SEL = "";
+let BOOST_EDIT_ID = "";
 
 /* ============================================================
    I18N
@@ -310,6 +383,42 @@ const I18N = {
     tabMenuLabel: "Mon menu",
     tabOrdersLabel: "Commandes",
     tabProposeLabel: "Proposer",
+    tabBoostLabel: "Publicité",
+    boostInfo: "Mets l'un de tes plats « À la une » sur la page d'accueil. Le paiement se fait directement en espèces, au bureau MT Delivery ou auprès de notre commercial. Ta publicité passe en ligne après validation et paiement.",
+    boostOffersTitle: "Choisis une durée",
+    boostFormatHint: "Visuel carré 800×800 px (JPG, PNG ou WebP, 500 Ko max), à coller sous forme de lien https. Jusqu'à 6 annonceurs en rotation.",
+    boostDays: "jours",
+    lblBNom: "Nom du plat à mettre en avant",
+    lblBPrix: "Prix du plat (DA, optionnel)",
+    lblBTexte: "Texte court (120 caractères max, optionnel)",
+    lblBImage: "Lien de l'image (https)",
+    lblBLien: "Lien de destination (optionnel)",
+    lblBDebut: "Date de début souhaitée",
+    boostSend: "Envoyer la demande",
+    boostResend: "Corriger et renvoyer",
+    boostCancel: "Annuler la modification",
+    boostMyTitle: "Mes demandes",
+    boostNone: "Aucune demande de publicité pour le moment.",
+    boostPickOffer: "Choisis une durée.",
+    boostNomRequired: "Indique le nom du plat.",
+    boostImageRequired: "Colle le lien https de l'image.",
+    boostDateRequired: "Choisis une date de début (aujourd'hui ou plus tard).",
+    boostSent: "Demande envoyée. Tu seras informé de la décision ici.",
+    boostResent: "Demande corrigée et renvoyée.",
+    boostFailed: "Impossible d'envoyer la demande. Réessaie.",
+    boostAdminComment: "Message de MT Delivery :",
+    boostPeriod: "Diffusion",
+    boostEdit: "Modifier",
+    boostRenew: "Renouveler",
+    boostPayWait: "Paiement attendu",
+    st_en_attente: "En attente",
+    st_a_modifier: "À modifier",
+    st_refusee: "Refusée",
+    st_approuvee: "Approuvée",
+    st_planifiee: "Planifiée",
+    st_active: "En ligne",
+    st_suspendue: "Suspendue",
+    st_expiree: "Expirée",
     refreshLabel: "↻ Actualiser",
     footerNote: "MT Delivery · Meftah, Blida",
     phoneRequired: "Merci d'entrer ton numéro de téléphone.",
@@ -349,6 +458,42 @@ const I18N = {
     tabMenuLabel: "قائمتي",
     tabOrdersLabel: "الطلبات",
     tabProposeLabel: "اقتراح طبق",
+    tabBoostLabel: "الإعلان",
+    boostInfo: "اعرض أحد أطباقك في واجهة الصفحة الرئيسية. الدفع نقدًا مباشرة في مكتب MT Delivery أو لدى مندوبنا التجاري. يظهر إعلانك بعد المراجعة والدفع.",
+    boostOffersTitle: "اختر المدة",
+    boostFormatHint: "صورة مربعة 800×800 بكسل (JPG أو PNG أو WebP، 500 كيلوبايت كحد أقصى) تُلصق على شكل رابط https. حتى 6 معلنين بالتناوب.",
+    boostDays: "أيام",
+    lblBNom: "اسم الطبق المراد إبرازه",
+    lblBPrix: "سعر الطبق (دج، اختياري)",
+    lblBTexte: "نص قصير (120 حرفًا كحد أقصى، اختياري)",
+    lblBImage: "رابط الصورة (https)",
+    lblBLien: "رابط الوجهة (اختياري)",
+    lblBDebut: "تاريخ البدء المطلوب",
+    boostSend: "إرسال الطلب",
+    boostResend: "تصحيح وإعادة الإرسال",
+    boostCancel: "إلغاء التعديل",
+    boostMyTitle: "طلباتي",
+    boostNone: "لا توجد طلبات إعلان حاليًا.",
+    boostPickOffer: "اختر المدة.",
+    boostNomRequired: "أدخل اسم الطبق.",
+    boostImageRequired: "الصق رابط الصورة (https).",
+    boostDateRequired: "اختر تاريخ بدء (اليوم أو بعده).",
+    boostSent: "تم إرسال الطلب. ستجد القرار هنا.",
+    boostResent: "تم تصحيح الطلب وإعادة إرساله.",
+    boostFailed: "تعذر إرسال الطلب. حاول مرة أخرى.",
+    boostAdminComment: "رسالة من MT Delivery:",
+    boostPeriod: "مدة العرض",
+    boostEdit: "تعديل",
+    boostRenew: "تجديد",
+    boostPayWait: "في انتظار الدفع",
+    st_en_attente: "قيد المراجعة",
+    st_a_modifier: "يحتاج تعديلًا",
+    st_refusee: "مرفوض",
+    st_approuvee: "مقبول",
+    st_planifiee: "مبرمج",
+    st_active: "معروض الآن",
+    st_suspendue: "موقوف مؤقتًا",
+    st_expiree: "منتهي",
     refreshLabel: "↻ تحديث",
     footerNote: "إم تي دليفري · مفتاح، البليدة",
     phoneRequired: "الرجاء إدخال رقم هاتفك.",
@@ -404,9 +549,11 @@ function applyLanguage() {
   $("lblDescription").textContent = t("lblDescription");
   $("proposeBtn").textContent = t("proposeBtn");
   $("proposeNote").textContent = t("proposeNote");
+  applyBoostLabels();
   if (SESSION) updateSessionBar();
   renderMenu();
   renderOrders();
+  renderBoost();
 }
 
 $("langToggle").addEventListener("click", () => {
@@ -522,8 +669,11 @@ function enterApp() {
   $("appScreen").classList.remove("hidden");
   updateSessionBar();
   $("ordersDate").value = todayStr();
+  $("bDebut").min = todayStr();
+  if (!$("bDebut").value) $("bDebut").value = todayStr();
   loadMenu();
   loadOrders();
+  loadBoost();
 }
 
 /* ============================================================
@@ -532,6 +682,7 @@ function enterApp() {
 $("tabMenu").addEventListener("click", () => switchTab("menu"));
 $("tabOrders").addEventListener("click", () => switchTab("orders"));
 $("tabPropose").addEventListener("click", () => switchTab("propose"));
+$("tabBoost").addEventListener("click", () => switchTab("boost"));
 
 function switchTab(tab) {
   CURRENT_TAB = tab;
@@ -541,6 +692,8 @@ function switchTab(tab) {
   $("panelMenu").classList.toggle("hidden", tab !== "menu");
   $("panelOrders").classList.toggle("hidden", tab !== "orders");
   $("panelPropose").classList.toggle("hidden", tab !== "propose");
+  $("tabBoost").classList.toggle("active", tab === "boost");
+  $("panelBoost").classList.toggle("hidden", tab !== "boost");
   hideError($("errorBox"));
   hideSuccess($("successBox"));
 }
@@ -711,6 +864,169 @@ async function onPropose() {
   } finally {
     $("proposeBtn").disabled = false;
     $("proposeBtn").textContent = t("proposeBtn");
+  }
+}
+
+/* ============================================================
+   PUBLICITÉ (mise à la une)
+   ============================================================ */
+function applyBoostLabels() {
+  $("tabBoostLabel").textContent = t("tabBoostLabel");
+  $("boostInfo").textContent = t("boostInfo");
+  $("boostOffersTitle").textContent = t("boostOffersTitle");
+  $("boostFormatHint").textContent = t("boostFormatHint");
+  $("lblBNom").textContent = t("lblBNom");
+  $("lblBPrix").textContent = t("lblBPrix");
+  $("lblBTexte").textContent = t("lblBTexte");
+  $("lblBImage").textContent = t("lblBImage");
+  $("lblBLien").textContent = t("lblBLien");
+  $("lblBDebut").textContent = t("lblBDebut");
+  $("boostSendBtn").textContent = BOOST_EDIT_ID ? t("boostResend") : t("boostSend");
+  $("boostCancelBtn").textContent = t("boostCancel");
+  $("boostMyTitle").textContent = t("boostMyTitle");
+}
+
+async function loadBoost() {
+  try {
+    const [o, r] = await Promise.all([
+      apiGet({ action: "getPubOffers" }),
+      apiGet({ action: "getMyPubRequests", telephone: SESSION.telephone })
+    ]);
+    if (o && o.success) BOOST_OFFERS = o.offers || [];
+    if (r && r.success) BOOST_REQS = r.requests || [];
+    if (!BOOST_SEL && BOOST_OFFERS.length) BOOST_SEL = BOOST_OFFERS[0].id;
+  } catch (e) { /* on garde l'état précédent */ }
+  renderBoost();
+}
+
+function boostStateLabel(r) {
+  let label = t("st_" + r.etat);
+  if ((r.etat === "active" || r.etat === "planifiee") && !r.paye) label = t("st_approuvee") + " · " + t("boostPayWait");
+  return label;
+}
+function boostBadgeClass(r) {
+  if (r.etat === "active" && r.paye) return "on";
+  if (r.etat === "refusee") return "refuse";
+  if (r.etat === "expiree" || r.etat === "suspendue") return "grey";
+  if (r.etat === "planifiee" && r.paye) return "publie";
+  return "attente";
+}
+
+function renderBoost() {
+  const offersBox = $("boostOffers");
+  offersBox.innerHTML = BOOST_OFFERS.map(o =>
+    `<button type="button" class="boost-offer${o.id === BOOST_SEL ? " sel" : ""}" data-offer="${escapeAttr(o.id)}">` +
+    `<span class="d">${o.dureeJours} ${escapeHtml(t("boostDays"))}</span>` +
+    `<span class="p">${Number(o.prixDA).toLocaleString("fr-FR")} DA</span></button>`).join("");
+
+  const need = BOOST_REQS.filter(r => r.etat === "a_modifier").length;
+  const c = $("countBoost");
+  c.textContent = need;
+  c.style.display = need ? "" : "none";
+
+  const list = $("listBoost");
+  if (!BOOST_REQS.length) { list.innerHTML = emptyStateHtml(t("boostNone"), "📣"); return; }
+  list.innerHTML = BOOST_REQS.map(r => {
+    const period = r.debut && r.fin ? `<div class="desc">${escapeHtml(t("boostPeriod"))} : ${escapeHtml(r.debut)} → ${escapeHtml(r.fin)}</div>` : "";
+    const comment = r.commentaire ? `<div class="boost-comment"><b>${escapeHtml(t("boostAdminComment"))}</b> ${escapeHtml(r.commentaire)}</div>` : "";
+    let actions = "";
+    if (r.etat === "a_modifier") actions = `<button class="btn-small" type="button" data-edit="${escapeAttr(r.id)}">${escapeHtml(t("boostEdit"))}</button>`;
+    else if (r.etat === "expiree" || r.etat === "refusee") actions = `<button class="btn-small" type="button" data-renew="${escapeAttr(r.id)}">${escapeHtml(t("boostRenew"))}</button>`;
+    return `<div class="item-card"><div class="row1"><div><div class="nom">${escapeHtml(r.nomPlat)}</div>` +
+      `<div class="desc">${escapeHtml(r.id)} · ${r.dureeJours} ${escapeHtml(t("boostDays"))} · ${Number(r.prixDA).toLocaleString("fr-FR")} DA</div></div></div>` +
+      period + `<span class="badge ${boostBadgeClass(r)}">${escapeHtml(boostStateLabel(r))}</span>` + comment +
+      (actions ? `<div class="boost-actions">${actions}</div>` : "") + `</div>`;
+  }).join("");
+}
+
+function fillBoostForm(r, editing) {
+  $("bNom").value = r.nomPlat || "";
+  $("bPrix").value = r.prixPlat === "" || r.prixPlat == null ? "" : r.prixPlat;
+  $("bTexte").value = r.texte || "";
+  $("bImage").value = r.imageUrl || "";
+  $("bLien").value = r.lienUrl || "";
+  $("bDebut").value = todayStr();
+  if (r.offreId && BOOST_OFFERS.some(o => o.id === r.offreId)) BOOST_SEL = r.offreId;
+  BOOST_EDIT_ID = editing ? r.id : "";
+  $("boostCancelBtn").style.display = editing ? "" : "none";
+  applyBoostLabels();
+  updateBoostPreview();
+  renderBoost();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+function resetBoostForm() {
+  fillBoostForm({}, false);
+}
+
+function updateBoostPreview() {
+  const url = $("bImage").value.trim();
+  const img = $("boostPreview");
+  if (/^https:\/\/\S+$/i.test(url)) {
+    img.onerror = () => img.classList.remove("on");
+    img.onload = () => img.classList.add("on");
+    img.src = url;
+  } else {
+    img.classList.remove("on");
+    img.removeAttribute("src");
+  }
+}
+$("bImage").addEventListener("input", updateBoostPreview);
+
+$("boostOffers").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-offer]");
+  if (!b) return;
+  BOOST_SEL = b.getAttribute("data-offer");
+  renderBoost();
+});
+$("listBoost").addEventListener("click", ev => {
+  const e = ev.target.closest("[data-edit]");
+  const n = ev.target.closest("[data-renew]");
+  if (e) { const r = BOOST_REQS.find(x => x.id === e.getAttribute("data-edit")); if (r) fillBoostForm(r, true); }
+  if (n) { const r = BOOST_REQS.find(x => x.id === n.getAttribute("data-renew")); if (r) fillBoostForm(r, false); }
+});
+$("boostCancelBtn").addEventListener("click", resetBoostForm);
+$("boostSendBtn").addEventListener("click", onBoostSend);
+
+async function onBoostSend() {
+  hideError($("errorBox"));
+  hideSuccess($("successBox"));
+  const nomPlat = $("bNom").value.trim();
+  const imageUrl = $("bImage").value.trim();
+  const debutSouhaite = $("bDebut").value;
+  if (!BOOST_SEL && !BOOST_EDIT_ID) { showError($("errorBox"), t("boostPickOffer")); return; }
+  if (!nomPlat) { showError($("errorBox"), t("boostNomRequired")); return; }
+  if (!/^https:\/\/\S+$/i.test(imageUrl)) { showError($("errorBox"), t("boostImageRequired")); return; }
+  if (!debutSouhaite || debutSouhaite < todayStr()) { showError($("errorBox"), t("boostDateRequired")); return; }
+
+  const params = {
+    action: BOOST_EDIT_ID ? "resubmitPubRequest" : "submitPubRequest",
+    telephone: SESSION.telephone,
+    nomPlat: nomPlat,
+    prixPlat: $("bPrix").value.trim(),
+    texte: $("bTexte").value.trim(),
+    imageUrl: imageUrl,
+    lienUrl: $("bLien").value.trim(),
+    debutSouhaite: debutSouhaite
+  };
+  if (BOOST_EDIT_ID) params.id = BOOST_EDIT_ID; else params.offreId = BOOST_SEL;
+
+  const wasEdit = !!BOOST_EDIT_ID;
+  $("boostSendBtn").disabled = true;
+  $("boostSendBtn").textContent = "...";
+  try {
+    const data = await apiGet(params);
+    if (data.success) {
+      showSuccess($("successBox"), wasEdit ? t("boostResent") : t("boostSent"));
+      resetBoostForm();
+      await loadBoost();
+    } else {
+      showError($("errorBox"), data.error || t("boostFailed"));
+    }
+  } catch (e) {
+    showError($("errorBox"), t("boostFailed"));
+  } finally {
+    $("boostSendBtn").disabled = false;
+    applyBoostLabels();
   }
 }
 
