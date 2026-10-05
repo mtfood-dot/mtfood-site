@@ -1308,7 +1308,7 @@ function orderCardHtml(o) {
         <div class="numero">${escapeHtml(o.numero || "")}</div>
         <div class="total">${escapeHtml(String(o.total || 0))} DA</div>
       </div>
-      <div class="client">${escapeHtml(o.client || "")} · ${escapeHtml(String(o.telephone || ""))}</div>
+      <div class="client">${escapeHtml(o.client || "")} · ${escapeHtml(fmtPhone(o.telephone))}</div>
       <div class="meta">${escapeHtml(o.adresse || "")} (${escapeHtml(o.zone || "")}) · ${escapeHtml(o.horodatage || "")}</div>
       <div class="articles">${escapeHtml(o.articles || "")}</div>
       <span class="badge ${b.cls}">${escapeHtml(b.label)}</span>
@@ -1520,7 +1520,7 @@ function entityCardHtml(kind, item, extraMeta) {
 }
 
 function partnerCardHtml(p) {
-  const meta = `${escapeHtml(p.type || "")} · ${escapeHtml(p.zone || "")} · ${escapeHtml(p.telephone || "")}`;
+  const meta = `${escapeHtml(p.type || "")} · ${escapeHtml(p.zone || "")} · ${escapeHtml(fmtPhone(p.telephone))}`;
   return entityCardHtml("partner", p, meta);
 }
 
@@ -1553,7 +1553,7 @@ function driverCardHtml(d) {
   return `
     <div class="partner-card">
       <div class="nom">${escapeHtml(d.nom || "")}</div>
-      <div class="meta">${escapeHtml(d.zone || "")} · ${escapeHtml(d.vehicule || "")} · ${escapeHtml(d.telephone || "")}</div>
+      <div class="meta">${escapeHtml(d.zone || "")} · ${escapeHtml(d.vehicule || "")} · ${escapeHtml(fmtPhone(d.telephone))}</div>
       <span class="status-badge ${b.cls}">${escapeHtml(b.label)}</span>
       <div class="actions-row">
         <button class="btn-action ${toggleClass}" type="button" data-toggle-kind="driver" data-toggle-tel="${tel}" data-new-status="${escapeAttr(newStatus)}">${escapeHtml(toggleLabel)}</button>
@@ -1628,8 +1628,8 @@ function requestCardHtml(r) {
   const tel = escapeAttr(x.telephone);
   const kindLabel = r.kind === "driver" ? t("kindDriver") : t("kindPartner");
   const meta = r.kind === "driver"
-    ? `${escapeHtml(x.zone || "")} · ${escapeHtml(x.vehicule || "")} · ${escapeHtml(x.telephone || "")}`
-    : `${escapeHtml(x.type || "")} · ${escapeHtml(x.zone || "")} · ${escapeHtml(x.telephone || "")}`;
+    ? `${escapeHtml(x.zone || "")} · ${escapeHtml(x.vehicule || "")} · ${escapeHtml(fmtPhone(x.telephone))}`
+    : `${escapeHtml(x.type || "")} · ${escapeHtml(x.zone || "")} · ${escapeHtml(fmtPhone(x.telephone))}`;
   return `
     <div class="partner-card">
       <div class="nom">${escapeHtml(x.nom || "")} <span class="status-badge enattente">${escapeHtml(kindLabel)}</span></div>
@@ -1943,7 +1943,7 @@ function topClientCardHtml(c, i) {
       <div class="rank">${i + 1}</div>
       <div class="info">
         <div class="nom">${escapeHtml(c.client || c.telephone || "")}</div>
-        <div class="meta">${escapeHtml(c.telephone || "")} · ${Number(c.nbCommandes) || 0} ${escapeHtml(t("statNbCommandesClient"))}</div>
+        <div class="meta">${escapeHtml(fmtPhone(c.telephone))} · ${Number(c.nbCommandes) || 0} ${escapeHtml(t("statNbCommandesClient"))}</div>
       </div>
       <div class="total">${total.toLocaleString("fr-FR")} DA</div>
     </div>
@@ -2473,7 +2473,7 @@ function boostCardHtml(r) {
         <div class="boost-main">
           <div class="nom">${escapeHtml(r.nomPlat)}${escapeHtml(price)}</div>
           <div class="boost-meta">
-            <div>${escapeHtml(t("boostRestaurant"))} : <b>${escapeHtml(r.restaurant)}</b> · ${escapeHtml(r.telephone)}</div>
+            <div>${escapeHtml(t("boostRestaurant"))} : <b>${escapeHtml(r.restaurant)}</b> · ${escapeHtml(fmtPhone(r.telephone))}</div>
             <div>${escapeHtml(r.id)} · ${escapeHtml(t("boostDuration"))} : ${r.dureeJours} · ${Number(r.prixDA).toLocaleString("fr-FR")} DA</div>
             <div>${escapeHtml(t("boostWishedStart"))} : ${escapeHtml(r.debutSouhaite)}</div>
             ${period}
@@ -2576,6 +2576,15 @@ $("listBoostAdmin").addEventListener("click", async ev => {
 function emptyStateHtml(msg, emoji) {
   return `<div class="empty-state"><span class="emoji">${emoji || "📦"}</span>${escapeHtml(msg)}</div>`;
 }
+/* Téléphone : Google Sheets perd le 0 initial des numéros enregistrés comme nombres. */
+function fmtPhone(v) {
+  let d = String(v == null ? "" : v).replace(/[^\d+]/g, "");
+  if (!d) return "";
+  if (/^\+?213\d{8,9}$/.test(d)) d = "0" + d.replace(/^\+?213/, "");
+  else if (/^\d{8,9}$/.test(d) && d[0] !== "0") d = "0" + d;
+  return /^0\d{9}$/.test(d) ? d.replace(/^(\d{4})(\d{2})(\d{2})(\d{2})$/, "$1 $2 $3 $4") : d;
+}
+
 function escapeHtml(s) {
   return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
