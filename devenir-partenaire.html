@@ -115,6 +115,7 @@ color:var(--muted);font-size:11.5px;font-weight:500;}
 
 .hidden{display:none !important;}
 </style>
+<script src="/form-validate.js" defer></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
@@ -142,14 +143,14 @@ if ("serviceWorker" in navigator) {
   </div>
 
   <div class="form-card" id="formCard">
-    <form id="registerForm">
+    <form id="registerForm" novalidate data-mtform data-note-before="#submitBtn">
       <div class="field">
-        <label id="lblNom">Nom de l'établissement</label>
-        <input type="text" id="nom" required>
+        <label id="lblNom" for="nom">Nom de l'établissement</label>
+        <input type="text" id="nom" data-required>
       </div>
       <div class="field">
-        <label id="lblType">Type d'établissement</label>
-        <select id="type" required>
+        <label id="lblType" for="type">Type d'établissement</label>
+        <select id="type" data-required>
           <option value="Restaurant" id="optRestaurant">Restaurant</option>
           <option value="Cafeteria" id="optCafeteria">Cafétéria</option>
           <option value="Patisserie" id="optPatisserie">Pâtisserie</option>
@@ -158,27 +159,27 @@ if ("serviceWorker" in navigator) {
         </select>
       </div>
       <div class="field">
-        <label id="lblAdresse">Adresse</label>
-        <input type="text" id="adresse" required>
+        <label id="lblAdresse" for="adresse">Adresse</label>
+        <input type="text" id="adresse" data-required>
       </div>
       <div class="field">
-        <label id="lblZone">Zone de livraison</label>
-        <select id="zone" required>
+        <label id="lblZone" for="zone">Zone de livraison</label>
+        <select id="zone" data-required>
           <option value="Meftah Centre" id="optCentre">Meftah Centre</option>
           <option value="Meftah Dehors" id="optDehors">Meftah Dehors</option>
           <option value="Les deux" id="optLesDeux">Les deux</option>
         </select>
       </div>
       <div class="field">
-        <label id="lblTelephone">Numéro de téléphone</label>
-        <input type="tel" id="telephone" required placeholder="05XX XX XX XX">
+        <label id="lblTelephone" for="telephone">Numéro de téléphone</label>
+        <input type="tel" id="telephone" data-required data-rule="phone" placeholder="05XX XX XX XX">
       </div>
       <div class="field">
-        <label id="lblHoraires">Horaires d'ouverture</label>
+        <label id="lblHoraires" for="horaires">Horaires d'ouverture (optionnel)</label>
         <input type="text" id="horaires" placeholder="Ex: 10h - 22h">
       </div>
       <div class="field">
-        <label id="lblDescription">Description (optionnel)</label>
+        <label id="lblDescription" for="description">Description (optionnel)</label>
         <textarea id="description" placeholder=""></textarea>
       </div>
       <button type="submit" class="submit-btn" id="submitBtn">Envoyer ma demande</button>
@@ -217,7 +218,7 @@ const I18N = {
     optDehors: "Meftah Dehors",
     optLesDeux: "Les deux",
     lblTelephone: "Numéro de téléphone",
-    lblHoraires: "Horaires d'ouverture",
+    lblHoraires: "Horaires d'ouverture (optionnel)",
     horairesPlaceholder: "Ex: 10h - 22h",
     lblDescription: "Description (optionnel)",
     submitBtn: "Envoyer ma demande",
@@ -247,7 +248,7 @@ const I18N = {
     optDehors: "مفتاح خارج المركز",
     optLesDeux: "كلاهما",
     lblTelephone: "رقم الهاتف",
-    lblHoraires: "أوقات العمل",
+    lblHoraires: "أوقات العمل (اختياري)",
     horairesPlaceholder: "مثال: 10 صباحاً - 22 مساءً",
     lblDescription: "وصف (اختياري)",
     submitBtn: "إرسال طلبي",
@@ -343,6 +344,7 @@ document.addEventListener("DOMContentLoaded", function(){
     errorBox.classList.remove("show");
     errorBox.textContent = "";
 
+    if(!MTForm.validate(form)) return;
     const nom = document.getElementById("nom").value.trim();
     const type = document.getElementById("type").value;
     const adresse = document.getElementById("adresse").value.trim();

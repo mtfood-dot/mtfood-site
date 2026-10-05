@@ -182,6 +182,7 @@
   .footer-note{max-width:960px;margin:24px auto 0;padding:0 16px;text-align:center;
     color:var(--muted);font-size:11.5px;font-weight:500;}
 </style>
+<script src="/form-validate.js" defer></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
@@ -205,16 +206,16 @@ if ("serviceWorker" in navigator) {
 <main>
 
   <!-- ================= ÉCRAN DE CONNEXION ================= -->
-  <section id="loginScreen" class="card login-card">
+  <section id="loginScreen" class="card login-card" data-mtform data-note-before="#loginBtn">
     <h2 id="loginTitle">Connexion partenaire</h2>
     <p id="loginSubtitle">Entre le numéro de téléphone utilisé pour ta demande de partenariat.</p>
     <div class="field">
-      <label id="lblPhone">Numéro de téléphone</label>
-      <input type="tel" id="fPhone" placeholder="Ex: 0555 xx xx xx" inputmode="numeric">
+      <label id="lblPhone" for="fPhone">Numéro de téléphone</label>
+      <input type="tel" id="fPhone" data-required data-rule="phone" placeholder="Ex: 0555 xx xx xx" inputmode="numeric">
     </div>
     <div class="field">
-      <label id="lblPin">Code PIN</label>
-      <input type="password" id="fPin" placeholder="Ex: 1234" inputmode="numeric" maxlength="4" autocomplete="off">
+      <label id="lblPin" for="fPin">Code PIN</label>
+      <input type="password" id="fPin" data-required data-rule="pin4" placeholder="Ex: 1234" inputmode="numeric" maxlength="4" autocomplete="off">
     </div>
     <button class="btn-primary" id="loginBtn" type="button">Se connecter</button>
     <div class="error-box" id="loginError"></div>
@@ -269,14 +270,14 @@ if ("serviceWorker" in navigator) {
 
     <!-- Onglet : Proposer un plat -->
     <div id="panelPropose" class="hidden">
-      <section class="card">
+      <section class="card" id="proposeForm" data-mtform data-note-before="#proposeBtn">
         <div class="field">
-          <label id="lblNom">Nom du plat</label>
-          <input type="text" id="pNom" placeholder="Ex: Tacos poulet">
+          <label id="lblNom" for="pNom">Nom du plat</label>
+          <input type="text" id="pNom" data-required placeholder="Ex: Tacos poulet">
         </div>
         <div class="field">
-          <label id="lblCategorie">Catégorie</label>
-          <select id="pCategorie">
+          <label id="lblCategorie" for="pCategorie">Catégorie</label>
+          <select id="pCategorie" data-required>
             <option value="Pizza">Pizza</option>
             <option value="Fast Food">Fast Food</option>
             <option value="Plats">Plats</option>
@@ -287,11 +288,11 @@ if ("serviceWorker" in navigator) {
           </select>
         </div>
         <div class="field">
-          <label id="lblPrix">Prix (DA)</label>
-          <input type="number" id="pPrix" placeholder="Ex: 450" inputmode="numeric">
+          <label id="lblPrix" for="pPrix">Prix (DA)</label>
+          <input type="number" id="pPrix" min="1" data-required data-rule="positive" placeholder="Ex: 450" inputmode="numeric">
         </div>
         <div class="field">
-          <label id="lblDescription">Description (optionnel)</label>
+          <label id="lblDescription" for="pDescription">Description (optionnel)</label>
           <textarea id="pDescription" placeholder="Ex: sauce maison, galette, frites..."></textarea>
         </div>
         <button class="btn-primary" id="proposeBtn" type="button">Envoyer la proposition</button>
@@ -300,29 +301,29 @@ if ("serviceWorker" in navigator) {
     </div>
 
     <!-- Onglet : Publicité (mise à la une) -->
-    <div id="panelBoost" class="hidden">
+    <div id="panelBoost" class="hidden" data-mtform data-note-before="#boostSendBtn">
       <div class="boost-info" id="boostInfo"></div>
       <section class="card">
         <div class="boost-title" id="boostOffersTitle"></div>
-        <div class="boost-offers" id="boostOffers"></div>
+        <div class="boost-offers" id="boostOffers" role="group" aria-labelledby="boostOffersTitle" aria-required="true" tabindex="-1"></div>
         <div class="boost-hint" id="boostFormatHint"></div>
         <div class="field">
-          <label id="lblBItem"></label>
-          <select id="bItem"></select>
+          <label id="lblBItem" for="bItem"></label>
+          <select id="bItem" data-required></select>
           <div class="boost-note" id="bItemNote"></div>
         </div>
         <div class="field">
-          <label id="lblBTexte"></label>
+          <label id="lblBTexte" for="bTexte"></label>
           <input type="text" id="bTexte" maxlength="120">
         </div>
         <div class="field">
-          <label id="lblBImage"></label>
-          <input type="url" id="bImage" placeholder="https://...">
+          <label id="lblBImage" for="bImage"></label>
+          <input type="url" id="bImage" data-required data-rule="url" placeholder="https://...">
         </div>
         <img id="boostPreview" class="boost-preview" alt="">
         <div class="field">
-          <label id="lblBDebut"></label>
-          <input type="date" id="bDebut">
+          <label id="lblBDebut" for="bDebut"></label>
+          <input type="date" id="bDebut" data-required data-rule="date">
         </div>
         <button class="btn-primary" id="boostSendBtn" type="button"></button>
         <button class="btn-refresh" id="boostCancelBtn" type="button" style="display:none;margin-top:10px;"></button>
@@ -609,17 +610,10 @@ $("fPhone").addEventListener("keydown", (e) => { if (e.key === "Enter") $("fPin"
 $("fPin").addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
 
 async function doLogin() {
+  hideError($("loginError"));
+  if (!MTForm.validate($("loginScreen"))) return;
   const phone = $("fPhone").value.trim();
   const pin = $("fPin").value.trim();
-  hideError($("loginError"));
-  if (!phone) {
-    showError($("loginError"), t("phoneRequired"));
-    return;
-  }
-  if (!pin) {
-    showError($("loginError"), t("pinRequired"));
-    return;
-  }
   $("loginBtn").disabled = true;
   $("loginBtn").textContent = "...";
   try {
@@ -831,14 +825,7 @@ async function onPropose() {
   const prix = $("pPrix").value.trim();
   const description = $("pDescription").value.trim();
 
-  if (!nom) {
-    showError($("errorBox"), t("nomRequired"));
-    return;
-  }
-  if (!prix || isNaN(Number(prix)) || Number(prix) <= 0) {
-    showError($("errorBox"), t("prixRequired"));
-    return;
-  }
+  if (!MTForm.validate($("proposeForm"))) return;
 
   $("proposeBtn").disabled = true;
   $("proposeBtn").textContent = "...";
@@ -985,6 +972,7 @@ $("boostOffers").addEventListener("click", ev => {
   const b = ev.target.closest("[data-offer]");
   if (!b) return;
   BOOST_SEL = b.getAttribute("data-offer");
+  MTForm.clearError($("boostOffers"));
   renderBoost();
 });
 $("listBoost").addEventListener("click", ev => {
@@ -1002,10 +990,11 @@ async function onBoostSend() {
   const chosen = MENU_ITEMS.find(i => String(i.id) === $("bItem").value);
   const imageUrl = $("bImage").value.trim();
   const debutSouhaite = $("bDebut").value;
-  if (!BOOST_SEL && !BOOST_EDIT_ID) { showError($("errorBox"), t("boostPickOffer")); return; }
-  if (!chosen) { showError($("errorBox"), t("boostItemRequired")); return; }
-  if (!/^https:\/\/\S+$/i.test(imageUrl)) { showError($("errorBox"), t("boostImageRequired")); return; }
-  if (!debutSouhaite || debutSouhaite < todayStr()) { showError($("errorBox"), t("boostDateRequired")); return; }
+  $("bDebut").min = todayStr();
+  const offerBad = !BOOST_SEL && !BOOST_EDIT_ID;
+  const formOk = MTForm.validate($("panelBoost"));
+  if (offerBad) { MTForm.fail($("boostOffers"), t("boostPickOffer")); return; }
+  if (!formOk || !chosen) return;
 
   const params = {
     action: BOOST_EDIT_ID ? "resubmitPubRequest" : "submitPubRequest",

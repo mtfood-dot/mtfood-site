@@ -107,20 +107,20 @@
 </header>
 
 <main>
-  <section class="card">
+  <section class="card" data-mtform data-note-before="#loginBtn">
     <h2 id="loginTitle">Connexion</h2>
     <p class="sub" id="loginSubtitle">Connecte-toi pour suivre tes commandes et commander plus vite.</p>
 
     <div class="field" id="fieldIdentifier">
-      <label id="lblIdentifier">E-mail ou téléphone</label>
-      <input type="text" id="fIdentifier" placeholder="ex: 0555 xx xx xx ou toi@email.com" autocomplete="username">
+      <label id="lblIdentifier" for="fIdentifier">E-mail ou téléphone</label>
+      <input type="text" id="fIdentifier" data-required data-rule="identifier" placeholder="ex: 0555 xx xx xx ou toi@email.com" autocomplete="username">
       <div class="hint" id="hintIdentifier">Merci d'entrer ton e-mail ou ton numéro de téléphone.</div>
     </div>
 
     <div class="field" id="fieldPassword">
-      <label id="lblPassword">Mot de passe</label>
+      <label id="lblPassword" for="fPassword">Mot de passe</label>
       <div class="pwd-wrap">
-        <input type="password" id="fPassword" placeholder="••••••••" autocomplete="current-password">
+        <input type="password" id="fPassword" data-required placeholder="••••••••" autocomplete="current-password">
         <button type="button" class="pwd-toggle" id="pwdToggle" aria-label="Afficher le mot de passe">👁</button>
       </div>
       <div class="hint" id="hintPassword">Merci d'entrer ton mot de passe.</div>
@@ -149,6 +149,7 @@
   </p>
 </main>
 
+<script src="/form-validate.js" defer></script>
 <script>
 /* ============================================================
    CONFIGURATION
@@ -253,12 +254,9 @@ function markInvalid(fieldId, invalid){ $(fieldId).classList.toggle("invalid", i
 
 async function doLogin() {
   hideError();
+  if (!MTForm.validate(document.querySelector("[data-mtform]"))) return;
   const identifier = $("fIdentifier").value.trim();
   const password = $("fPassword").value;
-  let ok = true;
-  markInvalid("fieldIdentifier", !identifier); if (!identifier) ok = false;
-  markInvalid("fieldPassword", !password); if (!password) ok = false;
-  if (!ok) return;
 
   $("loginBtn").disabled = true;
   $("loginBtn").textContent = "...";

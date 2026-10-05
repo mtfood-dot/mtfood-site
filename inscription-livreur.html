@@ -115,6 +115,7 @@ color:var(--muted);font-size:11.5px;font-weight:500;}
 
 .hidden{display:none !important;}
 </style>
+<script src="/form-validate.js" defer></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
@@ -142,26 +143,26 @@ if ("serviceWorker" in navigator) {
   </div>
 
   <div class="form-card" id="formCard">
-    <form id="registerForm">
+    <form id="registerForm" novalidate data-mtform data-note-before="#submitBtn">
       <div class="field">
-        <label id="lblNom">Nom complet</label>
-        <input type="text" id="nom" required>
+        <label id="lblNom" for="nom">Nom complet</label>
+        <input type="text" id="nom" data-required>
       </div>
       <div class="field">
-        <label id="lblTelephone">Numéro de téléphone</label>
-        <input type="tel" id="telephone" required placeholder="05XX XX XX XX">
+        <label id="lblTelephone" for="telephone">Numéro de téléphone</label>
+        <input type="tel" id="telephone" data-required data-rule="phone" placeholder="05XX XX XX XX">
       </div>
       <div class="field">
-        <label id="lblZone">Zone de livraison</label>
-        <select id="zone" required>
+        <label id="lblZone" for="zone">Zone de livraison</label>
+        <select id="zone" data-required>
           <option value="Meftah Centre" id="optCentre">Meftah Centre</option>
           <option value="Meftah Dehors" id="optDehors">Meftah Dehors</option>
           <option value="Les deux" id="optLesDeux">Les deux</option>
         </select>
       </div>
       <div class="field">
-        <label id="lblVehicule">Type de véhicule</label>
-        <select id="vehicule" required>
+        <label id="lblVehicule" for="vehicule">Type de véhicule</label>
+        <select id="vehicule" data-required>
           <option value="Moto" id="optMoto">Moto</option>
           <option value="Voiture" id="optVoiture">Voiture</option>
           <option value="Velo" id="optVelo">Vélo</option>
@@ -169,22 +170,22 @@ if ("serviceWorker" in navigator) {
         </select>
       </div>
       <div class="field">
-        <label id="lblDisponibilite">Disponibilité</label>
-        <select id="disponibilite" required>
+        <label id="lblDisponibilite" for="disponibilite">Disponibilité</label>
+        <select id="disponibilite" data-required>
           <option value="Temps plein" id="optPlein">Temps plein</option>
           <option value="Temps partiel" id="optPartiel">Temps partiel</option>
         </select>
       </div>
       <div class="field">
-        <label id="lblPin">Choisis un code PIN (4 chiffres)</label>
-        <input type="password" id="pin" required placeholder="Ex: 1234" inputmode="numeric" maxlength="4" autocomplete="off">
+        <label id="lblPin" for="pin">Choisis un code PIN (4 chiffres)</label>
+        <input type="password" id="pin" data-required data-rule="pin4" placeholder="Ex: 1234" inputmode="numeric" maxlength="4" autocomplete="off">
       </div>
       <div class="field">
-        <label id="lblPinConfirm">Confirme ton code PIN</label>
-        <input type="password" id="pinConfirm" required placeholder="Ex: 1234" inputmode="numeric" maxlength="4" autocomplete="off">
+        <label id="lblPinConfirm" for="pinConfirm">Confirme ton code PIN</label>
+        <input type="password" id="pinConfirm" data-required data-rule="pin4" placeholder="Ex: 1234" inputmode="numeric" maxlength="4" autocomplete="off">
       </div>
       <div class="field">
-        <label id="lblNotes">Remarques (optionnel)</label>
+        <label id="lblNotes" for="notes">Remarques (optionnel)</label>
         <textarea id="notes" placeholder=""></textarea>
       </div>
       <button type="submit" class="submit-btn" id="submitBtn">Envoyer mon inscription</button>
@@ -333,6 +334,10 @@ document.addEventListener("DOMContentLoaded", function(){
     e.preventDefault();
     errorBox.classList.remove("show");
     errorBox.textContent = "";
+
+    if(!MTForm.validate(form)) return;
+    const pinC = document.getElementById("pinConfirm");
+    if(document.getElementById("pin").value.trim() !== pinC.value.trim()){ MTForm.fail(pinC, t("pinMismatch")); return; }
 
     const nom = document.getElementById("nom").value.trim();
     const telephone = document.getElementById("telephone").value.trim();

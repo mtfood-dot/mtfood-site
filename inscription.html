@@ -103,42 +103,42 @@
 </header>
 
 <main>
-  <section class="card" id="formCard">
+  <section class="card" id="formCard" data-mtform data-note-before="#signupBtn">
     <h2 id="title">Créer un compte</h2>
     <p class="sub" id="subtitle">Juste l'essentiel, pour suivre tes commandes plus facilement.</p>
 
     <div class="two-col">
       <div class="field" id="fieldPrenom">
-        <label id="lblPrenom">Prénom</label>
-        <input type="text" id="fPrenom" autocomplete="given-name">
+        <label id="lblPrenom" for="fPrenom">Prénom</label>
+        <input type="text" id="fPrenom" data-required autocomplete="given-name">
         <div class="hint" id="hintPrenom">Requis</div>
       </div>
       <div class="field" id="fieldNom">
-        <label id="lblNom">Nom</label>
-        <input type="text" id="fNom" autocomplete="family-name">
+        <label id="lblNom" for="fNom">Nom</label>
+        <input type="text" id="fNom" data-required autocomplete="family-name">
         <div class="hint" id="hintNom">Requis</div>
       </div>
     </div>
 
     <div class="field" id="fieldIdentifier">
-      <label id="lblIdentifier">E-mail ou téléphone</label>
-      <input type="text" id="fIdentifier" placeholder="ex: 0555 xx xx xx ou toi@email.com" autocomplete="username">
+      <label id="lblIdentifier" for="fIdentifier">E-mail ou téléphone</label>
+      <input type="text" id="fIdentifier" data-required data-rule="identifier" placeholder="ex: 0555 xx xx xx ou toi@email.com" autocomplete="username">
       <div class="hint" id="hintIdentifier">Merci d'entrer un e-mail ou un numéro de téléphone valide.</div>
     </div>
 
     <div class="field" id="fieldPassword">
-      <label id="lblPassword">Mot de passe</label>
+      <label id="lblPassword" for="fPassword">Mot de passe</label>
       <div class="pwd-wrap">
-        <input type="password" id="fPassword" placeholder="8 caractères minimum" autocomplete="new-password">
+        <input type="password" id="fPassword" data-required data-rule="min8" placeholder="8 caractères minimum" autocomplete="new-password">
         <button type="button" class="pwd-toggle" id="pwdToggle1" aria-label="Afficher le mot de passe">👁</button>
       </div>
       <div class="hint" id="hintPassword">Le mot de passe doit contenir au moins 8 caractères.</div>
     </div>
 
     <div class="field" id="fieldPassword2">
-      <label id="lblPassword2">Confirmer le mot de passe</label>
+      <label id="lblPassword2" for="fPassword2">Confirmer le mot de passe</label>
       <div class="pwd-wrap">
-        <input type="password" id="fPassword2" placeholder="••••••••" autocomplete="new-password">
+        <input type="password" id="fPassword2" data-required data-match="#fPassword" placeholder="••••••••" autocomplete="new-password">
         <button type="button" class="pwd-toggle" id="pwdToggle2" aria-label="Afficher le mot de passe">👁</button>
       </div>
       <div class="hint" id="hintPassword2">Les deux mots de passe ne correspondent pas.</div>
@@ -165,6 +165,7 @@
   <p class="footer-note" id="legalNote"></p>
 </main>
 
+<script src="/form-validate.js" defer></script>
 <script>
 const CONFIG = {
   API_URL: "https://script.google.com/macros/s/AKfycbwgXOyXERonv0Yk7X-uhoHuE1Fj26RiYHPR4Tnr7Z_1Ly8wWjsvlE5sp3JJRukRR4ZF/exec",
@@ -241,19 +242,11 @@ function hideError(){ const b=$("signupError"); b.classList.remove("show"); b.te
 
 async function doSignup(){
   hideError();
+  if (!MTForm.validate($("formCard"))) return;
   const prenom = $("fPrenom").value.trim();
   const nom = $("fNom").value.trim();
   const identifier = $("fIdentifier").value.trim();
   const pwd = $("fPassword").value;
-  const pwd2 = $("fPassword2").value;
-
-  let ok = true;
-  markInvalid("fieldPrenom", !prenom); if (!prenom) ok = false;
-  markInvalid("fieldNom", !nom); if (!nom) ok = false;
-  markInvalid("fieldIdentifier", !identifier); if (!identifier) ok = false;
-  markInvalid("fieldPassword", pwd.length < 8); if (pwd.length < 8) ok = false;
-  markInvalid("fieldPassword2", pwd !== pwd2 || !pwd2); if (pwd !== pwd2 || !pwd2) ok = false;
-  if (!ok) return;
 
   $("signupBtn").disabled = true;
   $("signupBtn").textContent = "...";

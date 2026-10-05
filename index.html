@@ -165,10 +165,10 @@ if ("serviceWorker" in navigator) {
 
   <div class="zone-check" id="zoneCheck">
     <button class="zone-check-toggle" id="zoneCheckToggle" type="button">📍 <span id="zoneCheckToggleText">Vérifier si on livre chez toi</span></button>
-    <div class="zone-check-panel hidden" id="zoneCheckPanel">
-      <label id="zoneCheckLabel">Ton adresse ou ton quartier</label>
+    <div class="zone-check-panel hidden" id="zoneCheckPanel" data-mtform data-note-before="#zoneCheckResult">
+      <label id="zoneCheckLabel" for="zoneCheckInput">Ton adresse ou ton quartier</label>
       <div class="zone-check-row">
-        <input type="text" id="zoneCheckInput" placeholder="Ex: Meftah Centre, Souakria...">
+        <input type="text" id="zoneCheckInput" data-required data-error-after=".zone-check-row" placeholder="Ex: Meftah Centre, Souakria...">
         <button id="zoneCheckBtn" type="button">Vérifier</button>
       </div>
       <div class="zone-check-result" id="zoneCheckResult"></div>
@@ -187,6 +187,7 @@ if ("serviceWorker" in navigator) {
 </div>
 <div style="text-align:center;margin-top:6px;"><a class="footer-admin-link" href="espace-admin.html">Admin</a></div>
 
+<script src="/form-validate.js" defer></script>
 <script>
 /* ============================================================
    CONFIGURATION
@@ -295,10 +296,10 @@ function checkZoneAvailability() {
   const raw = $("zoneCheckInput").value;
   const box = $("zoneCheckResult");
   box.classList.remove("show", "ok", "ko");
+  if (!MTForm.validate($("zoneCheckPanel"))) return;
   const query = normalizeForZoneSearch(raw);
   if (!query) {
-    box.textContent = t("zoneCheckEmpty");
-    box.classList.add("show", "ko");
+    MTForm.fail($("zoneCheckInput"), t("zoneCheckEmpty"));
     return;
   }
   const match = CONFIG.ZONES.find(z => {
