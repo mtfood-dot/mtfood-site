@@ -233,20 +233,20 @@
   .compta-total-row .label{font-size:12px;font-weight:700;color:var(--gold-400);}
   .compta-total-row .value{font-size:18px;font-weight:800;}
 
-  .ad-form-card{padding-bottom:18px;}
-  .ad-form-row{display:flex;align-items:center;justify-content:space-between;gap:14px;}
-  .ad-form-ordre{display:flex;flex-direction:column;gap:6px;flex:none;}
-  .ad-form-ordre input{width:80px;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  .entry-form-card{padding-bottom:18px;}
+  .entry-form-row{display:flex;align-items:center;justify-content:space-between;gap:14px;}
+  .entry-form-ordre{display:flex;flex-direction:column;gap:6px;flex:none;}
+  .entry-form-ordre input{width:80px;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
     font-size:14px;font-family:inherit;background:#fbfcfe;}
-  .ad-form-actif{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--blue-900);cursor:pointer;}
-  .ad-form-actif input{width:18px;height:18px;}
-  .ad-card{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);
+  .entry-form-actif{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--blue-900);cursor:pointer;}
+  .entry-form-actif input{width:18px;height:18px;}
+  .list-card{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);
     border:1px solid var(--border);padding:16px;margin-bottom:12px;display:flex;gap:12px;}
-  .ad-card .thumb{width:64px;height:64px;border-radius:10px;object-fit:cover;background:var(--bg);flex-shrink:0;}
-  .ad-card .info{flex:1;min-width:0;}
-  .ad-card .nom{font-size:14.5px;font-weight:800;color:var(--text);}
-  .ad-card .texte{font-size:12.5px;color:var(--muted);margin:2px 0 6px;}
-  .ad-card .ordre{font-size:11.5px;color:var(--muted);font-weight:700;}
+  .list-card .thumb{width:64px;height:64px;border-radius:10px;object-fit:cover;background:var(--bg);flex-shrink:0;}
+  .list-card .info{flex:1;min-width:0;}
+  .list-card .nom{font-size:14.5px;font-weight:800;color:var(--text);}
+  .list-card .texte{font-size:12.5px;color:var(--muted);margin:2px 0 6px;}
+  .list-card .ordre{font-size:11.5px;color:var(--muted);font-weight:700;}
   .btn-edit{background:var(--blue-700);color:#fff;}
   .btn-delete{background:#fff;border-color:#f3c6c1;color:var(--danger);}
 
@@ -399,7 +399,7 @@ if ("serviceWorker" in navigator) {
         <div></div>
         <button class="btn-refresh" id="refreshPubBtn" type="button"><span id="refreshPubLabel">↻ Actualiser</span></button>
       </div>
-      <div class="card ad-form-card">
+      <div class="card entry-form-card">
         <div class="subheading" id="adFormTitle" style="margin-top:0;"></div>
         <input type="hidden" id="adFormId" value="">
         <div class="field">
@@ -418,12 +418,12 @@ if ("serviceWorker" in navigator) {
           <label id="lblAdTexte"></label>
           <input type="text" id="adFormTexte" placeholder="">
         </div>
-        <div class="field ad-form-row">
-          <div class="ad-form-ordre">
+        <div class="field entry-form-row">
+          <div class="entry-form-ordre">
             <label id="lblAdOrdre"></label>
             <input type="number" id="adFormOrdre" value="0" min="0" step="1">
           </div>
-          <label class="ad-form-actif">
+          <label class="entry-form-actif">
             <input type="checkbox" id="adFormActif" checked>
             <span id="lblAdActif"></span>
           </label>
@@ -442,23 +442,23 @@ if ("serviceWorker" in navigator) {
         <div></div>
         <button class="btn-refresh" id="refreshZonesBtn" type="button"><span id="refreshZonesLabel">↻ Actualiser</span></button>
       </div>
-      <div class="card ad-form-card">
+      <div class="card entry-form-card">
         <div class="subheading" id="zoneFormTitle" style="margin-top:0;"></div>
         <input type="hidden" id="zoneFormId" value="">
         <div class="field">
           <label id="lblZoneNom"></label>
           <input type="text" id="zoneFormNom" placeholder="">
         </div>
-        <div class="field ad-form-row">
-          <div class="ad-form-ordre">
+        <div class="field entry-form-row">
+          <div class="entry-form-ordre">
             <label id="lblZoneFrais"></label>
             <input type="number" id="zoneFormFrais" value="0" min="0" step="10">
           </div>
-          <div class="ad-form-ordre">
+          <div class="entry-form-ordre">
             <label id="lblZoneOrdre"></label>
             <input type="number" id="zoneFormOrdre" value="0" min="0" step="1">
           </div>
-          <label class="ad-form-actif">
+          <label class="entry-form-actif">
             <input type="checkbox" id="zoneFormActif" checked>
             <span id="lblZoneActif"></span>
           </label>
@@ -1854,7 +1854,7 @@ function adCardHtml(ad) {
   const statusLabel = ad.actif ? t("statusActif") : t("statusEnAttente");
   const statusCls = ad.actif ? "actif" : "enattente";
   return `
-    <div class="ad-card">
+    <div class="list-card">
       ${thumb}
       <div class="info">
         <div class="nom">${escapeHtml(ad.nomRestaurant || "")}</div>
@@ -1992,7 +1992,7 @@ function zoneCardHtml(zone) {
   const statusLabel = zone.actif ? t("statusActif") : t("statusEnAttente");
   const statusCls = zone.actif ? "actif" : "enattente";
   return `
-    <div class="ad-card">
+    <div class="list-card">
       <div class="info">
         <div class="nom">${escapeHtml(zone.nom || "")}</div>
         <div class="texte">${escapeHtml(t("lblZoneFrais"))} : ${escapeHtml(String(zone.frais || 0))} DA</div>
