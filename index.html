@@ -78,23 +78,23 @@
   .zone-check-result.ko{background:#fdeceb;color:var(--danger);}
   .hidden{display:none !important;}
 
-  .ads-section{margin-top:34px;}
-  .ads-title{font-size:13px;font-weight:800;color:var(--blue-900);text-transform:uppercase;
+  .promo-section{margin-top:34px;}
+  .promo-title{font-size:13px;font-weight:800;color:var(--blue-900);text-transform:uppercase;
     letter-spacing:.4px;margin-bottom:12px;text-align:center;}
-  .ads-grid{display:grid;grid-template-columns:1fr;gap:14px;}
-  @media(min-width:560px){.ads-grid{grid-template-columns:1fr 1fr;}}
-  .ad-card{display:block;text-decoration:none;color:inherit;background:var(--card);border-radius:var(--radius-md);
+  .promo-grid{display:grid;grid-template-columns:1fr;gap:14px;}
+  @media(min-width:560px){.promo-grid{grid-template-columns:1fr 1fr;}}
+  .promo-card{display:block;text-decoration:none;color:inherit;background:var(--card);border-radius:var(--radius-md);
     overflow:hidden;box-shadow:var(--shadow-sm);border:1px solid var(--border);}
-  .ad-card .ad-photo{width:100%;aspect-ratio:16/9;background:var(--blue-100) center/cover no-repeat;}
-  .ad-card .ad-body{padding:12px 14px;}
-  .ad-card .ad-name{font-size:14px;font-weight:800;color:var(--blue-900);}
-  .ad-card .ad-text{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.4;}
+  .promo-card .promo-photo{width:100%;aspect-ratio:16/9;background:var(--blue-100) center/cover no-repeat;}
+  .promo-card .promo-body{padding:12px 14px;}
+  .promo-card .promo-name{font-size:14px;font-weight:800;color:var(--blue-900);}
+  .promo-card .promo-text{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.4;}
 
-  .ad-placeholder{display:block;text-align:center;background:var(--card);border:1.5px dashed var(--gold-500);
+  .promo-placeholder{display:block;text-align:center;background:var(--card);border:1.5px dashed var(--gold-500);
     border-radius:var(--radius-md);padding:26px 18px;color:var(--muted);font-size:13px;line-height:1.6;
     text-decoration:none;}
-  .ad-placeholder b{display:block;color:var(--blue-900);font-size:14.5px;margin-bottom:6px;}
-  .ad-placeholder .cta{display:inline-block;margin-top:10px;background:var(--gold-500);color:var(--blue-900);
+  .promo-placeholder b{display:block;color:var(--blue-900);font-size:14.5px;margin-bottom:6px;}
+  .promo-placeholder .cta{display:inline-block;margin-top:10px;background:var(--gold-500);color:var(--blue-900);
     border-radius:999px;padding:8px 18px;font-weight:800;font-size:12.5px;}
 
   .footer-note{max-width:720px;margin:34px auto 0;padding:0 16px;text-align:center;
@@ -157,9 +157,9 @@ if ("serviceWorker" in navigator) {
     </div>
   </div>
 
-  <div class="ads-section">
-    <div class="ads-title" id="adsTitle">Nos partenaires</div>
-    <div class="ads-grid" id="adsGrid"></div>
+  <div class="promo-section">
+    <div class="promo-title" id="promoTitle">Nos partenaires</div>
+    <div class="promo-grid" id="promoGrid"></div>
   </div>
 </main>
 
@@ -298,8 +298,8 @@ function checkZoneAvailability() {
    ============================================================ */
 function renderAdPlaceholder() {
   const waLink = "https://wa.me/" + CONFIG.WHATSAPP_NUMBER + "?text=" + encodeURIComponent("Bonjour, je souhaite louer un espace publicitaire sur le site MT Delivery.");
-  $("adsGrid").innerHTML = `
-    <a class="ad-placeholder" href="${waLink}" target="_blank" rel="noopener">
+  $("promoGrid").innerHTML = `
+    <a class="promo-placeholder" href="${waLink}" target="_blank" rel="noopener">
       <b>${t("adPlaceholderTitle")}</b>
       ${t("adPlaceholderText")}
       <span class="cta">${t("adPlaceholderCta")}</span>
@@ -307,23 +307,50 @@ function renderAdPlaceholder() {
 }
 function renderAds(ads) {
   if (!ads || !ads.length) { renderAdPlaceholder(); return; }
-  $("adsGrid").innerHTML = ads.map(ad => {
+  $("promoGrid").innerHTML = ads.map(ad => {
     const photoStyle = ad.imageUrl ? `background-image:url('${escapeAttr(ad.imageUrl)}')` : "";
     const inner = `
-      <div class="ad-photo" style="${photoStyle}"></div>
-      <div class="ad-body">
-        <div class="ad-name">${escapeHtml(ad.nomRestaurant)}</div>
-        ${ad.texte ? `<div class="ad-text">${escapeHtml(ad.texte)}</div>` : ""}
+      <div class="promo-photo" style="${photoStyle}"></div>
+      <div class="promo-body">
+        <div class="promo-name">${escapeHtml(ad.nomRestaurant)}</div>
+        ${ad.texte ? `<div class="promo-text">${escapeHtml(ad.texte)}</div>` : ""}
       </div>`;
     return ad.lienUrl
-      ? `<a class="ad-card" href="${escapeAttr(ad.lienUrl)}" target="_blank" rel="noopener">${inner}</a>`
-      : `<div class="ad-card">${inner}</div>`;
+      ? `<a class="promo-card" href="${escapeAttr(ad.lienUrl)}" target="_blank" rel="noopener">${inner}</a>`
+      : `<div class="promo-card">${inner}</div>`;
   }).join("");
 }
+const ADS_CACHE_KEY = "mtd_ads_cache";
+function readAdsCache() {
+  try { const v = JSON.parse(localStorage.getItem(ADS_CACHE_KEY) || "null"); return Array.isArray(v) ? v : null; } catch (e) { return null; }
+}
+function writeAdsCache(ads) {
+  try { localStorage.setItem(ADS_CACHE_KEY, JSON.stringify(ads)); } catch (e) {}
+}
+let _adsLoadId = 0;
 function loadAds() {
-  jsonpRequest({ action: "getAds" })
-    .then(res => { renderAds(res && res.success ? res.ads : []); })
-    .catch(() => { renderAdPlaceholder(); });
+  const myId = ++_adsLoadId;
+  // Affichage immédiat des dernières pubs connues (pas de trou pendant le chargement)
+  const cached = readAdsCache();
+  if (cached && cached.length) renderAds(cached);
+  let attempt = 0;
+  const tryLoad = () => {
+    attempt++;
+    jsonpRequest({ action: "getAds" }, 20000)
+      .then(res => {
+        if (myId !== _adsLoadId) return;
+        const ads = res && res.success ? (res.ads || []) : [];
+        writeAdsCache(ads);
+        renderAds(ads);
+      })
+      .catch(() => {
+        if (myId !== _adsLoadId) return;
+        if (attempt < 3) { setTimeout(tryLoad, 1500 * attempt); return; }
+        // Échec réseau répété : on garde les dernières pubs connues, sinon l'encart par défaut
+        if (!(cached && cached.length)) renderAdPlaceholder();
+      });
+  };
+  tryLoad();
 }
 
 /* ============================================================
@@ -378,7 +405,7 @@ function applyLanguage() {
   $("zoneCheckLabel").textContent = t("zoneCheckLabel");
   $("zoneCheckInput").placeholder = t("zoneCheckPlaceholder");
   $("zoneCheckBtn").textContent = t("zoneCheckBtn");
-  $("adsTitle").textContent = t("adsTitle");
+  $("promoTitle").textContent = t("adsTitle");
   updateAccountLink();
 }
 function toggleLanguage() {
