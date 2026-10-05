@@ -383,6 +383,10 @@ if ("serviceWorker" in navigator) {
 
       <div class="subheading" id="subheadingTopClients"></div>
       <div id="listTopClients"></div>
+      <div class="subheading" id="subheadingTopDrivers"></div>
+      <div id="listTopDrivers"></div>
+      <div class="subheading" id="subheadingTopPartners"></div>
+      <div id="listTopPartners"></div>
     </div>
 
     <div id="comptaView" class="hidden">
@@ -509,6 +513,8 @@ let PARTNERS = [];
 let DRIVERS = [];
 let DASHBOARD_ORDERS = [];
 let DASHBOARD_PERIOD_DAYS = 7;
+let TOP_DRIVERS = [];
+let TOP_PARTNERS = [];
 let DASHBOARD_STATS = null;
 let COMPTA_PARTNERS = [];
 let COMPTA_DRIVERS = [];
@@ -614,6 +620,12 @@ const I18N = {
     loadDashboardFailedGeneric: "Impossible de charger le bilan. Réessaie.",
     subheadingEvolution: "Évolution des ventes",
     subheadingTopClients: "Top 5 clients",
+    subheadingTopDrivers: "Top 5 livreurs (par livraisons)",
+    subheadingTopPartners: "Top 5 restaurants (par commandes)",
+    noTopDrivers: "Aucune livraison sur cette période.",
+    noTopPartners: "Aucune commande sur cette période.",
+    unitLivraisons: "livraisons",
+    unitCommandes: "commandes",
     period7: "7j",
     period30: "30j",
     chartEmpty: "Aucune vente sur cette période.",
@@ -761,6 +773,12 @@ const I18N = {
     loadDashboardFailedGeneric: "تعذر تحميل الملخص. أعد المحاولة.",
     subheadingEvolution: "تطور المبيعات",
     subheadingTopClients: "أفضل 5 عملاء",
+    subheadingTopDrivers: "أفضل 5 سائقين (حسب التوصيلات)",
+    subheadingTopPartners: "أفضل 5 مطاعم (حسب الطلبات)",
+    noTopDrivers: "لا توجد توصيلات في هذه الفترة.",
+    noTopPartners: "لا توجد طلبات في هذه الفترة.",
+    unitLivraisons: "توصيلة",
+    unitCommandes: "طلب",
     period7: "7 أيام",
     period30: "30 يوماً",
     chartEmpty: "لا توجد مبيعات خلال هذه الفترة.",
@@ -857,6 +875,9 @@ function applyLanguage() {
   $("refreshDashboardLabel").textContent = t("refreshLabel");
   $("subheadingEvolution").textContent = t("subheadingEvolution");
   $("subheadingTopClients").textContent = t("subheadingTopClients");
+  $("subheadingTopDrivers").textContent = t("subheadingTopDrivers");
+  $("subheadingTopPartners").textContent = t("subheadingTopPartners");
+  renderTopRankings();
   $("period7Btn").textContent = t("period7");
   $("period30Btn").textContent = t("period30");
   $("tabComptaLabel").textContent = t("tabCompta");
@@ -1059,7 +1080,7 @@ function switchTab(tab) {
   hideSuccess($("successBox"));
   if (tab === "moderation") loadPendingItems();
   if (tab === "partners") { loadPartners(); loadDrivers(); }
-  if (tab === "dashboard") { loadDashboard(); loadDashboardStats(); }
+  if (tab === "dashboard") { loadDashboard(); loadDashboardStats(); loadTopRankings(); }
   if (tab === "compta") refreshComptaCurrent();
   if (tab === "pub") loadAdsAdmin();
   if (tab === "zones") loadZonesAdmin();
@@ -1722,6 +1743,7 @@ function renderDashboard() {
 
 function setDashboardPeriod(days) {
   DASHBOARD_PERIOD_DAYS = days;
+  loadTopRankings();
   $("period7Btn").classList.toggle("active", days === 7);
   $("period30Btn").classList.toggle("active", days === 30);
   loadDashboardStats();
@@ -1779,6 +1801,54 @@ function topClientCardHtml(c, i) {
       <div class="total">${total.toLocaleString("fr-FR")} DA</div>
     </div>
   `;
+}
+
+/* ---- Top 5 livreurs / restaurants (par nombre de commandes), même période que le graphique ---- */
+function dateStrDaysAgo(n) {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  const pad = (x) => String(x).padStart(2, "0");
+  return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+}
+
+function topRankCardHtml(name, meta, totalDA, i) {
+  return `
+    <div class="top-client-card">
+      <div class="rank">${i + 1}</div>
+      <div class="info">
+        <div class="nom">${escapeHtml(name || "")}</div>
+        <div class="meta">${escapeHtml(meta)}</div>
+      </div>
+      <div class="total">${(Number(totalDA) || 0).toLocaleString("fr-FR")} DA</div>
+    </div>
+  `;
+}
+
+function renderTopRankings() {
+  $("listTopDrivers").innerHTML = TOP_DRIVERS.length
+    ? TOP_DRIVERS.map((d, i) => topRankCardHtml(d.nom, (Number(d.nbLivraisons) || 0) + " " + t("unitLivraisons"), d.totalDA, i)).join("")
+    : emptyStateHtml(t("noTopDrivers"), "🛵");
+  $("listTopPartners").innerHTML = TOP_PARTNERS.length
+    ? TOP_PARTNERS.map((p, i) => topRankCardHtml(p.nom, (Number(p.nbCommandes) || 0) + " " + t("unitCommandes"), p.totalDA, i)).join("")
+    : emptyStateHtml(t("noTopPartners"), "🏪");
+}
+
+async function loadTopRankings() {
+  const ds = dateStrDaysAgo(DASHBOARD_PERIOD_DAYS - 1);
+  const de = todayStr();
+  try {
+    const [dr, pa] = await Promise.all([
+      apiGet({ action: "getDriverStats", password: SESSION_PASSWORD, dateStart: ds, dateEnd: de }),
+      apiGet({ action: "getPartnerAccounting", password: SESSION_PASSWORD, dateStart: ds, dateEnd: de })
+    ]);
+    TOP_DRIVERS = (dr && dr.success ? (dr.drivers || []) : [])
+      .slice().sort((a, b) => (Number(b.nbLivraisons) || 0) - (Number(a.nbLivraisons) || 0)).slice(0, 5);
+    TOP_PARTNERS = (pa && pa.success ? (pa.partners || []) : [])
+      .slice().sort((a, b) => (Number(b.nbCommandes) || 0) - (Number(a.nbCommandes) || 0)).slice(0, 5);
+    renderTopRankings();
+  } catch (e) {
+    /* silencieux : le reste du bilan reste utilisable */
+  }
 }
 
 function stuckAlertHtml(data) {
