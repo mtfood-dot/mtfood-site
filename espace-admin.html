@@ -275,6 +275,7 @@
   .footer-note{max-width:960px;margin:24px auto 0;padding:0 16px;text-align:center;
     color:var(--muted);font-size:11.5px;font-weight:500;}
 </style>
+<script src="/form-validate.js" defer></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
@@ -298,12 +299,12 @@ if ("serviceWorker" in navigator) {
 <main>
 
   <!-- ================= ÉCRAN DE CONNEXION ================= -->
-  <section id="loginScreen" class="card login-card">
+  <section id="loginScreen" class="card login-card" data-mtform data-note-before="#loginBtn">
     <h2 id="loginTitle">Connexion admin</h2>
     <p id="loginSubtitle">Entre le mot de passe administrateur.</p>
     <div class="field">
-      <label id="lblPassword">Mot de passe</label>
-      <input type="password" id="fPassword" placeholder="••••••••" autocomplete="off">
+      <label id="lblPassword" for="fPassword">Mot de passe</label>
+      <input type="password" id="fPassword" data-required placeholder="••••••••" autocomplete="off">
     </div>
     <button class="btn-primary" id="loginBtn" type="button">Se connecter</button>
     <div class="error-box" id="loginError"></div>
@@ -365,12 +366,12 @@ if ("serviceWorker" in navigator) {
         <div class="subheading" id="subheadingDrivers" style="margin:16px 0 10px;"></div>
         <button class="btn-refresh" id="addDriverToggleBtn" type="button"><span id="addDriverToggleLabel"></span></button>
       </div>
-      <div class="card driver-form-card hidden" id="driverFormCard">
+      <div class="card driver-form-card hidden" id="driverFormCard" data-mtform data-note-before=".actions-row">
         <div class="driver-form-row">
-          <div class="field"><label id="lblDriverNom"></label><input type="text" id="driverFormNom"></div>
-          <div class="field"><label id="lblDriverTelephone"></label><input type="tel" id="driverFormTelephone"></div>
-          <div class="field"><label id="lblDriverZone"></label><input type="text" id="driverFormZone"></div>
-          <div class="field"><label id="lblDriverVehicule"></label><input type="text" id="driverFormVehicule"></div>
+          <div class="field"><label id="lblDriverNom" for="driverFormNom"></label><input type="text" id="driverFormNom" data-required autocomplete="off"></div>
+          <div class="field"><label id="lblDriverTelephone" for="driverFormTelephone"></label><input type="tel" id="driverFormTelephone" data-required data-rule="phone"></div>
+          <div class="field"><label id="lblDriverZone" for="driverFormZone"></label><input type="text" id="driverFormZone"></div>
+          <div class="field"><label id="lblDriverVehicule" for="driverFormVehicule"></label><input type="text" id="driverFormVehicule"></div>
         </div>
         <div class="actions-row">
           <button class="btn-action btn-confirm" type="button" id="driverFormSaveBtn"></button>
@@ -429,28 +430,28 @@ if ("serviceWorker" in navigator) {
         <div></div>
         <button class="btn-refresh" id="refreshPubBtn" type="button"><span id="refreshPubLabel">↻ Actualiser</span></button>
       </div>
-      <div class="card entry-form-card">
+      <div class="card entry-form-card" id="adFormCard" data-mtform data-note-before=".actions-row">
         <div class="subheading" id="adFormTitle" style="margin-top:0;"></div>
         <input type="hidden" id="adFormId" value="">
         <div class="field">
-          <label id="lblAdNom"></label>
-          <input type="text" id="adFormNom" placeholder="">
+          <label id="lblAdNom" for="adFormNom"></label>
+          <input type="text" id="adFormNom" data-required placeholder="">
         </div>
         <div class="field">
-          <label id="lblAdImage"></label>
-          <input type="text" id="adFormImage" placeholder="https://...">
+          <label id="lblAdImage" for="adFormImage"></label>
+          <input type="text" id="adFormImage" data-required placeholder="https://...">
         </div>
         <div class="field">
-          <label id="lblAdLien"></label>
+          <label id="lblAdLien" for="adFormLien"></label>
           <input type="text" id="adFormLien" placeholder="https://...">
         </div>
         <div class="field">
-          <label id="lblAdTexte"></label>
+          <label id="lblAdTexte" for="adFormTexte"></label>
           <input type="text" id="adFormTexte" placeholder="">
         </div>
         <div class="field entry-form-row">
           <div class="entry-form-ordre">
-            <label id="lblAdOrdre"></label>
+            <label id="lblAdOrdre" for="adFormOrdre"></label>
             <input type="number" id="adFormOrdre" value="0" min="0" step="1">
           </div>
           <label class="entry-form-actif">
@@ -481,20 +482,20 @@ if ("serviceWorker" in navigator) {
         <div></div>
         <button class="btn-refresh" id="refreshZonesBtn" type="button"><span id="refreshZonesLabel">↻ Actualiser</span></button>
       </div>
-      <div class="card entry-form-card">
+      <div class="card entry-form-card" id="zoneFormCard" data-mtform data-note-before=".actions-row">
         <div class="subheading" id="zoneFormTitle" style="margin-top:0;"></div>
         <input type="hidden" id="zoneFormId" value="">
         <div class="field">
-          <label id="lblZoneNom"></label>
-          <input type="text" id="zoneFormNom" placeholder="">
+          <label id="lblZoneNom" for="zoneFormNom"></label>
+          <input type="text" id="zoneFormNom" data-required placeholder="">
         </div>
         <div class="field entry-form-row">
           <div class="entry-form-ordre">
-            <label id="lblZoneFrais"></label>
-            <input type="number" id="zoneFormFrais" value="0" min="0" step="10">
+            <label id="lblZoneFrais" for="zoneFormFrais"></label>
+            <input type="number" id="zoneFormFrais" data-required data-rule="nonneg" value="0" min="0" step="10">
           </div>
           <div class="entry-form-ordre">
-            <label id="lblZoneOrdre"></label>
+            <label id="lblZoneOrdre" for="zoneFormOrdre"></label>
             <input type="number" id="zoneFormOrdre" value="0" min="0" step="1">
           </div>
           <label class="entry-form-actif">
@@ -622,8 +623,8 @@ const I18N = {
     addDriverToggleClose: "✕ Fermer",
     lblDriverNom: "Nom",
     lblDriverTelephone: "Téléphone",
-    lblDriverZone: "Zone",
-    lblDriverVehicule: "Véhicule",
+    lblDriverZone: "Zone (optionnel)",
+    lblDriverVehicule: "Véhicule (optionnel)",
     btnDriverSave: "💾 Enregistrer",
     btnDriverCancel: "Annuler",
     btnDriverEdit: "✎ Modifier",
@@ -687,9 +688,9 @@ const I18N = {
     boostRestaurant: "Restaurant",
     boostDuration: "Durée",
     boostWishedStart: "Début souhaité",
-    boostStartLabel: "Date de début",
+    boostStartLabel: "Date de début (obligatoire pour accepter)",
     boostPaidNow: "Déjà payé (espèces reçues)",
-    boostCommentLabel: "Commentaire pour le partenaire",
+    boostCommentLabel: "Commentaire pour le partenaire (obligatoire pour renvoyer ou refuser)",
     boostAccept: "Accepter",
     boostReturn: "Renvoyer pour modification",
     boostReject: "Refuser",
@@ -703,6 +704,7 @@ const I18N = {
     boostUnpaid: "Non payé",
     boostPeriod: "Diffusion",
     boostCommentRequired: "Écris un commentaire pour le partenaire.",
+    boostStartRequired: "Choisis la date de début de la publicité.",
     boostDone: "Décision enregistrée.",
     boostUpdated: "Mise à jour effectuée.",
     boostFailed: "Action impossible. Réessaie.",
@@ -821,8 +823,8 @@ const I18N = {
     addDriverToggleClose: "✕ إغلاق",
     lblDriverNom: "الاسم",
     lblDriverTelephone: "الهاتف",
-    lblDriverZone: "المنطقة",
-    lblDriverVehicule: "المركبة",
+    lblDriverZone: "المنطقة (اختياري)",
+    lblDriverVehicule: "المركبة (اختياري)",
     btnDriverSave: "💾 حفظ",
     btnDriverCancel: "إلغاء",
     btnDriverEdit: "✎ تعديل",
@@ -886,9 +888,9 @@ const I18N = {
     boostRestaurant: "المطعم",
     boostDuration: "المدة",
     boostWishedStart: "البدء المطلوب",
-    boostStartLabel: "تاريخ البدء",
+    boostStartLabel: "تاريخ البدء (إلزامي للقبول)",
     boostPaidNow: "تم الدفع (استلام نقدًا)",
-    boostCommentLabel: "تعليق للشريك",
+    boostCommentLabel: "تعليق للشريك (إلزامي للإرجاع أو الرفض)",
     boostAccept: "قبول",
     boostReturn: "إرجاع للتعديل",
     boostReject: "رفض",
@@ -902,6 +904,7 @@ const I18N = {
     boostUnpaid: "غير مدفوع",
     boostPeriod: "مدة العرض",
     boostCommentRequired: "اكتب تعليقًا للشريك.",
+    boostStartRequired: "اختر تاريخ بدء الإعلان.",
     boostDone: "تم تسجيل القرار.",
     boostUpdated: "تم التحديث.",
     boostFailed: "تعذر تنفيذ الإجراء. حاول مجددًا.",
@@ -1095,12 +1098,9 @@ $("loginBtn").addEventListener("click", doLogin);
 $("fPassword").addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
 
 async function doLogin() {
-  const password = $("fPassword").value.trim();
   hideError($("loginError"));
-  if (!password) {
-    showError($("loginError"), t("passwordRequired"));
-    return;
-  }
+  if (!MTForm.validate($("loginScreen"))) return;
+  const password = $("fPassword").value.trim();
   $("loginBtn").disabled = true;
   $("loginBtn").textContent = "...";
   try {
@@ -1522,7 +1522,7 @@ function entityCardHtml(kind, item, extraMeta) {
         <button class="btn-action ${toggleClass}" type="button" data-toggle-kind="${kind}" data-toggle-tel="${tel}" data-new-status="${escapeAttr(newStatus)}">${escapeHtml(toggleLabel)}</button>
       </div>
       <div class="pin-row">
-        <input type="text" inputmode="numeric" maxlength="4" placeholder="${item.pin ? "••••" : "----"}">
+        <input type="text" inputmode="numeric" maxlength="4" aria-label="${escapeAttr(t("btnSavePin"))}" data-error-after="closest:.pin-row" placeholder="${item.pin ? "••••" : "----"}">
         <button class="btn-action btn-savepin" type="button" data-savepin-kind="${kind}" data-savepin-tel="${tel}">${escapeHtml(t("btnSavePin"))}</button>
       </div>
     </div>
@@ -1551,9 +1551,9 @@ function driverCardHtml(d) {
   const isEditing = EDITING_DRIVER_TEL === d.telephone;
   const editSection = isEditing ? `
     <div class="edit-row">
-      <input type="text" id="editDriverNom_${tel}" value="${escapeAttr(d.nom || "")}" placeholder="${escapeAttr(t("lblDriverNom"))}">
-      <input type="text" id="editDriverZone_${tel}" value="${escapeAttr(d.zone || "")}" placeholder="${escapeAttr(t("lblDriverZone"))}">
-      <input type="text" id="editDriverVehicule_${tel}" value="${escapeAttr(d.vehicule || "")}" placeholder="${escapeAttr(t("lblDriverVehicule"))}">
+      <input type="text" id="editDriverNom_${tel}" value="${escapeAttr(d.nom || "")}" aria-required="true" aria-label="${escapeAttr(t("lblDriverNom"))}" data-error-after="closest:.edit-row" placeholder="${escapeAttr(t("lblDriverNom"))} *">
+      <input type="text" id="editDriverZone_${tel}" value="${escapeAttr(d.zone || "")}" aria-label="${escapeAttr(t("lblDriverZone"))}" placeholder="${escapeAttr(t("lblDriverZone"))}">
+      <input type="text" id="editDriverVehicule_${tel}" value="${escapeAttr(d.vehicule || "")}" aria-label="${escapeAttr(t("lblDriverVehicule"))}" placeholder="${escapeAttr(t("lblDriverVehicule"))}">
       <div class="actions-row">
         <button class="btn-action btn-confirm" type="button" data-savedriver-tel="${tel}">${escapeHtml(t("btnDriverSave"))}</button>
         <button class="btn-action btn-cancel" type="button" data-canceledit-tel="${tel}">${escapeHtml(t("btnDriverCancel"))}</button>
@@ -1570,7 +1570,7 @@ function driverCardHtml(d) {
         <button class="btn-action btn-edit" type="button" data-editdriver-tel="${tel}">${escapeHtml(t("btnDriverEdit"))}</button>
       </div>
       <div class="pin-row">
-        <input type="text" inputmode="numeric" maxlength="4" placeholder="${d.pin ? "••••" : "----"}">
+        <input type="text" inputmode="numeric" maxlength="4" aria-label="${escapeAttr(t("btnSavePin"))}" data-error-after="closest:.pin-row" placeholder="${d.pin ? "••••" : "----"}">
         <button class="btn-action btn-savepin" type="button" data-savepin-kind="driver" data-savepin-tel="${tel}">${escapeHtml(t("btnSavePin"))}</button>
       </div>
       ${editSection}
@@ -1715,7 +1715,8 @@ async function onUpdateDriver(telephone, btnEl) {
   const zone = zoneEl ? zoneEl.value.trim() : "";
   const vehicule = vehiculeEl ? vehiculeEl.value.trim() : "";
   if (!nom) {
-    showError($("errorBox"), t("driverSaveRequired"));
+    if (nomEl) MTForm.fail(nomEl, t("driverSaveRequired"));
+    else showError($("errorBox"), t("driverSaveRequired"));
     return;
   }
   btnEl.disabled = true;
@@ -1758,10 +1759,7 @@ async function onCreateDriver() {
   const telephone = $("driverFormTelephone").value.trim();
   const zone = $("driverFormZone").value.trim();
   const vehicule = $("driverFormVehicule").value.trim();
-  if (!nom || !telephone) {
-    showError($("errorBox"), t("driverSaveRequired"));
-    return;
-  }
+  if (!MTForm.validate($("driverFormCard"))) return;
   $("driverFormSaveBtn").disabled = true;
   try {
     const data = await apiGet({ action: "createDriver", password: SESSION_PASSWORD, nom: nom, telephone: telephone, zone: zone, vehicule: vehicule });
@@ -1808,7 +1806,8 @@ async function onSavePin(kind, telephone, inputEl, btnEl) {
   hideSuccess($("successBox"));
   const pin = inputEl ? inputEl.value.trim() : "";
   if (!/^[0-9]{4}$/.test(pin)) {
-    showError($("errorBox"), t("pinInvalid"));
+    if (inputEl) MTForm.fail(inputEl, t("pinInvalid"));
+    else showError($("errorBox"), t("pinInvalid"));
     return;
   }
   btnEl.disabled = true;
@@ -2203,6 +2202,7 @@ function onEditAd(id) {
 }
 
 function resetAdForm() {
+  if (window.MTForm) MTForm.clearAll($("adFormCard"));
   $("adFormId").value = "";
   $("adFormNom").value = "";
   $("adFormImage").value = "";
@@ -2221,10 +2221,7 @@ $("adFormSaveBtn").addEventListener("click", async () => {
   hideSuccess($("successBox"));
   const nomRestaurant = $("adFormNom").value.trim();
   const imageUrl = $("adFormImage").value.trim();
-  if (!nomRestaurant || !imageUrl) {
-    showError($("errorBox"), t("adSaveRequired"));
-    return;
-  }
+  if (!MTForm.validate($("adFormCard"))) return;
   const btn = $("adFormSaveBtn");
   btn.disabled = true;
   try {
@@ -2338,6 +2335,7 @@ function onEditZone(id) {
 }
 
 function resetZoneForm() {
+  if (window.MTForm) MTForm.clearAll($("zoneFormCard"));
   $("zoneFormId").value = "";
   $("zoneFormNom").value = "";
   $("zoneFormFrais").value = 0;
@@ -2353,10 +2351,7 @@ $("zoneFormSaveBtn").addEventListener("click", async () => {
   hideError($("errorBox"));
   hideSuccess($("successBox"));
   const nom = $("zoneFormNom").value.trim();
-  if (!nom) {
-    showError($("errorBox"), t("zoneSaveRequired"));
-    return;
-  }
+  if (!MTForm.validate($("zoneFormCard"))) return;
   const btn = $("zoneFormSaveBtn");
   btn.disabled = true;
   try {
@@ -2461,12 +2456,12 @@ function boostCardHtml(r) {
   let actions = "";
   if (r.etat === "en_attente") {
     actions = `
-      <div class="boost-form">
-        <label>${escapeHtml(t("boostStartLabel"))}</label>
-        <input type="date" class="b-debut" value="${escapeAttr(r.debutSouhaite || "")}">
+      <div class="boost-form" data-mtform data-note-before=".actions-row">
+        <label class="mt-req" for="bdebut_${id}">${escapeHtml(t("boostStartLabel"))}</label>
+        <input type="date" class="b-debut" id="bdebut_${id}" aria-required="true" value="${escapeAttr(r.debutSouhaite || "")}">
         <label class="boost-check"><input type="checkbox" class="b-paye"> ${escapeHtml(t("boostPaidNow"))}</label>
-        <label>${escapeHtml(t("boostCommentLabel"))}</label>
-        <textarea class="b-comment"></textarea>
+        <label class="mt-req" for="bcomment_${id}">${escapeHtml(t("boostCommentLabel"))}</label>
+        <textarea class="b-comment" id="bcomment_${id}" aria-required="true"></textarea>
         <div class="actions-row">
           <button class="btn-action btn-activate" type="button" data-bact="approve" data-bid="${id}">${escapeHtml(t("boostAccept"))}</button>
           <button class="btn-action btn-confirm" type="button" data-bact="modify" data-bid="${id}">${escapeHtml(t("boostReturn"))}</button>
@@ -2520,6 +2515,7 @@ function renderBoostAdmin() {
   const f = $("boostFilter").value || "pending";
   const rows = BOOST_REQS.filter(r => boostMatches(r, f));
   list.innerHTML = rows.length ? rows.map(boostCardHtml).join("") : emptyStateHtml(t("boostNone"), "📣");
+  if (window.MTForm) MTForm.refresh(list);
 }
 
 $("boostFilter").addEventListener("change", renderBoostAdmin);
@@ -2556,8 +2552,13 @@ $("listBoostAdmin").addEventListener("click", async ev => {
     params = { action: "setPubSuspended", password: SESSION_PASSWORD, id: id, suspendue: btn.getAttribute("data-susp") };
   } else {
     const comment = card.querySelector(".b-comment").value.trim();
+    MTForm.clearAll(card);
+    if (act === "approve" && !card.querySelector(".b-debut").value) {
+      MTForm.fail(card.querySelector(".b-debut"), t("boostStartRequired"));
+      return;
+    }
     if ((act === "modify" || act === "refuse") && !comment) {
-      showError($("errorBox"), t("boostCommentRequired"));
+      MTForm.fail(card.querySelector(".b-comment"), t("boostCommentRequired"));
       return;
     }
     params = { action: "decidePubRequest", password: SESSION_PASSWORD, id: id, decision: act, comment: comment,

@@ -71,12 +71,12 @@
 
 <main>
   <!-- ÉTAPE 1 : identifiant + choix du canal -->
-  <section class="card" id="step1">
+  <section class="card" id="step1" data-mtform data-note-before=".channel-row">
     <h2 id="t1Title">Mot de passe oublié</h2>
     <p class="sub" id="t1Sub">Indique ton e-mail ou ton numéro de téléphone, on t'envoie un code.</p>
     <div class="field">
-      <label id="lblIdentifier">E-mail ou téléphone</label>
-      <input type="text" id="fIdentifier" placeholder="ex: 0555 xx xx xx ou toi@email.com">
+      <label id="lblIdentifier" for="fIdentifier">E-mail ou téléphone</label>
+      <input type="text" id="fIdentifier" data-required data-rule="identifier" placeholder="ex: 0555 xx xx xx ou toi@email.com">
     </div>
     <div class="channel-row">
       <button class="channel-btn active" id="channelEmail" type="button" data-channel="email">📧 <span id="channelEmailText">E-mail</span></button>
@@ -87,16 +87,16 @@
   </section>
 
   <!-- ÉTAPE 2 : code + nouveau mot de passe -->
-  <section class="card hidden" id="step2">
+  <section class="card hidden" id="step2" data-mtform data-note-before="#resetBtn">
     <h2 id="t2Title">Nouveau mot de passe</h2>
     <p class="sub" id="t2Sub">Entre le code reçu et choisis un nouveau mot de passe.</p>
     <div class="field">
-      <label id="lblCode">Code reçu</label>
-      <input type="text" id="fCode" inputmode="numeric" maxlength="6" placeholder="------">
+      <label id="lblCode" for="fCode">Code reçu</label>
+      <input type="text" id="fCode" data-required data-rule="code6" inputmode="numeric" maxlength="6" placeholder="------">
     </div>
     <div class="field">
-      <label id="lblNewPwd">Nouveau mot de passe</label>
-      <input type="password" id="fNewPwd" placeholder="8 caractères minimum">
+      <label id="lblNewPwd" for="fNewPwd">Nouveau mot de passe</label>
+      <input type="password" id="fNewPwd" data-required data-rule="min8" placeholder="8 caractères minimum">
     </div>
     <button class="btn-primary" id="resetBtn" type="button">Réinitialiser le mot de passe</button>
     <div class="error-box" id="error2"></div>
@@ -106,6 +106,7 @@
   <p class="foot-row"><a href="connexion.html" id="backLink">← Retour à la connexion</a></p>
 </main>
 
+<script src="/form-validate.js" defer></script>
 <script>
 const CONFIG = {
   API_URL: "https://script.google.com/macros/s/AKfycbwgXOyXERonv0Yk7X-uhoHuE1Fj26RiYHPR4Tnr7Z_1Ly8wWjsvlE5sp3JJRukRR4ZF/exec"
@@ -165,8 +166,8 @@ async function apiGet(p){ const qs = new URLSearchParams(p).toString(); const re
 
 $("sendCodeBtn").addEventListener("click", async () => {
   const box = $("error1"); box.classList.remove("show");
+  if (!MTForm.validate($("step1"))) return;
   IDENTIFIER = $("fIdentifier").value.trim();
-  if (!IDENTIFIER) { box.textContent = t("needIdentifier"); box.classList.add("show"); return; }
   $("sendCodeBtn").disabled = true; $("sendCodeBtn").textContent = "...";
   try {
     // Action backend à ajouter : requestPasswordReset (canal "email" ou "sms")
@@ -185,8 +186,7 @@ $("resetBtn").addEventListener("click", async () => {
   const ok2 = $("success2"); ok2.classList.remove("show");
   const code = $("fCode").value.trim();
   const pwd = $("fNewPwd").value;
-  if (!code) { box.textContent = t("needCode"); box.classList.add("show"); return; }
-  if (pwd.length < 8) { box.textContent = t("needPwd"); box.classList.add("show"); return; }
+  if (!MTForm.validate($("step2"))) return;
   $("resetBtn").disabled = true; $("resetBtn").textContent = "...";
   try {
     // Action backend à ajouter : resetPassword

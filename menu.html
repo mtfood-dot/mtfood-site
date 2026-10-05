@@ -330,6 +330,7 @@
   .install-bar .go{background:var(--gold-500);color:var(--blue-900);}
   .install-bar .no{background:transparent;color:#fff;opacity:.7;padding:9px 6px;}
 </style>
+<script src="/form-validate.js" defer></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
@@ -356,10 +357,10 @@ if ("serviceWorker" in navigator) {
 
 <div class="zone-check" id="zoneCheck">
   <button class="zone-check-toggle" id="zoneCheckToggle" type="button">📍 <span id="zoneCheckToggleText">Vérifier si on livre chez toi</span></button>
-  <div class="zone-check-panel hidden" id="zoneCheckPanel">
-    <label id="zoneCheckLabel">Ton adresse ou ton quartier</label>
+  <div class="zone-check-panel hidden" id="zoneCheckPanel" data-mtform data-note-before="#zoneCheckResult">
+    <label id="zoneCheckLabel" for="zoneCheckInput">Ton adresse ou ton quartier</label>
     <div class="zone-check-row">
-      <input type="text" id="zoneCheckInput" placeholder="Ex: Meftah Centre, Souakria...">
+      <input type="text" id="zoneCheckInput" data-required data-error-after=".zone-check-row" placeholder="Ex: Meftah Centre, Souakria...">
       <button id="zoneCheckBtn" type="button">Vérifier</button>
     </div>
     <div class="zone-check-result" id="zoneCheckResult"></div>
@@ -401,25 +402,25 @@ if ("serviceWorker" in navigator) {
 
 <!-- Overlay + formulaire de commande -->
 <div class="overlay" id="checkoutOverlay">
-  <div class="sheet">
+  <div class="sheet" id="checkoutForm" data-mtform data-note-before=".totals">
     <button class="close-x" data-close="checkoutOverlay">✕</button>
     <h2 id="checkoutTitle">Vos informations</h2>
 
     <div class="field">
-      <label id="lblName">Nom et prénom</label>
-      <input type="text" id="fName" placeholder="Ex:   Abdou ">
+      <label id="lblName" for="fName">Nom et prénom</label>
+      <input type="text" id="fName" data-required autocomplete="name" placeholder="Ex:   Abdou ">
     </div>
     <div class="field">
-      <label id="lblPhone">Téléphone</label>
-      <input type="tel" id="fPhone" placeholder="Ex: 0555 xx xx xx">
+      <label id="lblPhone" for="fPhone">Téléphone</label>
+      <input type="tel" id="fPhone" data-required data-rule="phone" autocomplete="tel" placeholder="Ex: 0555 xx xx xx">
     </div>
     <div class="field">
-      <label id="lblAddress">Adresse complète</label>
-      <textarea id="fAddress" rows="2" placeholder="Rue, quartier, repère..."></textarea>
+      <label id="lblAddress" for="fAddress">Adresse complète</label>
+      <textarea id="fAddress" data-required rows="2" placeholder="Rue, quartier, repère..."></textarea>
     </div>
     <div class="field">
       <label id="lblZone">Zone de livraison</label>
-      <div class="zone-options" id="zoneOptions"></div>
+      <div class="zone-options" id="zoneOptions" role="radiogroup" aria-labelledby="lblZone" aria-required="true" tabindex="-1"></div>
     </div>
     <div class="field">
       <label id="lblNotes">Remarque (optionnel)</label>
@@ -695,10 +696,10 @@ function checkZoneAvailability() {
   const raw = $("zoneCheckInput").value;
   const box = $("zoneCheckResult");
   box.classList.remove("show", "ok", "ko");
+  if (!MTForm.validate($("zoneCheckPanel"))) return;
   const query = normalizeForZoneSearch(raw);
   if (!query) {
-    box.textContent = t("zoneCheckEmpty");
-    box.classList.add("show", "ko");
+    MTForm.fail($("zoneCheckInput"), t("zoneCheckEmpty"));
     return;
   }
   const match = CONFIG.ZONES.find(z => {
@@ -1030,6 +1031,7 @@ function renderZoneOptions() {
       SELECTED_ZONE = CONFIG.ZONES.find(z => z.id === el.dataset.zone);
       $("zoneOptions").querySelectorAll(".zone-opt").forEach(o => o.classList.remove("selected"));
       el.classList.add("selected");
+      MTForm.clearError($("zoneOptions"));
       updateCheckoutTotals();
     });
   });
@@ -1128,11 +1130,12 @@ function submitOrder() {
 
   errBox.classList.remove("show");
 
-  if (!name || !phone || !address) {
-    return showCheckoutError(t("fillRequired"));
-  }
-  if (!SELECTED_ZONE) {
-    return showCheckoutError(t("chooseZone"));
+  const zoneBad = !SELECTED_ZONE;
+  const formOk = MTForm.validate($("checkoutForm"));
+  if (zoneBad) { MTForm.setError($("zoneOptions"), t("chooseZone")); }
+  if (!formOk || zoneBad) {
+    if (formOk) { MTForm.fail($("zoneOptions"), t("chooseZone")); }
+    return;
   }
   if (!Object.keys(CART).length) {
     return showCheckoutError(t("emptyCartErr"));
