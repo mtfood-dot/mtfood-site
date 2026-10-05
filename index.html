@@ -111,6 +111,17 @@
   .promo-placeholder .cta{display:inline-block;margin-top:10px;background:var(--gold-500);color:var(--blue-900);
     border-radius:999px;padding:8px 18px;font-weight:800;font-size:12.5px;}
 
+  .join-section{margin-top:26px;}
+  .join-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:520px){.join-grid{grid-template-columns:1fr;}}
+  .join-card{display:flex;flex-direction:column;align-items:flex-start;gap:6px;background:var(--card,#fff);
+    border:1.5px solid var(--border,#dfe6f0);border-radius:var(--radius-md);padding:16px;text-decoration:none;
+    color:var(--muted);font-size:12.5px;line-height:1.5;}
+  .join-card b{color:var(--blue-900);font-size:14.5px;}
+  .join-ico{font-size:24px;}
+  .join-cta{margin-top:6px;background:var(--gold-500);color:var(--blue-900);border-radius:999px;padding:8px 18px;font-weight:800;font-size:12.5px;}
+  .join-login{text-align:center;margin-top:12px;font-size:12px;color:var(--muted);}
+  .join-login a{color:var(--blue-700);font-weight:700;text-decoration:none;}
   .footer-note{max-width:720px;margin:34px auto 0;padding:0 16px;text-align:center;
     color:var(--muted);font-size:11.5px;font-weight:500;}
   .footer-legal-row{max-width:720px;margin:10px auto 0;padding:0 16px;text-align:center;font-size:11.5px;color:var(--muted);}
@@ -179,6 +190,27 @@ if ("serviceWorker" in navigator) {
     <div class="promo-title" id="promoTitle">Nos partenaires</div>
     <div class="promo-grid" id="promoGrid"></div>
   </div>
+
+  <div class="join-section">
+    <div class="promo-title" id="joinTitle">Rejoins MT Delivery</div>
+    <div class="join-grid">
+      <a class="join-card" href="devenir-partenaire.html">
+        <span class="join-ico">🍽️</span>
+        <b id="joinPartnerTitle">Restaurant : devenir partenaire</b>
+        <span id="joinPartnerText">Reçois des commandes et fais-toi livrer dans toute la zone.</span>
+        <span class="join-cta" id="joinPartnerCta">Inscrire mon restaurant</span>
+      </a>
+      <a class="join-card" href="inscription-livreur.html">
+        <span class="join-ico">🛵</span>
+        <b id="joinDriverTitle">Livreur : rejoins l'équipe</b>
+        <span id="joinDriverText">Livre les commandes de la zone et gagne de l'argent.</span>
+        <span class="join-cta" id="joinDriverCta">Devenir livreur</span>
+      </a>
+    </div>
+    <div class="join-login">
+      <a href="espace-partenaire.html" id="joinPartnerLogin">Espace partenaire</a> · <a href="espace-livreur.html" id="joinDriverLogin">Espace livreur</a>
+    </div>
+  </div>
 </main>
 
 <div class="footer-note" id="footerNote">MT Delivery · Meftah, Blida · Paiement à la livraison uniquement</div>
@@ -214,6 +246,15 @@ const I18N = {
     myAccountLinkTop: "👤 Mes commandes",
     footerNote: "MT Delivery · Meftah, Blida · Paiement à la livraison uniquement",
     footerCguLink: "Conditions d'utilisation",
+    joinTitle: "Rejoins MT Delivery",
+    joinPartnerTitle: "Restaurant : devenir partenaire",
+    joinPartnerText: "Reçois des commandes et fais-toi livrer dans toute la zone.",
+    joinPartnerCta: "Inscrire mon restaurant",
+    joinDriverTitle: "Livreur : rejoins l'équipe",
+    joinDriverText: "Livre les commandes de la zone et gagne de l'argent.",
+    joinDriverCta: "Devenir livreur",
+    joinPartnerLogin: "Espace partenaire",
+    joinDriverLogin: "Espace livreur",
     footerPrivacyLink: "Confidentialité",
     zoneCheckToggleText: "Vérifier si on livre chez toi",
     zoneCheckLabel: "Ton adresse ou ton quartier",
@@ -239,6 +280,15 @@ const I18N = {
     myAccountLinkTop: "👤 طلباتي",
     footerNote: "إم تي دليفري · مفتاح، البليدة · الدفع عند الاستلام فقط",
     footerCguLink: "شروط الاستخدام",
+    joinTitle: "انضم إلى إم تي دليفري",
+    joinPartnerTitle: "مطعم: كن شريكًا",
+    joinPartnerText: "استقبل الطلبات واستفد من التوصيل في كامل المنطقة.",
+    joinPartnerCta: "سجّل مطعمي",
+    joinDriverTitle: "موصّل: انضم إلى الفريق",
+    joinDriverText: "وصّل طلبات المنطقة واربح المال.",
+    joinDriverCta: "كن موصّلًا",
+    joinPartnerLogin: "فضاء الشريك",
+    joinDriverLogin: "فضاء الموصّل",
     footerPrivacyLink: "الخصوصية",
     zoneCheckToggleText: "تحقق هل نوصل عندك",
     zoneCheckLabel: "عنوانك أو حيّك",
@@ -422,6 +472,7 @@ function applyLanguage() {
   $("ctaOrder").textContent = t("ctaOrder");
   $("footerNote").textContent = t("footerNote");
   $("footerCguLink").textContent = t("footerCguLink");
+  Object.keys(['joinTitle', 'joinPartnerTitle', 'joinPartnerText', 'joinPartnerCta', 'joinDriverTitle', 'joinDriverText', 'joinDriverCta', 'joinPartnerLogin', 'joinDriverLogin']).forEach(function(k){ var el = $(k); if (el) el.textContent = t(k); });
   $("footerPrivacyLink").textContent = t("footerPrivacyLink");
   $("zoneCheckToggleText").textContent = t("zoneCheckToggleText");
   $("zoneCheckLabel").textContent = t("zoneCheckLabel");
