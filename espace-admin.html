@@ -167,6 +167,11 @@
   .status-badge.enattente{background:var(--gold-100);color:var(--gold-600);}
   .status-badge.refuse{background:#fdeceb;color:var(--danger);}
   .btn-activate{background:var(--green);color:#fff;}
+  .tab-count{display:inline-block;min-width:18px;height:18px;line-height:18px;padding:0 5px;margin-inline-start:6px;
+    border-radius:9px;background:var(--danger);color:#fff;font-size:11px;font-weight:800;text-align:center;vertical-align:middle;}
+  .requests-block{background:#fff8e6;border:1.5px solid #f4d58d;border-radius:var(--radius-md);padding:12px 12px 2px;margin-bottom:16px;}
+  .requests-block .subheading{margin-top:0;}
+  .btn-refuse{background:#fff;border-color:#f3c6c1;color:var(--danger);}
   .btn-deactivate{background:#fff;border-color:#f3c6c1;color:var(--danger);}
   .pin-row{display:flex;gap:8px;margin-top:10px;align-items:center;}
   .pin-row input{width:90px;padding:8px 10px;border:1.5px solid var(--border);border-radius:10px;
@@ -332,6 +337,10 @@ if ("serviceWorker" in navigator) {
       <div class="refresh-row">
         <div></div>
         <button class="btn-refresh" id="refreshPartnersBtn" type="button"><span id="refreshPartnersLabel">↻ Actualiser</span></button>
+      </div>
+      <div class="requests-block hidden" id="requestsBlock">
+        <div class="subheading" id="subheadingRequests"></div>
+        <div id="listRequests"></div>
       </div>
       <div class="subheading" id="subheadingPartners"></div>
       <div id="listPartners"></div>
@@ -551,6 +560,11 @@ const I18N = {
     tabPartners: "Partenaires",
     subheadingPartners: "Partenaires",
     subheadingDrivers: "Livreurs",
+    subheadingRequests: "Demandes en attente",
+    btnAccept: "✓ Accepter",
+    btnRefuse: "✕ Refuser",
+    kindDriver: "Livreur",
+    kindPartner: "Partenaire",
     noPartners: "Aucun partenaire.",
     noDrivers: "Aucun livreur.",
     statusActif: "Actif",
@@ -693,6 +707,11 @@ const I18N = {
     tabPartners: "الشركاء",
     subheadingPartners: "الشركاء",
     subheadingDrivers: "السائقون",
+    subheadingRequests: "طلبات قيد الانتظار",
+    btnAccept: "✓ قبول",
+    btnRefuse: "✕ رفض",
+    kindDriver: "سائق",
+    kindPartner: "شريك",
     noPartners: "لا يوجد شركاء.",
     noDrivers: "لا يوجد سائقون.",
     statusActif: "نشط",
@@ -823,6 +842,8 @@ function applyLanguage() {
   $("refreshPartnersLabel").textContent = t("refreshLabel");
   $("subheadingPartners").textContent = t("subheadingPartners");
   $("subheadingDrivers").textContent = t("subheadingDrivers");
+  $("subheadingRequests").textContent = t("subheadingRequests");
+  updateRequestsUi();
   $("addDriverToggleLabel").textContent = DRIVER_FORM_MODE ? t("addDriverToggleClose") : t("addDriverToggleOpen");
   $("lblDriverNom").textContent = t("lblDriverNom");
   $("lblDriverTelephone").textContent = t("lblDriverTelephone");
@@ -991,6 +1012,7 @@ function enterApp() {
   loadOrders();
   loadPendingItems();
   loadDrivers();
+  loadPartners();
 }
 
 $("refreshBtn").addEventListener("click", loadOrders);
@@ -1302,6 +1324,7 @@ async function loadPartners() {
     const data = await apiGet({ action: "getPartners", password: SESSION_PASSWORD });
     if (data.success) {
       PARTNERS = data.partners || [];
+      updateRequestsUi();
       if (CURRENT_TAB === "partners") renderPartners();
     } else if (CURRENT_TAB === "partners") {
       showError($("errorBox"), data.error || t("loadPartnersFailedGeneric"));
@@ -1316,6 +1339,7 @@ async function loadDrivers() {
     const data = await apiGet({ action: "getDriversExtended", password: SESSION_PASSWORD });
     if (data.success) {
       DRIVERS = data.drivers || [];
+      updateRequestsUi();
       if (CURRENT_TAB === "partners") renderDrivers();
       if (CURRENT_TAB === "orders") renderOrders();
     } else if (CURRENT_TAB === "partners") {
@@ -1415,6 +1439,58 @@ function wireEntityButtons(containerId) {
       onSavePin(btn.dataset.savepinKind, btn.dataset.savepinTel, input, btn);
     });
   });
+}
+
+/* ---- Demandes en attente (livreurs + partenaires) ---- */
+function isPendingStatus(statut) {
+  const s = String(statut || "").trim().toLowerCase();
+  return s !== "actif" && s !== "refuse" && s !== "refusé";
+}
+
+function pendingRequests() {
+  const reqs = [];
+  DRIVERS.forEach(d => { if (isPendingStatus(d.statut)) reqs.push({ kind: "driver", item: d }); });
+  PARTNERS.forEach(p => { if (isPendingStatus(p.statut)) reqs.push({ kind: "partner", item: p }); });
+  return reqs;
+}
+
+function requestCardHtml(r) {
+  const x = r.item;
+  const tel = escapeAttr(x.telephone);
+  const kindLabel = r.kind === "driver" ? t("kindDriver") : t("kindPartner");
+  const meta = r.kind === "driver"
+    ? `${escapeHtml(x.zone || "")} · ${escapeHtml(x.vehicule || "")} · ${escapeHtml(x.telephone || "")}`
+    : `${escapeHtml(x.type || "")} · ${escapeHtml(x.zone || "")} · ${escapeHtml(x.telephone || "")}`;
+  return `
+    <div class="partner-card">
+      <div class="nom">${escapeHtml(x.nom || "")} <span class="status-badge enattente">${escapeHtml(kindLabel)}</span></div>
+      <div class="meta">${meta}</div>
+      <div class="actions-row">
+        <button class="btn-action btn-activate" type="button" data-toggle-kind="${r.kind}" data-toggle-tel="${tel}" data-new-status="Actif">${escapeHtml(t("btnAccept"))}</button>
+        <button class="btn-action btn-refuse" type="button" data-toggle-kind="${r.kind}" data-toggle-tel="${tel}" data-new-status="Refuse">${escapeHtml(t("btnRefuse"))}</button>
+      </div>
+    </div>
+  `;
+}
+
+function updateRequestsUi() {
+  const reqs = pendingRequests();
+  const block = $("requestsBlock");
+  if (block) {
+    block.classList.toggle("hidden", reqs.length === 0);
+    $("listRequests").innerHTML = reqs.map(requestCardHtml).join("");
+    wireEntityButtons("listRequests");
+  }
+  const label = $("tabPartnersLabel");
+  if (label) {
+    label.textContent = t("tabPartners");
+    if (reqs.length) {
+      const badge = document.createElement("span");
+      badge.className = "tab-count";
+      badge.textContent = String(reqs.length);
+      label.appendChild(badge);
+    }
+  }
 }
 
 function renderPartners() {
@@ -1536,6 +1612,7 @@ async function onToggleStatus(kind, telephone, newStatus, btnEl) {
       const item = list.find(x => String(x.telephone) === String(telephone));
       if (item) item.statut = newStatus;
       if (kind === "partner") renderPartners(); else renderDrivers();
+      updateRequestsUi();
       showSuccess($("successBox"), t("statusUpdated"));
     } else {
       showError($("errorBox"), data.error || t("updateStatusFailedGeneric"));
