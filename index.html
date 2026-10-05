@@ -123,8 +123,6 @@
   .join-card b{color:var(--blue-900);font-size:14.5px;}
   .join-ico{font-size:24px;}
   .join-cta{margin-top:6px;background:var(--gold-500);color:var(--blue-900);border-radius:999px;padding:8px 18px;font-weight:800;font-size:12.5px;}
-  .join-login{text-align:center;margin-top:12px;font-size:12px;color:var(--muted);}
-  .join-login a{color:var(--blue-700);font-weight:700;text-decoration:none;}
   .footer-note{max-width:720px;margin:34px auto 0;padding:0 16px;text-align:center;
     color:var(--muted);font-size:11.5px;font-weight:500;}
   .footer-legal-row{max-width:720px;margin:10px auto 0;padding:0 16px;text-align:center;font-size:11.5px;color:var(--muted);}
@@ -214,9 +212,6 @@ if ("serviceWorker" in navigator) {
         <span class="join-cta" id="joinDriverCta">Devenir livreur</span>
       </a>
     </div>
-    <div class="join-login">
-      <a href="espace-partenaire.html" id="joinPartnerLogin">Espace partenaire</a> · <a href="espace-livreur.html" id="joinDriverLogin">Espace livreur</a>
-    </div>
   </div>
 </main>
 
@@ -224,7 +219,6 @@ if ("serviceWorker" in navigator) {
 <div class="footer-legal-row" id="footerLegalRow">
   <a href="cgu.html" id="footerCguLink">Conditions d'utilisation</a> · <a href="confidentialite.html" id="footerPrivacyLink">Confidentialité</a>
 </div>
-<div style="text-align:center;margin-top:6px;"><a class="footer-admin-link" href="espace-admin.html">Admin</a></div>
 
 <script src="/form-validate.js" defer></script>
 <script>
@@ -263,8 +257,6 @@ const I18N = {
     joinDriverTitle: "Livreur : rejoins l'équipe",
     joinDriverText: "Livre les commandes de la zone et gagne de l'argent.",
     joinDriverCta: "Devenir livreur",
-    joinPartnerLogin: "Espace partenaire",
-    joinDriverLogin: "Espace livreur",
     footerPrivacyLink: "Confidentialité",
     zoneCheckToggleText: "Vérifier si on livre chez toi",
     zoneCheckLabel: "Ton adresse ou ton quartier",
@@ -299,8 +291,6 @@ const I18N = {
     joinDriverTitle: "موصّل: انضم إلى الفريق",
     joinDriverText: "وصّل طلبات المنطقة واربح المال.",
     joinDriverCta: "كن موصّلًا",
-    joinPartnerLogin: "فضاء الشريك",
-    joinDriverLogin: "فضاء الموصّل",
     footerPrivacyLink: "الخصوصية",
     zoneCheckToggleText: "تحقق هل نوصل عندك",
     zoneCheckLabel: "عنوانك أو حيّك",
@@ -486,7 +476,7 @@ function applyLanguage() {
   $("headJoinPartner").textContent = t("headJoinPartner");
   $("headJoinDriver").textContent = t("headJoinDriver");
   $("footerCguLink").textContent = t("footerCguLink");
-  Object.keys(['joinTitle', 'joinPartnerTitle', 'joinPartnerText', 'joinPartnerCta', 'joinDriverTitle', 'joinDriverText', 'joinDriverCta', 'joinPartnerLogin', 'joinDriverLogin']).forEach(function(k){ var el = $(k); if (el) el.textContent = t(k); });
+  ['joinTitle', 'joinPartnerTitle', 'joinPartnerText', 'joinPartnerCta', 'joinDriverTitle', 'joinDriverText', 'joinDriverCta'].forEach(function(k){ var el = $(k); if (el) el.textContent = t(k); });
   $("footerPrivacyLink").textContent = t("footerPrivacyLink");
   $("zoneCheckToggleText").textContent = t("zoneCheckToggleText");
   $("zoneCheckLabel").textContent = t("zoneCheckLabel");
