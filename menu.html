@@ -97,6 +97,9 @@
     text-decoration:none;transition:background .15s ease;
   }
   header.top .partner-space-link-top:active{background:var(--gold-600);}
+  header.top .join-links-top{margin-top:8px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap;position:relative;z-index:1;}
+  header.top .join-links-top a{display:inline-flex;align-items:center;gap:6px;background:var(--gold-500);color:var(--blue-900);
+    padding:7px 14px;border-radius:999px;font-weight:800;font-size:12.5px;text-decoration:none;}
   header.top .account-link-top{
     display:inline-flex;align-items:center;gap:6px;
     background:var(--blue-100);border:1.5px solid var(--blue-600);color:var(--blue-700);
@@ -352,6 +355,10 @@ if ("serviceWorker" in navigator) {
     <a class="phone-link" id="headerPhone" href="tel:0560 78 84 97">📞 0560 78 84 97</a>
     <a class="account-link-top" id="accountLinkTop" href="connexion.html">👤 Mon compte</a>
   </div>
+  <div class="join-links-top">
+    <a href="devenir-partenaire.html">🍽️ <span id="headJoinPartner">Devenir partenaire</span></a>
+    <a href="inscription-livreur.html">🛵 <span id="headJoinDriver">Devenir livreur</span></a>
+  </div>
   <button class="lang-toggle" id="langToggle" type="button">AR</button>
 </header>
 
@@ -376,7 +383,7 @@ if ("serviceWorker" in navigator) {
 
 <div class="footer-note" id="footerNote">MT Delivery · Meftah, Blida · Paiement à la livraison uniquement</div>
 <div class="footer-legal-row" id="footerLegalRow">
-  <a href="cgu.html" id="footerCguLink">Conditions d'utilisation</a> · <a href="confidentialite.html" id="footerPrivacyLink">Confidentialité</a>
+  <a href="cgu.html" id="footerCguLink">Conditions d'utilisation</a> · <a href="confidentialite.html" id="footerPrivacyLink">Confidentialité</a> · <a href="devenir-partenaire.html" id="footerJoinLink">Devenir partenaire</a> · <a href="inscription-livreur.html" id="footerDriverLink">Devenir livreur</a>
 </div>
 <div style="text-align:center;margin-top:6px;"><a class="footer-admin-link" href="espace-admin.html">Admin</a></div>
 
@@ -489,6 +496,8 @@ const I18N = {
   fr: {
     toggleLabel: "AR",
     tagline: "Commandez, on vous livre",
+    headJoinPartner: "Devenir partenaire",
+    headJoinDriver: "Devenir livreur",
     footerNote: "MT Delivery · Meftah, Blida · Paiement à la livraison uniquement",
     driverLinkTop: "🛵 Devenir livreur",
     driverSpaceLinkTop: "🔑 Espace livreur",
@@ -544,6 +553,8 @@ const I18N = {
     myAccountLinkTop: "👤 Mes commandes",
     footerCguLink: "Conditions d'utilisation",
     footerPrivacyLink: "Confidentialité",
+    footerJoinLink: "Devenir partenaire",
+    footerDriverLink: "Devenir livreur",
     zoneCheckToggleText: "Vérifier si on livre chez toi",
     zoneCheckLabel: "Ton adresse ou ton quartier",
     zoneCheckPlaceholder: "Ex: Meftah Centre, Souakria...",
@@ -558,6 +569,8 @@ const I18N = {
   ar: {
     toggleLabel: "FR",
     tagline: "اطلب ونوصلك",
+    headJoinPartner: "كن شريكًا",
+    headJoinDriver: "كن موصّلًا",
     footerNote: "إم تي دليفري · مفتاح، البليدة · الدفع عند الاستلام فقط",
     driverLinkTop: "🛵 كن موصلاً",
     driverSpaceLinkTop: "🔑 مساحة الموصل",
@@ -613,6 +626,8 @@ const I18N = {
     myAccountLinkTop: "👤 طلباتي",
     footerCguLink: "شروط الاستخدام",
     footerPrivacyLink: "الخصوصية",
+    footerJoinLink: "كن شريكًا",
+    footerDriverLink: "كن موصّلًا",
     zoneCheckToggleText: "تحقق هل نوصل عندك",
     zoneCheckLabel: "عنوانك أو حيّك",
     zoneCheckPlaceholder: "مثال: مفتاح وسط، سواقرية...",
@@ -727,6 +742,8 @@ function applyLanguage() {
   $("langToggle").textContent = t("toggleLabel");
   $("tagline").textContent = t("tagline");
   $("footerNote").textContent = t("footerNote");
+  $("headJoinPartner").textContent = t("headJoinPartner");
+  $("headJoinDriver").textContent = t("headJoinDriver");
   $("cartBarUnit").textContent = t("cartBarUnit");
   $("openCartBtn").textContent = t("viewCart");
   $("cartTitle").textContent = t("cartTitle");
@@ -756,6 +773,8 @@ function applyLanguage() {
   $("closeSuccessBtn").textContent = t("close");
   $("footerCguLink").textContent = t("footerCguLink");
   $("footerPrivacyLink").textContent = t("footerPrivacyLink");
+  $("footerJoinLink").textContent = t("footerJoinLink");
+  $("footerDriverLink").textContent = t("footerDriverLink");
   $("zoneCheckToggleText").textContent = t("zoneCheckToggleText");
   $("zoneCheckLabel").textContent = t("zoneCheckLabel");
   $("zoneCheckInput").placeholder = t("zoneCheckPlaceholder");
