@@ -375,7 +375,7 @@ if ("serviceWorker" in navigator) {
 
 <div class="footer-note" id="footerNote">MT Delivery · Meftah, Blida · Paiement à la livraison uniquement</div>
 <div class="footer-legal-row" id="footerLegalRow">
-  <a href="cgu.html" id="footerCguLink">Conditions d'utilisation</a> · <a href="confidentialite.html" id="footerPrivacyLink">Confidentialité</a>
+  <a href="cgu.html" id="footerCguLink">Conditions d'utilisation</a> · <a href="confidentialite.html" id="footerPrivacyLink">Confidentialité</a> · <a href="devenir-partenaire.html" id="footerJoinLink">Devenir partenaire</a> · <a href="inscription-livreur.html" id="footerDriverLink">Devenir livreur</a>
 </div>
 <div style="text-align:center;margin-top:6px;"><a class="footer-admin-link" href="espace-admin.html">Admin</a></div>
 
@@ -543,6 +543,8 @@ const I18N = {
     myAccountLinkTop: "👤 Mes commandes",
     footerCguLink: "Conditions d'utilisation",
     footerPrivacyLink: "Confidentialité",
+    footerJoinLink: "Devenir partenaire",
+    footerDriverLink: "Devenir livreur",
     zoneCheckToggleText: "Vérifier si on livre chez toi",
     zoneCheckLabel: "Ton adresse ou ton quartier",
     zoneCheckPlaceholder: "Ex: Meftah Centre, Souakria...",
@@ -612,6 +614,8 @@ const I18N = {
     myAccountLinkTop: "👤 طلباتي",
     footerCguLink: "شروط الاستخدام",
     footerPrivacyLink: "الخصوصية",
+    footerJoinLink: "كن شريكًا",
+    footerDriverLink: "كن موصّلًا",
     zoneCheckToggleText: "تحقق هل نوصل عندك",
     zoneCheckLabel: "عنوانك أو حيّك",
     zoneCheckPlaceholder: "مثال: مفتاح وسط، سواقرية...",
@@ -755,6 +759,8 @@ function applyLanguage() {
   $("closeSuccessBtn").textContent = t("close");
   $("footerCguLink").textContent = t("footerCguLink");
   $("footerPrivacyLink").textContent = t("footerPrivacyLink");
+  $("footerJoinLink").textContent = t("footerJoinLink");
+  $("footerDriverLink").textContent = t("footerDriverLink");
   $("zoneCheckToggleText").textContent = t("zoneCheckToggleText");
   $("zoneCheckLabel").textContent = t("zoneCheckLabel");
   $("zoneCheckInput").placeholder = t("zoneCheckPlaceholder");
