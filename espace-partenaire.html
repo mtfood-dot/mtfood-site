@@ -307,12 +307,9 @@ if ("serviceWorker" in navigator) {
         <div class="boost-offers" id="boostOffers"></div>
         <div class="boost-hint" id="boostFormatHint"></div>
         <div class="field">
-          <label id="lblBNom"></label>
-          <input type="text" id="bNom" maxlength="60">
-        </div>
-        <div class="field">
-          <label id="lblBPrix"></label>
-          <input type="number" id="bPrix" inputmode="numeric">
+          <label id="lblBItem"></label>
+          <select id="bItem"></select>
+          <div class="boost-note" id="bItemNote"></div>
         </div>
         <div class="field">
           <label id="lblBTexte"></label>
@@ -323,10 +320,6 @@ if ("serviceWorker" in navigator) {
           <input type="url" id="bImage" placeholder="https://...">
         </div>
         <img id="boostPreview" class="boost-preview" alt="">
-        <div class="field">
-          <label id="lblBLien"></label>
-          <input type="url" id="bLien" placeholder="https://...">
-        </div>
         <div class="field">
           <label id="lblBDebut"></label>
           <input type="date" id="bDebut">
@@ -388,11 +381,13 @@ const I18N = {
     boostOffersTitle: "Choisis une durée",
     boostFormatHint: "Visuel carré 800×800 px (JPG, PNG ou WebP, 500 Ko max), à coller sous forme de lien https. Jusqu'à 6 annonceurs en rotation.",
     boostDays: "jours",
-    lblBNom: "Nom du plat à mettre en avant",
-    lblBPrix: "Prix du plat (DA, optionnel)",
+    lblBItem: "Plat à mettre en avant (choisi dans ton menu)",
+    boostPickItem: "— Choisis un plat —",
+    boostNoItems: "Tu n'as encore aucun plat publié dans ton menu. Ajoute-en un dans l'onglet Proposer.",
+    boostItemRequired: "Choisis le plat à mettre en avant.",
+    boostItemNote: "Un clic du client sur ta publicité ajoute ce plat à son panier.",
     lblBTexte: "Texte court (120 caractères max, optionnel)",
     lblBImage: "Lien de l'image (https)",
-    lblBLien: "Lien de destination (optionnel)",
     lblBDebut: "Date de début souhaitée",
     boostSend: "Envoyer la demande",
     boostResend: "Corriger et renvoyer",
@@ -400,7 +395,6 @@ const I18N = {
     boostMyTitle: "Mes demandes",
     boostNone: "Aucune demande de publicité pour le moment.",
     boostPickOffer: "Choisis une durée.",
-    boostNomRequired: "Indique le nom du plat.",
     boostImageRequired: "Colle le lien https de l'image.",
     boostDateRequired: "Choisis une date de début (aujourd'hui ou plus tard).",
     boostSent: "Demande envoyée. Tu seras informé de la décision ici.",
@@ -463,11 +457,13 @@ const I18N = {
     boostOffersTitle: "اختر المدة",
     boostFormatHint: "صورة مربعة 800×800 بكسل (JPG أو PNG أو WebP، 500 كيلوبايت كحد أقصى) تُلصق على شكل رابط https. حتى 6 معلنين بالتناوب.",
     boostDays: "أيام",
-    lblBNom: "اسم الطبق المراد إبرازه",
-    lblBPrix: "سعر الطبق (دج، اختياري)",
+    lblBItem: "الطبق المراد إبرازه (من قائمتك)",
+    boostPickItem: "— اختر طبقًا —",
+    boostNoItems: "ليس لديك أي طبق منشور في قائمتك بعد. أضف طبقًا من تبويب اقتراح طبق.",
+    boostItemRequired: "اختر الطبق المراد إبرازه.",
+    boostItemNote: "عند نقر الزبون على إعلانك يُضاف هذا الطبق إلى سلته.",
     lblBTexte: "نص قصير (120 حرفًا كحد أقصى، اختياري)",
     lblBImage: "رابط الصورة (https)",
-    lblBLien: "رابط الوجهة (اختياري)",
     lblBDebut: "تاريخ البدء المطلوب",
     boostSend: "إرسال الطلب",
     boostResend: "تصحيح وإعادة الإرسال",
@@ -475,7 +471,6 @@ const I18N = {
     boostMyTitle: "طلباتي",
     boostNone: "لا توجد طلبات إعلان حاليًا.",
     boostPickOffer: "اختر المدة.",
-    boostNomRequired: "أدخل اسم الطبق.",
     boostImageRequired: "الصق رابط الصورة (https).",
     boostDateRequired: "اختر تاريخ بدء (اليوم أو بعده).",
     boostSent: "تم إرسال الطلب. ستجد القرار هنا.",
@@ -722,6 +717,7 @@ async function loadMenu() {
 
 function renderMenu() {
   $("countMenu").textContent = MENU_ITEMS.length;
+  renderBoostItemSelect();
   $("listMenu").innerHTML = MENU_ITEMS.length
     ? MENU_ITEMS.map(itemCardHtml).join("")
     : emptyStateHtml(t("noItems"), "🍽️");
@@ -875,11 +871,9 @@ function applyBoostLabels() {
   $("boostInfo").textContent = t("boostInfo");
   $("boostOffersTitle").textContent = t("boostOffersTitle");
   $("boostFormatHint").textContent = t("boostFormatHint");
-  $("lblBNom").textContent = t("lblBNom");
-  $("lblBPrix").textContent = t("lblBPrix");
+  $("lblBItem").textContent = t("lblBItem");
   $("lblBTexte").textContent = t("lblBTexte");
   $("lblBImage").textContent = t("lblBImage");
-  $("lblBLien").textContent = t("lblBLien");
   $("lblBDebut").textContent = t("lblBDebut");
   $("boostSendBtn").textContent = BOOST_EDIT_ID ? t("boostResend") : t("boostSend");
   $("boostCancelBtn").textContent = t("boostCancel");
@@ -912,7 +906,24 @@ function boostBadgeClass(r) {
   return "attente";
 }
 
+function boostMenuItems() {
+  return MENU_ITEMS.filter(i => {
+    const st = String(i.statut || "Publié").trim();
+    return st !== "En attente" && st !== "Refusé" && st !== "Refuse";
+  });
+}
+function renderBoostItemSelect(selectedId) {
+  const sel = $("bItem");
+  const keep = selectedId != null ? String(selectedId) : sel.value;
+  const items = boostMenuItems();
+  sel.innerHTML = `<option value="">${escapeHtml(t("boostPickItem"))}</option>` +
+    items.map(i => `<option value="${escapeAttr(i.id)}">${escapeHtml(i.nom)} — ${escapeHtml(String(i.prix || 0))} DA</option>`).join("");
+  if (keep && items.some(i => String(i.id) === keep)) sel.value = keep;
+  $("bItemNote").textContent = items.length ? t("boostItemNote") : t("boostNoItems");
+}
+
 function renderBoost() {
+  renderBoostItemSelect();
   const offersBox = $("boostOffers");
   offersBox.innerHTML = BOOST_OFFERS.map(o =>
     `<button type="button" class="boost-offer${o.id === BOOST_SEL ? " sel" : ""}" data-offer="${escapeAttr(o.id)}">` +
@@ -940,11 +951,8 @@ function renderBoost() {
 }
 
 function fillBoostForm(r, editing) {
-  $("bNom").value = r.nomPlat || "";
-  $("bPrix").value = r.prixPlat === "" || r.prixPlat == null ? "" : r.prixPlat;
   $("bTexte").value = r.texte || "";
   $("bImage").value = r.imageUrl || "";
-  $("bLien").value = r.lienUrl || "";
   $("bDebut").value = todayStr();
   if (r.offreId && BOOST_OFFERS.some(o => o.id === r.offreId)) BOOST_SEL = r.offreId;
   BOOST_EDIT_ID = editing ? r.id : "";
@@ -952,6 +960,7 @@ function fillBoostForm(r, editing) {
   applyBoostLabels();
   updateBoostPreview();
   renderBoost();
+  renderBoostItemSelect(r.itemId || "");
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 function resetBoostForm() {
@@ -990,22 +999,23 @@ $("boostSendBtn").addEventListener("click", onBoostSend);
 async function onBoostSend() {
   hideError($("errorBox"));
   hideSuccess($("successBox"));
-  const nomPlat = $("bNom").value.trim();
+  const chosen = MENU_ITEMS.find(i => String(i.id) === $("bItem").value);
   const imageUrl = $("bImage").value.trim();
   const debutSouhaite = $("bDebut").value;
   if (!BOOST_SEL && !BOOST_EDIT_ID) { showError($("errorBox"), t("boostPickOffer")); return; }
-  if (!nomPlat) { showError($("errorBox"), t("boostNomRequired")); return; }
+  if (!chosen) { showError($("errorBox"), t("boostItemRequired")); return; }
   if (!/^https:\/\/\S+$/i.test(imageUrl)) { showError($("errorBox"), t("boostImageRequired")); return; }
   if (!debutSouhaite || debutSouhaite < todayStr()) { showError($("errorBox"), t("boostDateRequired")); return; }
 
   const params = {
     action: BOOST_EDIT_ID ? "resubmitPubRequest" : "submitPubRequest",
     telephone: SESSION.telephone,
-    nomPlat: nomPlat,
-    prixPlat: $("bPrix").value.trim(),
+    nomPlat: chosen.nom,
+    prixPlat: String(chosen.prix || ""),
+    itemId: String(chosen.id),
     texte: $("bTexte").value.trim(),
     imageUrl: imageUrl,
-    lienUrl: $("bLien").value.trim(),
+    lienUrl: "",
     debutSouhaite: debutSouhaite
   };
   if (BOOST_EDIT_ID) params.id = BOOST_EDIT_ID; else params.offreId = BOOST_SEL;

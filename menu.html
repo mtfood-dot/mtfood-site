@@ -179,6 +179,8 @@
     border:1px solid var(--border);transition:transform .18s ease, box-shadow .18s ease;
   }
   .card:active{transform:scale(.98);}
+  @keyframes cardPulse{0%,100%{box-shadow:var(--shadow-sm);}50%{box-shadow:0 0 0 4px var(--gold-500);}}
+  .card.pulse{animation:cardPulse 1.2s ease 3;}
   .card .photo{
     width:100%;aspect-ratio:4/3;
     background:linear-gradient(135deg,var(--blue-100),#f7f2e2) center/cover no-repeat;
@@ -801,6 +803,7 @@ function loadMenu() {
       renderTabs();
       renderGrid();
       applyReorderIfAny();
+      applyFeaturedItem();
     })
     .catch(err => {
       showEmpty("loadError");
@@ -811,6 +814,27 @@ function loadMenu() {
 /* ============================================================
    RECOMMANDER UNE COMMANDE PASSÉE (depuis espace-client.html)
    ============================================================ */
+/* Arrivée depuis une carte « À la une » : menu.html?item=<id> → on se place sur le plat
+   et on l'ajoute au panier (une seule fois, le paramètre est retiré de l'adresse). */
+function applyFeaturedItem() {
+  let id = null;
+  try { id = new URLSearchParams(location.search).get("item"); } catch (e) {}
+  if (!id) return;
+  try { history.replaceState(null, "", location.pathname); } catch (e) {}
+  const item = MENU.find(i => String(i.id) === String(id));
+  if (!item) return;
+  ACTIVE_CATEGORY = ALL_CAT;
+  renderTabs();
+  renderGrid();
+  if (!CART[item.id]) changeQty(item.id, 1);
+  const ctrl = $("ctrl-" + item.id);
+  const card = ctrl && ctrl.closest(".card");
+  if (card) {
+    card.classList.add("pulse");
+    setTimeout(() => card.scrollIntoView({ behavior: "smooth", block: "center" }), 150);
+  }
+}
+
 function applyReorderIfAny() {
   let panier;
   try { panier = JSON.parse(localStorage.getItem("mtd_reorder_cart") || "null"); } catch(e) { panier = null; }
