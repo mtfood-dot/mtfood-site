@@ -82,6 +82,19 @@
     font-size:15px;font-family:inherit;background:#fbfcfe;transition:border-color .15s ease;
   }
   .field textarea{resize:vertical;min-height:70px;}
+  .photo-pick{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .photo-pick input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;}
+  .photo-btn{display:inline-flex;align-items:center;gap:8px;background:var(--blue-100);color:var(--blue-900);
+    border:1.5px dashed var(--blue-600);border-radius:var(--radius-sm);padding:11px 16px;font-weight:800;font-size:13.5px;
+    cursor:pointer;font-family:inherit;}
+  .photo-btn:focus-visible{outline:3px solid var(--gold-500);outline-offset:2px;}
+  .photo-preview{display:flex;align-items:center;gap:12px;margin-top:10px;}
+  .photo-preview img{width:96px;height:96px;object-fit:cover;border-radius:12px;border:1.5px solid var(--blue-100);background:#fff;}
+  .photo-remove{background:none;border:none;color:var(--danger);font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;text-decoration:underline;}
+  .photo-hint{margin:6px 0 0;font-size:12px;color:var(--muted);line-height:1.6;}
+  .photo-error{margin:6px 0 0;font-size:12.5px;color:var(--danger);font-weight:700;}
+  .photo-error:empty{display:none;}
+  .item-thumb{width:100%;max-height:150px;object-fit:cover;border-radius:12px;margin-bottom:10px;}
   .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--blue-600);}
   .btn-primary{
     width:100%;background:linear-gradient(135deg,var(--blue-700),var(--blue-900));color:#fff;border:none;
@@ -298,6 +311,19 @@ if ("serviceWorker" in navigator) {
           <label id="lblDescription" for="pDescription">Description (optionnel)</label>
           <textarea id="pDescription" placeholder="Ex: sauce maison, galette, frites..."></textarea>
         </div>
+        <div class="field" id="photoField">
+          <label id="lblPhoto" for="pPhoto">Photo du plat (optionnel)</label>
+          <div class="photo-pick">
+            <input type="file" id="pPhoto" accept="image/*" aria-describedby="photoHint photoError">
+            <button type="button" class="photo-btn" id="photoBtn">📷 <span id="photoBtnTxt">Choisir une photo</span></button>
+          </div>
+          <div class="photo-preview hidden" id="photoPreviewWrap">
+            <img id="photoPreview" alt="">
+            <button type="button" class="photo-remove" id="photoRemove">Retirer la photo</button>
+          </div>
+          <p class="photo-hint" id="photoHint"></p>
+          <p class="photo-error" id="photoError" role="alert"></p>
+        </div>
         <button class="btn-primary" id="proposeBtn" type="button">Envoyer la proposition</button>
         <p id="proposeNote" style="margin:12px 0 0;font-size:12px;color:var(--muted);line-height:1.6;"></p>
       </section>
@@ -434,6 +460,14 @@ const I18N = {
     lblCategorie: "Catégorie",
     lblPrix: "Prix (DA)",
     lblDescription: "Description (optionnel)",
+    lblPhoto: "Photo du plat (optionnel)",
+    photoChoose: "Choisir une photo",
+    photoChange: "Changer la photo",
+    photoRemove: "Retirer la photo",
+    photoHint: "Une belle photo nette, de près, avec le plat bien visible, donne plus de commandes. Elle sera vérifiée par MT Delivery avant publication.",
+    photoErrType: "Ce fichier n'est pas une image. Choisis une photo (JPG, PNG…).",
+    photoErrRead: "Impossible de lire cette photo. Essaie-en une autre.",
+    photoErrBig: "Photo trop lourde. Choisis une photo de moins de 15 Mo.",
     proposeBtn: "Envoyer la proposition",
     proposeNote: "Ton plat sera visible sur le site après validation par MT Delivery.",
     nomRequired: "Merci d'indiquer le nom du plat.",
@@ -510,6 +544,14 @@ const I18N = {
     lblCategorie: "الفئة",
     lblPrix: "السعر (دج)",
     lblDescription: "الوصف (اختياري)",
+    lblPhoto: "صورة الطبق (اختياري)",
+    photoChoose: "اختيار صورة",
+    photoChange: "تغيير الصورة",
+    photoRemove: "إزالة الصورة",
+    photoHint: "صورة واضحة وقريبة للطبق تجلب طلبات أكثر. ستتم مراجعتها من إم تي دليفري قبل النشر.",
+    photoErrType: "هذا الملف ليس صورة. اختر صورة (JPG أو PNG…).",
+    photoErrRead: "تعذر قراءة هذه الصورة. جرّب صورة أخرى.",
+    photoErrBig: "الصورة كبيرة جدًا. اختر صورة أقل من 15 ميغابايت.",
     proposeBtn: "إرسال الاقتراح",
     proposeNote: "سيظهر طبقك في الموقع بعد موافقة إم تي دليفري.",
     nomRequired: "الرجاء إدخال اسم الطبق.",
@@ -546,6 +588,10 @@ function applyLanguage() {
   $("lblCategorie").textContent = t("lblCategorie");
   $("lblPrix").textContent = t("lblPrix");
   $("lblDescription").textContent = t("lblDescription");
+  $("lblPhoto").textContent = t("lblPhoto");
+  $("photoHint").textContent = t("photoHint");
+  $("photoRemove").textContent = t("photoRemove");
+  refreshPhotoUi();
   $("proposeBtn").textContent = t("proposeBtn");
   $("proposeNote").textContent = t("proposeNote");
   applyBoostLabels();
@@ -723,6 +769,7 @@ function itemCardHtml(item) {
   const checked = item.disponible ? "checked" : "";
   return `
     <div class="item-card">
+      ${item.photo ? `<img class="item-thumb" src="${escapeAttr(item.photo)}" alt="" loading="lazy">` : ""}
       <div class="row1">
         <div>
           <div class="nom">${escapeHtml(item.nom || "")}</div>
@@ -808,6 +855,67 @@ function orderCardHtml(o) {
    ============================================================ */
 $("proposeBtn").addEventListener("click", onPropose);
 
+/* ---- Photo du plat : choix, réduction (max 900 px, JPEG) et aperçu ---- */
+let PHOTO_DATA = "";          // data:image/jpeg;base64,... (vide = pas de photo)
+const PHOTO_MAX_SIDE = 900;
+const PHOTO_MAX_INPUT = 15 * 1024 * 1024;
+
+function refreshPhotoUi() {
+  const has = !!PHOTO_DATA;
+  $("photoPreviewWrap").classList.toggle("hidden", !has);
+  if (has) $("photoPreview").src = PHOTO_DATA;
+  $("photoBtnTxt").textContent = t(has ? "photoChange" : "photoChoose");
+}
+function setPhotoError(msg) { $("photoError").textContent = msg || ""; }
+function clearPhoto() {
+  PHOTO_DATA = "";
+  $("pPhoto").value = "";
+  setPhotoError("");
+  refreshPhotoUi();
+}
+function resizeImage(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        let w = img.naturalWidth, h = img.naturalHeight;
+        if (!w || !h) throw new Error("size");
+        const k = Math.min(1, PHOTO_MAX_SIDE / Math.max(w, h));
+        w = Math.round(w * k); h = Math.round(h * k);
+        const c = document.createElement("canvas");
+        c.width = w; c.height = h;
+        const ctx = c.getContext("2d");
+        ctx.fillStyle = "#fff";           // fond blanc (PNG transparents)
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        let q = 0.82, out = c.toDataURL("image/jpeg", q);
+        while (out.length > 400000 && q > 0.45) { q -= 0.1; out = c.toDataURL("image/jpeg", q); }
+        resolve(out);
+      } catch (e) { reject(e); }
+      finally { URL.revokeObjectURL(url); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("read")); };
+    img.src = url;
+  });
+}
+$("photoBtn").addEventListener("click", () => $("pPhoto").click());
+$("photoRemove").addEventListener("click", clearPhoto);
+$("pPhoto").addEventListener("change", async () => {
+  const f = $("pPhoto").files && $("pPhoto").files[0];
+  setPhotoError("");
+  if (!f) return;
+  if (f.type && !/^image\//i.test(f.type)) { clearPhoto(); setPhotoError(t("photoErrType")); return; }
+  if (f.size > PHOTO_MAX_INPUT) { clearPhoto(); setPhotoError(t("photoErrBig")); return; }
+  try {
+    PHOTO_DATA = await resizeImage(f);
+    refreshPhotoUi();
+  } catch (e) {
+    clearPhoto();
+    setPhotoError(t("photoErrRead"));
+  }
+});
+
 async function onPropose() {
   hideError($("errorBox"));
   hideSuccess($("successBox"));
@@ -821,7 +929,7 @@ async function onPropose() {
   $("proposeBtn").disabled = true;
   $("proposeBtn").textContent = "...";
   try {
-    const payload = JSON.stringify({ nom, categorie, prix: Number(prix), description });
+    const payload = JSON.stringify({ nom, categorie, prix: Number(prix), description, photoData: PHOTO_DATA });
     const data = await apiGet({ action: "proposeMenuItem", telephone: SESSION.telephone, payload });
     if (data.success) {
       showSuccess($("successBox"), t("proposeSuccess"));
@@ -829,6 +937,7 @@ async function onPropose() {
       $("pPrix").value = "";
       $("pDescription").value = "";
       $("pCategorie").value = "Autre";
+      clearPhoto();
       await loadMenu();
     } else {
       showError($("errorBox"), data.error || t("proposeFailedGeneric"));
