@@ -18,7 +18,7 @@
   bar.className = "install-bar";
   bar.setAttribute("role", "dialog");
   bar.innerHTML = '<img src="/icons/icon-192.png" alt="">' +
-    '<div class="txt"><b>Installer MT Delivery</b><small>Accès rapide depuis votre écran d\'accueil</small></div>' +
+    '<div class="txt"><b>Installer MT Food</b><small>Accès rapide depuis votre écran d\'accueil</small></div>' +
     '<button class="go" type="button">Installer</button><button class="no" type="button" aria-label="Fermer">✕</button>';
   document.body.appendChild(bar);
 

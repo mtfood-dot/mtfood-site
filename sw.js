@@ -4,7 +4,7 @@
 // JAMAIS mis en cache : toujours réseau, pour ne jamais servir des
 // commandes/statuts périmés.
 
-const CACHE_NAME = "mtdelivery-v6";
+const CACHE_NAME = "mtdelivery-v7";
 const CORE_ASSETS = [
   "/index.html",
   "/offline.html",
@@ -104,7 +104,7 @@ self.addEventListener("push", (event) => {
   // Format FCM : { notification: {title, body}, data: {url, ...} } ; format brut : {title, body, url}.
   const n = data.notification || {};
   const d = data.data || {};
-  const title = n.title || data.title || d.title || "MT Delivery";
+  const title = n.title || data.title || d.title || "MT Food";
   const options = {
     body: n.body || data.body || d.body || "",
     icon: "/icons/icon-192.png",
