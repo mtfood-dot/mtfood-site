@@ -196,6 +196,25 @@
   .pin-row input:focus{outline:none;border-color:var(--blue-600);}
   .btn-savepin{background:var(--blue-700);color:#fff;flex:none;padding:8px 14px;}
 
+  .eval-overlay{position:fixed;inset:0;background:rgba(10,25,50,.55);z-index:60;display:flex;align-items:center;justify-content:center;padding:14px;}
+  .eval-sheet{background:#fff;border-radius:18px;width:100%;max-width:520px;max-height:92vh;overflow:auto;padding:16px 16px 18px;box-shadow:var(--shadow-md);}
+  .eval-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;}
+  .eval-title{font-size:16px;font-weight:800;color:var(--text);line-height:1.35;}
+  .eval-x{background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;font-size:15px;cursor:pointer;color:var(--muted);flex:none;font-family:inherit;}
+  .eval-info{border:1px solid var(--border);border-radius:12px;background:#fbfcfe;margin:6px 0 12px;}
+  .eval-row{display:flex;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px;line-height:1.5;}
+  .eval-row:last-child{border-bottom:none;}
+  .eval-row .k{flex:0 0 38%;color:var(--muted);font-weight:700;}
+  .eval-row .v{flex:1;min-width:0;color:var(--text);font-weight:600;word-break:break-word;white-space:pre-wrap;}
+  .eval-label{display:block;font-size:12px;font-weight:800;color:var(--blue-900);margin:10px 0 4px;}
+  .eval-field{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:9px 11px;font-family:inherit;font-size:13.5px;background:#fff;color:var(--text);}
+  textarea.eval-field{min-height:78px;resize:vertical;}
+  .eval-err{background:#fdeceb;color:var(--danger);border-radius:10px;padding:9px 12px;font-size:12.5px;font-weight:700;margin-top:10px;}
+  .eval-ok{background:#eaf7ee;color:var(--green);border-radius:10px;padding:10px 12px;font-size:13.5px;font-weight:800;margin:4px 0 10px;}
+  .eval-note{font-size:12.5px;color:var(--muted);line-height:1.6;margin:6px 0;}
+  .eval-note b{color:var(--text);letter-spacing:1.5px;}
+  .eval-loading{text-align:center;color:var(--muted);font-size:13.5px;padding:28px 10px;}
+
   .stats-row{display:flex;gap:10px;flex-wrap:wrap;}
   .stat-card{flex:1;min-width:140px;background:var(--card);border-radius:var(--radius-md);
     box-shadow:var(--shadow-sm);border:1px solid var(--border);padding:18px 14px;text-align:center;}
@@ -278,6 +297,16 @@
     color:var(--muted);font-size:11.5px;font-weight:500;}
 </style>
 <script src="/form-validate.js" defer></script>
+<div class="eval-overlay hidden" id="evalModal" role="dialog" aria-modal="true" aria-labelledby="evalTitle">
+  <div class="eval-sheet">
+    <div class="eval-head">
+      <div class="eval-title" id="evalTitle"></div>
+      <button type="button" class="eval-x" id="evalX" aria-label="Fermer">✕</button>
+    </div>
+    <div id="evalBody"></div>
+  </div>
+</div>
+
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
@@ -607,6 +636,33 @@ const I18N = {
     btnRefuse: "✕ Refuser",
     kindDriver: "Livreur",
     kindPartner: "Partenaire",
+    evalBtn: "🔍 Évaluer",
+    evalInfoTitle: "Informations fournies",
+    evalLoading: "Chargement de la fiche…",
+    evalLoadFailed: "Impossible de charger la fiche. Réessaie.",
+    evalEmailLabel: "E-mail du candidat (facultatif)",
+    evalEmailInvalid: "Adresse e-mail invalide.",
+    evalAccept: "✓ Valider la demande",
+    evalRefuse: "✕ Refuser",
+    evalReasonLabel: "Motif du refus (obligatoire)",
+    evalReasonPh: "Ex : zone non desservie, informations incomplètes…",
+    evalReasonRequired: "Indique le motif du refus.",
+    evalConfirmRefuse: "Confirmer le refus",
+    evalBack: "← Retour",
+    evalClose: "Fermer",
+    evalDoneAccept: "Demande validée ✅",
+    evalDoneRefuse: "Demande refusée.",
+    evalPinGenerated: "Code PIN créé : ",
+    evalPinKept: "Le livreur utilise le code PIN choisi à l'inscription (il n'est pas affiché ni envoyé).",
+    evalEmailSent: "E-mail envoyé à ",
+    evalEmailNone: "Pas d'adresse e-mail : envoie le message par WhatsApp.",
+    evalEmailFailed: "L'e-mail n'a pas pu partir : envoie le message par WhatsApp.",
+    evalSendWa: "Envoyer sur WhatsApp",
+    evalAcceptHint: "En validant, le compte est activé et les accès sont préparés pour l'envoi.",
+    evalFailed: "Action impossible. Réessaie.",
+    evalReasonFor: "Motif : ",
+    evalKindDriverFull: "livreur",
+    evalKindPartnerFull: "partenaire",
     noPartners: "Aucun partenaire.",
     noDrivers: "Aucun livreur.",
     statusActif: "Actif",
@@ -807,6 +863,33 @@ const I18N = {
     btnRefuse: "✕ رفض",
     kindDriver: "سائق",
     kindPartner: "شريك",
+    evalBtn: "🔍 مراجعة",
+    evalInfoTitle: "المعلومات المقدَّمة",
+    evalLoading: "جارٍ تحميل البطاقة…",
+    evalLoadFailed: "تعذر تحميل البطاقة. أعد المحاولة.",
+    evalEmailLabel: "البريد الإلكتروني للمتقدم (اختياري)",
+    evalEmailInvalid: "عنوان بريد إلكتروني غير صالح.",
+    evalAccept: "✓ قبول الطلب",
+    evalRefuse: "✕ رفض",
+    evalReasonLabel: "سبب الرفض (إجباري)",
+    evalReasonPh: "مثال: منطقة غير مغطاة، معلومات ناقصة…",
+    evalReasonRequired: "أدخل سبب الرفض.",
+    evalConfirmRefuse: "تأكيد الرفض",
+    evalBack: "رجوع →",
+    evalClose: "إغلاق",
+    evalDoneAccept: "تم قبول الطلب ✅",
+    evalDoneRefuse: "تم رفض الطلب.",
+    evalPinGenerated: "تم إنشاء رمز PIN: ",
+    evalPinKept: "يستخدم السائق رمز PIN الذي اختاره عند التسجيل (لا يُعرض ولا يُرسل).",
+    evalEmailSent: "تم إرسال البريد الإلكتروني إلى ",
+    evalEmailNone: "لا يوجد بريد إلكتروني: أرسل الرسالة عبر واتساب.",
+    evalEmailFailed: "تعذر إرسال البريد الإلكتروني: أرسل الرسالة عبر واتساب.",
+    evalSendWa: "إرسال عبر واتساب",
+    evalAcceptHint: "عند القبول يتم تفعيل الحساب وتجهيز بيانات الدخول للإرسال.",
+    evalFailed: "تعذر تنفيذ العملية. أعد المحاولة.",
+    evalReasonFor: "السبب: ",
+    evalKindDriverFull: "سائق",
+    evalKindPartnerFull: "شريك",
     noPartners: "لا يوجد شركاء.",
     noDrivers: "لا يوجد سائقون.",
     statusActif: "نشط",
@@ -1635,8 +1718,7 @@ function requestCardHtml(r) {
       <div class="nom">${escapeHtml(x.nom || "")} <span class="status-badge enattente">${escapeHtml(kindLabel)}</span></div>
       <div class="meta">${meta}</div>
       <div class="actions-row">
-        <button class="btn-action btn-activate" type="button" data-toggle-kind="${r.kind}" data-toggle-tel="${tel}" data-new-status="Actif">${escapeHtml(t("btnAccept"))}</button>
-        <button class="btn-action btn-refuse" type="button" data-toggle-kind="${r.kind}" data-toggle-tel="${tel}" data-new-status="Refuse">${escapeHtml(t("btnRefuse"))}</button>
+        <button class="btn-action btn-confirm" type="button" data-eval-kind="${r.kind}" data-eval-tel="${tel}">${escapeHtml(t("evalBtn"))}</button>
       </div>
     </div>
   `;
@@ -1649,6 +1731,9 @@ function updateRequestsUi() {
     block.classList.toggle("hidden", reqs.length === 0);
     $("listRequests").innerHTML = reqs.map(requestCardHtml).join("");
     wireEntityButtons("listRequests");
+    document.querySelectorAll("#listRequests [data-eval-kind]").forEach(btn => {
+      btn.addEventListener("click", () => evalOpen(btn.dataset.evalKind, btn.dataset.evalTel));
+    });
   }
   const label = $("tabPartnersLabel");
   if (label) {
@@ -1766,6 +1851,265 @@ async function onCreateDriver() {
     $("driverFormSaveBtn").disabled = false;
   }
 }
+
+/* ============================================================
+   FICHE « ÉVALUER » (demandes livreurs / partenaires)
+   ============================================================ */
+let EVAL = null;
+
+function evalSiteUrl(kind) {
+  return location.origin + "/" + (kind === "partner" ? "espace-partenaire.html" : "espace-livreur.html");
+}
+
+/* Messages envoyés au candidat : français puis arabe. pin = code à afficher ("{PIN}" pour l'e-mail). */
+function evalAcceptMsg(kind, nom, tel, pin) {
+  const url = evalSiteUrl(kind);
+  const idTel = fmtPhone(tel);
+  if (kind === "partner") {
+    return [
+      `Bonjour ${nom},`,
+      `Bonne nouvelle : votre demande pour rejoindre MT Delivery comme partenaire est acceptée ✅`,
+      ``,
+      `Lien : ${url}`,
+      `Identifiant (téléphone) : ${idTel}`,
+      `Code PIN : ${pin}`,
+      ``,
+      `Mini-tutoriel :`,
+      `1. Ouvrez le lien et connectez-vous avec votre numéro et votre code PIN.`,
+      `2. « Mon menu » : vos plats. « Proposer » : ajoutez un plat (nom, prix, photo), nous le validons avant publication.`,
+      `3. « Commandes » : retrouvez les commandes reçues et mettez à jour leur statut.`,
+      `4. Une question ? Répondez à ce message.`,
+      ``,
+      `────────`,
+      ``,
+      `مرحبًا ${nom}،`,
+      `يسعدنا إعلامكم بقبول طلبكم للانضمام إلى MT Delivery كشريك ✅`,
+      ``,
+      `الرابط: ${url}`,
+      `المعرّف (رقم الهاتف): ${idTel}`,
+      `رمز PIN: ${pin}`,
+      ``,
+      `شرح سريع:`,
+      `1. افتحوا الرابط وسجّلوا الدخول برقم هاتفكم ورمز PIN.`,
+      `2. «قائمتي»: أطباقكم. «اقتراح طبق»: أضيفوا طبقًا (الاسم والسعر والصورة) ونراجعه قبل نشره.`,
+      `3. «الطلبات»: تابعوا الطلبات الواردة وحدّثوا حالتها.`,
+      `4. لأي سؤال، ردّوا على هذه الرسالة.`
+    ].join("\n");
+  }
+  return [
+    `Bonjour ${nom},`,
+    `Bonne nouvelle : votre demande pour devenir livreur MT Delivery est acceptée ✅`,
+    ``,
+    `Lien : ${url}`,
+    `Identifiant (téléphone) : ${idTel}`,
+    `Code PIN : celui que vous avez choisi à l'inscription`,
+    ``,
+    `Mini-tutoriel :`,
+    `1. Ouvrez le lien et connectez-vous avec votre numéro et votre code PIN.`,
+    `2. « Disponibles » : les commandes à prendre. Appuyez sur « Accepter » pour en choisir une.`,
+    `3. « Mes livraisons » : suivez vos livraisons et mettez à jour leur statut à la remise.`,
+    `4. Une question ? Répondez à ce message.`,
+    ``,
+    `────────`,
+    ``,
+    `مرحبًا ${nom}،`,
+    `يسعدنا إعلامكم بقبول طلبكم للانضمام إلى MT Delivery كسائق توصيل ✅`,
+    ``,
+    `الرابط: ${url}`,
+    `المعرّف (رقم الهاتف): ${idTel}`,
+    `رمز PIN: الذي اخترتموه عند التسجيل`,
+    ``,
+    `شرح سريع:`,
+    `1. افتحوا الرابط وسجّلوا الدخول برقم هاتفكم ورمز PIN.`,
+    `2. «متوفرة»: الطلبات المتاحة. اضغطوا «قبول» لاختيار طلب.`,
+    `3. «توصيلاتي»: تابعوا توصيلاتكم وحدّثوا حالتها عند التسليم.`,
+    `4. لأي سؤال، ردّوا على هذه الرسالة.`
+  ].join("\n");
+}
+
+function evalRefuseMsg(kind, nom, motif) {
+  const fr = kind === "partner" ? "partenaire" : "livreur";
+  const ar = kind === "partner" ? "شريك" : "سائق توصيل";
+  return [
+    `Bonjour ${nom},`,
+    `Nous avons étudié votre demande pour rejoindre MT Delivery (${fr}). Malheureusement, elle n'est pas acceptée pour le moment.`,
+    `Motif : ${motif}`,
+    `Vous pouvez répondre à ce message pour toute précision.`,
+    ``,
+    `────────`,
+    ``,
+    `مرحبًا ${nom}،`,
+    `لقد درسنا طلبكم للانضمام إلى MT Delivery (${ar}). للأسف لم يتم قبوله في الوقت الحالي.`,
+    `السبب: ${motif}`,
+    `يمكنكم الرد على هذه الرسالة لأي توضيح.`
+  ].join("\n");
+}
+
+function evalOpen(kind, tel) {
+  const list = kind === "partner" ? PARTNERS : DRIVERS;
+  const item = list.find(x => String(x.telephone) === String(tel));
+  if (!item) return;
+  EVAL = { kind: kind, item: item, detail: null };
+  $("evalTitle").innerHTML = escapeHtml(item.nom || "") + " <span class=\"status-badge enattente\" style=\"margin:0 0 0 6px;\">" +
+    escapeHtml(kind === "driver" ? t("kindDriver") : t("kindPartner")) + "</span>";
+  $("evalModal").classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+  evalRender("loading");
+  apiGet({ action: "getRequestDetail", password: SESSION_PASSWORD, kind: kind, telephone: tel })
+    .then(d => {
+      if (!EVAL || EVAL.item !== item) return;
+      if (d && d.success) { EVAL.detail = d; evalRender("form"); }
+      else evalRender("error", (d && d.error) || t("evalLoadFailed"));
+    })
+    .catch(() => { if (EVAL && EVAL.item === item) evalRender("error", t("evalLoadFailed")); });
+}
+
+function evalClose() {
+  $("evalModal").classList.add("hidden");
+  document.body.style.overflow = "";
+  EVAL = null;
+}
+
+function evalInfoHtml() {
+  const x = EVAL.item;
+  const rows = [];
+  (EVAL.detail.fields || []).forEach(f => rows.push([f.label, f.value]));
+  if (!rows.length) {
+    rows.push([EVAL.kind === "driver" ? t("kindDriver") : t("kindPartner"), x.nom || ""]);
+  }
+  // Le téléphone (avec son 0 initial) est toujours montré en premier.
+  const tel = fmtPhone(x.telephone);
+  const body = rows.map(r => {
+    const isPhone = /t[ée]l[ée]?phone|هاتف/i.test(r[0]);
+    return `<div class="eval-row"><div class="k">${escapeHtml(r[0])}</div><div class="v">${isPhone ? `<span dir="ltr">${escapeHtml(tel)}</span>` : escapeHtml(r[1])}</div></div>`;
+  }).join("");
+  return `<div class="eval-info">${body}</div>`;
+}
+
+function evalRender(state, extra) {
+  const body = $("evalBody");
+  if (state === "loading") {
+    body.innerHTML = `<div class="eval-loading">${escapeHtml(t("evalLoading"))}</div>`;
+    return;
+  }
+  if (state === "error") {
+    body.innerHTML = `<div class="eval-err">${escapeHtml(extra || t("evalLoadFailed"))}</div>
+      <div class="actions-row"><button class="btn-action btn-refuse" type="button" data-eval-act="close">${escapeHtml(t("evalClose"))}</button></div>`;
+    return;
+  }
+  if (state === "form") {
+    const email = (EVAL.detail && EVAL.detail.email) || "";
+    body.innerHTML = `
+      <div class="subheading" style="margin-top:0;">${escapeHtml(t("evalInfoTitle"))}</div>
+      ${evalInfoHtml()}
+      <label class="eval-label" for="evalEmail">${escapeHtml(t("evalEmailLabel"))}</label>
+      <input class="eval-field" id="evalEmail" type="email" inputmode="email" autocomplete="off" value="${escapeAttr(email)}" dir="ltr">
+      <div class="eval-note">${escapeHtml(t("evalAcceptHint"))}</div>
+      <div id="evalMsg"></div>
+      <div class="actions-row">
+        <button class="btn-action btn-activate" type="button" data-eval-act="accept">${escapeHtml(t("evalAccept"))}</button>
+        <button class="btn-action btn-refuse" type="button" data-eval-act="refuse-form">${escapeHtml(t("evalRefuse"))}</button>
+      </div>`;
+    return;
+  }
+  if (state === "refuse") {
+    const email = ($("evalEmail") && $("evalEmail").value) || (EVAL.detail && EVAL.detail.email) || "";
+    EVAL.emailDraft = email;
+    body.innerHTML = `
+      <label class="eval-label" for="evalReason">${escapeHtml(t("evalReasonLabel"))}</label>
+      <textarea class="eval-field" id="evalReason" maxlength="400" placeholder="${escapeAttr(t("evalReasonPh"))}"></textarea>
+      <label class="eval-label" for="evalEmail">${escapeHtml(t("evalEmailLabel"))}</label>
+      <input class="eval-field" id="evalEmail" type="email" inputmode="email" autocomplete="off" value="${escapeAttr(email)}" dir="ltr">
+      <div id="evalMsg"></div>
+      <div class="actions-row">
+        <button class="btn-action btn-refuse" type="button" data-eval-act="refuse">${escapeHtml(t("evalConfirmRefuse"))}</button>
+        <button class="btn-action btn-cancel" type="button" data-eval-act="back" style="color:var(--muted);border-color:var(--border);">${escapeHtml(t("evalBack"))}</button>
+      </div>`;
+    setTimeout(() => { const r = $("evalReason"); if (r) r.focus(); }, 30);
+    return;
+  }
+  if (state === "done") {
+    const r = extra;
+    const lines = [];
+    lines.push(`<div class="${r.decision === "accept" ? "eval-ok" : "eval-note"}" style="${r.decision === "accept" ? "" : "font-weight:800;color:var(--text);"}">${escapeHtml(r.decision === "accept" ? t("evalDoneAccept") : t("evalDoneRefuse"))}</div>`);
+    if (r.decision === "accept") {
+      if (EVAL.kind === "partner" && r.pin) lines.push(`<div class="eval-note">${escapeHtml(t("evalPinGenerated"))}<b>${escapeHtml(r.pin)}</b></div>`);
+      if (EVAL.kind === "driver") lines.push(`<div class="eval-note">${escapeHtml(t("evalPinKept"))}</div>`);
+    } else {
+      lines.push(`<div class="eval-note">${escapeHtml(t("evalReasonFor"))}${escapeHtml(r.motif)}</div>`);
+    }
+    if (r.emailSent) lines.push(`<div class="eval-note">✉️ ${escapeHtml(t("evalEmailSent"))}<span dir="ltr">${escapeHtml(r.email)}</span></div>`);
+    else if (r.email) lines.push(`<div class="eval-note">${escapeHtml(t("evalEmailFailed"))}</div>`);
+    else lines.push(`<div class="eval-note">${escapeHtml(t("evalEmailNone"))}</div>`);
+    const wa = phoneToWaNumber(EVAL.item.telephone);
+    const waBtn = wa
+      ? `<a class="btn-action btn-whatsapp" href="https://wa.me/${wa}?text=${encodeURIComponent(r.waText)}" target="_blank" rel="noopener">${escapeHtml(t("evalSendWa"))}</a>`
+      : "";
+    body.innerHTML = lines.join("") + `<div class="actions-row">${waBtn}<button class="btn-action btn-cancel" type="button" data-eval-act="close" style="color:var(--muted);border-color:var(--border);">${escapeHtml(t("evalClose"))}</button></div>`;
+  }
+}
+
+function evalShowErr(msg) {
+  const box = $("evalMsg");
+  if (box) box.innerHTML = msg ? `<div class="eval-err">${escapeHtml(msg)}</div>` : "";
+}
+
+async function evalDecide(decision) {
+  if (!EVAL) return;
+  const x = EVAL.item, kind = EVAL.kind;
+  const emailEl = $("evalEmail");
+  const email = emailEl ? emailEl.value.trim() : "";
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { evalShowErr(t("evalEmailInvalid")); return; }
+  let motif = "";
+  if (decision === "refuse") {
+    motif = ($("evalReason") ? $("evalReason").value : "").trim();
+    if (!motif) { evalShowErr(t("evalReasonRequired")); return; }
+  }
+  const nom = String(x.nom || "").trim();
+  const isAccept = decision === "accept";
+  const subject = isAccept ? "MT Delivery – Demande acceptée / تم قبول طلبكم" : "MT Delivery – Réponse à votre demande / رد على طلبكم";
+  const emailBody = isAccept ? evalAcceptMsg(kind, nom, x.telephone, "{PIN}") : evalRefuseMsg(kind, nom, motif);
+  document.querySelectorAll("#evalBody .btn-action").forEach(b => { b.disabled = true; });
+  evalShowErr("");
+  try {
+    const d = await apiGet({
+      action: "decideRequest", password: SESSION_PASSWORD, kind: kind, telephone: x.telephone,
+      decision: decision, motif: motif, email: email, subject: subject, body: emailBody
+    });
+    if (!d || !d.success) {
+      document.querySelectorAll("#evalBody .btn-action").forEach(b => { b.disabled = false; });
+      evalShowErr((d && d.error) || t("evalFailed"));
+      return;
+    }
+    x.statut = isAccept ? "Actif" : "Refuse";
+    let pin = d.pin || "";
+    if (kind === "partner") {
+      if (d.pin) x.pin = d.pin;
+      pin = x.pin || "";
+    }
+    if (kind === "partner") renderPartners(); else renderDrivers();
+    updateRequestsUi();
+    const waText = isAccept ? evalAcceptMsg(kind, nom, x.telephone, pin || "—") : evalRefuseMsg(kind, nom, motif);
+    evalRender("done", { decision: decision, pin: d.pin || "", motif: motif, email: email || "", emailSent: !!d.emailSent, waText: waText });
+  } catch (e) {
+    document.querySelectorAll("#evalBody .btn-action").forEach(b => { b.disabled = false; });
+    evalShowErr(t("evalFailed"));
+  }
+}
+
+$("evalX").addEventListener("click", evalClose);
+$("evalModal").addEventListener("click", (e) => { if (e.target === $("evalModal")) evalClose(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && EVAL) evalClose(); });
+$("evalBody").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-eval-act]");
+  if (!b || b.disabled) return;
+  const a = b.dataset.evalAct;
+  if (a === "close") evalClose();
+  else if (a === "accept") evalDecide("accept");
+  else if (a === "refuse-form") evalRender("refuse");
+  else if (a === "refuse") evalDecide("refuse");
+  else if (a === "back") evalRender("form");
+});
 
 async function onToggleStatus(kind, telephone, newStatus, btnEl) {
   hideError($("errorBox"));

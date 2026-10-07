@@ -187,6 +187,11 @@ if ("serviceWorker" in navigator) {
         <input type="password" id="pinConfirm" data-required data-rule="pin4" placeholder="Ex: 1234" inputmode="numeric" maxlength="4" autocomplete="off">
       </div>
       <div class="field">
+        <label id="lblEmail" for="email">E-mail (optionnel)</label>
+        <input type="email" id="email" inputmode="email" autocomplete="email" dir="ltr" placeholder="nom@email.com">
+        <div class="hint" id="emailHint" style="font-size:12px;color:var(--muted);margin-top:4px;">Pour recevoir vos accès par e-mail une fois la demande acceptée.</div>
+      </div>
+      <div class="field">
         <label id="lblNotes" for="notes">Remarques (optionnel)</label>
         <textarea id="notes" placeholder=""></textarea>
       </div>
@@ -239,6 +244,9 @@ const I18N = {
     fillRequired: "Merci de remplir tous les champs obligatoires.",
     pinInvalid: "Le code PIN doit contenir exactement 4 chiffres.",
     pinMismatch: "Les deux codes PIN ne correspondent pas.",
+    lblEmail: "E-mail (optionnel)",
+    emailHint: "Pour recevoir vos accès par e-mail une fois la demande acceptée.",
+    emailInvalid: "Adresse e-mail invalide (ex : nom@email.com).",
     sendError: "Erreur d'envoi. Vérifie ta connexion et réessaie, ou appelle-nous directement.",
     footerNote: "MT Delivery — البريد السريع · Meftah, Blida"
   },
@@ -272,6 +280,9 @@ const I18N = {
     fillRequired: "يرجى تعبئة جميع الحقول المطلوبة.",
     pinInvalid: "يجب أن يتكون رمز PIN من 4 أرقام بالضبط.",
     pinMismatch: "رمزا PIN غير متطابقين.",
+    lblEmail: "البريد الإلكتروني (اختياري)",
+    emailHint: "لتصلكم بيانات الدخول بالبريد الإلكتروني بعد قبول الطلب.",
+    emailInvalid: "عنوان بريد إلكتروني غير صالح (مثال: name@email.com).",
     sendError: "خطأ في الإرسال. تحقق من اتصالك وحاول مرة أخرى، أو اتصل بنا مباشرة.",
     footerNote: "البريد السريع MT Delivery · مفتاح، البليدة"
   }
@@ -307,6 +318,8 @@ function applyLanguage(){
   document.getElementById("lblPinConfirm").textContent = t("lblPinConfirm");
   document.getElementById("pinConfirm").placeholder = t("pinPlaceholder");
   document.getElementById("lblNotes").textContent = t("lblNotes");
+  document.getElementById("lblEmail").textContent = t("lblEmail");
+  document.getElementById("emailHint").textContent = t("emailHint");
   document.getElementById("submitBtn").textContent = t("submitBtn");
   document.getElementById("successTitle").textContent = t("successTitle");
   document.getElementById("successText").textContent = t("successText");
@@ -349,6 +362,12 @@ document.addEventListener("DOMContentLoaded", function(){
     const pin = document.getElementById("pin").value.trim();
     const pinConfirm = document.getElementById("pinConfirm").value.trim();
     const notes = document.getElementById("notes").value.trim();
+    const email = document.getElementById("email").value.trim();
+    if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+      errorBox.textContent = t("emailInvalid");
+      errorBox.classList.add("show");
+      return;
+    }
 
     if(!nom || !telephone || !zone || !vehicule || !disponibilite || !pin || !pinConfirm){
       errorBox.textContent = t("fillRequired");
@@ -375,7 +394,7 @@ document.addEventListener("DOMContentLoaded", function(){
     try{
       const resp = await fetch(CONFIG.API_URL, {
         method: "POST",
-        body: JSON.stringify({ nom, telephone, zone, vehicule, disponibilite, pin, notes })
+        body: JSON.stringify({ nom, telephone, zone, vehicule, disponibilite, pin, notes, email })
       });
       const data = await resp.json();
       if(data && data.ok){

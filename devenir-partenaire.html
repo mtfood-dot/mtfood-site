@@ -177,6 +177,11 @@ if ("serviceWorker" in navigator) {
         <input type="tel" id="telephone" data-required data-rule="phone" placeholder="05XX XX XX XX">
       </div>
       <div class="field">
+        <label id="lblEmail" for="email">E-mail (optionnel)</label>
+        <input type="email" id="email" inputmode="email" autocomplete="email" dir="ltr" placeholder="nom@email.com">
+        <div class="hint" id="emailHint" style="font-size:12px;color:var(--muted);margin-top:4px;">Pour recevoir vos accès par e-mail une fois la demande acceptée.</div>
+      </div>
+      <div class="field">
         <label id="lblHoraires" for="horaires">Horaires d'ouverture (optionnel)</label>
         <input type="text" id="horaires" placeholder="Ex: 10h - 22h">
       </div>
@@ -230,6 +235,9 @@ const I18N = {
     homeLink: "Retour à l'accueil",
     fillRequired: "Merci de remplir tous les champs obligatoires.",
     duplicateError: "Un partenaire est déjà inscrit avec ce numéro de téléphone.",
+    lblEmail: "E-mail (optionnel)",
+    emailHint: "Pour recevoir vos accès par e-mail une fois la demande acceptée.",
+    emailInvalid: "Adresse e-mail invalide (ex : nom@email.com).",
     sendError: "Erreur d'envoi. Vérifie ta connexion et réessaie, ou appelle-nous directement.",
     footerNote: "MT Delivery — البريد السريع · Meftah, Blida"
   },
@@ -260,6 +268,9 @@ const I18N = {
     homeLink: "العودة إلى الصفحة الرئيسية",
     fillRequired: "يرجى تعبئة جميع الحقول المطلوبة.",
     duplicateError: "يوجد شريك مسجل بهذا الرقم بالفعل.",
+    lblEmail: "البريد الإلكتروني (اختياري)",
+    emailHint: "لتصلكم بيانات الدخول بالبريد الإلكتروني بعد قبول الطلب.",
+    emailInvalid: "عنوان بريد إلكتروني غير صالح (مثال: name@email.com).",
     sendError: "خطأ في الإرسال. تحقق من اتصالك وحاول مرة أخرى، أو اتصل بنا مباشرة.",
     footerNote: "البريد السريع MT Delivery · مفتاح، البليدة"
   }
@@ -289,6 +300,8 @@ function applyLanguage(){
   document.getElementById("optDehors").textContent = t("optDehors");
   document.getElementById("optLesDeux").textContent = t("optLesDeux");
   document.getElementById("lblTelephone").textContent = t("lblTelephone");
+  document.getElementById("lblEmail").textContent = t("lblEmail");
+  document.getElementById("emailHint").textContent = t("emailHint");
   document.getElementById("lblHoraires").textContent = t("lblHoraires");
   document.getElementById("horaires").placeholder = t("horairesPlaceholder");
   document.getElementById("lblDescription").textContent = t("lblDescription");
@@ -354,6 +367,12 @@ document.addEventListener("DOMContentLoaded", function(){
     const telephone = document.getElementById("telephone").value.trim();
     const horaires = document.getElementById("horaires").value.trim();
     const description = document.getElementById("description").value.trim();
+    const email = document.getElementById("email").value.trim();
+    if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+      errorBox.textContent = t("emailInvalid");
+      errorBox.classList.add("show");
+      return;
+    }
 
     if(!nom || !type || !adresse || !zone || !telephone){
       errorBox.textContent = t("fillRequired");
@@ -368,7 +387,7 @@ document.addEventListener("DOMContentLoaded", function(){
     try{
       const data = await apiGet({
         action: "registerPartner",
-        payload: JSON.stringify({ nom, type, adresse, zone, telephone, horaires, description })
+        payload: JSON.stringify({ nom, type, adresse, zone, telephone, email, horaires, description })
       });
       if(data && data.success){
         document.getElementById("formCard").classList.add("hidden");
