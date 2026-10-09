@@ -334,6 +334,66 @@
   .install-bar button{border:0;border-radius:10px;padding:9px 14px;font-weight:700;font-size:14px;cursor:pointer;}
   .install-bar .go{background:var(--gold-500);color:var(--blue-900);}
   .install-bar .no{background:transparent;color:#fff;opacity:.7;padding:9px 6px;}
+  .hidden{display:none !important;}
+  /* À la une : plats mis en avant (classes boost-*, éviter les noms bloqués par les bloqueurs de pub) */
+  .boost-box{max-width:960px;margin:14px auto 0;padding:0 12px;}
+  .boost-box-title{font-size:13px;font-weight:800;color:var(--blue-900);text-align:center;margin-bottom:10px;}
+  .boost-strip{display:flex;gap:12px;overflow-x:auto;padding:4px 4px 10px;scroll-snap-type:x proximity;
+    -webkit-overflow-scrolling:touch;justify-content:safe start;}
+  .boost-item{flex:0 0 150px;scroll-snap-align:start;display:block;text-decoration:none;color:inherit;background:var(--card);
+    border-radius:var(--radius-md);box-shadow:var(--shadow-sm);border:1px solid var(--border);overflow:hidden;position:relative;}
+  .boost-item .boost-img{width:100%;aspect-ratio:1/1;background:var(--blue-100) center/cover no-repeat;}
+  .boost-item .boost-tag{position:absolute;top:6px;inset-inline-start:6px;background:rgba(15,40,80,.78);color:#fff;
+    font-size:9.5px;font-weight:800;border-radius:999px;padding:2px 8px;}
+  .boost-item .boost-info{padding:8px 10px 10px;}
+  .boost-item .boost-dish{font-size:13px;font-weight:800;color:var(--blue-900);line-height:1.3;}
+  .boost-item .boost-price{font-size:12.5px;font-weight:800;color:var(--gold-600);margin-top:2px;}
+  .boost-item .boost-resto{font-size:11.5px;color:var(--muted);margin-top:2px;}
+  .promo-section{margin-top:34px;}
+  .promo-title{font-size:13px;font-weight:800;color:var(--blue-900);text-transform:uppercase;
+    letter-spacing:.4px;margin-bottom:12px;text-align:center;}
+  .promo-grid{display:grid;grid-template-columns:1fr;gap:14px;}
+  @media(min-width:560px){.promo-grid{grid-template-columns:1fr 1fr;}}
+  .promo-card{display:block;text-decoration:none;color:inherit;background:var(--card);border-radius:var(--radius-md);
+    overflow:hidden;box-shadow:var(--shadow-sm);border:1px solid var(--border);}
+  .promo-card .promo-photo{width:100%;aspect-ratio:16/9;background:var(--blue-100) center/cover no-repeat;}
+  .promo-card .promo-body{padding:12px 14px;}
+  .promo-card .promo-name{font-size:14px;font-weight:800;color:var(--blue-900);}
+  .promo-card .promo-text{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.4;}
+
+  .promo-placeholder{display:block;text-align:center;background:var(--card);border:1.5px dashed var(--gold-500);
+    border-radius:var(--radius-md);padding:26px 18px;color:var(--muted);font-size:13px;line-height:1.6;
+    text-decoration:none;}
+  .promo-placeholder b{display:block;color:var(--blue-900);font-size:14.5px;margin-bottom:6px;}
+  .promo-placeholder .cta{display:inline-block;margin-top:10px;background:var(--gold-500);color:var(--blue-900);
+    border-radius:999px;padding:8px 18px;font-weight:800;font-size:12.5px;}
+
+  .join-section{margin-top:26px;}
+  .join-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:520px){.join-grid{grid-template-columns:1fr;}}
+  .join-card{display:flex;flex-direction:column;align-items:flex-start;gap:6px;background:var(--card,#fff);
+    border:1.5px solid var(--border,#dfe6f0);border-radius:var(--radius-md);padding:16px;text-decoration:none;
+    color:var(--muted);font-size:12.5px;line-height:1.5;}
+  .join-card b{color:var(--blue-900);font-size:14.5px;}
+  .join-ico{font-size:24px;}
+  .join-cta{margin-top:6px;background:var(--gold-500);color:var(--blue-900);border-radius:999px;padding:8px 18px;font-weight:800;font-size:12.5px;}
+  .footer-note{max-width:720px;margin:34px auto 0;padding:0 16px;text-align:center;
+    color:var(--muted);font-size:11.5px;font-weight:500;}
+  .footer-legal-row{max-width:720px;margin:10px auto 0;padding:0 16px;text-align:center;font-size:11.5px;color:var(--muted);}
+  .footer-legal-row a{color:var(--blue-700);font-weight:700;text-decoration:none;}
+  .footer-admin-link{color:var(--muted);font-size:10.5px;text-decoration:none;opacity:.6;}
+
+  .install-bar{display:none;position:fixed;left:12px;right:12px;bottom:12px;z-index:1000;max-width:480px;margin:0 auto;
+    background:var(--blue-900);color:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.3);
+    align-items:center;gap:12px;font-size:14px;}
+  .install-bar.show{display:flex;}
+  .install-bar img{width:40px;height:40px;border-radius:10px;}
+  .install-bar .txt{flex:1;line-height:1.3;}
+  .install-bar .txt small{display:block;opacity:.8;font-size:12px;}
+  .install-bar button{border:0;border-radius:10px;padding:9px 14px;font-weight:700;font-size:14px;cursor:pointer;}
+  .install-bar .go{background:var(--gold-500);color:var(--blue-900);}
+  .install-bar .no{background:transparent;color:#fff;opacity:.7;padding:9px 6px;}
+  .promo-section,.join-section{max-width:960px;margin-left:auto;margin-right:auto;padding:0 16px;}
 </style>
 <script src="/form-validate.js" defer></script>
 <script>
@@ -357,12 +417,13 @@ if ("serviceWorker" in navigator) {
     <a class="phone-link" id="headerPhone" href="tel:0560 78 84 97">📞 0560 78 84 97</a>
     <a class="account-link-top" id="accountLinkTop" href="connexion.html">👤 Mon compte</a>
   </div>
-  <div class="join-links-top">
-    <a href="devenir-partenaire.html">🍽️ <span id="headJoinPartner">Devenir partenaire</span></a>
-    <a href="inscription-livreur.html">🛵 <span id="headJoinDriver">Devenir livreur</span></a>
-  </div>
   <button class="lang-toggle" id="langToggle" type="button">AR</button>
 </header>
+
+<div class="boost-box hidden" id="boostBox">
+  <div class="boost-box-title" id="boostBoxTitle">À la une</div>
+  <div class="boost-strip" id="boostStrip"></div>
+</div>
 
 <div class="zone-check" id="zoneCheck">
   <button class="zone-check-toggle" id="zoneCheckToggle" type="button">📍 <span id="zoneCheckToggleText">Vérifier si on livre chez toi</span></button>
@@ -382,6 +443,30 @@ if ("serviceWorker" in navigator) {
   <div id="grid" class="grid"></div>
   <div id="emptyMsg" class="empty-msg" style="display:none;"></div>
 </main>
+
+
+<div class="promo-section">
+  <div class="promo-title" id="promoTitle">Nos partenaires</div>
+  <div class="promo-grid" id="promoGrid"></div>
+</div>
+
+<div class="join-section">
+  <div class="promo-title" id="joinTitle">Rejoins MT Delivery</div>
+  <div class="join-grid">
+    <a class="join-card" href="devenir-partenaire.html">
+      <span class="join-ico">🍽️</span>
+      <b id="joinPartnerTitle">Restaurant : devenir partenaire</b>
+      <span id="joinPartnerText">Reçois des commandes et fais-toi livrer dans toute la zone.</span>
+      <span class="join-cta" id="joinPartnerCta">Inscrire mon restaurant</span>
+    </a>
+    <a class="join-card" href="inscription-livreur.html">
+      <span class="join-ico">🛵</span>
+      <b id="joinDriverTitle">Livreur : rejoins l'équipe</b>
+      <span id="joinDriverText">Livre les commandes de la zone et gagne de l'argent.</span>
+      <span class="join-cta" id="joinDriverCta">Devenir livreur</span>
+    </a>
+  </div>
+</div>
 
 <div class="footer-note" id="footerNote">MT Delivery · Meftah, Blida · Paiement à la livraison uniquement</div>
 <div class="footer-legal-row" id="footerLegalRow">
@@ -495,6 +580,19 @@ const ALL_CAT = "Tous"; // clé interne, jamais affichée directement
 
 const I18N = {
   fr: {
+    adsTitle: "Nos partenaires",
+    adPlaceholderTitle: "Espace publicitaire disponible",
+    adPlaceholderText: "Fais connaître ton restaurant ou ta pâtisserie à nos clients.",
+    adPlaceholderCta: "📞 Contacter MT Delivery",
+    joinTitle: "Rejoins MT Delivery",
+    joinPartnerTitle: "Restaurant : devenir partenaire",
+    joinPartnerText: "Reçois des commandes et fais-toi livrer dans toute la zone.",
+    joinPartnerCta: "Inscrire mon restaurant",
+    joinDriverTitle: "Livreur : rejoins l'équipe",
+    joinDriverText: "Livre les commandes de la zone et gagne de l'argent.",
+    joinDriverCta: "Devenir livreur",
+    boostTitle: "À la une",
+    boostTag: "Sponsorisé",
     toggleLabel: "AR",
     tagline: "Commandez, on vous livre",
     headJoinPartner: "Devenir partenaire",
@@ -568,6 +666,19 @@ const I18N = {
     accountBannerSignup: "Créer un compte"
   },
   ar: {
+    adsTitle: "شركاؤنا",
+    adPlaceholderTitle: "مساحة إعلانية متاحة",
+    adPlaceholderText: "عرّف عملاءنا بمطعمك أو محل حلوياتك.",
+    adPlaceholderCta: "📞 تواصل مع MT Delivery",
+    joinTitle: "انضم إلى إم تي دليفري",
+    joinPartnerTitle: "مطعم: كن شريكًا",
+    joinPartnerText: "استقبل الطلبات واستفد من التوصيل في كامل المنطقة.",
+    joinPartnerCta: "سجّل مطعمي",
+    joinDriverTitle: "موصّل: انضم إلى الفريق",
+    joinDriverText: "وصّل طلبات المنطقة واربح المال.",
+    joinDriverCta: "كن موصّلًا",
+    boostTitle: "في الواجهة",
+    boostTag: "إعلان",
     toggleLabel: "FR",
     tagline: "اطلب ونوصلك",
     headJoinPartner: "كن شريكًا",
@@ -743,8 +854,17 @@ function applyLanguage() {
   $("langToggle").textContent = t("toggleLabel");
   $("tagline").textContent = t("tagline");
   $("footerNote").textContent = t("footerNote");
-  $("headJoinPartner").textContent = t("headJoinPartner");
-  $("headJoinDriver").textContent = t("headJoinDriver");
+  $("boostBoxTitle").textContent = t("boostTitle");
+  $("promoTitle").textContent = t("adsTitle");
+  $("joinTitle").textContent = t("joinTitle");
+  $("joinPartnerTitle").textContent = t("joinPartnerTitle");
+  $("joinPartnerText").textContent = t("joinPartnerText");
+  $("joinPartnerCta").textContent = t("joinPartnerCta");
+  $("joinDriverTitle").textContent = t("joinDriverTitle");
+  $("joinDriverText").textContent = t("joinDriverText");
+  $("joinDriverCta").textContent = t("joinDriverCta");
+  if (typeof loadBoost === "function") loadBoost();
+  if (typeof loadAds === "function") loadAds();
   $("cartBarUnit").textContent = t("cartBarUnit");
   $("openCartBtn").textContent = t("viewCart");
   $("cartTitle").textContent = t("cartTitle");
@@ -795,6 +915,122 @@ function toggleLanguage() {
   try { localStorage.setItem("mtd_lang", LANG); } catch(e) {}
   applyLanguage();
 }
+
+/* ============================================================
+   ESPACES PUBLICITAIRES
+   ============================================================ */
+function renderAdPlaceholder() {
+  const waLink = "https://wa.me/" + CONFIG.WHATSAPP_NUMBER + "?text=" + encodeURIComponent("Bonjour, je souhaite louer un espace publicitaire sur le site MT Delivery.");
+  $("promoGrid").innerHTML = `
+    <a class="promo-placeholder" href="${waLink}" target="_blank" rel="noopener">
+      <b>${t("adPlaceholderTitle")}</b>
+      ${t("adPlaceholderText")}
+      <span class="cta">${t("adPlaceholderCta")}</span>
+    </a>`;
+}
+function renderAds(ads) {
+  if (!ads || !ads.length) { renderAdPlaceholder(); return; }
+  $("promoGrid").innerHTML = ads.map(ad => {
+    const photoStyle = ad.imageUrl ? `background-image:url('${escapeAttr(ad.imageUrl)}')` : "";
+    const inner = `
+      <div class="promo-photo" style="${photoStyle}"></div>
+      <div class="promo-body">
+        <div class="promo-name">${escapeHtml(ad.nomRestaurant)}</div>
+        ${ad.texte ? `<div class="promo-text">${escapeHtml(ad.texte)}</div>` : ""}
+      </div>`;
+    return ad.lienUrl
+      ? `<a class="promo-card" href="${escapeAttr(ad.lienUrl)}" target="_blank" rel="noopener">${inner}</a>`
+      : `<div class="promo-card">${inner}</div>`;
+  }).join("");
+}
+const ADS_CACHE_KEY = "mtd_ads_cache";
+function readAdsCache() {
+  try { const v = JSON.parse(localStorage.getItem(ADS_CACHE_KEY) || "null"); return Array.isArray(v) ? v : null; } catch (e) { return null; }
+}
+function writeAdsCache(ads) {
+  try { localStorage.setItem(ADS_CACHE_KEY, JSON.stringify(ads)); } catch (e) {}
+}
+let _adsLoadId = 0;
+function loadAds() {
+  const myId = ++_adsLoadId;
+  // Affichage immédiat des dernières pubs connues (pas de trou pendant le chargement)
+  const cached = readAdsCache();
+  if (cached && cached.length) renderAds(cached);
+  let attempt = 0;
+  const tryLoad = () => {
+    attempt++;
+    jsonpRequest({ action: "getAds" }, 20000)
+      .then(res => {
+        if (myId !== _adsLoadId) return;
+        const ads = res && res.success ? (res.ads || []) : [];
+        writeAdsCache(ads);
+        renderAds(ads);
+      })
+      .catch(() => {
+        if (myId !== _adsLoadId) return;
+        if (attempt < 3) { setTimeout(tryLoad, 1500 * attempt); return; }
+        // Échec réseau répété : on garde les dernières pubs connues, sinon l'encart par défaut
+        if (!(cached && cached.length)) renderAdPlaceholder();
+      });
+  };
+  tryLoad();
+}
+
+
+/* ============================================================
+   À LA UNE
+   ============================================================ */
+const BOOST_CACHE_KEY = "mtd_boost_cache";
+function readBoostCache() {
+  try { const v = JSON.parse(localStorage.getItem(BOOST_CACHE_KEY) || "null"); return Array.isArray(v) ? v : null; } catch (e) { return null; }
+}
+function writeBoostCache(list) {
+  try { localStorage.setItem(BOOST_CACHE_KEY, JSON.stringify(list)); } catch (e) {}
+}
+function shuffled(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+function renderBoost(list) {
+  const box = $("boostBox");
+  if (!list || !list.length) { box.classList.add("hidden"); $("boostStrip").innerHTML = ""; return; }
+  $("boostBoxTitle").textContent = t("boostTitle");
+  $("boostStrip").innerHTML = shuffled(list).map(p => {
+    const ext = !p.itemId && /^https:\/\//i.test(p.lienUrl || "") ? ' target="_blank" rel="noopener"' : "";
+    const href = p.itemId ? "menu.html?item=" + encodeURIComponent(p.itemId)
+      : (ext ? p.lienUrl : "menu.html");
+    const price = p.prixPlat === "" || p.prixPlat == null ? "" : `<div class="boost-price">${Number(p.prixPlat).toLocaleString("fr-FR")} DA</div>`;
+    return `<a class="boost-item" href="${escapeAttr(href)}"${ext}>
+      <div class="boost-img" style="background-image:url('${escapeAttr(p.imageUrl)}')"></div>
+      <span class="boost-tag">${escapeHtml(t("boostTag"))}</span>
+      <div class="boost-info">
+        <div class="boost-dish">${escapeHtml(p.nomPlat)}</div>${price}
+        <div class="boost-resto">${escapeHtml(p.restaurant)}</div>
+      </div></a>`;
+  }).join("");
+  box.classList.remove("hidden");
+}
+let _boostLoadId = 0;
+function loadBoost() {
+  const myId = ++_boostLoadId;
+  const cached = readBoostCache();
+  if (cached && cached.length) renderBoost(cached);
+  let attempt = 0;
+  const tryLoad = () => {
+    attempt++;
+    jsonpRequest({ action: "getFeaturedPubs" }, 20000)
+      .then(res => {
+        if (myId !== _boostLoadId) return;
+        const list = res && res.success ? (res.pubs || []) : [];
+        writeBoostCache(list);
+        renderBoost(list);
+      })
+      .catch(() => { if (myId === _boostLoadId && attempt < 2) setTimeout(tryLoad, 1500); });
+  };
+  tryLoad();
+}
+
 
 /* ============================================================
    INITIALISATION

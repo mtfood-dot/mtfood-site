@@ -4,9 +4,10 @@
 // JAMAIS mis en cache : toujours réseau, pour ne jamais servir des
 // commandes/statuts périmés.
 
-const CACHE_NAME = "mtdelivery-v7";
+const CACHE_NAME = "mtdelivery-v8";
 const CORE_ASSETS = [
   "/index.html",
+  "/menu.html",
   "/offline.html",
   "/logo.png",
   "/manifest.json",
