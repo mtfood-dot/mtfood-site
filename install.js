@@ -1,7 +1,8 @@
 // Bannière « Installer l'app » (Android/Chrome + aide iOS), injectée dynamiquement.
 (function () {
   var standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone;
-  function dismissed() { try { return localStorage.getItem("mtInstallDismissed") === "1"; } catch (e) { return false; } }
+  function dkey() { var l = document.querySelector('link[rel="manifest"]'); var h = l ? l.getAttribute("href") : ""; return "mtInstallDismissed" + (/livreur/.test(h) ? "Livreur" : /partenaire/.test(h) ? "Partenaire" : ""); }
+  function dismissed() { try { return localStorage.getItem(dkey()) === "1"; } catch (e) { return false; } }
   if (standalone || dismissed()) return;
 
   var style = document.createElement("style");
@@ -17,14 +18,19 @@
   var bar = document.createElement("div");
   bar.className = "install-bar";
   bar.setAttribute("role", "dialog");
-  bar.innerHTML = '<img src="/icons/icon-192.png" alt="">' +
-    '<div class="txt"><b>Installer MT Food</b><small>Accès rapide depuis votre écran d\'accueil</small></div>' +
+  var mf = document.querySelector('link[rel="manifest"]');
+  var mh = mf ? mf.getAttribute("href") : "";
+  var role = /livreur/.test(mh) ? "livreur" : /partenaire/.test(mh) ? "partenaire" : "";
+  var appName = role === "livreur" ? "MT Food Livreur" : role === "partenaire" ? "MT Food Partenaire" : "MT Food";
+  var iconSrc = role ? "/icons/" + role + "-192.png" : "/icons/icon-192.png";
+  bar.innerHTML = '<img src="' + iconSrc + '" alt="">' +
+    '<div class="txt"><b>Installer ' + appName + '</b><small>Accès rapide depuis votre écran d\'accueil</small></div>' +
     '<button class="go" type="button">Installer</button><button class="no" type="button" aria-label="Fermer">✕</button>';
   document.body.appendChild(bar);
 
   var go = bar.querySelector(".go"), no = bar.querySelector(".no"), hint = bar.querySelector("small");
   var deferred = null;
-  function dismiss() { try { localStorage.setItem("mtInstallDismissed", "1"); } catch (e) {} bar.classList.remove("show"); }
+  function dismiss() { try { localStorage.setItem(dkey(), "1"); } catch (e) {} bar.classList.remove("show"); }
   no.onclick = dismiss;
   window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); deferred = e; bar.classList.add("show"); });
   go.onclick = function () {
