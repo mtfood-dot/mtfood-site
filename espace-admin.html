@@ -1865,65 +1865,49 @@ function evalSiteUrl(kind) {
 function evalAcceptMsg(kind, nom, tel, pin) {
   const url = evalSiteUrl(kind);
   const idTel = fmtPhone(tel);
-  if (kind === "partner") {
-    return [
-      `Bonjour ${nom},`,
-      `Bonne nouvelle : votre demande pour rejoindre MT Delivery comme partenaire est acceptée ✅`,
-      ``,
-      `Lien : ${url}`,
-      `Identifiant (téléphone) : ${idTel}`,
-      `Code PIN : ${pin}`,
-      ``,
-      `Mini-tutoriel :`,
-      `1. Ouvrez le lien et connectez-vous avec votre numéro et votre code PIN.`,
-      `2. « Mon menu » : vos plats. « Proposer » : ajoutez un plat (nom, prix, photo), nous le validons avant publication.`,
-      `3. « Commandes » : retrouvez les commandes reçues et mettez à jour leur statut.`,
-      `4. Une question ? Répondez à ce message.`,
-      ``,
-      `────────`,
-      ``,
-      `مرحبًا ${nom}،`,
-      `يسعدنا إعلامكم بقبول طلبكم للانضمام إلى MT Delivery كشريك ✅`,
-      ``,
-      `الرابط: ${url}`,
-      `المعرّف (رقم الهاتف): ${idTel}`,
-      `رمز PIN: ${pin}`,
-      ``,
-      `شرح سريع:`,
-      `1. افتحوا الرابط وسجّلوا الدخول برقم هاتفكم ورمز PIN.`,
-      `2. «قائمتي»: أطباقكم. «اقتراح طبق»: أضيفوا طبقًا (الاسم والسعر والصورة) ونراجعه قبل نشره.`,
-      `3. «الطلبات»: تابعوا الطلبات الواردة وحدّثوا حالتها.`,
-      `4. لأي سؤال، ردّوا على هذه الرسالة.`
-    ].join("\n");
-  }
+  const isP = kind === "partner";
+  const app = isP ? "MT Food Partenaire" : "MT Food Livreur";
+  const appAr = isP ? "MT Food Partenaire" : "MT Food Livreur";
+  const pinFr = isP ? pin : "celui que vous avez choisi à l'inscription";
+  const pinAr = isP ? pin : "الذي اخترتموه عند التسجيل";
+  const tutoFr = isP
+    ? [`3. « Mon menu » : vos plats. « Proposer » : ajoutez un plat (nom, prix, photo), nous le validons avant publication.`,
+       `4. « Commandes » : retrouvez les commandes reçues et mettez à jour leur statut.`]
+    : [`3. « Disponibles » : les commandes à prendre. Appuyez sur « Accepter » pour en choisir une.`,
+       `4. « Mes livraisons » : suivez vos livraisons et mettez à jour leur statut à la remise.`];
+  const tutoAr = isP
+    ? [`3. «قائمتي»: أطباقكم. «اقتراح طبق»: أضيفوا طبقًا (الاسم والسعر والصورة) ونراجعه قبل نشره.`,
+       `4. «الطلبات»: تابعوا الطلبات الواردة وحدّثوا حالتها.`]
+    : [`3. «متوفرة»: الطلبات المتاحة. اضغطوا «قبول» لاختيار طلب.`,
+       `4. «توصيلاتي»: تابعوا توصيلاتكم وحدّثوا حالتها عند التسليم.`];
   return [
     `Bonjour ${nom},`,
-    `Bonne nouvelle : votre demande pour devenir livreur MT Delivery est acceptée ✅`,
+    `Bonne nouvelle : votre demande pour rejoindre MT Food (by MT Delivery) comme ${isP ? "partenaire" : "livreur"} est acceptée ✅`,
     ``,
     `Lien : ${url}`,
     `Identifiant (téléphone) : ${idTel}`,
-    `Code PIN : celui que vous avez choisi à l'inscription`,
+    `Code PIN : ${pinFr}`,
     ``,
     `Mini-tutoriel :`,
-    `1. Ouvrez le lien et connectez-vous avec votre numéro et votre code PIN.`,
-    `2. « Disponibles » : les commandes à prendre. Appuyez sur « Accepter » pour en choisir une.`,
-    `3. « Mes livraisons » : suivez vos livraisons et mettez à jour leur statut à la remise.`,
-    `4. Une question ? Répondez à ce message.`,
+    `1. Ouvrez le lien dans Chrome (iPhone : Safari) et appuyez sur « Installer ${app} » (iPhone : Partager puis « Sur l'écran d'accueil »).`,
+    `2. Connectez-vous avec votre numéro et votre code PIN.`,
+    ...tutoFr,
+    `5. Une question ? Répondez à ce message.`,
     ``,
     `────────`,
     ``,
     `مرحبًا ${nom}،`,
-    `يسعدنا إعلامكم بقبول طلبكم للانضمام إلى MT Delivery كسائق توصيل ✅`,
+    `يسعدنا إعلامكم بقبول طلبكم للانضمام إلى MT Food (من MT Delivery) ${isP ? "كشريك" : "كسائق توصيل"} ✅`,
     ``,
     `الرابط: ${url}`,
     `المعرّف (رقم الهاتف): ${idTel}`,
-    `رمز PIN: الذي اخترتموه عند التسجيل`,
+    `رمز PIN: ${pinAr}`,
     ``,
     `شرح سريع:`,
-    `1. افتحوا الرابط وسجّلوا الدخول برقم هاتفكم ورمز PIN.`,
-    `2. «متوفرة»: الطلبات المتاحة. اضغطوا «قبول» لاختيار طلب.`,
-    `3. «توصيلاتي»: تابعوا توصيلاتكم وحدّثوا حالتها عند التسليم.`,
-    `4. لأي سؤال، ردّوا على هذه الرسالة.`
+    `1. افتحوا الرابط في Chrome (آيفون: Safari) واضغطوا «تثبيت ${appAr}» (آيفون: مشاركة ثم «إضافة إلى الشاشة الرئيسية»).`,
+    `2. سجّلوا الدخول برقم هاتفكم ورمز PIN.`,
+    ...tutoAr,
+    `5. لأي سؤال، ردّوا على هذه الرسالة.`
   ].join("\n");
 }
 
@@ -1932,14 +1916,14 @@ function evalRefuseMsg(kind, nom, motif) {
   const ar = kind === "partner" ? "شريك" : "سائق توصيل";
   return [
     `Bonjour ${nom},`,
-    `Nous avons étudié votre demande pour rejoindre MT Delivery (${fr}). Malheureusement, elle n'est pas acceptée pour le moment.`,
+    `Nous avons étudié votre demande pour rejoindre MT Food (${fr}). Malheureusement, elle n'est pas acceptée pour le moment.`,
     `Motif : ${motif}`,
     `Vous pouvez répondre à ce message pour toute précision.`,
     ``,
     `────────`,
     ``,
     `مرحبًا ${nom}،`,
-    `لقد درسنا طلبكم للانضمام إلى MT Delivery (${ar}). للأسف لم يتم قبوله في الوقت الحالي.`,
+    `لقد درسنا طلبكم للانضمام إلى MT Food (${ar}). للأسف لم يتم قبوله في الوقت الحالي.`,
     `السبب: ${motif}`,
     `يمكنكم الرد على هذه الرسالة لأي توضيح.`
   ].join("\n");
