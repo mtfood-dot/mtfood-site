@@ -293,15 +293,7 @@ if ("serviceWorker" in navigator) {
         </div>
         <div class="field">
           <label id="lblCategorie" for="pCategorie">Catégorie</label>
-          <select id="pCategorie" data-required>
-            <option value="Pizza">Pizza</option>
-            <option value="Fast Food">Fast Food</option>
-            <option value="Plats">Plats</option>
-            <option value="Dessert">Dessert</option>
-            <option value="Boissons Chaudes">Boissons Chaudes</option>
-            <option value="Boissons Froides">Boissons Froides</option>
-            <option value="Autre" selected>Autre</option>
-          </select>
+          <select id="pCategorie" data-required></select>
         </div>
         <div class="field">
           <label id="lblPrix" for="pPrix">Prix (DA)</label>
@@ -459,6 +451,7 @@ const I18N = {
     statutRefuse: "Refusé",
     lblNom: "Nom du plat",
     lblCategorie: "Catégorie",
+    chooseCategory: "Choisir une catégorie",
     lblPrix: "Prix (DA)",
     lblDescription: "Description (optionnel)",
     lblPhoto: "Photo du plat (optionnel)",
@@ -544,6 +537,7 @@ const I18N = {
     statutRefuse: "مرفوض",
     lblNom: "اسم الطبق",
     lblCategorie: "الفئة",
+    chooseCategory: "اختر فئة",
     lblPrix: "السعر (دج)",
     lblDescription: "الوصف (اختياري)",
     lblPhoto: "صورة الطبق (اختياري)",
@@ -567,6 +561,34 @@ const I18N = {
 function t(key) { return (I18N[LANG] && I18N[LANG][key]) || I18N.fr[key] || key; }
 function $(id) { return document.getElementById(id); }
 
+/* Les 10 catégories du site (même noms que dans la barre du menu : FR enregistré dans le Sheet, AR pour l'affichage arabe). */
+const MENU_CATEGORIES = [
+  { fr: "Traditionnel", ar: "أكل تقليدي" },
+  { fr: "Pizza", ar: "بيتزا" },
+  { fr: "Fast Food", ar: "وجبات سريعة" },
+  { fr: "Poulet", ar: "دجاج" },
+  { fr: "Grillades", ar: "مشاوي" },
+  { fr: "Plats", ar: "أطباق" },
+  { fr: "Salades & Entrées", ar: "سلطات ومقبلات" },
+  { fr: "Desserts", ar: "حلويات" },
+  { fr: "Boissons", ar: "مشروبات" },
+  { fr: "Café & Thé", ar: "قهوة وشاي" }
+];
+function renderCategoryOptions() {
+  const sel = $("pCategorie");
+  const current = sel.value;
+  sel.innerHTML = "";
+  const ph = document.createElement("option");
+  ph.value = ""; ph.textContent = t("chooseCategory");
+  sel.appendChild(ph);
+  MENU_CATEGORIES.forEach(c => {
+    const o = document.createElement("option");
+    o.value = c.fr; o.textContent = LANG === "ar" ? c.ar : c.fr;
+    sel.appendChild(o);
+  });
+  sel.value = current && MENU_CATEGORIES.some(c => c.fr === current) ? current : "";
+}
+
 function applyLanguage() {
   document.documentElement.lang = LANG;
   document.documentElement.dir = LANG === "ar" ? "rtl" : "ltr";
@@ -588,6 +610,7 @@ function applyLanguage() {
   $("footerNote").textContent = t("footerNote");
   $("lblNom").textContent = t("lblNom");
   $("lblCategorie").textContent = t("lblCategorie");
+  renderCategoryOptions();
   $("lblPrix").textContent = t("lblPrix");
   $("lblDescription").textContent = t("lblDescription");
   $("lblPhoto").textContent = t("lblPhoto");
@@ -947,14 +970,15 @@ async function onPropose() {
   $("proposeBtn").disabled = true;
   $("proposeBtn").textContent = "...";
   try {
-    const payload = JSON.stringify({ nom, categorie, prix: Number(prix), description, photoData: PHOTO_DATA });
+    const cat = MENU_CATEGORIES.find(c => c.fr === categorie);
+    const payload = JSON.stringify({ nom, categorie, categorie_ar: cat ? cat.ar : "", prix: Number(prix), description, photoData: PHOTO_DATA });
     const data = await apiGet({ action: "proposeMenuItem", telephone: SESSION.telephone, payload });
     if (data.success) {
       showSuccess($("successBox"), t("proposeSuccess"));
       $("pNom").value = "";
       $("pPrix").value = "";
       $("pDescription").value = "";
-      $("pCategorie").value = "Autre";
+      $("pCategorie").value = "";
       clearPhoto();
       await loadMenu();
     } else {
