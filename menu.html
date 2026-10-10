@@ -162,26 +162,27 @@
 
   /* ---------- CATEGORY TABS ---------- */
   .tabs{
-    display:flex;gap:6px;overflow-x:auto;padding:14px 12px 8px;
+    display:flex;gap:4px;overflow-x:auto;padding:16px 10px 6px;
     background:var(--bg);scrollbar-width:none;
   }
   .tabs::-webkit-scrollbar{display:none;}
   .tab{
-    flex:0 0 auto;width:74px;display:flex;flex-direction:column;align-items:center;gap:6px;
+    flex:0 0 auto;width:86px;display:flex;flex-direction:column;align-items:center;gap:8px;
     cursor:pointer;-webkit-tap-highlight-color:transparent;
   }
   .tab .ico{
-    width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-    line-height:0;background:#fff;border:1.5px solid var(--border);
-    box-shadow:var(--shadow-sm);transition:all .15s ease;
+    width:68px;height:68px;display:flex;align-items:center;justify-content:center;
+    line-height:0;transition:transform .15s ease;
   }
+  .tab .ico svg{width:100%;height:100%;filter:drop-shadow(0 2px 2px rgba(10,38,71,.18));}
   .tab .lbl{
-    font-size:12px;font-weight:600;color:var(--blue-700);text-align:center;line-height:1.2;
-    max-width:74px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-    padding-bottom:3px;border-bottom:2.5px solid transparent;
+    font-size:14px;font-weight:600;color:var(--text,#0a2647);text-align:center;line-height:1.2;
+    max-width:86px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    padding-bottom:4px;border-bottom:3px solid transparent;
   }
-  .tab.active .ico{background:var(--blue-100);border-color:var(--blue-700);box-shadow:0 6px 14px -4px rgba(19,74,143,.45);}
-  .tab.active .lbl{color:var(--blue-900);font-weight:800;border-bottom-color:var(--gold-600,#d4a017);}
+  .tab:active .ico{transform:scale(.94);}
+  .tab.active .ico{transform:scale(1.06);}
+  .tab.active .lbl{font-weight:800;border-bottom-color:var(--gold-600,#d4a017);}
 
   /* ---------- PRODUCT GRID ---------- */
   main{padding:6px 16px 10px;max-width:960px;margin:0 auto;}
@@ -1211,7 +1212,7 @@ function catIcon(cat) {
     const k = String(cat).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     for (const [re, name] of CAT_ICONS) { if (re.test(k)) { key = name; break; } }
   }
-  return '<svg viewBox="0 0 48 48" width="36" height="36" focusable="false">' + CAT_SVG[key] + '</svg>';
+  return '<svg viewBox="0 0 48 48" focusable="false">' + CAT_SVG[key] + '</svg>';
 }
 
 function renderTabs() {
