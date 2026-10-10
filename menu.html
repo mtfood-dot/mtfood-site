@@ -676,7 +676,7 @@ const I18N = {
     addrGpsDenied: "Position refusée : choisis ta zone dans la liste ci-dessous.",
     addrGpsFail: "Impossible de te localiser : choisis ta zone dans la liste ci-dessous.",
     addrGpsUnsupported: "La localisation n'est pas disponible sur cet appareil : choisis ta zone ci-dessous.",
-    addrGpsOut: "Tu sembles hors de notre zone de livraison actuelle. Tu peux quand même choisir ta zone ci-dessous.",
+    addrGpsOut: "Tu sembles hors de notre zone de livraison. Pour te faire livrer à Meftah, choisis ta zone ci-dessous et saisis l'adresse de livraison.",
     addrGpsNoZone: "Position trouvée, mais la zone n'a pas pu être déterminée : choisis-la dans la liste.",
     addrGpsOk: "Position trouvée : ",
     addrDetected: "Position détectée : ",
@@ -787,7 +787,7 @@ const I18N = {
     addrGpsDenied: "تم رفض الوصول إلى الموقع: اختر منطقتك من القائمة أدناه.",
     addrGpsFail: "تعذّر تحديد موقعك: اختر منطقتك من القائمة أدناه.",
     addrGpsUnsupported: "تحديد الموقع غير متاح على هذا الجهاز: اختر منطقتك أدناه.",
-    addrGpsOut: "يبدو أنك خارج منطقة التوصيل الحالية. يمكنك مع ذلك اختيار منطقتك أدناه.",
+    addrGpsOut: "يبدو أنك خارج منطقة التوصيل. للتوصيل إلى المفتاح، اختر منطقتك أدناه وأدخل عنوان التوصيل.",
     addrGpsNoZone: "تم تحديد موقعك لكن تعذّر تحديد المنطقة: اخترها من القائمة.",
     addrGpsOk: "تم تحديد موقعك: ",
     addrDetected: "موقعك المكتشف: ",
@@ -1548,6 +1548,7 @@ const ADDR_KEY = "mtDelivery";
 let DELIVERY = { zoneId: "", line: "", repere: "", outside: false };
 let ADDR_DRAFT_ZONE = null;
 let ADDR_DRAFT_OUTSIDE = false;
+let ADDR_GPS_FILLED = "";
 
 function loadDelivery() {
   try {
@@ -1618,6 +1619,7 @@ function renderAddrZones() {
   $("addrZones").querySelectorAll(".zone-opt").forEach(el =>
     el.addEventListener("click", () => {
       ADDR_DRAFT_ZONE = el.dataset.zone;
+      ADDR_DRAFT_OUTSIDE = false;   // choix manuel : le client saisit une adresse dans cette zone
       $("addrZoneErr").classList.remove("show");
       renderAddrZones();
     }));
@@ -1730,7 +1732,14 @@ function onGpsPosition(lat, lng) {
   where.className = "gps-where"; where.textContent = "";
   reverseGeocode(lat, lng).then(res => {
     const addr = res ? res.addr : "";
-    if (addr && !$("addrLine").value.trim()) $("addrLine").value = addr;
+    if (outside) {
+      // Hors zone : on n'écrit pas le lieu GPS comme adresse de livraison. Le client saisit lui-même une adresse à Meftah.
+      if ($("addrLine").value.trim() === ADDR_GPS_FILLED) $("addrLine").value = "";
+      ADDR_GPS_FILLED = "";
+    } else if (addr && !$("addrLine").value.trim()) {
+      $("addrLine").value = addr;
+      ADDR_GPS_FILLED = addr;
+    }
     if (res && res.where) { where.textContent = t("addrDetected") + res.where; where.className = "gps-where show"; }
     if (outside) showGpsMsg(t("addrGpsOut"));
     else if (!zone) showGpsMsg(t("addrGpsNoZone"));
