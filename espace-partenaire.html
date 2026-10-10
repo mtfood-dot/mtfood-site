@@ -190,6 +190,25 @@
   .order-card .articles{font-size:13px;color:var(--text);background:var(--bg);border-radius:var(--radius-sm);
     padding:8px 10px;margin:8px 0;line-height:1.5;}
 
+  .tab-btn .count.alert{background:var(--danger,#c62828);color:#fff;animation:pulse 1.2s infinite;}
+  @keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.18);}}
+  .live-card{border-width:2px;}
+  .live-card.new{border-color:var(--gold-500);box-shadow:0 0 0 3px rgba(212,160,23,.18);}
+  .live-card .st{display:inline-block;font-size:11px;font-weight:800;border-radius:999px;padding:3px 10px;}
+  .live-card .st.new{background:var(--gold-100);color:var(--gold-600);}
+  .live-card .st.ok{background:#eaf7ee;color:var(--green);}
+  .live-card .st.road{background:#e8f0fb;color:var(--blue-900);}
+  .live-card .ago{font-size:12px;color:var(--muted);font-weight:700;}
+  .live-card .notes{font-size:12.5px;color:#8a5a00;background:#fff5e0;border-radius:var(--radius-sm);padding:6px 10px;margin-top:6px;}
+  .live-actions{display:flex;gap:10px;margin-top:12px;}
+  .live-actions button{flex:1;border:none;border-radius:var(--radius-sm);padding:12px;font-weight:800;font-size:14.5px;font-family:inherit;cursor:pointer;}
+  .live-actions .acc{background:var(--green,#1a7d3a);color:#fff;}
+  .live-actions .ref{background:#fdeceb;color:var(--danger,#c62828);}
+  .live-actions .ref.confirm{background:var(--danger,#c62828);color:#fff;}
+  .live-actions button:disabled{opacity:.55;}
+  .alert-setup{background:var(--gold-100);border:1.5px solid var(--gold-500);border-radius:var(--radius-md);padding:12px 14px;margin-bottom:12px;font-size:13px;line-height:1.5;color:var(--blue-900);}
+  .alert-setup button{margin-top:8px;width:100%;background:var(--blue-900);color:#fff;border:none;border-radius:var(--radius-sm);padding:11px;font-weight:800;font-size:14px;font-family:inherit;cursor:pointer;}
+  .live-info{font-size:12px;color:var(--muted);text-align:center;margin:6px 0 10px;}
   .empty-state{text-align:center;color:var(--muted);font-size:13.5px;padding:40px 20px;}
   .empty-state .emoji{font-size:32px;display:block;margin-bottom:10px;}
 
@@ -199,6 +218,8 @@
     color:var(--muted);font-size:11.5px;font-weight:500;}
 </style>
 <script src="/form-validate.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js"></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
@@ -249,7 +270,10 @@ if ("serviceWorker" in navigator) {
     </div>
 
     <div class="tabs">
-      <button class="tab-btn active" id="tabMenu" type="button">
+      <button class="tab-btn active" id="tabLive" type="button">
+        <span id="tabLiveLabel">En cours</span> <span class="count" id="countLive">0</span>
+      </button>
+      <button class="tab-btn" id="tabMenu" type="button">
         <span id="tabMenuLabel">Mon menu</span> <span class="count" id="countMenu">0</span>
       </button>
       <button class="tab-btn" id="tabOrders" type="button">
@@ -266,8 +290,21 @@ if ("serviceWorker" in navigator) {
     <div id="errorBox" class="error-box"></div>
     <div id="successBox" class="success-box"></div>
 
+    <!-- Onglet : Commandes en cours (à accepter / acceptées / en livraison) -->
+    <div id="panelLive">
+      <div class="alert-setup hidden" id="alertSetup">
+        <div id="alertSetupText">Active le son et les notifications pour être prévenu de chaque nouvelle commande, même application fermée.</div>
+        <button type="button" id="alertSetupBtn">Activer les alertes</button>
+      </div>
+      <div class="refresh-row">
+        <span class="live-info" id="liveInfo"></span>
+        <button class="btn-refresh" id="refreshLiveBtn" type="button"><span id="refreshLiveLabel">↻ Actualiser</span></button>
+      </div>
+      <div id="listLive"></div>
+    </div>
+
     <!-- Onglet : Mon menu -->
-    <div id="panelMenu">
+    <div id="panelMenu" class="hidden">
       <div class="refresh-row">
         <span></span>
         <button class="btn-refresh" id="refreshMenuBtn" type="button"><span id="refreshMenuLabel">↻ Actualiser</span></button>
@@ -372,7 +409,12 @@ const SESSION_KEY = "mtd_espace_partenaire_session";
 let LANG = localStorage.getItem(LANG_KEY) || "fr";
 let SESSION = null;
 try { SESSION = JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch(e) { SESSION = null; }
-let CURRENT_TAB = "menu";
+let CURRENT_TAB = "live";
+let LIVE_ORDERS = [];
+let LIVE_KNOWN = null;          // numéros « À confirmer » déjà vus (null = premier chargement)
+let LIVE_TIMER = null;
+let LIVE_BUSY = false;
+const LIVE_EVERY_MS = 30000;
 let MENU_ITEMS = [];
 let ORDERS = [];
 let BOOST_OFFERS = [];
@@ -396,6 +438,26 @@ const I18N = {
     loginBtn: "Se connecter",
     logoutBtn: "Déconnexion",
     tabMenuLabel: "Mon menu",
+    tabLiveLabel: "En cours",
+    liveNone: "Aucune commande en cours. Les nouvelles commandes s'affichent ici automatiquement.",
+    liveStNew: "À accepter",
+    liveStOk: "Acceptée · en attente du livreur",
+    liveStRoad: "En livraison",
+    liveAccept: "Accepter",
+    liveRefuse: "Refuser",
+    liveRefuseConfirm: "Confirmer le refus",
+    liveAgo: "il y a {m} min",
+    liveNow: "à l'instant",
+    liveUpdated: "Mise à jour automatique toutes les 30 s · {h}",
+    liveAccepted: "Commande acceptée : les livreurs sont prévenus.",
+    liveRefused: "Commande refusée : le client est prévenu.",
+    liveDone: "Cette commande a déjà été traitée.",
+    liveNotes: "Remarque du client :",
+    liveClient: "Client",
+    alertSetupText: "Active le son et les notifications pour être prévenu de chaque nouvelle commande, même application fermée.",
+    alertSetupBtn: "Activer les alertes",
+    alertIosHint: "Sur iPhone, installe d'abord l'application (Partager → Sur l'écran d'accueil) pour recevoir les notifications.",
+    newOrderTitle: "Nouvelle commande !",
     tabOrdersLabel: "Commandes",
     tabProposeLabel: "Proposer",
     tabBoostLabel: "Publicité",
@@ -482,6 +544,26 @@ const I18N = {
     loginBtn: "تسجيل الدخول",
     logoutBtn: "تسجيل الخروج",
     tabMenuLabel: "قائمتي",
+    tabLiveLabel: "قيد التنفيذ",
+    liveNone: "لا توجد طلبات قيد التنفيذ. تظهر الطلبات الجديدة هنا تلقائيًا.",
+    liveStNew: "بانتظار القبول",
+    liveStOk: "مقبول · بانتظار الموصل",
+    liveStRoad: "قيد التوصيل",
+    liveAccept: "قبول",
+    liveRefuse: "رفض",
+    liveRefuseConfirm: "تأكيد الرفض",
+    liveAgo: "منذ {m} د",
+    liveNow: "الآن",
+    liveUpdated: "تحديث تلقائي كل 30 ثانية · {h}",
+    liveAccepted: "تم قبول الطلب: تم إعلام الموصلين.",
+    liveRefused: "تم رفض الطلب: تم إعلام الزبون.",
+    liveDone: "تمت معالجة هذا الطلب مسبقًا.",
+    liveNotes: "ملاحظة الزبون:",
+    liveClient: "الزبون",
+    alertSetupText: "فعّل الصوت والإشعارات لتصلك كل طلبية جديدة، حتى والتطبيق مغلق.",
+    alertSetupBtn: "تفعيل التنبيهات",
+    alertIosHint: "على الآيفون، ثبّت التطبيق أولًا (مشاركة ← إضافة إلى الشاشة الرئيسية) لتلقي الإشعارات.",
+    newOrderTitle: "طلبية جديدة!",
     tabOrdersLabel: "الطلبات",
     tabProposeLabel: "اقتراح طبق",
     tabBoostLabel: "الإعلان",
@@ -603,6 +685,10 @@ function applyLanguage() {
   $("loginBtn").textContent = t("loginBtn");
   $("logoutBtn").textContent = t("logoutBtn");
   $("tabMenuLabel").textContent = t("tabMenuLabel");
+  $("tabLiveLabel").textContent = t("tabLiveLabel");
+  $("refreshLiveLabel").textContent = t("refreshLabel");
+  $("alertSetupText").textContent = t("alertSetupText");
+  $("alertSetupBtn").textContent = t("alertSetupBtn");
   $("tabOrdersLabel").textContent = t("tabOrdersLabel");
   $("tabProposeLabel").textContent = t("tabProposeLabel");
   $("refreshMenuLabel").textContent = t("refreshLabel");
@@ -624,6 +710,7 @@ function applyLanguage() {
   renderMenu();
   renderOrders();
   renderBoost();
+  renderLive();
 }
 
 $("langToggle").addEventListener("click", () => {
@@ -712,6 +799,7 @@ async function doLogin() {
 }
 
 $("logoutBtn").addEventListener("click", () => {
+  stopLivePolling();
   SESSION = null;
   localStorage.removeItem(SESSION_KEY);
   $("appScreen").classList.add("hidden");
@@ -741,11 +829,16 @@ function enterApp() {
   loadMenu();
   loadOrders();
   loadBoost();
+  switchTab(CURRENT_TAB);
+  startLivePolling();
+  updateAlertSetup();
+  if (typeof Notification !== "undefined" && Notification.permission === "granted") registerPartnerPush_();
 }
 
 /* ============================================================
    ONGLETS
    ============================================================ */
+$("tabLive").addEventListener("click", () => switchTab("live"));
 $("tabMenu").addEventListener("click", () => switchTab("menu"));
 $("tabOrders").addEventListener("click", () => switchTab("orders"));
 $("tabPropose").addEventListener("click", () => switchTab("propose"));
@@ -753,6 +846,8 @@ $("tabBoost").addEventListener("click", () => switchTab("boost"));
 
 function switchTab(tab) {
   CURRENT_TAB = tab;
+  $("tabLive").classList.toggle("active", tab === "live");
+  $("panelLive").classList.toggle("hidden", tab !== "live");
   $("tabMenu").classList.toggle("active", tab === "menu");
   $("tabOrders").classList.toggle("active", tab === "orders");
   $("tabPropose").classList.toggle("active", tab === "propose");
@@ -850,6 +945,190 @@ async function onToggle(itemId, isChecked) {
     showError($("errorBox"), t("toggleFailedGeneric"));
     await loadMenu();
   }
+}
+
+/* ============================================================
+   COMMANDES EN COURS : nouvelles commandes à accepter, alertes
+   - Actualisation toutes les 30 s tant que la page est ouverte (et au retour sur la page)
+   - Nouvelle commande : son + vibration + pastille + titre de l'onglet
+   - Notification push (même application fermée) via Firebase, jeton enregistré côté serveur
+   ============================================================ */
+const FCM_CONFIG = {
+  apiKey: "AIzaSyDh9Vrzfd4jC3OyxPPx5Xg0wo9nL0hNt5Q",
+  authDomain: "mt-delivery-489fa.firebaseapp.com",
+  projectId: "mt-delivery-489fa",
+  storageBucket: "mt-delivery-489fa.firebasestorage.app",
+  messagingSenderId: "1070331334746",
+  appId: "1:1070331334746:web:d559009457afd41a8fc863"
+};
+const FCM_VAPID_KEY = "BDZwk3KEyULhtVEn3kPDhpUc1hIEtdke835Os4u2NxqGomlRuEzLDwZXUzHMhVkal4r77N0fSCNq-bGu3lO5J_I";
+let AUDIO_CTX = null;
+const BASE_TITLE = document.title;
+
+async function registerPartnerPush_() {
+  try {
+    if (!("Notification" in window) || !("serviceWorker" in navigator) || typeof firebase === "undefined") return false;
+    if (Notification.permission !== "granted") return false;
+    const reg = await navigator.serviceWorker.ready;
+    if (!firebase.apps.length) firebase.initializeApp(FCM_CONFIG);
+    const messaging = firebase.messaging();
+    const pushToken = await messaging.getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: reg });
+    if (!pushToken) return false;
+    // « token » = jeton de session (ajouté par apiGet) ; le jeton push part dans « pushToken »
+    await apiGet({ action: "saveFcmToken", role: "partner", pushToken: pushToken });
+    // Application ouverte : la notification arrive ici, on recharge tout de suite la liste
+    messaging.onMessage(() => loadLive(true));
+    return true;
+  } catch (e) {
+    console.warn("Notifications push non activées :", e);
+    return false;
+  }
+}
+
+function unlockAudio_() {
+  try {
+    if (!AUDIO_CTX) AUDIO_CTX = new (window.AudioContext || window.webkitAudioContext)();
+    if (AUDIO_CTX.state === "suspended") AUDIO_CTX.resume();
+  } catch (e) {}
+}
+document.addEventListener("click", unlockAudio_, { once: true });
+
+function ringBell_() {
+  try {
+    unlockAudio_();
+    if (AUDIO_CTX) {
+      const now = AUDIO_CTX.currentTime;
+      [0, 0.35, 0.7].forEach((d, i) => {
+        const o = AUDIO_CTX.createOscillator(), g = AUDIO_CTX.createGain();
+        o.type = "sine"; o.frequency.value = i === 1 ? 1175 : 880;
+        g.gain.setValueAtTime(0.0001, now + d);
+        g.gain.exponentialRampToValueAtTime(0.5, now + d + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + d + 0.3);
+        o.connect(g); g.connect(AUDIO_CTX.destination);
+        o.start(now + d); o.stop(now + d + 0.32);
+      });
+    }
+  } catch (e) {}
+  try { if (navigator.vibrate) navigator.vibrate([300, 150, 300, 150, 300]); } catch (e) {}
+}
+
+function updateAlertSetup() {
+  const box = $("alertSetup");
+  const supported = ("Notification" in window);
+  const needed = !supported || Notification.permission !== "granted" || !AUDIO_CTX || AUDIO_CTX.state !== "running";
+  box.classList.toggle("hidden", !needed);
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  $("alertSetupText").textContent = t("alertSetupText") + ((ios && !standalone) ? " " + t("alertIosHint") : "");
+}
+$("alertSetupBtn").addEventListener("click", async () => {
+  unlockAudio_();
+  if ("Notification" in window && Notification.permission === "default") {
+    try { await Notification.requestPermission(); } catch (e) {}
+  }
+  await registerPartnerPush_();
+  updateAlertSetup();
+});
+
+function startLivePolling() {
+  stopLivePolling();
+  loadLive();
+  LIVE_TIMER = setInterval(() => { if (document.visibilityState === "visible") loadLive(); }, LIVE_EVERY_MS);
+}
+function stopLivePolling() {
+  if (LIVE_TIMER) clearInterval(LIVE_TIMER);
+  LIVE_TIMER = null; LIVE_KNOWN = null;
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && SESSION && LIVE_TIMER) loadLive();
+});
+$("refreshLiveBtn").addEventListener("click", () => loadLive(true));
+
+async function loadLive(force) {
+  if (!SESSION || (LIVE_BUSY && !force)) return;
+  LIVE_BUSY = true;
+  try {
+    const data = await apiGet({ action: "partnerLiveOrders" });
+    if (!data || !data.success) return;
+    LIVE_ORDERS = data.orders || [];
+    const pending = LIVE_ORDERS.filter(o => o.statut === "À confirmer").map(o => String(o.numero));
+    const fresh = LIVE_KNOWN ? pending.filter(n => !LIVE_KNOWN.has(n)) : [];
+    LIVE_KNOWN = new Set(pending);
+    if (fresh.length) {
+      ringBell_();
+      if (CURRENT_TAB !== "live") switchTab("live");
+    }
+    const hh = new Date(); const pad = n => String(n).padStart(2, "0");
+    $("liveInfo").textContent = t("liveUpdated").replace("{h}", pad(hh.getHours()) + ":" + pad(hh.getMinutes()));
+    renderLive(fresh);
+  } catch (e) {
+    /* réseau : on réessaie au prochain passage */
+  } finally {
+    LIVE_BUSY = false;
+  }
+}
+
+function liveAgo_(iso) {
+  const t0 = Date.parse(iso || "");
+  if (!t0) return "";
+  const m = Math.floor((Date.now() - t0) / 60000);
+  return m < 1 ? t("liveNow") : t("liveAgo").replace("{m}", m);
+}
+
+function renderLive(fresh) {
+  const pending = LIVE_ORDERS.filter(o => o.statut === "À confirmer").length;
+  const c = $("countLive");
+  c.textContent = pending || LIVE_ORDERS.length;
+  c.classList.toggle("alert", pending > 0);
+  document.title = pending ? "(" + pending + ") " + BASE_TITLE : BASE_TITLE;
+  const freshSet = new Set(fresh || []);
+  $("listLive").innerHTML = LIVE_ORDERS.length
+    ? LIVE_ORDERS.map(o => liveCardHtml(o, freshSet.has(String(o.numero)))).join("")
+    : emptyStateHtml(t("liveNone"), "🛎️");
+  $("listLive").querySelectorAll("[data-acc]").forEach(b => b.addEventListener("click", () => decideLive(b.dataset.acc, true, b)));
+  $("listLive").querySelectorAll("[data-ref]").forEach(b => b.addEventListener("click", () => {
+    // Refus en deux appuis (pas de fenêtre de confirmation du navigateur)
+    if (!b.classList.contains("confirm")) {
+      b.classList.add("confirm"); b.textContent = t("liveRefuseConfirm");
+      setTimeout(() => { if (b.isConnected) { b.classList.remove("confirm"); b.textContent = t("liveRefuse"); } }, 4000);
+      return;
+    }
+    decideLive(b.dataset.ref, false, b);
+  }));
+}
+
+function liveCardHtml(o, isFresh) {
+  const st = o.statut === "À confirmer" ? ["new", t("liveStNew")] : o.statut === "En livraison" ? ["road", t("liveStRoad")] : ["ok", t("liveStOk")];
+  const num = escapeAttr(String(o.numero || ""));
+  return `
+    <div class="order-card live-card ${o.statut === "À confirmer" ? "new" : ""}">
+      <div class="row1">
+        <div><div class="numero">${escapeHtml(o.numero || "")}${isFresh ? " · 🔔" : ""}</div>
+          <span class="st ${st[0]}">${escapeHtml(st[1])}</span></div>
+        <div style="text-align:end"><div class="total">${escapeHtml(String(o.total || 0))} DA</div><div class="ago">${escapeHtml(liveAgo_(o.heure))}</div></div>
+      </div>
+      <div class="meta">${escapeHtml(t("liveClient"))} : ${escapeHtml(o.client || "")}</div>
+      <div class="articles">${escapeHtml(String(o.articles || "").split(" | ").join("\n")).replace(/\n/g, "<br>")}</div>
+      ${o.notes ? `<div class="notes">${escapeHtml(t("liveNotes"))} ${escapeHtml(o.notes)}</div>` : ""}
+      ${o.statut === "À confirmer" ? `<div class="live-actions">
+        <button type="button" class="acc" data-acc="${num}">${escapeHtml(t("liveAccept"))}</button>
+        <button type="button" class="ref" data-ref="${num}">${escapeHtml(t("liveRefuse"))}</button>
+      </div>` : ""}
+    </div>`;
+}
+
+async function decideLive(numero, accept, btn) {
+  hideError($("errorBox")); hideSuccess($("successBox"));
+  btn.closest(".live-actions").querySelectorAll("button").forEach(b => b.disabled = true);
+  try {
+    const data = await apiGet({ action: accept ? "partnerAccept" : "partnerRefuse", orderNumber: numero });
+    if (data && data.success) showSuccess($("successBox"), t(accept ? "liveAccepted" : "liveRefused"));
+    else if (data && data.code === "done") showError($("errorBox"), t("liveDone"));
+    else showError($("errorBox"), (data && data.error) || t("loadFailedGeneric"));
+  } catch (e) {
+    showError($("errorBox"), t("loadFailedGeneric"));
+  }
+  await loadLive(true);
 }
 
 /* ============================================================

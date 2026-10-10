@@ -4,7 +4,7 @@
 // JAMAIS mis en cache : toujours réseau, pour ne jamais servir des
 // commandes/statuts périmés.
 
-const CACHE_NAME = "mtdelivery-v9";
+const CACHE_NAME = "mtdelivery-v10";
 const CORE_ASSETS = [
   "/index.html",
   "/menu.html",
@@ -98,6 +98,7 @@ self.addEventListener("fetch", (event) => {
 // Page à ouvrir au clic selon le contenu de la notification :
 // suivi de la commande (client) ou espace livreur (nouvelle commande), sinon accueil.
 function targetFromData_(d) {
+  if (d && d.type === "newPartnerOrder") return "/espace-partenaire.html";
   if (d && d.orderNumber) return "/suivi-commande.html?cmd=" + encodeURIComponent(d.orderNumber);
   if (d && d.type === "newOrder") return "/espace-livreur.html";
   return "/index.html";

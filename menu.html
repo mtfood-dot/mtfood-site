@@ -709,6 +709,7 @@ const I18N = {
     addrSearchNone: "Aucun résultat à Meftah. Essaie un autre nom de rue ou de quartier, ou utilise ta position actuelle.",
     addrSearchTip: "Choisis ton adresse dans la liste :",
     addrSearching: "Recherche…",
+    cartOneRestaurant: "Ton panier contient déjà des plats de « {r} ». Une commande = un seul restaurant : termine-la ou vide ton panier pour commander ailleurs.",
     addrVerifying: "Vérification de l'adresse…",
     addrNotFound: "Adresse introuvable avec certitude : utilise ta position actuelle (bouton ci-dessus).",
     addrToLocate: "à localiser",
@@ -767,7 +768,7 @@ const I18N = {
     sending: "Envoi en cours...",
     orderSentTitle: "Commande envoyée !",
     trackOrder: "Suivre ma commande",
-    thanksHtml: "Dernière étape : confirmez votre commande sur WhatsApp pour que nous puissions la préparer.<br>Paiement en espèces à la réception.",
+    thanksHtml: "Ta commande est envoyée au restaurant, qui doit l'accepter. Tu seras prévenu dès que c'est fait.<br>Paiement en espèces à la réception.",
     waConfirm: "✅ Confirmer ma commande sur WhatsApp",
     waNote: "Un message déjà prêt s'ouvre : il suffit d'appuyer sur Envoyer.",
     waMsgIntro: "Bonjour MT Delivery, je confirme ma commande",
@@ -841,6 +842,7 @@ const I18N = {
     addrSearchNone: "لا توجد نتائج في المفتاح. جرّب اسم شارع أو حي آخر، أو استخدم موقعك الحالي.",
     addrSearchTip: "اختر عنوانك من القائمة:",
     addrSearching: "جارٍ البحث…",
+    cartOneRestaurant: "سلتك تحتوي على أطباق من «{r}». الطلب الواحد من مطعم واحد: أنهِه أو أفرغ السلة للطلب من مطعم آخر.",
     addrVerifying: "جارٍ التحقق من العنوان…",
     addrNotFound: "تعذّر تحديد العنوان بدقة: استخدم موقعك الحالي (الزر أعلاه).",
     addrToLocate: "يجب تحديد الموقع",
@@ -1459,9 +1461,35 @@ function bindCardEvents() {
     b.addEventListener("click", () => changeQty(b.dataset.dec, -1)));
 }
 
+/* Une commande = un seul restaurant : on refuse d'ajouter un plat d'un autre restaurant */
+function cartPartner() {
+  const l = Object.values(CART)[0];
+  return l ? String(l.item.partenaire || "").trim().toLowerCase() : null;
+}
+function showCartNotice(msg) {
+  let n = $("cartNotice");
+  if (!n) {
+    n = document.createElement("div");
+    n.id = "cartNotice"; n.setAttribute("role", "alert");
+    n.style.cssText = "position:fixed;left:12px;right:12px;bottom:84px;z-index:60;background:#fff5e0;color:#8a5a00;border:1.5px solid #f1d9a0;border-radius:14px;padding:12px 14px;font-size:13.5px;font-weight:700;line-height:1.5;box-shadow:0 6px 20px rgba(0,0,0,.15);display:none;";
+    document.body.appendChild(n);
+  }
+  n.textContent = msg; n.style.display = "block";
+  clearTimeout(showCartNotice.t);
+  showCartNotice.t = setTimeout(() => { n.style.display = "none"; }, 5000);
+}
+
 function changeQty(id, delta) {
   const item = MENU.find(i => String(i.id) === String(id));
   if (!item) return;
+  if (delta > 0 && !CART[id]) {
+    const cp = cartPartner();
+    if (cp !== null && cp !== String(item.partenaire || "").trim().toLowerCase()) {
+      const other = Object.values(CART)[0].item.partenaire || "";
+      showCartNotice(t("cartOneRestaurant").replace("{r}", other));
+      return;
+    }
+  }
   const current = CART[id] ? CART[id].qty : 0;
   const next = Math.max(0, current + delta);
 
