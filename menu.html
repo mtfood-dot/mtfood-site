@@ -184,6 +184,31 @@
   .tab.active .ico{transform:scale(1.06);}
   .tab.active .lbl{font-weight:800;border-bottom-color:var(--gold-600,#d4a017);}
 
+
+  /* ---------- BARRE D'ADRESSE ---------- */
+  .addr-bar{background:#fff;border-bottom:1px solid var(--border);}
+  .addr-btn{
+    display:flex;align-items:center;gap:8px;width:100%;max-width:960px;margin:0 auto;
+    padding:11px 16px;background:none;border:none;cursor:pointer;text-align:start;
+    font-family:inherit;color:var(--blue-900);
+  }
+  .addr-btn .pin{font-size:16px;flex:0 0 auto;}
+  .addr-btn .txt{flex:1;min-width:0;font-size:14.5px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .addr-btn .txt.empty{color:var(--blue-700);}
+  .addr-btn .chev{flex:0 0 auto;font-size:12px;color:var(--muted);}
+  .gps-btn{
+    display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+    background:var(--blue-100);color:var(--blue-900);border:1.5px solid var(--blue-600);border-radius:12px;
+    padding:12px 14px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;
+  }
+  .gps-btn:disabled{opacity:.6;cursor:wait;}
+  .gps-msg{margin-top:8px;font-size:12.5px;line-height:1.5;border-radius:10px;padding:8px 11px;display:none;}
+  .gps-msg.show{display:block;}
+  .gps-msg.ok{background:#eaf7ee;color:#1a7d3a;}
+  .gps-msg.warn{background:#fff5e0;color:#8a5a00;}
+  .gps-priv{margin-top:6px;font-size:11.5px;color:var(--muted);text-align:center;}
+  .addr-fixed{padding:11px 13px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-weight:700;color:var(--blue-900);}
+
   /* ---------- PRODUCT GRID ---------- */
   main{padding:6px 16px 10px;max-width:960px;margin:0 auto;}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
@@ -418,6 +443,14 @@ if ("serviceWorker" in navigator) {
 </head>
 <body>
 
+<div class="addr-bar">
+  <button class="addr-btn" id="addrBtn" type="button" aria-haspopup="dialog">
+    <span class="pin" aria-hidden="true">📍</span>
+    <span class="txt empty" id="addrText">Choisir mon adresse</span>
+    <span class="chev" aria-hidden="true">▾</span>
+  </button>
+</div>
+
 <header class="top">
   <div class="brand">
     <a href="index.html" aria-label="Retour à l'accueil" style="display:block;"><img class="logo-img" src="branding/mt-food-logo.svg" alt="MT Food by MT Delivery" width="316" height="85" loading="eager" style="max-width:300px;height:auto"></a>
@@ -543,6 +576,37 @@ if ("serviceWorker" in navigator) {
   </div>
 </div>
 
+<!-- Adresse de livraison -->
+<div class="overlay" id="addrOverlay">
+  <div class="sheet" id="addrForm" role="dialog" aria-modal="true" aria-labelledby="addrTitle">
+    <button class="close-x" data-close="addrOverlay" type="button" aria-label="Fermer">✕</button>
+    <h2 id="addrTitle">Adresse de livraison</h2>
+
+    <button class="gps-btn" id="gpsBtn" type="button"><span aria-hidden="true">📍</span> <span id="gpsBtnText">Utiliser ma position actuelle</span></button>
+    <div class="gps-msg" id="gpsMsg" role="status" aria-live="polite"></div>
+    <div class="gps-priv" id="gpsPriv">Ta position n'est pas enregistrée.</div>
+
+    <div class="field" style="margin-top:18px">
+      <label id="lblWilaya">Wilaya / commune</label>
+      <div class="addr-fixed" id="addrWilayaVal">Blida · Meftah</div>
+    </div>
+    <div class="field">
+      <label id="lblAddrZone">Quartier / zone de livraison</label>
+      <div class="zone-options" id="addrZones" role="radiogroup" aria-labelledby="lblAddrZone" tabindex="-1"></div>
+      <div class="gps-msg warn" id="addrZoneErr" role="alert"></div>
+    </div>
+    <div class="field">
+      <label id="lblAddrLine" for="addrLine">Adresse détaillée</label>
+      <textarea id="addrLine" rows="2" placeholder="Rue, numéro, bâtiment..."></textarea>
+    </div>
+    <div class="field">
+      <label id="lblAddrRepere" for="addrRepere">Repère (facultatif)</label>
+      <input type="text" id="addrRepere" placeholder="Ex: près de la pharmacie...">
+    </div>
+    <button class="submit-btn" id="addrSaveBtn" type="button">Confirmer l'adresse</button>
+  </div>
+</div>
+
 <!-- Overlay + confirmation -->
 <div class="overlay" id="successOverlay">
   <div class="sheet success-view">
@@ -575,6 +639,17 @@ const CONFIG = {
   WHATSAPP_NUMBER: "213560788497",
 
   // Zones de livraison et frais (en DA) — à ajuster
+  // Coordonnées des zones pour la détection GPS (centre + rayon en mètres).
+  // ⚠ Valeurs APPROXIMATIVES à ajuster (clic long sur Google Maps pour lire lat/lng).
+  // Une zone sans coordonnées n'est jamais choisie automatiquement.
+  ZONE_GEO: {
+    centre:   { lat: 36.617, lng: 3.233, r: 2500 }
+    // Hopital:  { lat: ..., lng: ..., r: ... },
+    // Souakria: { lat: ..., lng: ..., r: ... }
+  },
+  // Cercle global de service : au-delà, on prévient le client (sans le bloquer).
+  SERVICE_AREA: { lat: 36.617, lng: 3.233, maxKm: 12 },
+
   ZONES: [
     { id: "centre", label: "Meftah Centre", fee: 200 },
     { id: "Hopital", label: "Meftah Dehors", fee: 250 },
@@ -590,6 +665,28 @@ const ALL_CAT = "Tous"; // clé interne, jamais affichée directement
 
 const I18N = {
   fr: {
+    addrChoose: "Choisir mon adresse",
+    addrTitle: "Adresse de livraison",
+    addrGps: "Utiliser ma position actuelle",
+    addrGpsLocating: "Localisation en cours...",
+    addrGpsDenied: "Position refusée : choisis ta zone dans la liste ci-dessous.",
+    addrGpsFail: "Impossible de te localiser : choisis ta zone dans la liste ci-dessous.",
+    addrGpsUnsupported: "La localisation n'est pas disponible sur cet appareil : choisis ta zone ci-dessous.",
+    addrGpsOut: "Tu sembles hors de notre zone de livraison actuelle. Tu peux quand même choisir ta zone ci-dessous.",
+    addrGpsNoZone: "Position trouvée, mais la zone n'a pas pu être déterminée : choisis-la dans la liste.",
+    addrGpsOk: "Position trouvée : ",
+    addrGpsNoAddr: "Adresse introuvable : complète-la à la main.",
+    addrGpsPriv: "Ta position n'est pas enregistrée.",
+    lblWilaya: "Wilaya / commune",
+    addrWilayaVal: "Blida · Meftah",
+    lblAddrZone: "Quartier / zone de livraison",
+    lblAddrLine: "Adresse détaillée",
+    addrLinePh: "Rue, numéro, bâtiment...",
+    lblAddrRepere: "Repère (facultatif)",
+    addrReperePh: "Ex: près de la pharmacie...",
+    addrSave: "Confirmer l'adresse",
+    addrNeedZone: "Merci de choisir ta zone de livraison.",
+    addrWilayaSuffix: ", Blida",
     adsTitle: "Nos partenaires",
     adPlaceholderTitle: "Espace publicitaire disponible",
     adPlaceholderText: "Fais connaître ton restaurant ou ta pâtisserie à nos clients.",
@@ -676,6 +773,28 @@ const I18N = {
     accountBannerSignup: "Créer un compte"
   },
   ar: {
+    addrChoose: "اختر عنواني",
+    addrTitle: "عنوان التوصيل",
+    addrGps: "استخدم موقعي الحالي",
+    addrGpsLocating: "جارٍ تحديد الموقع...",
+    addrGpsDenied: "تم رفض الوصول إلى الموقع: اختر منطقتك من القائمة أدناه.",
+    addrGpsFail: "تعذّر تحديد موقعك: اختر منطقتك من القائمة أدناه.",
+    addrGpsUnsupported: "تحديد الموقع غير متاح على هذا الجهاز: اختر منطقتك أدناه.",
+    addrGpsOut: "يبدو أنك خارج منطقة التوصيل الحالية. يمكنك مع ذلك اختيار منطقتك أدناه.",
+    addrGpsNoZone: "تم تحديد موقعك لكن تعذّر تحديد المنطقة: اخترها من القائمة.",
+    addrGpsOk: "تم تحديد موقعك: ",
+    addrGpsNoAddr: "تعذّر العثور على العنوان: أكمله يدويًا.",
+    addrGpsPriv: "لا يتم حفظ موقعك الجغرافي.",
+    lblWilaya: "الولاية / البلدية",
+    addrWilayaVal: "البليدة · المفتاح",
+    lblAddrZone: "الحي / منطقة التوصيل",
+    lblAddrLine: "العنوان التفصيلي",
+    addrLinePh: "الشارع، الرقم، العمارة...",
+    lblAddrRepere: "معلم قريب (اختياري)",
+    addrReperePh: "مثال: بجانب الصيدلية...",
+    addrSave: "تأكيد العنوان",
+    addrNeedZone: "الرجاء اختيار منطقة التوصيل.",
+    addrWilayaSuffix: "، البليدة",
     adsTitle: "شركاؤنا",
     adPlaceholderTitle: "مساحة إعلانية متاحة",
     adPlaceholderText: "عرّف عملاءنا بمطعمك أو محل حلوياتك.",
@@ -911,6 +1030,7 @@ function applyLanguage() {
   $("zoneCheckInput").placeholder = t("zoneCheckPlaceholder");
   $("zoneCheckBtn").textContent = t("zoneCheckBtn");
   updateAccountLink();
+  applyAddrLanguage();
 
   if (SELECTED_ZONE) updateCheckoutTotals();
   else $("chkFee").textContent = t("chooseZonePlaceholder");
@@ -1051,6 +1171,7 @@ document.addEventListener("DOMContentLoaded", () => {
   $("langToggle").addEventListener("click", toggleLanguage);
   applyLanguage();
   renderZoneOptions();
+  initAddress();
   loadZones();
   loadMenu();
   bindGlobalEvents();
@@ -1344,11 +1465,8 @@ function renderZoneOptions() {
 
   $("zoneOptions").querySelectorAll(".zone-opt").forEach(el => {
     el.addEventListener("click", () => {
-      SELECTED_ZONE = CONFIG.ZONES.find(z => z.id === el.dataset.zone);
-      $("zoneOptions").querySelectorAll(".zone-opt").forEach(o => o.classList.remove("selected"));
-      el.classList.add("selected");
+      selectZone(CONFIG.ZONES.find(z => z.id === el.dataset.zone));
       MTForm.clearError($("zoneOptions"));
-      updateCheckoutTotals();
     });
   });
 }
@@ -1373,6 +1491,12 @@ function loadZones() {
         }
         updateCheckoutTotals();
       }
+      // Zone mémorisée sur l'appareil : on la rétablit avec les zones à jour
+      if (!SELECTED_ZONE && DELIVERY.zoneId) {
+        const saved = CONFIG.ZONES.find(z => z.id === DELIVERY.zoneId);
+        if (saved) selectZone(saved);
+      }
+      renderAddrBar();
     })
     .catch(() => { /* on garde les zones par défaut ci-dessus */ });
 }
@@ -1387,6 +1511,209 @@ function updateCheckoutTotals() {
     $("chkFee").textContent = t("chooseZonePlaceholder");
     $("chkTotal").textContent = subtotal + " DA";
   }
+}
+
+/* ============================================================
+   ADRESSE DE LIVRAISON : barre du haut, GPS, choix manuel
+   - Les coordonnées GPS ne sont JAMAIS enregistrées (ni sur l'appareil, ni envoyées
+     à MT Food) : elles servent seulement à trouver la zone et l'adresse.
+   - On mémorise sur l'appareil : zone, adresse écrite, repère.
+   - La vérification officielle de la zone reste celle du serveur à la commande.
+   ============================================================ */
+const ADDR_KEY = "mtDelivery";
+let DELIVERY = { zoneId: "", line: "", repere: "" };
+let ADDR_DRAFT_ZONE = null;
+
+function loadDelivery() {
+  try {
+    const d = JSON.parse(localStorage.getItem(ADDR_KEY) || "null");
+    if (d && typeof d === "object") {
+      DELIVERY = { zoneId: String(d.zoneId || ""), line: String(d.line || ""), repere: String(d.repere || "") };
+    }
+  } catch (e) {}
+}
+function saveDelivery() {
+  try { localStorage.setItem(ADDR_KEY, JSON.stringify(DELIVERY)); } catch (e) {}
+}
+
+/* Sélection d'une zone pour la commande (liste du formulaire de commande) */
+function selectZone(z) {
+  SELECTED_ZONE = z || null;
+  $("zoneOptions").querySelectorAll(".zone-opt").forEach(o =>
+    o.classList.toggle("selected", !!z && o.dataset.zone === z.id));
+  updateCheckoutTotals();
+  if (z && DELIVERY.zoneId !== z.id) { DELIVERY.zoneId = z.id; saveDelivery(); renderAddrBar(); }
+}
+
+function renderAddrBar() {
+  const el = $("addrText");
+  const z = CONFIG.ZONES.find(x => x.id === DELIVERY.zoneId);
+  if (!z && !DELIVERY.line) {
+    el.textContent = t("addrChoose");
+    el.classList.add("empty");
+    return;
+  }
+  el.classList.remove("empty");
+  el.textContent = DELIVERY.line
+    ? DELIVERY.line + (z ? " · " + z.label : "")
+    : z.label + t("addrWilayaSuffix");
+}
+
+function applyAddrLanguage() {
+  $("addrTitle").textContent = t("addrTitle");
+  $("gpsBtnText").textContent = t("addrGps");
+  $("gpsPriv").textContent = t("addrGpsPriv");
+  $("lblWilaya").textContent = t("lblWilaya");
+  $("addrWilayaVal").textContent = t("addrWilayaVal");
+  $("lblAddrZone").textContent = t("lblAddrZone");
+  $("lblAddrLine").textContent = t("lblAddrLine");
+  $("addrLine").placeholder = t("addrLinePh");
+  $("lblAddrRepere").textContent = t("lblAddrRepere");
+  $("addrRepere").placeholder = t("addrReperePh");
+  $("addrSaveBtn").textContent = t("addrSave");
+  renderAddrBar();
+}
+
+function renderAddrZones() {
+  $("addrZones").innerHTML = CONFIG.ZONES.map(z => `
+    <div class="zone-opt ${ADDR_DRAFT_ZONE === z.id ? "selected" : ""}" data-zone="${escapeAttr(z.id)}" role="radio" aria-checked="${ADDR_DRAFT_ZONE === z.id}">
+      <span>${escapeHtml(z.label)}</span>
+      <span class="fee">+${z.fee} DA</span>
+    </div>`).join("");
+  $("addrZones").querySelectorAll(".zone-opt").forEach(el =>
+    el.addEventListener("click", () => {
+      ADDR_DRAFT_ZONE = el.dataset.zone;
+      $("addrZoneErr").classList.remove("show");
+      renderAddrZones();
+    }));
+}
+
+function openAddrSheet() {
+  ADDR_DRAFT_ZONE = DELIVERY.zoneId || null;
+  $("addrLine").value = DELIVERY.line;
+  $("addrRepere").value = DELIVERY.repere;
+  $("gpsMsg").className = "gps-msg";
+  $("addrZoneErr").classList.remove("show");
+  renderAddrZones();
+  openOverlay("addrOverlay");
+}
+
+function saveAddrSheet() {
+  if (!ADDR_DRAFT_ZONE || !CONFIG.ZONES.find(z => z.id === ADDR_DRAFT_ZONE)) {
+    $("addrZoneErr").textContent = t("addrNeedZone");
+    $("addrZoneErr").classList.add("show");
+    return;
+  }
+  DELIVERY.zoneId = ADDR_DRAFT_ZONE;
+  DELIVERY.line = $("addrLine").value.trim().slice(0, 160);
+  DELIVERY.repere = $("addrRepere").value.trim().slice(0, 120);
+  saveDelivery();
+  selectZone(CONFIG.ZONES.find(z => z.id === DELIVERY.zoneId));
+  renderAddrBar();
+  prefillCheckoutAddress(true);
+  closeOverlay("addrOverlay");
+}
+
+/* Pré-remplit l'adresse du formulaire de commande (sans écraser ce que le client a tapé) */
+function prefillCheckoutAddress(force) {
+  const z = CONFIG.ZONES.find(x => x.id === DELIVERY.zoneId);
+  if (z && (!SELECTED_ZONE || force)) selectZone(z);
+  const f = $("fAddress");
+  if (!f || (f.value.trim() && !force)) return;
+  const text = [DELIVERY.line, DELIVERY.repere ? "(" + DELIVERY.repere + ")" : ""].filter(Boolean).join(" ");
+  if (text) f.value = text;
+}
+
+function initAddress() {
+  loadDelivery();
+  $("addrBtn").addEventListener("click", openAddrSheet);
+  $("addrSaveBtn").addEventListener("click", saveAddrSheet);
+  $("gpsBtn").addEventListener("click", useMyLocation);
+  if (DELIVERY.zoneId) {
+    const z = CONFIG.ZONES.find(x => x.id === DELIVERY.zoneId);
+    if (z) selectZone(z);
+  }
+  renderAddrBar();
+}
+
+/* ---- GPS ---- */
+function distMeters(lat1, lng1, lat2, lng2) {
+  const R = 6371000, rad = Math.PI / 180;
+  const dLat = (lat2 - lat1) * rad, dLng = (lng2 - lng1) * rad;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+/* Zone dont le cercle contient le point (la plus proche du centre si plusieurs) */
+function detectZone(lat, lng) {
+  let best = null, bestD = Infinity;
+  CONFIG.ZONES.forEach(z => {
+    const key = Object.keys(CONFIG.ZONE_GEO).find(k => k.toLowerCase() === String(z.id).toLowerCase());
+    const g = key ? CONFIG.ZONE_GEO[key] : null;
+    if (!g) return;
+    const d = distMeters(lat, lng, g.lat, g.lng);
+    if (d <= g.r && d < bestD) { best = z; bestD = d; }
+  });
+  return best;
+}
+
+function showGpsMsg(text, kind) {
+  const m = $("gpsMsg");
+  m.textContent = text;
+  m.className = "gps-msg show " + (kind || "warn");
+}
+
+function useMyLocation() {
+  if (!navigator.geolocation) { showGpsMsg(t("addrGpsUnsupported")); return; }
+  const btn = $("gpsBtn");
+  btn.disabled = true;
+  showGpsMsg(t("addrGpsLocating"), "ok");
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      btn.disabled = false;
+      onGpsPosition(pos.coords.latitude, pos.coords.longitude);
+    },
+    err => {
+      btn.disabled = false;
+      showGpsMsg(err && err.code === 1 ? t("addrGpsDenied") : t("addrGpsFail"));
+    },
+    { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 }
+  );
+}
+
+function onGpsPosition(lat, lng) {
+  const S = CONFIG.SERVICE_AREA;
+  const outside = S && distMeters(lat, lng, S.lat, S.lng) > S.maxKm * 1000;
+  const zone = outside ? null : detectZone(lat, lng);
+  if (zone) { ADDR_DRAFT_ZONE = zone.id; renderAddrZones(); }
+
+  reverseGeocode(lat, lng).then(addr => {
+    if (addr && !$("addrLine").value.trim()) $("addrLine").value = addr;
+    if (outside) showGpsMsg(t("addrGpsOut"));
+    else if (!zone) showGpsMsg(t("addrGpsNoZone"));
+    else if (addr) showGpsMsg(t("addrGpsOk") + addr, "ok");
+    else showGpsMsg(t("addrGpsNoAddr"));
+  });
+}
+
+/* Géocodage inverse (OpenStreetMap / Nominatim, sans clé). Faible volume uniquement :
+   pour un trafic réel, passer par un service dédié derrière un Worker Cloudflare. */
+function reverseGeocode(lat, lng) {
+  const ctrl = ("AbortController" in window) ? new AbortController() : null;
+  const timer = setTimeout(() => ctrl && ctrl.abort(), 7000);
+  const url = "https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=18&addressdetails=1" +
+    "&accept-language=" + (LANG === "ar" ? "ar" : "fr") + "&lat=" + lat.toFixed(5) + "&lon=" + lng.toFixed(5);
+  return fetch(url, ctrl ? { signal: ctrl.signal } : {})
+    .then(r => r.ok ? r.json() : null)
+    .then(j => {
+      if (!j || !j.address) return "";
+      const a = j.address;
+      const street = [a.house_number, a.road].filter(Boolean).join(" ");
+      const area = a.neighbourhood || a.suburb || a.hamlet || a.village || a.town || a.city || "";
+      return [street, area].filter(Boolean).join(", ");
+    })
+    .catch(() => "")
+    .finally(() => clearTimeout(timer));
 }
 
 /* ============================================================
@@ -1414,6 +1741,7 @@ function bindGlobalEvents() {
     closeOverlay("cartOverlay");
     updateCheckoutTotals();
     prefillCheckoutFromSession();
+    prefillCheckoutAddress();
     openOverlay("checkoutOverlay");
   });
 
