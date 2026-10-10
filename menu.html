@@ -220,6 +220,16 @@
   .quote-box.warn{background:#fff5e0;border-color:#f1d9a0;color:#8a5a00;}
   .quote-box.busy{background:var(--bg);color:var(--muted);}
   .addr-summary{padding:11px 13px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-weight:700;color:var(--blue-900);word-break:break-word;}
+  .addr-search{display:flex;gap:8px;margin-top:16px;}
+  .addr-search input{flex:1;min-width:0;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;background:#fbfcfe;}
+  .addr-search button{background:var(--blue-900);color:#fff;border:none;border-radius:var(--radius-sm);padding:0 16px;font-weight:800;font-size:13.5px;cursor:pointer;font-family:inherit;}
+  .addr-search button:disabled{opacity:.6;}
+  .addr-results{margin-top:8px;display:none;flex-direction:column;gap:6px;}
+  .addr-results.show{display:flex;}
+  .addr-results .res{padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:#fff;font-size:13.5px;font-weight:700;color:var(--blue-900);text-align:start;cursor:pointer;font-family:inherit;}
+  .addr-results .res small{display:block;font-weight:500;color:var(--muted);font-size:12px;}
+  .addr-results .res:active{background:var(--blue-100);}
+  .addr-results .none{font-size:12.5px;color:#8a5a00;background:#fff5e0;border-radius:10px;padding:8px 11px;}
   .change-addr{margin-top:8px;background:none;border:none;color:var(--blue-700);font-weight:800;font-size:13.5px;cursor:pointer;padding:4px 0;font-family:inherit;text-decoration:underline;}
   .addr-fixed{padding:11px 13px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-weight:700;color:var(--blue-900);}
 
@@ -600,6 +610,12 @@ if ("serviceWorker" in navigator) {
     <div class="gps-where" id="gpsWhere" aria-live="polite"></div>
     <div class="gps-priv" id="gpsPriv">Ta position sert uniquement à calculer la livraison.</div>
 
+    <div class="addr-search">
+      <input type="search" id="addrSearch" autocomplete="off" enterkeyhint="search" placeholder="Rechercher une adresse à Meftah">
+      <button type="button" id="addrSearchBtn">Chercher</button>
+    </div>
+    <div class="addr-results" id="addrResults" role="listbox"></div>
+
     <div class="field" style="margin-top:18px">
       <label id="lblWilaya">Wilaya / commune</label>
       <div class="addr-fixed" id="addrWilayaVal">Blida · Meftah</div>
@@ -688,6 +704,10 @@ const I18N = {
     quoteError: "Impossible de calculer les frais pour le moment. Réessaie dans un instant.",
     addrNeedLocate: "Localise ton adresse pour connaître la zone et les frais de livraison.",
     addrNeedAddr: "Saisis une adresse ou utilise ta position actuelle.",
+    addrSearchPh: "Rechercher une adresse à Meftah",
+    addrSearchBtn: "Chercher",
+    addrSearchNone: "Aucun résultat à Meftah. Essaie un autre nom de rue ou de quartier, ou utilise ta position actuelle.",
+    addrSearchTip: "Choisis ton adresse dans la liste :",
     addrVerifying: "Vérification de l'adresse…",
     addrNotFound: "Adresse introuvable avec certitude : utilise ta position actuelle (bouton ci-dessus).",
     addrToLocate: "à localiser",
@@ -815,6 +835,10 @@ const I18N = {
     quoteError: "تعذّر حساب الرسوم حاليًا. أعد المحاولة بعد قليل.",
     addrNeedLocate: "حدّد موقع عنوانك لمعرفة منطقة التوصيل والرسوم.",
     addrNeedAddr: "أدخل عنوانًا أو استخدم موقعك الحالي.",
+    addrSearchPh: "ابحث عن عنوان في المفتاح",
+    addrSearchBtn: "بحث",
+    addrSearchNone: "لا توجد نتائج في المفتاح. جرّب اسم شارع أو حي آخر، أو استخدم موقعك الحالي.",
+    addrSearchTip: "اختر عنوانك من القائمة:",
     addrVerifying: "جارٍ التحقق من العنوان…",
     addrNotFound: "تعذّر تحديد العنوان بدقة: استخدم موقعك الحالي (الزر أعلاه).",
     addrToLocate: "يجب تحديد الموقع",
@@ -1675,6 +1699,8 @@ function applyAddrLanguage() {
   $("lblAddrRepere").textContent = t("lblAddrRepere");
   $("addrRepere").placeholder = t("addrReperePh");
   $("addrSaveBtn").textContent = t("addrSave");
+  $("addrSearch").placeholder = t("addrSearchPh");
+  $("addrSearchBtn").textContent = t("addrSearchBtn");
   $("changeAddrBtn").textContent = t("changeAddr");
   renderAll();
 }
@@ -1722,6 +1748,8 @@ function initAddress() {
   $("changeAddrBtn").addEventListener("click", () => { closeOverlay("checkoutOverlay"); openAddrSheet(); });
   $("addrSaveBtn").addEventListener("click", saveAddrSheet);
   $("gpsBtn").addEventListener("click", useMyLocation);
+  $("addrSearchBtn").addEventListener("click", runAddrSearch);
+  $("addrSearch").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); runAddrSearch(); } });
   $("addrLine").addEventListener("input", () => {
     if ($("addrLine").value.trim() !== DELIVERY.line && hasCoords()) invalidateReference();
     // On garde ce que le client écrit, mais sans coordonnées ni tarif tant qu'il n'a pas revérifié
@@ -1815,6 +1843,65 @@ function reverseGeocode(lat, lng) {
     })
     .catch(() => null)
     .finally(() => clearTimeout(timer));
+}
+
+/* Recherche d'adresse à Meftah : au clic / Entrée (pas à chaque lettre : Nominatim public l'interdit).
+   Résultats limités à la zone de Meftah ; le serveur décide ensuite de la zone et des frais. */
+function searchAddresses(text) {
+  const q = String(text || "").trim();
+  if (q.length < 3) return Promise.resolve([]);
+  const ctrl = ("AbortController" in window) ? new AbortController() : null;
+  const timer = setTimeout(() => ctrl && ctrl.abort(), 8000);
+  const url = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&addressdetails=1&countrycodes=dz&bounded=1" +
+    "&viewbox=3.13,36.69,3.31,36.55&accept-language=" + (LANG === "ar" ? "ar" : "fr") + "&q=" + encodeURIComponent(q);
+  return fetch(url, ctrl ? { signal: ctrl.signal } : {})
+    .then(r => r.ok ? r.json() : [])
+    .then(list => (Array.isArray(list) ? list : []).map(r => {
+      const a = r.address || {};
+      const street = [a.house_number, a.road].filter(Boolean).join(" ");
+      const name = r.name || "";
+      const area = a.neighbourhood || a.suburb || a.hamlet || a.village || a.town || a.city || "";
+      const title = [street || name, area].filter((v, i, arr) => v && arr.indexOf(v) === i).join(", ") || String(r.display_name || "").split(",").slice(0, 2).join(",").trim();
+      const sub = [a.town || a.city || a.village || a.municipality || "", a.state || ""].filter((v, i, arr) => v && arr.indexOf(v) === i).join(", ");
+      return { title: title, sub: sub, lat: Number(r.lat), lng: Number(r.lon) };
+    }).filter(r => r.title && isFinite(r.lat) && isFinite(r.lng)))
+    .catch(() => [])
+    .finally(() => clearTimeout(timer));
+}
+
+async function runAddrSearch() {
+  const box = $("addrResults");
+  const btn = $("addrSearchBtn");
+  const q = $("addrSearch").value.trim();
+  box.textContent = "";
+  if (q.length < 3) { box.classList.remove("show"); return; }
+  btn.disabled = true;
+  const list = await searchAddresses(q);
+  btn.disabled = false;
+  box.classList.add("show");
+  if (!list.length) {
+    const n = document.createElement("div"); n.className = "none"; n.textContent = t("addrSearchNone"); box.appendChild(n);
+    return;
+  }
+  list.forEach(r => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "res"; b.setAttribute("role", "option");
+    b.textContent = r.title;
+    if (r.sub) { const sm = document.createElement("small"); sm.textContent = r.sub; b.appendChild(sm); }
+    b.addEventListener("click", () => pickSearchResult(r));
+    box.appendChild(b);
+  });
+}
+
+async function pickSearchResult(r) {
+  $("addrResults").classList.remove("show");
+  $("addrResults").textContent = "";
+  $("addrSearch").value = "";
+  DELIVERY.line = r.title.slice(0, 160);
+  $("addrLine").value = DELIVERY.line;
+  $("gpsMsg").className = "gps-msg";
+  await setReference(r.lat, r.lng, "typed");
+  if (DELIVERY.quote && DELIVERY.quote.covered) showGpsMsg(t("addrGpsOk") + DELIVERY.line, "ok");
 }
 
 /* Repère une adresse écrite (Nominatim, limité à la région de Blida). Un simple nom de commune
