@@ -708,6 +708,7 @@ const I18N = {
     addrSearchBtn: "Chercher",
     addrSearchNone: "Aucun résultat à Meftah. Essaie un autre nom de rue ou de quartier, ou utilise ta position actuelle.",
     addrSearchTip: "Choisis ton adresse dans la liste :",
+    addrSearching: "Recherche…",
     addrVerifying: "Vérification de l'adresse…",
     addrNotFound: "Adresse introuvable avec certitude : utilise ta position actuelle (bouton ci-dessus).",
     addrToLocate: "à localiser",
@@ -839,6 +840,7 @@ const I18N = {
     addrSearchBtn: "بحث",
     addrSearchNone: "لا توجد نتائج في المفتاح. جرّب اسم شارع أو حي آخر، أو استخدم موقعك الحالي.",
     addrSearchTip: "اختر عنوانك من القائمة:",
+    addrSearching: "جارٍ البحث…",
     addrVerifying: "جارٍ التحقق من العنوان…",
     addrNotFound: "تعذّر تحديد العنوان بدقة: استخدم موقعك الحالي (الزر أعلاه).",
     addrToLocate: "يجب تحديد الموقع",
@@ -1896,7 +1898,7 @@ function photonSearch(text, signal) {
         return { title: title, sub: sub, lat: lat, lng: lng };
       }).filter(Boolean);
     })
-    .catch(() => []);
+    .catch(() => null);   // null = Photon injoignable (différent de « aucun résultat »)
 }
 
 function showAddrResults(list) {
@@ -1924,11 +1926,17 @@ function onAddrSearchInput() {
   if (q.length < 3) { $("addrResults").classList.remove("show"); SUGGEST_SEQ++; return; }
   SUGGEST_TIMER = setTimeout(async () => {
     const seq = ++SUGGEST_SEQ;
-    const list = await photonSearch(q);
+    const box = $("addrResults");
+    box.textContent = ""; box.classList.add("show");
+    const w = document.createElement("div"); w.className = "none"; w.style.background = "var(--bg)"; w.style.color = "var(--muted)"; w.textContent = t("addrSearching"); box.appendChild(w);
+    let list = await photonSearch(q);
     if (seq !== SUGGEST_SEQ) return;            // une frappe plus récente a déjà relancé la recherche
-    if (list.length) showAddrResults(list);     // liste vide : on n'affiche rien, « Chercher » essaie Nominatim
-    else $("addrResults").classList.remove("show");
-  }, 350);
+    if (!list || !list.length) {                // Photon injoignable ou sans résultat : repli Nominatim
+      list = await searchAddresses(q);
+      if (seq !== SUGGEST_SEQ) return;
+    }
+    showAddrResults(list);
+  }, 450);
 }
 
 async function runAddrSearch() {
@@ -1938,7 +1946,7 @@ async function runAddrSearch() {
   if (q.length < 3) { $("addrResults").classList.remove("show"); return; }
   btn.disabled = true;
   let list = await photonSearch(q);
-  if (!list.length) list = await searchAddresses(q);   // repli : Nominatim
+  if (!list || !list.length) list = await searchAddresses(q);   // repli : Nominatim
   btn.disabled = false;
   showAddrResults(list);
 }
