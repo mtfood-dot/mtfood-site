@@ -1304,6 +1304,7 @@ const CAT_SVG = {
   petitdej: "<path d='M4 32Q7 11 24 8Q41 11 44 32Q38 26 34 29Q30 20 24 20Q18 20 14 29Q10 26 4 32Z' fill='#E8A24A' stroke='#B8741F' stroke-width='2' stroke-linejoin='round'/><path d='M15 12 18 26M24 9V20M33 12 30 26' fill='none' stroke='#B8741F' stroke-width='1.8' stroke-linecap='round'/><path d='M5 36H43' stroke='#F2A900' stroke-width='3' stroke-linecap='round'/>",
   dessert: "<circle cx='24' cy='13' r='3.6' fill='#D6402B'/><path d='M24 10Q26 5 30 5' fill='none' stroke='#5DB85C' stroke-width='2' stroke-linecap='round'/><path d='M7 24Q9 15 16 19Q22 13 28 19Q36 14 41 24Z' fill='#F08CA8'/><rect x='7' y='24' width='34' height='5' fill='#fff'/><rect x='7' y='29' width='34' height='7' fill='#8A4B2A'/><path d='M7 36H41V38Q41 42 37 42H11Q7 42 7 38Z' fill='#F5D9A8'/>",
   boisson: "<rect x='25' y='3' width='3.4' height='13' rx='1.5' fill='#F2A900' transform='rotate(14 26 10)'/><rect x='10' y='13' width='28' height='5' rx='2.5' fill='#0F3F85'/><path d='M13 18H35L32 43H16Z' fill='#D6402B'/><path d='M14 26H34L33 32H15Z' fill='#fff'/>",
+  cafe: "<path d='M17 13Q14 9 17 5M24 13Q21 9 24 5M31 13Q28 9 31 5' fill='none' stroke='#9DB7DE' stroke-width='2.4' stroke-linecap='round'/><path d='M36 21H40Q45 21 45 27Q45 33 39 33H35' fill='none' stroke='#8A4B2A' stroke-width='3.2' stroke-linecap='round'/><path d='M8 19H37V30Q37 40 27 40H18Q8 40 8 30Z' fill='#F4EBDD' stroke='#8A4B2A' stroke-width='2.2' stroke-linejoin='round'/><path d='M8 19H37V23H8Z' fill='#6B3A1E'/><rect x='5' y='42' width='36' height='3' rx='1.5' fill='#0F3F85'/>",
   traditionnel: "<ellipse cx='24' cy='39' rx='19' ry='4.5' fill='#0F3F85'/><path d='M8 37Q8 33 12 33H36Q40 33 40 37Z' fill='#D98A3D' stroke='#A9611F' stroke-width='1.5'/><path d='M11 33 24 9 37 33Z' fill='#C8643A' stroke='#9C4423' stroke-width='2' stroke-linejoin='round'/><path d='M15.5 25H32.5' stroke='#F2A900' stroke-width='2.4' stroke-linecap='round'/><circle cx='24' cy='19' r='1.8' fill='#F2A900'/><circle cx='24' cy='7' r='3' fill='#F2A900' stroke='#C98B00' stroke-width='1.2'/>",
   fastfood: "<path d='M5 27Q5 19 13 19H35Q43 19 43 27Q43 35 35 35H13Q5 35 5 27Z' fill='#E8A24A' stroke='#B8741F' stroke-width='2'/><rect x='3' y='22' width='42' height='9' rx='4.5' fill='#C0392B' stroke='#8E2F23' stroke-width='1.5'/><path d='M8 26.5Q11 23 14 26.5T20 26.5T26 26.5T32 26.5T38 26.5' fill='none' stroke='#F7C531' stroke-width='2.4' stroke-linecap='round'/><path d='M5 27Q5 36 13 36H35Q43 36 43 27' fill='none' stroke='#B8741F' stroke-width='2'/>",
   defaut: "<circle cx='24' cy='11' r='3' fill='#0F3F85'/><path d='M6 34Q6 15 24 15Q42 15 42 34Z' fill='#F2A900' stroke='#C98B00' stroke-width='2' stroke-linejoin='round'/><path d='M13 27Q15 21 21 20' fill='none' stroke='#FBD56B' stroke-width='3' stroke-linecap='round'/><rect x='3' y='34' width='42' height='5' rx='2.5' fill='#0F3F85'/>"
@@ -1316,16 +1317,29 @@ const CAT_ICONS = [
   [/tacos|تاكوس/, "tacos"],
   [/sandwich|panini|kebab|chawarma|shawarma|casse.?croute|ساندويتش|ساندوتش|شاورما/, "sandwich"],
   [/frite|بطاطا/, "frite"],
+  [/cafe|\bthe\b|\btea\b|chaude|قهوة|شاي|ساخن/, "cafe"],
+  [/plat|طبق|أطباق|اطباق/, "defaut"],
   [/poulet|chicken|دجاج/, "poulet"],
-  [/salade|سلطة/, "salade"],
+  [/salade|entree|سلط|مقبل/, "salade"],
   [/pate|pasta|معكرونة|عجين/, "pates"],
   [/viande|grill|brochette|steak|لحم|مشاوي/, "viande"],
   [/poisson|sushi|\bmer\b|سمك/, "poisson"],
   [/soupe|chorba|شوربة|حساء/, "soupe"],
   [/petit.?dej|breakfast|croissant|viennoiserie|فطور/, "petitdej"],
   [/dessert|gateau|patisserie|tarte|crepe|glace|حلويات|حلوى|كيك|مثلجات/, "dessert"],
-  [/boisson|jus|soda|cafe|\bthe\b|مشروب|عصير|قهوة/, "boisson"]
+  [/boisson|jus|soda|مشروب|عصير/, "boisson"]
 ];
+/* Ordre d'affichage fixe (comme sur les grandes applications), les catégories inconnues passent à la fin. */
+const CAT_ORDER = ["traditionnel", "pizza", "fastfood", "burger", "tacos", "sandwich", "poulet", "viande", "defaut", "salade", "soupe", "pates", "poisson", "petitdej", "dessert", "boisson", "cafe"];
+function catKey(cat) {
+  const k = String(cat).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  for (const [re, name] of CAT_ICONS) { if (re.test(k)) return name; }
+  return "defaut";
+}
+function catRank(cat) {
+  const i = CAT_ORDER.indexOf(catKey(cat));
+  return i < 0 ? 99 : i;
+}
 function catIcon(cat) {
   let key = "defaut";
   if (cat === ALL_CAT) key = "all";
@@ -1337,7 +1351,7 @@ function catIcon(cat) {
 }
 
 function renderTabs() {
-  const cats = [ALL_CAT, ...new Set(MENU.map(i => i.categorie || "Autre"))];
+  const cats = [ALL_CAT, ...Array.from(new Set(MENU.map(i => i.categorie || "Autre"))).sort((a, b) => catRank(a) - catRank(b))];
   $("tabs").innerHTML = cats.map(c =>
     `<div class="tab ${c === ACTIVE_CATEGORY ? "active" : ""}" data-cat="${escapeAttr(c)}" role="button" tabindex="0">` +
     `<span class="ico" aria-hidden="true">${catIcon(c)}</span>` +
