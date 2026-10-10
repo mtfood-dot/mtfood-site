@@ -210,6 +210,17 @@
   .gps-where{margin-top:6px;font-size:12.5px;color:var(--navy,#0f3f85);font-weight:700;display:none;}
   .gps-where.show{display:block;}
   .gps-priv{margin-top:6px;font-size:11.5px;color:var(--muted);text-align:center;}
+  .quote-box{display:none;margin:10px 0 14px;border-radius:var(--radius-sm);padding:10px 12px;font-size:13.5px;line-height:1.55;border:1.5px solid var(--border);}
+  .quote-box.show{display:block;}
+  .quote-box .qt{font-weight:800;}
+  .quote-box .qs{font-size:12.5px;opacity:.85;}
+  .quote-box .qf{font-weight:800;margin-top:2px;}
+  .quote-box.ok{background:#eaf7ee;border-color:#bfe3c9;color:#1a7d3a;}
+  .quote-box.ko{background:#fdecec;border-color:#f3c2c2;color:#b3261e;}
+  .quote-box.warn{background:#fff5e0;border-color:#f1d9a0;color:#8a5a00;}
+  .quote-box.busy{background:var(--bg);color:var(--muted);}
+  .addr-summary{padding:11px 13px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-weight:700;color:var(--blue-900);word-break:break-word;}
+  .change-addr{margin-top:8px;background:none;border:none;color:var(--blue-700);font-weight:800;font-size:13.5px;cursor:pointer;padding:4px 0;font-family:inherit;text-decoration:underline;}
   .addr-fixed{padding:11px 13px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-weight:700;color:var(--blue-900);}
 
   /* ---------- PRODUCT GRID ---------- */
@@ -554,12 +565,11 @@ if ("serviceWorker" in navigator) {
       <input type="tel" id="fPhone" data-required data-rule="phone" autocomplete="tel" placeholder="Ex: 0555 xx xx xx">
     </div>
     <div class="field">
-      <label id="lblAddress" for="fAddress">Adresse complète</label>
-      <textarea id="fAddress" data-required rows="2" placeholder="Rue, quartier, repère..."></textarea>
-    </div>
-    <div class="field">
-      <label id="lblZone">Zone de livraison</label>
-      <div class="zone-options" id="zoneOptions" role="radiogroup" aria-labelledby="lblZone" aria-required="true" tabindex="-1"></div>
+      <label id="lblAddress" for="fAddress">Adresse de livraison</label>
+      <div class="addr-summary"><span id="zoneSummaryAddr">—</span></div>
+      <textarea id="fAddress" rows="1" readonly hidden></textarea>
+      <div class="quote-box" id="zoneSummary" role="status" aria-live="polite"></div>
+      <button class="change-addr" id="changeAddrBtn" type="button">Modifier l'adresse</button>
     </div>
     <div class="field">
       <label id="lblNotes">Remarque (optionnel)</label>
@@ -588,23 +598,19 @@ if ("serviceWorker" in navigator) {
     <button class="gps-btn" id="gpsBtn" type="button"><span aria-hidden="true">📍</span> <span id="gpsBtnText">Utiliser ma position actuelle</span></button>
     <div class="gps-msg" id="gpsMsg" role="status" aria-live="polite"></div>
     <div class="gps-where" id="gpsWhere" aria-live="polite"></div>
-    <div class="gps-priv" id="gpsPriv">Ta position n'est pas enregistrée.</div>
+    <div class="gps-priv" id="gpsPriv">Ta position sert uniquement à calculer la livraison.</div>
 
     <div class="field" style="margin-top:18px">
       <label id="lblWilaya">Wilaya / commune</label>
       <div class="addr-fixed" id="addrWilayaVal">Blida · Meftah</div>
     </div>
+    <div class="quote-box" id="addrQuote" role="status" aria-live="polite"></div>
     <div class="field">
-      <label id="lblAddrZone">Quartier / zone de livraison</label>
-      <div class="zone-options" id="addrZones" role="radiogroup" aria-labelledby="lblAddrZone" tabindex="-1"></div>
-      <div class="gps-msg warn" id="addrZoneErr" role="alert"></div>
-    </div>
-    <div class="field">
-      <label id="lblAddrLine" for="addrLine">Adresse détaillée</label>
+      <label id="lblAddrLine" for="addrLine">Adresse (rue, quartier)</label>
       <textarea id="addrLine" rows="2" placeholder="Rue, numéro, bâtiment..."></textarea>
     </div>
     <div class="field">
-      <label id="lblAddrRepere" for="addrRepere">Repère (facultatif)</label>
+      <label id="lblAddrRepere" for="addrRepere">Précisions (bâtiment, étage, repère)</label>
       <input type="text" id="addrRepere" placeholder="Ex: près de la pharmacie...">
     </div>
     <button class="submit-btn" id="addrSaveBtn" type="button">Confirmer l'adresse</button>
@@ -642,24 +648,8 @@ const CONFIG = {
   // (format international sans + ni espaces : 213 + numéro sans le 0)
   WHATSAPP_NUMBER: "213560788497",
 
-  // Zones de livraison et frais (en DA) — à ajuster
-  // Coordonnées des zones pour la détection GPS (centre + rayon en mètres).
-  // ⚠ Valeurs APPROXIMATIVES à ajuster (clic long sur Google Maps pour lire lat/lng).
-  // Une zone sans coordonnées n'est jamais choisie automatiquement.
-  ZONE_GEO: {
-    centre:   { lat: 36.617, lng: 3.233, r: 2500 }
-    // Hopital:  { lat: ..., lng: ..., r: ... },
-    // Souakria: { lat: ..., lng: ..., r: ... }
-  },
-  // Cercle global de service : au-delà, on prévient le client (sans le bloquer).
-  SERVICE_AREA: { lat: 36.617, lng: 3.233, maxKm: 12 },
-
-  ZONES: [
-    { id: "centre", label: "Meftah Centre", fee: 200 },
-    { id: "Hopital", label: "Meftah Dehors", fee: 250 },
-    { id: "Souakria", label: "Meftah Dehors", fee: 300 }
-
-  ]
+  // Zones de livraison : le centre de référence, les distances (3 / 5 / 7 km) et les tarifs
+  // (150 / 250 / 350 DA) sont gérés côté serveur (Apps Script + onglet Zones) : rien à modifier ici.
 };
 
 /* ============================================================
@@ -681,19 +671,35 @@ const I18N = {
     addrGpsOk: "Position trouvée : ",
     addrDetected: "Position détectée : ",
     addrGpsNoAddr: "Adresse introuvable : complète-la à la main.",
-    addrGpsPriv: "Ta position n'est pas enregistrée.",
+    addrGpsPriv: "Ta position sert uniquement à calculer la livraison ; elle n'est jamais suivie en continu.",
     lblWilaya: "Wilaya / commune",
     addrWilayaVal: "Blida · Meftah",
     lblAddrZone: "Quartier / zone de livraison",
-    lblAddrLine: "Adresse détaillée",
+    lblAddrLine: "Adresse (rue, quartier)",
     addrLinePh: "Rue, numéro, bâtiment...",
-    lblAddrRepere: "Repère (facultatif)",
+    lblAddrRepere: "Précisions (bâtiment, étage, repère)",
     addrReperePh: "Ex: près de la pharmacie...",
     addrSave: "Confirmer l'adresse",
     addrNeedZone: "Merci de choisir ta zone de livraison.",
     addrOutsideShort: "Hors zone de livraison",
     outsideCheckoutWarn: "Tu sembles hors de notre zone de livraison. Appelle-nous avant de commander : ",
     addrWilayaSuffix: ", Blida",
+    quoteLoading: "Calcul des frais…",
+    quoteError: "Impossible de calculer les frais pour le moment. Réessaie dans un instant.",
+    addrNeedLocate: "Localise ton adresse pour connaître la zone et les frais de livraison.",
+    addrNeedAddr: "Saisis une adresse ou utilise ta position actuelle.",
+    addrVerifying: "Vérification de l'adresse…",
+    addrNotFound: "Adresse introuvable avec certitude : utilise ta position actuelle (bouton ci-dessus).",
+    addrToLocate: "à localiser",
+    zoneOut: "Zone non couverte pour le moment",
+    zoneOutShort: "Zone non couverte",
+    zoneOutDetail: "Ton adresse est à {d} km du centre de Meftah (limite : {m} km). Appelle-nous : ",
+    deliveryTo: "Livraison :",
+    distFromCenter: "À {d} km du centre de Meftah",
+    deliveryFeeLbl: "Frais de livraison",
+    changeAddr: "Modifier l'adresse",
+    checkoutNeedAddr: "Localise ton adresse avant de confirmer la commande.",
+    addrCheckNeedPos: "Écris une rue ou un lieu précis, ou utilise ta position (page Adresse).",
     adsTitle: "Nos partenaires",
     adPlaceholderTitle: "Espace publicitaire disponible",
     adPlaceholderText: "Fais connaître ton restaurant ou ta pâtisserie à nos clients.",
@@ -728,7 +734,7 @@ const I18N = {
     namePlaceholder: "Ex:   Abdou ",
     lblPhone: "Téléphone",
     phonePlaceholder: "Ex: 0555 xx xx xx",
-    lblAddress: "Adresse complète",
+    lblAddress: "Adresse de livraison",
     addressPlaceholder: "Rue, quartier, repère...",
     lblZone: "Zone de livraison",
     lblNotes: "Remarque (optionnel)",
@@ -792,19 +798,35 @@ const I18N = {
     addrGpsOk: "تم تحديد موقعك: ",
     addrDetected: "موقعك المكتشف: ",
     addrGpsNoAddr: "تعذّر العثور على العنوان: أكمله يدويًا.",
-    addrGpsPriv: "لا يتم حفظ موقعك الجغرافي.",
+    addrGpsPriv: "يُستخدم موقعك لحساب التوصيل فقط ولا تتم متابعته باستمرار.",
     lblWilaya: "الولاية / البلدية",
     addrWilayaVal: "البليدة · المفتاح",
     lblAddrZone: "الحي / منطقة التوصيل",
-    lblAddrLine: "العنوان التفصيلي",
+    lblAddrLine: "العنوان (الشارع، الحي)",
     addrLinePh: "الشارع، الرقم، العمارة...",
-    lblAddrRepere: "معلم قريب (اختياري)",
+    lblAddrRepere: "تفاصيل (العمارة، الطابق، معلم قريب)",
     addrReperePh: "مثال: بجانب الصيدلية...",
     addrSave: "تأكيد العنوان",
     addrNeedZone: "الرجاء اختيار منطقة التوصيل.",
     addrOutsideShort: "خارج منطقة التوصيل",
     outsideCheckoutWarn: "يبدو أنك خارج منطقة التوصيل. اتصل بنا قبل الطلب: ",
     addrWilayaSuffix: "، البليدة",
+    quoteLoading: "جارٍ حساب رسوم التوصيل…",
+    quoteError: "تعذّر حساب الرسوم حاليًا. أعد المحاولة بعد قليل.",
+    addrNeedLocate: "حدّد موقع عنوانك لمعرفة منطقة التوصيل والرسوم.",
+    addrNeedAddr: "أدخل عنوانًا أو استخدم موقعك الحالي.",
+    addrVerifying: "جارٍ التحقق من العنوان…",
+    addrNotFound: "تعذّر تحديد العنوان بدقة: استخدم موقعك الحالي (الزر أعلاه).",
+    addrToLocate: "يجب تحديد الموقع",
+    zoneOut: "منطقة غير مغطاة حاليًا",
+    zoneOutShort: "منطقة غير مغطاة",
+    zoneOutDetail: "عنوانك يبعد {d} كم عن وسط المفتاح (الحد الأقصى: {m} كم). اتصل بنا: ",
+    deliveryTo: "التوصيل:",
+    distFromCenter: "على بعد {d} كم من وسط المفتاح",
+    deliveryFeeLbl: "رسوم التوصيل",
+    changeAddr: "تعديل العنوان",
+    checkoutNeedAddr: "حدّد موقع عنوانك قبل تأكيد الطلب.",
+    addrCheckNeedPos: "اكتب شارعًا أو مكانًا دقيقًا، أو استخدم موقعك (صفحة العنوان).",
     adsTitle: "شركاؤنا",
     adPlaceholderTitle: "مساحة إعلانية متاحة",
     adPlaceholderText: "عرّف عملاءنا بمطعمك أو محل حلوياتك.",
@@ -839,7 +861,7 @@ const I18N = {
     namePlaceholder: "مثال: عبدو",
     lblPhone: "الهاتف",
     phonePlaceholder: "مثال: 0555 xx xx xx",
-    lblAddress: "العنوان الكامل",
+    lblAddress: "عنوان التوصيل",
     addressPlaceholder: "الشارع، الحي، علامة مميزة...",
     lblZone: "منطقة التوصيل",
     lblNotes: "ملاحظة (اختياري)",
@@ -958,28 +980,21 @@ function normalizeForZoneSearch(s) {
     .replace(/[^a-z0-9؀-ۿ\s]/g, " ")
     .trim();
 }
-function checkZoneAvailability() {
+async function checkZoneAvailability() {
   const raw = $("zoneCheckInput").value;
   const box = $("zoneCheckResult");
   box.classList.remove("show", "ok", "ko");
   if (!MTForm.validate($("zoneCheckPanel"))) return;
-  const query = normalizeForZoneSearch(raw);
-  if (!query) {
-    MTForm.fail($("zoneCheckInput"), t("zoneCheckEmpty"));
-    return;
-  }
-  const match = CONFIG.ZONES.find(z => {
-    const label = normalizeForZoneSearch(z.label);
-    return query.includes(label) || label.includes(query) || query.includes(normalizeForZoneSearch(z.id));
-  });
-  if (match) {
-    box.textContent = t("zoneCheckOk") + match.label + " (" + match.fee + " DA)";
-    box.classList.add("show", "ok");
-  } else {
-    const zoneNames = CONFIG.ZONES.map(z => z.label).join(", ");
-    box.textContent = t("zoneCheckKo") + zoneNames;
-    box.classList.add("show", "ko");
-  }
+  if (!normalizeForZoneSearch(raw)) { MTForm.fail($("zoneCheckInput"), t("zoneCheckEmpty")); return; }
+  box.textContent = t("addrVerifying"); box.classList.add("show");
+  const found = await geocodeAddress(raw);
+  box.classList.remove("show");
+  if (!found) { box.textContent = t("addrCheckNeedPos"); box.classList.add("show", "ko"); return; }
+  try {
+    const q = await fetchQuote(found.lat, found.lng);
+    box.textContent = q.covered ? (t("zoneCheckOk") + q.zoneNom + " (" + q.fee + " DA)") : t("zoneOut");
+    box.classList.add("show", q.covered ? "ok" : "ko");
+  } catch (e) { box.textContent = t("quoteError"); box.classList.add("show", "ko"); }
 }
 
 /* ============================================================
@@ -1017,7 +1032,6 @@ function applyLanguage() {
   $("fPhone").placeholder = t("phonePlaceholder");
   $("lblAddress").textContent = t("lblAddress");
   $("fAddress").placeholder = t("addressPlaceholder");
-  $("lblZone").textContent = t("lblZone");
   $("lblNotes").textContent = t("lblNotes");
   $("fNotes").placeholder = t("notesPlaceholder");
   $("lblSubtotalChk").textContent = t("subtotal");
@@ -1180,9 +1194,7 @@ document.addEventListener("DOMContentLoaded", () => {
   $("headerPhone").textContent = "📞 " + CONFIG.PHONE_DISPLAY;
   $("langToggle").addEventListener("click", toggleLanguage);
   applyLanguage();
-  renderZoneOptions();
   initAddress();
-  loadZones();
   loadMenu();
   bindGlobalEvents();
 });
@@ -1478,51 +1490,104 @@ function renderCartLines() {
 }
 
 /* ============================================================
-   ZONES DE LIVRAISON
+   ZONES DE LIVRAISON PAR DISTANCE
+   - La distance et la zone sont calculées UNIQUEMENT par le serveur (action deliveryQuote,
+     et recalculées à la commande). Le site n'affiche que ce que le serveur répond.
+   - Une seule adresse de référence (DELIVERY) : barre du haut, fenêtre d'adresse et
+     formulaire de commande lisent le même objet.
+   - Modifier l'adresse écrite efface les coordonnées et le tarif : il faut la revérifier.
+   - La position GPS n'est lue qu'au clic sur le bouton (jamais en continu).
    ============================================================ */
-function renderZoneOptions() {
-  $("zoneOptions").innerHTML = CONFIG.ZONES.map(z => `
-    <div class="zone-opt" data-zone="${z.id}">
-      <span>${escapeHtml(z.label)}</span>
-      <span class="fee">+${z.fee} DA</span>
-    </div>`).join("");
+const ADDR_KEY = "mtDelivery2";
+let DELIVERY = emptyDelivery();   // { line, repere, lat, lng, source: "gps"|"typed"|"", quote }
+let QUOTE_BUSY = false;
+let QUOTE_FAILED = false;
+let QUOTE_SEQ = 0;
 
-  $("zoneOptions").querySelectorAll(".zone-opt").forEach(el => {
-    el.addEventListener("click", () => {
-      selectZone(CONFIG.ZONES.find(z => z.id === el.dataset.zone));
-      MTForm.clearError($("zoneOptions"));
-    });
+function emptyDelivery() { return { line: "", repere: "", lat: null, lng: null, source: "", quote: null }; }
+
+function loadDelivery() {
+  try {
+    const d = JSON.parse(localStorage.getItem(ADDR_KEY) || "null");
+    if (d && typeof d === "object") {
+      DELIVERY = emptyDelivery();
+      DELIVERY.line = String(d.line || "").slice(0, 160);
+      DELIVERY.repere = String(d.repere || "").slice(0, 120);
+      const lat = Number(d.lat), lng = Number(d.lng);
+      if (d.lat != null && d.lng != null && isFinite(lat) && isFinite(lng)) {
+        DELIVERY.lat = lat; DELIVERY.lng = lng;
+        DELIVERY.source = d.source === "typed" ? "typed" : "gps";
+      }
+    }
+  } catch (e) {}
+}
+function saveDelivery() {
+  // Tarif et zone ne sont jamais mémorisés : ils sont redemandés au serveur à chaque fois.
+  try {
+    localStorage.setItem(ADDR_KEY, JSON.stringify({
+      line: DELIVERY.line, repere: DELIVERY.repere, lat: DELIVERY.lat, lng: DELIVERY.lng, source: DELIVERY.source
+    }));
+  } catch (e) {}
+}
+
+/* Zone de commande dérivée du devis serveur (null = pas de commande possible) */
+function syncSelectedZone() {
+  const q = DELIVERY.quote;
+  SELECTED_ZONE = (q && q.covered && DELIVERY.lat != null)
+    ? { id: q.zoneId, label: q.zoneNom, fee: q.fee } : null;
+}
+function hasCoords() { return DELIVERY.lat != null && DELIVERY.lng != null; }
+
+function fetchQuote(lat, lng) {
+  return jsonpRequest({ action: "deliveryQuote", lat: lat.toFixed(6), lng: lng.toFixed(6) }, 15000).then(res => {
+    if (!res || !res.success) { const e = new Error((res && res.error) || "quote"); e.code = res && res.code; throw e; }
+    return res.covered
+      ? { covered: true, zoneId: res.zone.id, zoneNom: res.zone.nom, fee: Number(res.zone.frais), distanceKm: res.distanceKm, rang: res.rang }
+      : { covered: false, distanceKm: res.distanceKm, maxKm: res.maxKm };
   });
 }
 
-/* ============================================================
-   CHARGEMENT DES ZONES DEPUIS L'ADMIN (avec repli sur les valeurs
-   codées en dur ci-dessus si l'appel échoue)
-   ============================================================ */
-function loadZones() {
-  jsonpRequest({ action: "getZones" })
-    .then(res => {
-      if (!res || !res.success || !res.zones || !res.zones.length) return;
-      const previousId = SELECTED_ZONE ? SELECTED_ZONE.id : null;
-      CONFIG.ZONES = res.zones.map(z => ({ id: z.id, label: z.nom, fee: z.frais }));
-      renderZoneOptions();
-      if (previousId) {
-        const stillThere = CONFIG.ZONES.find(z => z.id === previousId);
-        SELECTED_ZONE = stillThere || null;
-        if (stillThere) {
-          const opt = Array.from($("zoneOptions").children).find(c => c.dataset.zone === stillThere.id);
-          if (opt) opt.classList.add("selected");
-        }
-        updateCheckoutTotals();
-      }
-      // Zone mémorisée sur l'appareil : on la rétablit avec les zones à jour
-      if (!SELECTED_ZONE && DELIVERY.zoneId) {
-        const saved = CONFIG.ZONES.find(z => z.id === DELIVERY.zoneId);
-        if (saved) selectZone(saved);
-      }
-      renderAddrBar();
-    })
-    .catch(() => { /* on garde les zones par défaut ci-dessus */ });
+/* Demande (ou redemande) le devis pour l'adresse de référence */
+function refreshQuote() {
+  syncSelectedZone();
+  if (!hasCoords()) { DELIVERY.quote = null; syncSelectedZone(); renderAll(); return Promise.resolve(); }
+  const seq = ++QUOTE_SEQ;
+  QUOTE_BUSY = true; QUOTE_FAILED = false;
+  DELIVERY.quote = null; syncSelectedZone(); renderAll();
+  return fetchQuote(DELIVERY.lat, DELIVERY.lng)
+    .then(q => { if (seq !== QUOTE_SEQ) return; DELIVERY.quote = q; })
+    .catch(() => { if (seq !== QUOTE_SEQ) return; DELIVERY.quote = null; QUOTE_FAILED = true; })
+    .finally(() => { if (seq !== QUOTE_SEQ) return; QUOTE_BUSY = false; syncSelectedZone(); renderAll(); });
+}
+
+/* Nouvelle position de référence (GPS ou adresse repérée) */
+function setReference(lat, lng, source) {
+  DELIVERY.lat = lat; DELIVERY.lng = lng; DELIVERY.source = source;
+  saveDelivery();
+  return refreshQuote();
+}
+/* Adresse écrite modifiée : coordonnées, zone et tarif ne sont plus valables */
+function invalidateReference() {
+  QUOTE_SEQ++; QUOTE_BUSY = false; QUOTE_FAILED = false;
+  DELIVERY.lat = null; DELIVERY.lng = null; DELIVERY.source = ""; DELIVERY.quote = null;
+  syncSelectedZone();
+  saveDelivery();
+  renderAll();
+}
+
+function renderAll() {
+  syncSelectedZone();
+  renderAddrBar();
+  renderAddrQuote();
+  renderZoneSummary();
+  updateCheckoutTotals();
+  updateConfirmState();
+}
+
+function zoneText(q) { return q.zoneNom + " · " + q.distanceKm.toString().replace(".", LANG === "ar" ? "٫" : ",") + " km"; }
+function kmText(v) { return String(v).replace(".", LANG === "ar" ? "٫" : ","); }
+function fullAddressText() {
+  return [DELIVERY.line, DELIVERY.repere ? "(" + DELIVERY.repere + ")" : ""].filter(Boolean).join(" ");
 }
 
 function updateCheckoutTotals() {
@@ -1537,62 +1602,66 @@ function updateCheckoutTotals() {
   }
 }
 
-/* ============================================================
-   ADRESSE DE LIVRAISON : barre du haut, GPS, choix manuel
-   - Les coordonnées GPS ne sont JAMAIS enregistrées (ni sur l'appareil, ni envoyées
-     à MT Food) : elles servent seulement à trouver la zone et l'adresse.
-   - On mémorise sur l'appareil : zone, adresse écrite, repère.
-   - La vérification officielle de la zone reste celle du serveur à la commande.
-   ============================================================ */
-const ADDR_KEY = "mtDelivery";
-let DELIVERY = { zoneId: "", line: "", repere: "", outside: false };
-let ADDR_DRAFT_ZONE = null;
-let ADDR_DRAFT_OUTSIDE = false;
-let ADDR_GPS_FILLED = "";
-
-function loadDelivery() {
-  try {
-    const d = JSON.parse(localStorage.getItem(ADDR_KEY) || "null");
-    if (d && typeof d === "object") {
-      DELIVERY = { zoneId: String(d.zoneId || ""), line: String(d.line || ""), repere: String(d.repere || ""), outside: d.outside === true };
-    }
-  } catch (e) {}
-}
-function saveDelivery() {
-  try { localStorage.setItem(ADDR_KEY, JSON.stringify(DELIVERY)); } catch (e) {}
-}
-
-/* Sélection d'une zone pour la commande (liste du formulaire de commande) */
-function selectZone(z) {
-  SELECTED_ZONE = z || null;
-  $("zoneOptions").querySelectorAll(".zone-opt").forEach(o =>
-    o.classList.toggle("selected", !!z && o.dataset.zone === z.id));
-  updateCheckoutTotals();
-  if (z && DELIVERY.zoneId !== z.id) { DELIVERY.zoneId = z.id; saveDelivery(); renderAddrBar(); }
-}
-
+/* ---- Barre du haut ---- */
 function renderAddrBar() {
   const el = $("addrText");
-  const z = CONFIG.ZONES.find(x => x.id === DELIVERY.zoneId);
-  if (!z && !DELIVERY.line) {
+  el.textContent = "";
+  if (!DELIVERY.line && !hasCoords()) {
     el.textContent = t("addrChoose");
     el.classList.add("empty");
     return;
   }
   el.classList.remove("empty");
-  if (DELIVERY.outside) {
-    // Position GPS hors zone : on l'affiche clairement au lieu d'un nom de zone.
-    el.textContent = "";
-    if (DELIVERY.line) el.appendChild(document.createTextNode(DELIVERY.line + " · "));
-    const o = document.createElement("span");
-    o.className = "out";
-    o.textContent = t("addrOutsideShort");
-    el.appendChild(o);
-    return;
+  if (DELIVERY.line) el.appendChild(document.createTextNode(DELIVERY.line));
+  const q = DELIVERY.quote;
+  const tag = document.createElement("span");
+  if (QUOTE_BUSY) { tag.textContent = " · " + t("quoteLoading"); }
+  else if (q && q.covered) { tag.textContent = " · " + q.zoneNom + " · " + q.fee + " DA"; }
+  else if (q && !q.covered) { tag.className = "out"; tag.textContent = " · " + t("zoneOutShort"); }
+  else { tag.className = "out"; tag.textContent = " · " + t("addrToLocate"); }
+  el.appendChild(tag);
+}
+
+/* ---- Résumé dans la fenêtre d'adresse ---- */
+function quoteBox(target, withButton) {
+  const box = target;
+  box.className = "quote-box";
+  box.textContent = "";
+  const q = DELIVERY.quote;
+  const line = (cls, text) => { const d = document.createElement("div"); d.className = cls; d.textContent = text; box.appendChild(d); return d; };
+  if (QUOTE_BUSY) { box.classList.add("show", "busy"); line("qt", t("quoteLoading")); return; }
+  if (QUOTE_FAILED) { box.classList.add("show", "ko"); line("qt", t("quoteError")); return; }
+  if (!hasCoords()) { box.classList.add("show", "warn"); line("qt", t("addrNeedLocate")); return; }
+  if (q && q.covered) {
+    box.classList.add("show", "ok");
+    line("qt", t("deliveryTo") + " " + q.zoneNom);
+    line("qs", t("distFromCenter").replace("{d}", kmText(q.distanceKm)));
+    line("qf", t("deliveryFeeLbl") + " : " + q.fee + " DA");
+  } else if (q) {
+    box.classList.add("show", "ko");
+    line("qt", t("zoneOut"));
+    line("qs", t("zoneOutDetail").replace("{d}", kmText(q.distanceKm)).replace("{m}", kmText(q.maxKm)) + CONFIG.PHONE_DISPLAY + ".");
   }
-  el.textContent = DELIVERY.line
-    ? DELIVERY.line + (z ? " · " + z.label : "")
-    : z.label + t("addrWilayaSuffix");
+}
+function renderAddrQuote() { quoteBox($("addrQuote")); }
+function renderZoneSummary() {
+  quoteBox($("zoneSummary"));
+  $("zoneSummaryAddr").textContent = fullAddressText() || "—";
+  $("fAddress").value = fullAddressText();
+}
+
+/* Le bouton « Confirmer » n'est actif que si le serveur a validé une zone pour l'adresse affichée */
+function updateConfirmState() {
+  const ok = !!SELECTED_ZONE && !QUOTE_BUSY;
+  $("confirmOrderBtn").disabled = !ok;
+  const box = $("chkError");
+  if (!ok && $("checkoutOverlay").classList.contains("show") && !QUOTE_BUSY) {
+    const q = DELIVERY.quote;
+    if (q && !q.covered) showCheckoutError(t("zoneOut") + ". " + CONFIG.PHONE_DISPLAY);
+    else showCheckoutError(t("checkoutNeedAddr"));
+  } else if (ok) {
+    box.classList.remove("show");
+  }
 }
 
 function applyAddrLanguage() {
@@ -1601,117 +1670,96 @@ function applyAddrLanguage() {
   $("gpsPriv").textContent = t("addrGpsPriv");
   $("lblWilaya").textContent = t("lblWilaya");
   $("addrWilayaVal").textContent = t("addrWilayaVal");
-  $("lblAddrZone").textContent = t("lblAddrZone");
   $("lblAddrLine").textContent = t("lblAddrLine");
   $("addrLine").placeholder = t("addrLinePh");
   $("lblAddrRepere").textContent = t("lblAddrRepere");
   $("addrRepere").placeholder = t("addrReperePh");
   $("addrSaveBtn").textContent = t("addrSave");
-  renderAddrBar();
+  $("changeAddrBtn").textContent = t("changeAddr");
+  renderAll();
 }
 
-function renderAddrZones() {
-  $("addrZones").innerHTML = CONFIG.ZONES.map(z => `
-    <div class="zone-opt ${ADDR_DRAFT_ZONE === z.id ? "selected" : ""}" data-zone="${escapeAttr(z.id)}" role="radio" aria-checked="${ADDR_DRAFT_ZONE === z.id}">
-      <span>${escapeHtml(z.label)}</span>
-      <span class="fee">+${z.fee} DA</span>
-    </div>`).join("");
-  $("addrZones").querySelectorAll(".zone-opt").forEach(el =>
-    el.addEventListener("click", () => {
-      ADDR_DRAFT_ZONE = el.dataset.zone;
-      ADDR_DRAFT_OUTSIDE = false;   // choix manuel : le client saisit une adresse dans cette zone
-      $("addrZoneErr").classList.remove("show");
-      renderAddrZones();
-    }));
-}
-
+/* ---- Fenêtre d'adresse ---- */
 function openAddrSheet() {
-  ADDR_DRAFT_ZONE = DELIVERY.zoneId || null;
-  ADDR_DRAFT_OUTSIDE = !!DELIVERY.outside;
   $("addrLine").value = DELIVERY.line;
   $("addrRepere").value = DELIVERY.repere;
   $("gpsMsg").className = "gps-msg";
-  $("addrZoneErr").classList.remove("show");
-  renderAddrZones();
+  $("gpsWhere").className = "gps-where";
+  renderAddrQuote();
   openOverlay("addrOverlay");
 }
 
-function saveAddrSheet() {
-  if (!ADDR_DRAFT_ZONE || !CONFIG.ZONES.find(z => z.id === ADDR_DRAFT_ZONE)) {
-    $("addrZoneErr").textContent = t("addrNeedZone");
-    $("addrZoneErr").classList.add("show");
-    return;
-  }
-  DELIVERY.zoneId = ADDR_DRAFT_ZONE;
-  DELIVERY.outside = ADDR_DRAFT_OUTSIDE;
-  DELIVERY.line = $("addrLine").value.trim().slice(0, 160);
-  DELIVERY.repere = $("addrRepere").value.trim().slice(0, 120);
+async function saveAddrSheet() {
+  const line = $("addrLine").value.trim().slice(0, 160);
+  const repere = $("addrRepere").value.trim().slice(0, 120);
+  if (line !== DELIVERY.line && hasCoords() && DELIVERY.source !== "") invalidateReference();
+  DELIVERY.line = line;
+  DELIVERY.repere = repere;
   saveDelivery();
-  selectZone(CONFIG.ZONES.find(z => z.id === DELIVERY.zoneId));
-  renderAddrBar();
-  prefillCheckoutAddress(true);
-  closeOverlay("addrOverlay");
+  if (!line && !hasCoords()) { showGpsMsg(t("addrNeedAddr")); return; }
+
+  // Adresse écrite sans coordonnées vérifiées : on essaie de la repérer sur la carte (OpenStreetMap)
+  if (!hasCoords()) {
+    const btn = $("addrSaveBtn");
+    btn.disabled = true; showGpsMsg(t("addrVerifying"), "ok");
+    const found = await geocodeAddress(line);
+    btn.disabled = false;
+    if (!found) { showGpsMsg(t("addrNotFound")); renderAll(); return; }
+    await setReference(found.lat, found.lng, "typed");
+  } else if (!DELIVERY.quote) {
+    await refreshQuote();
+  }
+  renderAll();
+  if (DELIVERY.quote && DELIVERY.quote.covered) { $("gpsMsg").className = "gps-msg"; closeOverlay("addrOverlay"); }
 }
 
-/* Pré-remplit l'adresse du formulaire de commande (sans écraser ce que le client a tapé) */
-function prefillCheckoutAddress(force) {
-  const z = CONFIG.ZONES.find(x => x.id === DELIVERY.zoneId);
-  if (z && (!SELECTED_ZONE || force)) selectZone(z);
-  const f = $("fAddress");
-  if (!f || (f.value.trim() && !force)) return;
-  const text = [DELIVERY.line, DELIVERY.repere ? "(" + DELIVERY.repere + ")" : ""].filter(Boolean).join(" ");
-  if (text) f.value = text;
-}
+/* Pré-remplit la zone d'adresse du formulaire de commande depuis la référence unique */
+function prefillCheckoutAddress() { renderZoneSummary(); }
 
 function initAddress() {
   loadDelivery();
   $("addrBtn").addEventListener("click", openAddrSheet);
+  $("changeAddrBtn").addEventListener("click", () => { closeOverlay("checkoutOverlay"); openAddrSheet(); });
   $("addrSaveBtn").addEventListener("click", saveAddrSheet);
   $("gpsBtn").addEventListener("click", useMyLocation);
-  if (DELIVERY.zoneId) {
-    const z = CONFIG.ZONES.find(x => x.id === DELIVERY.zoneId);
-    if (z) selectZone(z);
-  }
-  renderAddrBar();
+  $("addrLine").addEventListener("input", () => {
+    if ($("addrLine").value.trim() !== DELIVERY.line && hasCoords()) invalidateReference();
+    // On garde ce que le client écrit, mais sans coordonnées ni tarif tant qu'il n'a pas revérifié
+    DELIVERY.line = $("addrLine").value.trim().slice(0, 160);
+    renderAll();
+  });
+  $("addrRepere").addEventListener("input", () => {
+    DELIVERY.repere = $("addrRepere").value.trim().slice(0, 120);
+    saveDelivery(); renderZoneSummary();
+  });
+  renderAll();
+  if (hasCoords()) refreshQuote();
 }
 
 /* ---- GPS ---- */
-function distMeters(lat1, lng1, lat2, lng2) {
-  const R = 6371000, rad = Math.PI / 180;
-  const dLat = (lat2 - lat1) * rad, dLng = (lng2 - lng1) * rad;
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLng / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(a));
-}
-
-/* Zone dont le cercle contient le point (la plus proche du centre si plusieurs) */
-function detectZone(lat, lng) {
-  let best = null, bestD = Infinity;
-  CONFIG.ZONES.forEach(z => {
-    const key = Object.keys(CONFIG.ZONE_GEO).find(k => k.toLowerCase() === String(z.id).toLowerCase());
-    const g = key ? CONFIG.ZONE_GEO[key] : null;
-    if (!g) return;
-    const d = distMeters(lat, lng, g.lat, g.lng);
-    if (d <= g.r && d < bestD) { best = z; bestD = d; }
-  });
-  return best;
-}
-
 function showGpsMsg(text, kind) {
   const m = $("gpsMsg");
   m.textContent = text;
   m.className = "gps-msg show " + (kind || "warn");
 }
 
+/* Position simulée pour les tests : menu.html?simpos=36.617,3.233 (le serveur vérifie quand même la distance) */
+function simulatedPosition() {
+  try {
+    const m = /^(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)$/.exec(new URLSearchParams(location.search).get("simpos") || "");
+    return m ? { lat: Number(m[1]), lng: Number(m[2]) } : null;
+  } catch (e) { return null; }
+}
+
 function useMyLocation() {
+  const sim = simulatedPosition();
+  if (sim) { onGpsPosition(sim.lat, sim.lng); return; }
   if (!navigator.geolocation) { showGpsMsg(t("addrGpsUnsupported")); return; }
   const btn = $("gpsBtn");
   btn.disabled = true;
   showGpsMsg(t("addrGpsLocating"), "ok");
   navigator.geolocation.getCurrentPosition(
-    pos => {
-      btn.disabled = false;
-      onGpsPosition(pos.coords.latitude, pos.coords.longitude);
-    },
+    pos => { btn.disabled = false; onGpsPosition(pos.coords.latitude, pos.coords.longitude); },
     err => {
       btn.disabled = false;
       showGpsMsg(err && err.code === 1 ? t("addrGpsDenied") : t("addrGpsFail"));
@@ -1720,32 +1768,28 @@ function useMyLocation() {
   );
 }
 
-function onGpsPosition(lat, lng) {
-  const S = CONFIG.SERVICE_AREA;
-  const outside = S && distMeters(lat, lng, S.lat, S.lng) > S.maxKm * 1000;
-  const zone = outside ? null : detectZone(lat, lng);
-  ADDR_DRAFT_OUTSIDE = !!outside;
-  if (outside) { ADDR_DRAFT_ZONE = null; renderAddrZones(); }   // hors zone : le client choisit lui-même
-  else if (zone) { ADDR_DRAFT_ZONE = zone.id; renderAddrZones(); }
-
+async function onGpsPosition(lat, lng) {
+  // Nouvelle référence : l'adresse affichée devient celle du GPS (modifiable ensuite)
+  DELIVERY.lat = lat; DELIVERY.lng = lng; DELIVERY.source = "gps"; DELIVERY.quote = null;
+  const quotePromise = setReference(lat, lng, "gps");
   const where = $("gpsWhere");
   where.className = "gps-where"; where.textContent = "";
-  reverseGeocode(lat, lng).then(res => {
-    const addr = res ? res.addr : "";
-    if (outside) {
-      // Hors zone : on n'écrit pas le lieu GPS comme adresse de livraison. Le client saisit lui-même une adresse à Meftah.
-      if ($("addrLine").value.trim() === ADDR_GPS_FILLED) $("addrLine").value = "";
-      ADDR_GPS_FILLED = "";
-    } else if (addr && !$("addrLine").value.trim()) {
-      $("addrLine").value = addr;
-      ADDR_GPS_FILLED = addr;
-    }
-    if (res && res.where) { where.textContent = t("addrDetected") + res.where; where.className = "gps-where show"; }
-    if (outside) showGpsMsg(t("addrGpsOut"));
-    else if (!zone) showGpsMsg(t("addrGpsNoZone"));
-    else if (addr) showGpsMsg(t("addrGpsOk") + addr, "ok");
-    else showGpsMsg(t("addrGpsNoAddr"));
-  });
+  showGpsMsg(t("addrVerifying"), "ok");
+  const res = await reverseGeocode(lat, lng);
+  if (res && res.addr) {
+    DELIVERY.line = res.addr;
+    $("addrLine").value = res.addr;
+    saveDelivery();
+  } else {
+    showGpsMsg(t("addrGpsNoAddr"));
+  }
+  if (res && res.where) { where.textContent = t("addrDetected") + res.where; where.className = "gps-where show"; }
+  await quotePromise;
+  renderAll();
+  const q = DELIVERY.quote;
+  if (q && q.covered) showGpsMsg(t("addrGpsOk") + (DELIVERY.line || ""), "ok");
+  else if (q) showGpsMsg(t("zoneOut"));
+  else if (QUOTE_FAILED) showGpsMsg(t("quoteError"));
 }
 
 /* Géocodage inverse (OpenStreetMap / Nominatim, sans clé). Faible volume uniquement :
@@ -1768,6 +1812,28 @@ function reverseGeocode(lat, lng) {
         addr: [street, area].filter(Boolean).join(", "),
         where: [commune, wilaya].filter((v, i, arr) => v && arr.indexOf(v) === i).join(", ")
       };
+    })
+    .catch(() => null)
+    .finally(() => clearTimeout(timer));
+}
+
+/* Repère une adresse écrite (Nominatim, limité à la région de Blida). Un simple nom de commune
+   ou de quartier trop vague n'est PAS accepté : il faut une rue ou un lieu précis. */
+function geocodeAddress(text) {
+  const q = String(text || "").trim();
+  if (q.length < 4) return Promise.resolve(null);
+  const ctrl = ("AbortController" in window) ? new AbortController() : null;
+  const timer = setTimeout(() => ctrl && ctrl.abort(), 8000);
+  const url = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=3&countrycodes=dz&bounded=1" +
+    "&viewbox=2.80,36.75,3.60,36.42&accept-language=fr&q=" + encodeURIComponent(q);
+  return fetch(url, ctrl ? { signal: ctrl.signal } : {})
+    .then(r => r.ok ? r.json() : null)
+    .then(list => {
+      if (!Array.isArray(list)) return null;
+      const good = list.find(r => r && ((r.category !== "boundary" && r.category !== "place") || /house|neighbourhood|suburb|quarter|hamlet/.test(r.type || "")));
+      if (!good) return null;
+      const lat = Number(good.lat), lng = Number(good.lon);
+      return isFinite(lat) && isFinite(lng) ? { lat, lng } : null;
     })
     .catch(() => null)
     .finally(() => clearTimeout(timer));
@@ -1796,11 +1862,11 @@ function bindGlobalEvents() {
       return;
     }
     closeOverlay("cartOverlay");
-    updateCheckoutTotals();
     prefillCheckoutFromSession();
-    prefillCheckoutAddress();
-    if (DELIVERY.outside) showCheckoutError(t("outsideCheckoutWarn") + CONFIG.PHONE_DISPLAY + ".");
+    $("chkError").classList.remove("show");
     openOverlay("checkoutOverlay");
+    renderAll();
+    if (hasCoords()) refreshQuote();   // tarif toujours revérifié par le serveur à l'ouverture
   });
 
   $("confirmOrderBtn").addEventListener("click", submitOrder);
@@ -1827,18 +1893,16 @@ function submitOrder() {
 
   const name = $("fName").value.trim();
   const phone = $("fPhone").value.trim();
-  const address = $("fAddress").value.trim();
+  const address = fullAddressText();
   const notes = $("fNotes").value.trim();
   const errBox = $("chkError");
 
   errBox.classList.remove("show");
 
-  const zoneBad = !SELECTED_ZONE;
-  const formOk = MTForm.validate($("checkoutForm"));
-  if (zoneBad) { MTForm.setError($("zoneOptions"), t("chooseZone")); }
-  if (!formOk || zoneBad) {
-    if (formOk) { MTForm.fail($("zoneOptions"), t("chooseZone")); }
-    return;
+  if (!MTForm.validate($("checkoutForm"))) return;
+  if (!SELECTED_ZONE || !hasCoords()) {
+    // Pas de commande sans adresse vérifiée dans la zone de livraison
+    return showCheckoutError(t("checkoutNeedAddr"));
   }
   if (!Object.keys(CART).length) {
     return showCheckoutError(t("emptyCartErr"));
@@ -1858,6 +1922,8 @@ function submitOrder() {
     zone: SELECTED_ZONE.label,
     zoneId: SELECTED_ZONE.id,
     deliveryFee: SELECTED_ZONE.fee,
+    lat: DELIVERY.lat,
+    lng: DELIVERY.lng,
     notes: notes,
     total: total,
     clientId: session.clientId || "",
@@ -1896,9 +1962,13 @@ function submitOrder() {
       if (code === "price_changed" || code === "unavailable") {
         // Prix, frais ou plat modifiés : on recharge le menu et les zones, le client revérifie son panier.
         ORDER_REQUEST_ID = "";
-        loadZones();
+        refreshQuote();
         loadMenu();
         showCheckoutError(err.serverMsg || t("sendError") + CONFIG.PHONE_DISPLAY + ".");
+      } else if (code === "gps_required" || code === "out_of_zone") {
+        ORDER_REQUEST_ID = "";
+        refreshQuote();
+        showCheckoutError(err.serverMsg || t("checkoutNeedAddr"));
       } else if (code === "zone" || code === "rate" || code === "fields" || code === "phone") {
         ORDER_REQUEST_ID = "";
         showCheckoutError(err.serverMsg || t("sendError") + CONFIG.PHONE_DISPLAY + ".");
@@ -1908,8 +1978,8 @@ function submitOrder() {
       console.error(err);
     })
     .finally(() => {
-      btn.disabled = false;
       btn.textContent = t("confirmOrder");
+      updateConfirmState();
     });
 }
 
@@ -1934,12 +2004,7 @@ function showCheckoutError(msg) {
 
 function resetOrder() {
   CART = {};
-  SELECTED_ZONE = null;
-  $("fName").value = "";
-  $("fPhone").value = "";
-  $("fAddress").value = "";
   $("fNotes").value = "";
-  $("zoneOptions").querySelectorAll(".zone-opt").forEach(o => o.classList.remove("selected"));
   updateCartBar();
   renderGrid();
 }
