@@ -240,12 +240,19 @@ $("pwdToggle2").addEventListener("click", () => togglePwd("fPassword2","pwdToggl
 function markInvalid(fieldId, invalid){ $(fieldId).classList.toggle("invalid", invalid); }
 async function apiGet(params) {
   // Envoi en POST : mots de passe et codes PIN ne passent plus dans l'URL.
-  const res = await fetch(CONFIG.API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify(params)
-  });
-  const txt = await res.text();
+  // Délai maximum : le bouton ne reste jamais bloqué si Google met trop de temps à répondre.
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 30000);
+  let txt;
+  try {
+    const res = await fetch(CONFIG.API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(params),
+      signal: ctrl.signal
+    });
+    txt = await res.text();
+  } finally { clearTimeout(timer); }
   try { return JSON.parse(txt); }
   catch (e) { throw new Error("Réponse invalide du serveur"); }
 }
@@ -262,20 +269,28 @@ async function doSignup(){
 
   $("signupBtn").disabled = true;
   $("signupBtn").textContent = "...";
+  function finishSignup(data) {
+    $("formCard").classList.add("hidden");
+    $("successCard").classList.add("show");
+    localStorage.setItem(SESSION_KEY, JSON.stringify({
+      clientId: data.clientId, prenom: data.prenom || prenom, nom: data.nom || nom,
+      email: data.email || "", telephone: data.telephone || ""
+    }));
+    setTimeout(() => { window.location.href = INSCRIPTION_NEXT; }, 1600);
+  }
   try {
-    // Action backend à ajouter côté Apps Script : clientSignup
     const data = await apiGet({ action: "clientSignup", prenom, nom, identifiant: identifier, motDePasse: pwd });
     if (data && data.success) {
-      $("formCard").classList.add("hidden");
-      $("successCard").classList.add("show");
-      localStorage.setItem(SESSION_KEY, JSON.stringify({
-        clientId: data.clientId, prenom, nom, email: data.email || "", telephone: data.telephone || ""
-      }));
-      setTimeout(() => { window.location.href = INSCRIPTION_NEXT; }, 1600);
+      finishSignup(data);
     } else {
       showError((data && data.error) || t("errExists"));
     }
   } catch(e) {
+    // Réponse perdue ou trop lente : le compte a peut-être été créé. On tente la connexion avec les mêmes infos.
+    try {
+      const login = await apiGet({ action: "clientLogin", identifiant: identifier, motDePasse: pwd });
+      if (login && login.success) { finishSignup(login); return; }
+    } catch(e2) { /* ignore */ }
     showError(t("networkError"));
   } finally {
     $("signupBtn").disabled = false;
