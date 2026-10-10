@@ -4,7 +4,7 @@
 // JAMAIS mis en cache : toujours réseau, pour ne jamais servir des
 // commandes/statuts périmés.
 
-const CACHE_NAME = "mtdelivery-v8";
+const CACHE_NAME = "mtdelivery-v9";
 const CORE_ASSETS = [
   "/index.html",
   "/menu.html",
@@ -95,6 +95,14 @@ self.addEventListener("fetch", (event) => {
 // pour un livreur, changement de statut pour un client) le jour où le
 // backend enverra de vraies notifications (nécessite un projet Firebase
 // Cloud Messaging, pas encore configuré à ce stade).
+// Page à ouvrir au clic selon le contenu de la notification :
+// suivi de la commande (client) ou espace livreur (nouvelle commande), sinon accueil.
+function targetFromData_(d) {
+  if (d && d.orderNumber) return "/suivi-commande.html?cmd=" + encodeURIComponent(d.orderNumber);
+  if (d && d.type === "newOrder") return "/espace-livreur.html";
+  return "/index.html";
+}
+
 self.addEventListener("push", (event) => {
   let data = {};
   try {
@@ -110,7 +118,7 @@ self.addEventListener("push", (event) => {
     body: n.body || data.body || d.body || "",
     icon: "/icons/icon-192.png",
     badge: "/icons/icon-192.png",
-    data: { url: d.url || data.url || "/index.html" },
+    data: { url: d.url || data.url || targetFromData_(d) },
   };
   event.waitUntil(self.registration.showNotification(title, options));
 });
