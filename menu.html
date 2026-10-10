@@ -162,17 +162,26 @@
 
   /* ---------- CATEGORY TABS ---------- */
   .tabs{
-    display:flex;gap:8px;overflow-x:auto;padding:16px 16px 12px;
-    background:var(--bg);position:sticky;top:0;z-index:5;
+    display:flex;gap:6px;overflow-x:auto;padding:14px 12px 8px;
+    background:var(--bg);scrollbar-width:none;
   }
   .tabs::-webkit-scrollbar{display:none;}
   .tab{
-    flex:0 0 auto;padding:9px 17px;border-radius:999px;font-size:13.5px;
-    background:#fff;border:1px solid var(--border);color:var(--blue-700);
-    font-weight:600;white-space:nowrap;cursor:pointer;transition:all .15s ease;
-    box-shadow:var(--shadow-sm);
+    flex:0 0 auto;width:74px;display:flex;flex-direction:column;align-items:center;gap:6px;
+    cursor:pointer;-webkit-tap-highlight-color:transparent;
   }
-  .tab.active{background:var(--blue-700);border-color:var(--blue-700);color:#fff;box-shadow:0 6px 14px -4px rgba(19,74,143,.45);}
+  .tab .ico{
+    width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:28px;line-height:1;background:#fff;border:1.5px solid var(--border);
+    box-shadow:var(--shadow-sm);transition:all .15s ease;
+  }
+  .tab .lbl{
+    font-size:12px;font-weight:600;color:var(--blue-700);text-align:center;line-height:1.2;
+    max-width:74px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    padding-bottom:3px;border-bottom:2.5px solid transparent;
+  }
+  .tab.active .ico{background:var(--blue-100);border-color:var(--blue-700);box-shadow:0 6px 14px -4px rgba(19,74,143,.45);}
+  .tab.active .lbl{color:var(--blue-900);font-weight:800;border-bottom-color:var(--gold-600,#d4a017);}
 
   /* ---------- PRODUCT GRID ---------- */
   main{padding:6px 16px 10px;max-width:960px;margin:0 auto;}
@@ -1155,18 +1164,42 @@ function showEmpty(key) {
 /* ============================================================
    CATÉGORIES / ONGLETS
    ============================================================ */
+/* Icône d'une catégorie : on devine d'après le nom (FR ou AR), sinon assiette */
+const CAT_ICONS = [
+  [/pizza|بيتزا/, "🍕"],
+  [/burger|برغر|برجر/, "🍔"],
+  [/tacos|تاكوس/, "🌮"],
+  [/sandwich|panini|kebab|chawarma|shawarma|casse.?croute|ساندويتش|ساندوتش|شاورما/, "🥪"],
+  [/frite|بطاطا/, "🍟"],
+  [/poulet|chicken|دجاج/, "🍗"],
+  [/salade|سلطة/, "🥗"],
+  [/pate|pasta|معكرونة|عجين/, "🍝"],
+  [/viande|grill|brochette|steak|لحم|مشاوي/, "🍖"],
+  [/poisson|sushi|mer\b|سمك/, "🐟"],
+  [/soupe|chorba|شوربة|حساء/, "🍲"],
+  [/petit.?dej|breakfast|croissant|viennoiserie|فطور/, "🥐"],
+  [/dessert|gateau|patisserie|tarte|crepe|glace|حلويات|حلوى|كيك|مثلجات/, "🍰"],
+  [/boisson|jus|soda|cafe|the\b|مشروب|عصير|قهوة/, "🥤"]
+];
+function catIcon(cat) {
+  if (cat === ALL_CAT) return "🍽️";
+  const k = String(cat).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  for (const [re, ico] of CAT_ICONS) { if (re.test(k)) return ico; }
+  return "🍴";
+}
+
 function renderTabs() {
   const cats = [ALL_CAT, ...new Set(MENU.map(i => i.categorie || "Autre"))];
   $("tabs").innerHTML = cats.map(c =>
-    `<div class="tab ${c === ACTIVE_CATEGORY ? "active" : ""}" data-cat="${escapeAttr(c)}">${escapeHtml(catLabel(c))}</div>`
+    `<div class="tab ${c === ACTIVE_CATEGORY ? "active" : ""}" data-cat="${escapeAttr(c)}" role="button" tabindex="0">` +
+    `<span class="ico" aria-hidden="true">${catIcon(c)}</span>` +
+    `<span class="lbl">${escapeHtml(catLabel(c))}</span></div>`
   ).join("");
 
   $("tabs").querySelectorAll(".tab").forEach(tab => {
-    tab.addEventListener("click", () => {
-      ACTIVE_CATEGORY = tab.dataset.cat;
-      renderTabs();
-      renderGrid();
-    });
+    const pick = () => { ACTIVE_CATEGORY = tab.dataset.cat; renderTabs(); renderGrid(); };
+    tab.addEventListener("click", pick);
+    tab.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
   });
 }
 
