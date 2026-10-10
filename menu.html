@@ -1759,6 +1759,7 @@ function bindGlobalEvents() {
 /* ============================================================
    ENVOI DE LA COMMANDE
    ============================================================ */
+let ORDER_REQUEST_ID = "";
 function submitOrder() {
   if (!getClientSession()) {
     saveCartForAfterLogin();
@@ -1788,15 +1789,22 @@ function submitOrder() {
   const { subtotal } = cartTotals();
   const total = subtotal + SELECTED_ZONE.fee;
 
+  const session = getClientSession() || {};
+  // Identifiant d'envoi : conservé tant que la commande n'est pas confirmée (évite les doublons si on réessaie).
+  if (!ORDER_REQUEST_ID) ORDER_REQUEST_ID = "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+
   const payload = {
     customerName: name,
     phone: phone,
     address: address,
     zone: SELECTED_ZONE.label,
+    zoneId: SELECTED_ZONE.id,
     deliveryFee: SELECTED_ZONE.fee,
     notes: notes,
     total: total,
-    items: Object.values(CART).map(l => ({ nom: l.item.nom, prix: l.item.prix, qty: l.qty }))
+    clientId: session.clientId || "",
+    requestId: ORDER_REQUEST_ID,
+    items: Object.values(CART).map(l => ({ id: l.item.id, nom: l.item.nom, prix: l.item.prix, qty: l.qty }))
   };
 
   const btn = $("confirmOrderBtn");
@@ -1805,7 +1813,13 @@ function submitOrder() {
 
   jsonpRequest({ action: "order", payload: JSON.stringify(payload) })
     .then(res => {
-      if (!res.success) throw new Error(res.error || t("genericError"));
+      if (!res.success) {
+        const e = new Error(res.error || t("genericError"));
+        e.code = res.code || "";
+        e.serverMsg = res.error || "";
+        throw e;
+      }
+      ORDER_REQUEST_ID = "";
       closeOverlay("checkoutOverlay");
       $("orderNoDisplay").textContent = res.orderNumber;
       $("trackOrderLink").href = "suivi-commande.html?cmd=" + encodeURIComponent(res.orderNumber);
@@ -1814,7 +1828,25 @@ function submitOrder() {
       resetOrder();
     })
     .catch(err => {
-      showCheckoutError(t("sendError") + CONFIG.PHONE_DISPLAY + ".");
+      const code = err && err.code;
+      if (code === "auth_client") {
+        saveCartForAfterLogin();
+        localStorage.removeItem(CLIENT_SESSION_KEY);
+        window.location.href = "connexion.html?next=menu.html";
+        return;
+      }
+      if (code === "price_changed" || code === "unavailable") {
+        // Prix, frais ou plat modifiés : on recharge le menu et les zones, le client revérifie son panier.
+        ORDER_REQUEST_ID = "";
+        loadZones();
+        loadMenu();
+        showCheckoutError(err.serverMsg || t("sendError") + CONFIG.PHONE_DISPLAY + ".");
+      } else if (code === "zone" || code === "rate" || code === "fields" || code === "phone") {
+        ORDER_REQUEST_ID = "";
+        showCheckoutError(err.serverMsg || t("sendError") + CONFIG.PHONE_DISPLAY + ".");
+      } else {
+        showCheckoutError(t("sendError") + CONFIG.PHONE_DISPLAY + ".");
+      }
       console.error(err);
     })
     .finally(() => {

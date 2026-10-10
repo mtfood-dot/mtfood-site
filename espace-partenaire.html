@@ -447,6 +447,7 @@ const I18N = {
     footerNote: "MT Delivery · Meftah, Blida",
     phoneRequired: "Merci d'entrer ton numéro de téléphone.",
     pinRequired: "Merci d'entrer ton code PIN.",
+    sessionExpired: "Session expirée. Reconnecte-toi.",
     loginFailedGeneric: "Erreur de connexion. Vérifie ta connexion internet et réessaie.",
     loadFailedGeneric: "Impossible de charger les données. Vérifie ta connexion et réessaie.",
     zoneLabel: "Zone",
@@ -531,6 +532,7 @@ const I18N = {
     footerNote: "إم تي دليفري · مفتاح، البليدة",
     phoneRequired: "الرجاء إدخال رقم هاتفك.",
     pinRequired: "الرجاء إدخال رمز PIN الخاص بك.",
+    sessionExpired: "انتهت الجلسة. أعد تسجيل الدخول.",
     loginFailedGeneric: "خطأ في الاتصال. تحقق من اتصالك بالإنترنت وأعد المحاولة.",
     loadFailedGeneric: "تعذر تحميل البيانات. تحقق من اتصالك وأعد المحاولة.",
     zoneLabel: "المنطقة",
@@ -610,7 +612,23 @@ $("langToggle").addEventListener("click", () => {
 /* ============================================================
    APPEL API
    ============================================================ */
+function checkAuth_(data) {
+  // Session refusée par le serveur (jeton expiré / compte désactivé) : retour à la connexion.
+  if (data && data.code === "auth" && SESSION) {
+    SESSION = null;
+    localStorage.removeItem(SESSION_KEY);
+    $("appScreen").classList.add("hidden");
+    $("loginScreen").classList.remove("hidden");
+    $("fPin").value = "";
+    showError($("loginError"), t("sessionExpired"));
+  }
+  return data;
+}
+
 async function apiGet(params) {
+  // Jeton de session ajouté automatiquement (sauf connexion).
+  params = Object.assign({}, params);
+  if (SESSION && SESSION.token && params.action !== "partnerLogin") params.token = SESSION.token;
   // Envoi en POST : mots de passe et codes PIN ne passent plus dans l'URL.
   const res = await fetch(CONFIG.API_URL, {
     method: "POST",
@@ -618,7 +636,7 @@ async function apiGet(params) {
     body: JSON.stringify(params)
   });
   const txt = await res.text();
-  try { return JSON.parse(txt); }
+  try { return checkAuth_(JSON.parse(txt)); }
   catch (e) { throw new Error("Réponse invalide du serveur"); }
 }
 
@@ -656,7 +674,7 @@ async function doLogin() {
   try {
     const data = await apiGet({ action: "partnerLogin", telephone: phone, pin: pin });
     if (data.success) {
-      SESSION = { nom: data.nom, telephone: data.telephone, type: data.type, zone: data.zone };
+      SESSION = { nom: data.nom, telephone: data.telephone, type: data.type, zone: data.zone, token: data.token || "" };
       localStorage.setItem(SESSION_KEY, JSON.stringify(SESSION));
       enterApp();
     } else {
