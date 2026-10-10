@@ -206,6 +206,8 @@
   .gps-msg.show{display:block;}
   .gps-msg.ok{background:#eaf7ee;color:#1a7d3a;}
   .gps-msg.warn{background:#fff5e0;color:#8a5a00;}
+  .gps-where{margin-top:6px;font-size:12.5px;color:var(--navy,#0f3f85);font-weight:700;display:none;}
+  .gps-where.show{display:block;}
   .gps-priv{margin-top:6px;font-size:11.5px;color:var(--muted);text-align:center;}
   .addr-fixed{padding:11px 13px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-weight:700;color:var(--blue-900);}
 
@@ -584,6 +586,7 @@ if ("serviceWorker" in navigator) {
 
     <button class="gps-btn" id="gpsBtn" type="button"><span aria-hidden="true">📍</span> <span id="gpsBtnText">Utiliser ma position actuelle</span></button>
     <div class="gps-msg" id="gpsMsg" role="status" aria-live="polite"></div>
+    <div class="gps-where" id="gpsWhere" aria-live="polite"></div>
     <div class="gps-priv" id="gpsPriv">Ta position n'est pas enregistrée.</div>
 
     <div class="field" style="margin-top:18px">
@@ -675,6 +678,7 @@ const I18N = {
     addrGpsOut: "Tu sembles hors de notre zone de livraison actuelle. Tu peux quand même choisir ta zone ci-dessous.",
     addrGpsNoZone: "Position trouvée, mais la zone n'a pas pu être déterminée : choisis-la dans la liste.",
     addrGpsOk: "Position trouvée : ",
+    addrDetected: "Position détectée : ",
     addrGpsNoAddr: "Adresse introuvable : complète-la à la main.",
     addrGpsPriv: "Ta position n'est pas enregistrée.",
     lblWilaya: "Wilaya / commune",
@@ -783,6 +787,7 @@ const I18N = {
     addrGpsOut: "يبدو أنك خارج منطقة التوصيل الحالية. يمكنك مع ذلك اختيار منطقتك أدناه.",
     addrGpsNoZone: "تم تحديد موقعك لكن تعذّر تحديد المنطقة: اخترها من القائمة.",
     addrGpsOk: "تم تحديد موقعك: ",
+    addrDetected: "موقعك المكتشف: ",
     addrGpsNoAddr: "تعذّر العثور على العنوان: أكمله يدويًا.",
     addrGpsPriv: "لا يتم حفظ موقعك الجغرافي.",
     lblWilaya: "الولاية / البلدية",
@@ -1701,8 +1706,12 @@ function onGpsPosition(lat, lng) {
   const zone = outside ? null : detectZone(lat, lng);
   if (zone) { ADDR_DRAFT_ZONE = zone.id; renderAddrZones(); }
 
-  reverseGeocode(lat, lng).then(addr => {
+  const where = $("gpsWhere");
+  where.className = "gps-where"; where.textContent = "";
+  reverseGeocode(lat, lng).then(res => {
+    const addr = res ? res.addr : "";
     if (addr && !$("addrLine").value.trim()) $("addrLine").value = addr;
+    if (res && res.where) { where.textContent = t("addrDetected") + res.where; where.className = "gps-where show"; }
     if (outside) showGpsMsg(t("addrGpsOut"));
     else if (!zone) showGpsMsg(t("addrGpsNoZone"));
     else if (addr) showGpsMsg(t("addrGpsOk") + addr, "ok");
@@ -1720,13 +1729,18 @@ function reverseGeocode(lat, lng) {
   return fetch(url, ctrl ? { signal: ctrl.signal } : {})
     .then(r => r.ok ? r.json() : null)
     .then(j => {
-      if (!j || !j.address) return "";
+      if (!j || !j.address) return null;
       const a = j.address;
       const street = [a.house_number, a.road].filter(Boolean).join(" ");
       const area = a.neighbourhood || a.suburb || a.hamlet || a.village || a.town || a.city || "";
-      return [street, area].filter(Boolean).join(", ");
+      const commune = a.city || a.town || a.village || a.municipality || a.city_district || a.county || "";
+      const wilaya = String(a.state || a.province || "").replace(/^(Wilaya de|ولاية)\s*/i, "");
+      return {
+        addr: [street, area].filter(Boolean).join(", "),
+        where: [commune, wilaya].filter((v, i, arr) => v && arr.indexOf(v) === i).join(", ")
+      };
     })
-    .catch(() => "")
+    .catch(() => null)
     .finally(() => clearTimeout(timer));
 }
 
