@@ -1749,6 +1749,7 @@ function initAddress() {
   $("addrSaveBtn").addEventListener("click", saveAddrSheet);
   $("gpsBtn").addEventListener("click", useMyLocation);
   $("addrSearchBtn").addEventListener("click", runAddrSearch);
+  $("addrSearch").addEventListener("input", onAddrSearchInput);
   $("addrSearch").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); runAddrSearch(); } });
   $("addrLine").addEventListener("input", () => {
     if ($("addrLine").value.trim() !== DELIVERY.line && hasCoords()) invalidateReference();
@@ -1869,15 +1870,38 @@ function searchAddresses(text) {
     .finally(() => clearTimeout(timer));
 }
 
-async function runAddrSearch() {
+/* Suggestions pendant la frappe : Photon (komoot, données OpenStreetMap, gratuit, sans clé).
+   Zone limitée à Meftah. En cas d'échec ou de liste vide, le bouton « Chercher » retombe sur Nominatim. */
+function photonSearch(text, signal) {
+  const q = String(text || "").trim();
+  if (q.length < 3) return Promise.resolve([]);
+  const url = "https://photon.komoot.io/api/?limit=7&lat=36.620&lon=3.223&bbox=3.13,36.55,3.31,36.69" +
+    (LANG === "ar" ? "" : "&lang=fr") + "&q=" + encodeURIComponent(q);
+  return fetch(url, signal ? { signal: signal } : {})
+    .then(r => r.ok ? r.json() : null)
+    .then(j => {
+      const feats = (j && Array.isArray(j.features)) ? j.features : [];
+      const seen = {};
+      return feats.map(f => {
+        const pr = f.properties || {}, c = (f.geometry && f.geometry.coordinates) || [];
+        if (pr.countrycode && pr.countrycode !== "DZ") return null;
+        const street = [pr.housenumber, pr.street].filter(Boolean).join(" ");
+        const area = pr.district || pr.locality || "";
+        const title = [pr.name, !pr.name || pr.name !== street ? street : "", area].filter((v, i, a) => v && a.indexOf(v) === i).join(", ");
+        const sub = [pr.city || pr.county || "", pr.state || ""].filter((v, i, a) => v && a.indexOf(v) === i).join(", ");
+        const lat = Number(c[1]), lng = Number(c[0]);
+        if (!title || !isFinite(lat) || !isFinite(lng)) return null;
+        const key = title + "|" + lat.toFixed(4) + "|" + lng.toFixed(4);
+        if (seen[key]) return null; seen[key] = 1;
+        return { title: title, sub: sub, lat: lat, lng: lng };
+      }).filter(Boolean);
+    })
+    .catch(() => []);
+}
+
+function showAddrResults(list) {
   const box = $("addrResults");
-  const btn = $("addrSearchBtn");
-  const q = $("addrSearch").value.trim();
   box.textContent = "";
-  if (q.length < 3) { box.classList.remove("show"); return; }
-  btn.disabled = true;
-  const list = await searchAddresses(q);
-  btn.disabled = false;
   box.classList.add("show");
   if (!list.length) {
     const n = document.createElement("div"); n.className = "none"; n.textContent = t("addrSearchNone"); box.appendChild(n);
@@ -1891,6 +1915,32 @@ async function runAddrSearch() {
     b.addEventListener("click", () => pickSearchResult(r));
     box.appendChild(b);
   });
+}
+
+let SUGGEST_TIMER = null, SUGGEST_SEQ = 0;
+function onAddrSearchInput() {
+  clearTimeout(SUGGEST_TIMER);
+  const q = $("addrSearch").value.trim();
+  if (q.length < 3) { $("addrResults").classList.remove("show"); SUGGEST_SEQ++; return; }
+  SUGGEST_TIMER = setTimeout(async () => {
+    const seq = ++SUGGEST_SEQ;
+    const list = await photonSearch(q);
+    if (seq !== SUGGEST_SEQ) return;            // une frappe plus récente a déjà relancé la recherche
+    if (list.length) showAddrResults(list);     // liste vide : on n'affiche rien, « Chercher » essaie Nominatim
+    else $("addrResults").classList.remove("show");
+  }, 350);
+}
+
+async function runAddrSearch() {
+  clearTimeout(SUGGEST_TIMER); SUGGEST_SEQ++;
+  const btn = $("addrSearchBtn");
+  const q = $("addrSearch").value.trim();
+  if (q.length < 3) { $("addrResults").classList.remove("show"); return; }
+  btn.disabled = true;
+  let list = await photonSearch(q);
+  if (!list.length) list = await searchAddresses(q);   // repli : Nominatim
+  btn.disabled = false;
+  showAddrResults(list);
 }
 
 async function pickSearchResult(r) {
