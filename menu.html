@@ -195,6 +195,7 @@
   .addr-btn .pin{font-size:16px;flex:0 0 auto;}
   .addr-btn .txt{flex:1;min-width:0;font-size:14.5px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .addr-btn .txt.empty{color:var(--blue-700);}
+  .addr-btn .txt .out{color:#b45f00;}
   .addr-btn .chev{flex:0 0 auto;font-size:12px;color:var(--muted);}
   .gps-btn{
     display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
@@ -690,6 +691,8 @@ const I18N = {
     addrReperePh: "Ex: près de la pharmacie...",
     addrSave: "Confirmer l'adresse",
     addrNeedZone: "Merci de choisir ta zone de livraison.",
+    addrOutsideShort: "Hors zone de livraison",
+    outsideCheckoutWarn: "Tu sembles hors de notre zone de livraison. Appelle-nous avant de commander : ",
     addrWilayaSuffix: ", Blida",
     adsTitle: "Nos partenaires",
     adPlaceholderTitle: "Espace publicitaire disponible",
@@ -799,6 +802,8 @@ const I18N = {
     addrReperePh: "مثال: بجانب الصيدلية...",
     addrSave: "تأكيد العنوان",
     addrNeedZone: "الرجاء اختيار منطقة التوصيل.",
+    addrOutsideShort: "خارج منطقة التوصيل",
+    outsideCheckoutWarn: "يبدو أنك خارج منطقة التوصيل. اتصل بنا قبل الطلب: ",
     addrWilayaSuffix: "، البليدة",
     adsTitle: "شركاؤنا",
     adPlaceholderTitle: "مساحة إعلانية متاحة",
@@ -1540,14 +1545,15 @@ function updateCheckoutTotals() {
    - La vérification officielle de la zone reste celle du serveur à la commande.
    ============================================================ */
 const ADDR_KEY = "mtDelivery";
-let DELIVERY = { zoneId: "", line: "", repere: "" };
+let DELIVERY = { zoneId: "", line: "", repere: "", outside: false };
 let ADDR_DRAFT_ZONE = null;
+let ADDR_DRAFT_OUTSIDE = false;
 
 function loadDelivery() {
   try {
     const d = JSON.parse(localStorage.getItem(ADDR_KEY) || "null");
     if (d && typeof d === "object") {
-      DELIVERY = { zoneId: String(d.zoneId || ""), line: String(d.line || ""), repere: String(d.repere || "") };
+      DELIVERY = { zoneId: String(d.zoneId || ""), line: String(d.line || ""), repere: String(d.repere || ""), outside: d.outside === true };
     }
   } catch (e) {}
 }
@@ -1573,6 +1579,16 @@ function renderAddrBar() {
     return;
   }
   el.classList.remove("empty");
+  if (DELIVERY.outside) {
+    // Position GPS hors zone : on l'affiche clairement au lieu d'un nom de zone.
+    el.textContent = "";
+    if (DELIVERY.line) el.appendChild(document.createTextNode(DELIVERY.line + " · "));
+    const o = document.createElement("span");
+    o.className = "out";
+    o.textContent = t("addrOutsideShort");
+    el.appendChild(o);
+    return;
+  }
   el.textContent = DELIVERY.line
     ? DELIVERY.line + (z ? " · " + z.label : "")
     : z.label + t("addrWilayaSuffix");
@@ -1609,6 +1625,7 @@ function renderAddrZones() {
 
 function openAddrSheet() {
   ADDR_DRAFT_ZONE = DELIVERY.zoneId || null;
+  ADDR_DRAFT_OUTSIDE = !!DELIVERY.outside;
   $("addrLine").value = DELIVERY.line;
   $("addrRepere").value = DELIVERY.repere;
   $("gpsMsg").className = "gps-msg";
@@ -1624,6 +1641,7 @@ function saveAddrSheet() {
     return;
   }
   DELIVERY.zoneId = ADDR_DRAFT_ZONE;
+  DELIVERY.outside = ADDR_DRAFT_OUTSIDE;
   DELIVERY.line = $("addrLine").value.trim().slice(0, 160);
   DELIVERY.repere = $("addrRepere").value.trim().slice(0, 120);
   saveDelivery();
@@ -1704,7 +1722,9 @@ function onGpsPosition(lat, lng) {
   const S = CONFIG.SERVICE_AREA;
   const outside = S && distMeters(lat, lng, S.lat, S.lng) > S.maxKm * 1000;
   const zone = outside ? null : detectZone(lat, lng);
-  if (zone) { ADDR_DRAFT_ZONE = zone.id; renderAddrZones(); }
+  ADDR_DRAFT_OUTSIDE = !!outside;
+  if (outside) { ADDR_DRAFT_ZONE = null; renderAddrZones(); }   // hors zone : le client choisit lui-même
+  else if (zone) { ADDR_DRAFT_ZONE = zone.id; renderAddrZones(); }
 
   const where = $("gpsWhere");
   where.className = "gps-where"; where.textContent = "";
@@ -1770,6 +1790,7 @@ function bindGlobalEvents() {
     updateCheckoutTotals();
     prefillCheckoutFromSession();
     prefillCheckoutAddress();
+    if (DELIVERY.outside) showCheckoutError(t("outsideCheckoutWarn") + CONFIG.PHONE_DISPLAY + ".");
     openOverlay("checkoutOverlay");
   });
 
