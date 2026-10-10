@@ -140,7 +140,7 @@ if ("serviceWorker" in navigator) {
     <p id="searchText">Entre le numéro de ta commande (reçu à la validation) pour voir où en est ton livreur.</p>
     <label id="lblNumero" for="fNumero" style="display:block;font-size:13px;font-weight:800;margin:0 0 6px;">Numéro de commande</label>
     <div class="search-row">
-      <input type="text" id="fNumero" data-required placeholder="Ex: CMD-260928-114500" autocomplete="off">
+      <input type="text" id="fNumero" data-required placeholder="Ex: MT-K7R4" autocomplete="off">
       <button id="searchBtn" type="button">Suivre</button>
     </div>
     <div class="error-box" id="errorBox"></div>
@@ -173,7 +173,7 @@ const I18N = {
     searchTitle: "Suivre ma commande",
     lblNumero: "Numéro de commande",
     searchText: "Entre le numéro de ta commande (reçu à la validation) pour voir où en est ton livreur.",
-    numeroPlaceholder: "Ex: CMD-260928-114500",
+    numeroPlaceholder: "Ex: MT-K7R4",
     searchBtn: "Suivre",
     numeroRequired: "Merci d'entrer un numéro de commande.",
     notFound: "Commande introuvable. Vérifie le numéro et réessaie.",
@@ -198,7 +198,7 @@ const I18N = {
     searchTitle: "تتبع طلبي",
     lblNumero: "رقم الطلب",
     searchText: "أدخل رقم طلبك (المُستلم عند التأكيد) لمعرفة أين وصل عامل التوصيل.",
-    numeroPlaceholder: "مثال: CMD-260928-114500",
+    numeroPlaceholder: "مثال: MT-K7R4",
     searchBtn: "تتبع",
     numeroRequired: "يرجى إدخال رقم الطلب.",
     notFound: "الطلب غير موجود. تحقق من الرقم وأعد المحاولة.",
@@ -462,7 +462,7 @@ async function startTracking(numero){
 $("searchBtn").addEventListener("click", function(){
   hideError();
   if (!MTForm.validate($("searchCard"))) return;
-  const numero = $("fNumero").value.trim();
+  const numero = $("fNumero").value.trim().toUpperCase();
   startTracking(numero);
 });
 $("fNumero").addEventListener("keydown", function(e){
@@ -475,7 +475,7 @@ window.addEventListener("resize", function(){
 document.addEventListener("DOMContentLoaded", function(){
   applyLanguage();
   const params = new URLSearchParams(location.search);
-  const numeroParam = params.get("cmd") || params.get("numero");
+  const numeroParam = String(params.get("cmd") || params.get("numero") || "").trim().toUpperCase();
   if (numeroParam) {
     $("fNumero").value = numeroParam;
     startTracking(numeroParam);
