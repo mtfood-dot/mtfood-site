@@ -109,6 +109,32 @@
   .date-input{border:1.5px solid var(--border);border-radius:999px;padding:6px 12px;font-size:12.5px;
     font-family:inherit;color:var(--blue-900);background:#fff;}
 
+
+  /* ---- Suivi en direct (équipe CS) ---- */
+  .live-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:10px;}
+  .live-chip{background:#fff;border:1.5px solid var(--border);border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:800;color:var(--blue-900);cursor:pointer;font-family:inherit;}
+  .live-chip.active{background:var(--blue-700);border-color:var(--blue-700);color:#fff;}
+  .live-chip .n{display:inline-block;min-width:18px;margin-inline-start:6px;padding:0 5px;border-radius:999px;background:var(--danger);color:#fff;font-size:11px;line-height:18px;text-align:center;}
+  .live-chip.active .n{background:#fff;color:var(--danger);}
+  .live-updated{font-size:12px;color:var(--muted);margin-inline-start:auto;}
+  .live-note{font-size:12px;color:var(--muted);margin:2px 0 12px;line-height:1.6;}
+  .live-card{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);border:1px solid var(--border);
+    border-inline-start:6px solid var(--blue-600);padding:14px 16px;margin-bottom:12px;}
+  .live-card.sev1{border-inline-start-color:#e67e22;background:#fff8ef;}
+  .live-card.sev2{border-inline-start-color:var(--danger);background:#fff1f0;animation:livePulse 1.6s ease-in-out infinite;}
+  @keyframes livePulse{0%,100%{box-shadow:0 0 0 0 rgba(192,57,43,.35);}50%{box-shadow:0 0 0 6px rgba(192,57,43,0);}}
+  .live-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .live-stage{font-size:13px;font-weight:800;color:var(--blue-900);}
+  .live-hint{font-size:12px;color:var(--muted);margin-top:2px;}
+  .live-card.sev1 .live-hint{color:#a45a10;}
+  .live-card.sev2 .live-hint{color:var(--danger);font-weight:700;}
+  .live-timer{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--blue-900);white-space:nowrap;}
+  .live-card.sev1 .live-timer{color:#c9650c;}
+  .live-card.sev2 .live-timer{color:var(--danger);}
+  .live-line{font-size:13px;color:var(--text);margin-top:6px;line-height:1.6;}
+  .live-line b{color:var(--blue-900);}
+  .live-line.muted{color:var(--muted);}
+  .btn-action.btn-call{background:#eaf7ee;border:1px solid #bfe6c9;color:var(--green);text-decoration:none;text-align:center;}
   .order-card{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);
     border:1px solid var(--border);padding:16px;margin-bottom:12px;}
   .order-card .row1{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px;}
@@ -356,6 +382,7 @@ if ("serviceWorker" in navigator) {
 
     <div class="tab-bar" id="tabBar">
       <button class="tab-btn active" id="tabOrdersBtn" type="button"><span id="tabOrdersLabel"></span></button>
+      <button class="tab-btn" id="tabLiveBtn" type="button"><span id="tabLiveLabel"></span><span id="liveBadge" class="tab-count hidden">0</span></button>
       <button class="tab-btn" id="tabModerationBtn" type="button"><span id="tabModerationLabel"></span><span id="modBadge" class="mod-badge hidden">0</span></button>
       <button class="tab-btn" id="tabPartnersBtn" type="button"><span id="tabPartnersLabel"></span></button>
       <button class="tab-btn" id="tabDashboardBtn" type="button"><span id="tabDashboardLabel"></span></button>
@@ -371,6 +398,18 @@ if ("serviceWorker" in navigator) {
         <button class="btn-refresh" id="refreshBtn" type="button"><span id="refreshLabel">↻ Actualiser</span></button>
       </div>
       <div id="listOrders"></div>
+    </div>
+
+    <div id="liveView" class="hidden">
+      <div class="live-bar">
+        <button class="live-chip active" id="liveFilterAll" type="button"></button>
+        <button class="live-chip" id="liveFilterLate" type="button"></button>
+        <button class="live-chip" id="liveSoundBtn" type="button"></button>
+        <button class="live-chip" id="liveRefreshBtn" type="button"></button>
+        <span class="live-updated" id="liveUpdated"></span>
+      </div>
+      <div class="live-note" id="liveNote"></div>
+      <div id="listLive"></div>
     </div>
 
     <div id="moderationView" class="hidden">
@@ -816,6 +855,36 @@ const I18N = {
     loadZonesFailedGeneric: "Impossible de charger les zones. Réessaie.",
     saveZoneFailedGeneric: "Impossible d'enregistrer la zone. Réessaie.",
     deleteZoneFailedGeneric: "Impossible de supprimer la zone. Réessaie.",
+    tabLive: "Suivi en direct",
+    liveAll: "Toutes",
+    liveLate: "En retard",
+    liveSoundOn: "🔔 Son activé",
+    liveSoundOff: "🔕 Son coupé",
+    liveRefresh: "↻ Actualiser",
+    liveUpdated: "Mis à jour à",
+    liveNote: "Les retards sont comptés depuis l'heure de la commande. Orange : à surveiller. Rouge : à traiter maintenant.",
+    liveEmpty: "Aucune commande en cours. Tout est calme.",
+    liveEmptyLate: "Aucune commande en retard.",
+    liveLoadFailed: "Impossible de charger le suivi. Nouvel essai automatique.",
+    liveStageRestaurant: "Attente du restaurant",
+    liveStageDriver: "Attente d'un livreur",
+    liveStageDelivery: "En livraison",
+    liveHintRestaurant: "Le restaurant n'a pas encore accepté.",
+    liveHintDriver: "Aucun livreur n'a encore pris la commande.",
+    liveHintDelivery: "Livraison en cours.",
+    liveHintLateRestaurant: "Le restaurant ne répond pas : appeler.",
+    liveHintLateDriver: "Aucun livreur : assigner ou relancer.",
+    liveHintLateDelivery: "Livraison trop longue : appeler le livreur ou le client.",
+    liveRestaurant: "Restaurant",
+    liveNoRestaurant: "Livraison directe (sans restaurant)",
+    liveClient: "Client",
+    liveAddress: "Adresse",
+    btnCallClient: "📞 Client",
+    btnCallRestaurant: "📞 Restaurant",
+    btnWaRestaurant: "WhatsApp restaurant",
+    btnConfirmForRestaurant: "✓ Confirmer à la place du restaurant",
+    liveCancelConfirm: "Annuler cette commande ?",
+    liveConfirmConfirm: "Confirmer cette commande à la place du restaurant ?",
   },
   ar: {
     tagline: "مساحة الإدارة",
@@ -1043,6 +1112,36 @@ const I18N = {
     loadZonesFailedGeneric: "تعذر تحميل المناطق. أعد المحاولة.",
     saveZoneFailedGeneric: "تعذر حفظ المنطقة. أعد المحاولة.",
     deleteZoneFailedGeneric: "تعذر حذف المنطقة. أعد المحاولة.",
+    tabLive: "المتابعة المباشرة",
+    liveAll: "الكل",
+    liveLate: "متأخرة",
+    liveSoundOn: "🔔 الصوت مفعّل",
+    liveSoundOff: "🔕 الصوت متوقف",
+    liveRefresh: "↻ تحديث",
+    liveUpdated: "آخر تحديث",
+    liveNote: "يُحتسب التأخير منذ وقت الطلب. البرتقالي: للمراقبة. الأحمر: يجب التدخل الآن.",
+    liveEmpty: "لا توجد طلبات قيد التنفيذ. كل شيء هادئ.",
+    liveEmptyLate: "لا توجد طلبات متأخرة.",
+    liveLoadFailed: "تعذر تحميل المتابعة. ستتم المحاولة تلقائيا.",
+    liveStageRestaurant: "في انتظار المطعم",
+    liveStageDriver: "في انتظار موصّل",
+    liveStageDelivery: "قيد التوصيل",
+    liveHintRestaurant: "لم يقبل المطعم الطلب بعد.",
+    liveHintDriver: "لم يأخذ أي موصّل الطلب بعد.",
+    liveHintDelivery: "التوصيل جارٍ.",
+    liveHintLateRestaurant: "المطعم لا يرد: اتصل به.",
+    liveHintLateDriver: "لا يوجد موصّل: عيّن موصّلا أو أعد التنبيه.",
+    liveHintLateDelivery: "التوصيل طويل جدا: اتصل بالموصّل أو الزبون.",
+    liveRestaurant: "المطعم",
+    liveNoRestaurant: "توصيل مباشر (بدون مطعم)",
+    liveClient: "الزبون",
+    liveAddress: "العنوان",
+    btnCallClient: "📞 الزبون",
+    btnCallRestaurant: "📞 المطعم",
+    btnWaRestaurant: "واتساب المطعم",
+    btnConfirmForRestaurant: "✓ التأكيد نيابة عن المطعم",
+    liveCancelConfirm: "هل تريد إلغاء هذا الطلب؟",
+    liveConfirmConfirm: "هل تريد تأكيد هذا الطلب نيابة عن المطعم؟",
   }
 };
 
@@ -1105,6 +1204,7 @@ function applyLanguage() {
   $("adFormCancelBtn").textContent = t("btnAdCancel");
   $("adFormTitle").textContent = $("adFormId").value ? t("adFormTitleEdit") : t("adFormTitleNew");
   $("tabZonesLabel").textContent = t("tabZones");
+  if (typeof liveApplyLang === "function") liveApplyLang();
   $("refreshZonesLabel").textContent = t("refreshLabel");
   $("subheadingZones").textContent = t("subheadingZones");
   $("lblZoneNom").textContent = t("lblZoneNom");
@@ -1196,6 +1296,7 @@ async function doLogin() {
 }
 
 $("logoutBtn").addEventListener("click", () => {
+  if (typeof liveStop === "function") liveStop();
   SESSION_PASSWORD = null;
   SESSION_NAME = null;
   localStorage.removeItem(SESSION_KEY);
@@ -1225,6 +1326,7 @@ function enterApp() {
   $("dashboardDate").value = todayStr();
   $("comptaDateStart").value = firstDayOfMonthStr();
   $("comptaDateEnd").value = todayStr();
+  liveInit();
   loadOrders();
   loadPendingItems();
   loadDrivers();
@@ -1237,6 +1339,7 @@ $("refreshBtn").addEventListener("click", loadOrders);
 $("ordersDate").addEventListener("change", loadOrders);
 $("refreshModBtn").addEventListener("click", loadPendingItems);
 $("tabOrdersBtn").addEventListener("click", () => switchTab("orders"));
+$("tabLiveBtn").addEventListener("click", () => switchTab("live"));
 $("tabModerationBtn").addEventListener("click", () => switchTab("moderation"));
 $("tabPartnersBtn").addEventListener("click", () => switchTab("partners"));
 $("refreshPartnersBtn").addEventListener("click", () => { loadPartners(); loadDrivers(); });
@@ -1261,6 +1364,7 @@ $("refreshZonesBtn").addEventListener("click", loadZonesAdmin);
 function switchTab(tab) {
   CURRENT_TAB = tab;
   $("tabOrdersBtn").classList.toggle("active", tab === "orders");
+  $("tabLiveBtn").classList.toggle("active", tab === "live");
   $("tabModerationBtn").classList.toggle("active", tab === "moderation");
   $("tabPartnersBtn").classList.toggle("active", tab === "partners");
   $("tabDashboardBtn").classList.toggle("active", tab === "dashboard");
@@ -1269,6 +1373,7 @@ function switchTab(tab) {
   $("tabBoostBtn").classList.toggle("active", tab === "boost");
   $("tabZonesBtn").classList.toggle("active", tab === "zones");
   $("ordersView").classList.toggle("hidden", tab !== "orders");
+  $("liveView").classList.toggle("hidden", tab !== "live");
   $("moderationView").classList.toggle("hidden", tab !== "moderation");
   $("partnersView").classList.toggle("hidden", tab !== "partners");
   $("dashboardView").classList.toggle("hidden", tab !== "dashboard");
@@ -1278,6 +1383,7 @@ function switchTab(tab) {
   $("zonesView").classList.toggle("hidden", tab !== "zones");
   hideError($("errorBox"));
   hideSuccess($("successBox"));
+  if (tab === "live") liveStart();
   if (tab === "moderation") loadPendingItems();
   if (tab === "partners") { loadPartners(); loadDrivers(); loadDuplicates(); }
   if (tab === "dashboard") { loadDashboard(); loadDashboardStats(); loadTopRankings(); }
@@ -1537,6 +1643,411 @@ async function onModerate(itemId, decision, btnEl) {
     document.querySelectorAll("[data-mod-id]").forEach(b => b.disabled = false);
   }
 }
+
+
+/* ============================================================
+   SUIVI EN DIRECT (équipe service client)
+   Les retards sont comptés depuis l'heure de création de la commande
+   (le serveur n'enregistre pas encore l'heure de chaque étape).
+   Les seuils (en minutes) se règlent ici.
+   ============================================================ */
+const LIVE_THRESHOLDS = {
+  restaurant: { warn: 3, late: 6 },    // attente d'acceptation par le restaurant
+  driver:     { warn: 9, late: 12 },   // accepté, attente d'un livreur (3 min de marge restaurant incluses)
+  delivery:   { warn: 30, late: 45 }   // en livraison, depuis la commande
+};
+const LIVE_POLL_MS = 20000;
+let LIVE_ORDERS = [];
+let LIVE_FILTER = "all";
+let LIVE_SOUND = false;
+let LIVE_MENU_MAP = null;      // nom du plat (minuscules) -> restaurant
+let LIVE_YESTERDAY = { at: 0, orders: [] };
+let LIVE_POLL_ID = null;
+let LIVE_TICK_ID = null;
+let LIVE_LOADING = false;
+let LIVE_LAST_OK = 0;
+let LIVE_ALERTED = {};         // numéro -> true quand l'alerte sonore a déjà été jouée
+let LIVE_AUDIO = null;
+let LIVE_BASE_TITLE = document.title;
+
+function liveStageOf(statut) {
+  const s = String(statut || "").trim();
+  if (s === "À confirmer") return "restaurant";
+  if (s === "En attente") return "driver";
+  if (s === "En livraison") return "delivery";
+  return "";
+}
+
+/* "dd/MM HH:mm" (heure d'Algérie, UTC+1) -> millisecondes UTC */
+function liveParseTime(horodatage) {
+  const m = /^(\d{1,2})\/(\d{1,2})\s+(\d{1,2}):(\d{2})/.exec(String(horodatage || ""));
+  if (!m) return NaN;
+  const now = new Date();
+  let year = now.getUTCFullYear();
+  let ms = Date.UTC(year, Number(m[2]) - 1, Number(m[1]), Number(m[3]) - 1, Number(m[4]));
+  if (ms > now.getTime() + 36 * 3600 * 1000) ms = Date.UTC(year - 1, Number(m[2]) - 1, Number(m[1]), Number(m[3]) - 1, Number(m[4]));
+  return ms;
+}
+
+function liveSeverity(stage, minutes) {
+  const th = LIVE_THRESHOLDS[stage];
+  if (!th) return 0;
+  if (minutes >= th.late) return 2;
+  if (minutes >= th.warn) return 1;
+  return 0;
+}
+
+function liveFmtElapsed(ms) {
+  if (!isFinite(ms) || ms < 0) ms = 0;
+  const total = Math.floor(ms / 1000);
+  const h = Math.floor(total / 3600);
+  const mm = Math.floor((total % 3600) / 60);
+  const ss = total % 60;
+  const pad = (n) => String(n).padStart(2, "0");
+  return h > 0 ? h + ":" + pad(mm) + ":" + pad(ss) : pad(mm) + ":" + pad(ss);
+}
+
+/* Restaurant d'une commande : déduit des plats (colonne Articles) et du menu */
+function liveRestaurantOf(o) {
+  if (!LIVE_MENU_MAP) return "";
+  const parts = String(o.articles || "").split("|");
+  for (let i = 0; i < parts.length; i++) {
+    const m = /^\s*\d+\s*x\s*(.*?)\s*\(\s*\d+\s*DA\s*\)\s*$/i.exec(parts[i]);
+    const name = (m ? m[1] : parts[i]).trim().toLowerCase();
+    if (name && LIVE_MENU_MAP[name]) return LIVE_MENU_MAP[name];
+  }
+  return "";
+}
+function livePartnerPhone(name) {
+  const key = String(name || "").trim().toLowerCase();
+  if (!key) return "";
+  const p = (PARTNERS || []).find(x => String(x.nom || x.name || "").trim().toLowerCase() === key);
+  return p ? String(p.telephone || "") : "";
+}
+
+async function liveLoadMenuMap() {
+  if (LIVE_MENU_MAP) return;
+  try {
+    const data = await apiGet({ action: "menu" });
+    if (data && data.success && data.items) {
+      const map = {};
+      data.items.forEach(it => {
+        const partner = String(it.partenaire || "").trim();
+        const nom = String(it.nom || "").trim().toLowerCase();
+        if (nom && partner) map[nom] = partner;
+      });
+      LIVE_MENU_MAP = map;
+    }
+  } catch (e) { /* on réessaiera au prochain cycle */ }
+}
+
+function liveDateStr(d) {
+  const pad = (n) => String(n).padStart(2, "0");
+  return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+}
+
+async function liveFetchOrders() {
+  const today = await apiGet({ action: "getAllOrders", password: SESSION_PASSWORD, date: liveDateStr(new Date()) });
+  if (!today || !today.success) throw new Error((today && today.error) || "load");
+  let yesterday = LIVE_YESTERDAY.orders;
+  if (Date.now() - LIVE_YESTERDAY.at > 5 * 60 * 1000) {
+    try {
+      const y = new Date(Date.now() - 24 * 3600 * 1000);
+      const yd = await apiGet({ action: "getAllOrders", password: SESSION_PASSWORD, date: liveDateStr(y) });
+      if (yd && yd.success) { yesterday = yd.orders || []; LIVE_YESTERDAY = { at: Date.now(), orders: yesterday }; }
+    } catch (e) { /* hier est facultatif */ }
+  }
+  const seen = {};
+  return (today.orders || []).concat(yesterday).filter(o => {
+    const k = String(o.numero);
+    if (seen[k]) return false;
+    seen[k] = true;
+    return true;
+  });
+}
+
+async function loadLive() {
+  if (LIVE_LOADING || !SESSION_PASSWORD) return;
+  LIVE_LOADING = true;
+  try {
+    await liveLoadMenuMap();
+    const all = await liveFetchOrders();
+    LIVE_ORDERS = all.filter(o => liveStageOf(o.statut)).map(o => {
+      const stage = liveStageOf(o.statut);
+      return Object.assign({}, o, { _stage: stage, _t0: liveParseTime(o.horodatage), _restaurant: liveRestaurantOf(o) });
+    });
+    LIVE_LAST_OK = Date.now();
+    if (CURRENT_TAB === "live") hideError($("errorBox"));
+    renderLive();
+  } catch (e) {
+    if (CURRENT_TAB === "live") showError($("errorBox"), t("liveLoadFailed"));
+    if (e && /mot de passe|password/i.test(String(e.message || ""))) $("logoutBtn").click();
+  } finally {
+    LIVE_LOADING = false;
+  }
+}
+
+function liveSorted() {
+  const now = Date.now();
+  return LIVE_ORDERS.map(o => {
+    const el = isFinite(o._t0) ? now - o._t0 : 0;
+    return { o: o, el: el, sev: liveSeverity(o._stage, el / 60000) };
+  }).sort((a, b) => b.sev - a.sev || b.el - a.el);
+}
+
+function liveHintText(stage, sev) {
+  const k = stage.charAt(0).toUpperCase() + stage.slice(1);
+  return t((sev === 2 ? "liveHintLate" : "liveHint") + k);
+}
+
+function liveCardHtml(row) {
+  const o = row.o;
+  const numero = escapeAttr(o.numero);
+  const stageLabel = t("liveStage" + o._stage.charAt(0).toUpperCase() + o._stage.slice(1));
+  const restoName = o._restaurant;
+  const restoPhone = livePartnerPhone(restoName);
+  const restoLine = restoName
+    ? `<div class="live-line"><b>${escapeHtml(t("liveRestaurant"))} :</b> ${escapeHtml(restoName)}${restoPhone ? " · " + escapeHtml(fmtPhone(restoPhone)) : ""}</div>`
+    : `<div class="live-line muted">${escapeHtml(t("liveNoRestaurant"))}</div>`;
+  let buttons = "";
+  const clientTel = String(o.telephone == null ? "" : o.telephone).replace(/[^\d+]/g, "");
+  if (clientTel) buttons += `<a class="btn-action btn-call" href="tel:${escapeAttr(clientTel)}">${escapeHtml(t("btnCallClient"))}</a>`;
+  const restoTel = String(restoPhone).replace(/[^\d+]/g, "");
+  if (restoTel) buttons += `<a class="btn-action btn-call" href="tel:${escapeAttr(restoTel)}">${escapeHtml(t("btnCallRestaurant"))}</a>`;
+  const waClient = phoneToWaNumber(o.telephone);
+  if (waClient) buttons += `<a class="btn-action btn-whatsapp" href="https://wa.me/${waClient}?text=${encodeURIComponent(t("waMsgIntro") + " N° " + (o.numero || ""))}" target="_blank" rel="noopener">${escapeHtml(t("btnWhatsapp"))}</a>`;
+  const waResto = phoneToWaNumber(restoPhone);
+  if (waResto) buttons += `<a class="btn-action btn-whatsapp" href="https://wa.me/${waResto}?text=${encodeURIComponent("MT Food · N° " + (o.numero || ""))}" target="_blank" rel="noopener">${escapeHtml(t("btnWaRestaurant"))}</a>`;
+  if (o._stage === "restaurant") {
+    buttons += `<button class="btn-action btn-confirm" type="button" data-live-action="${numero}" data-new-status="En attente">${escapeHtml(t("btnConfirmForRestaurant"))}</button>`;
+  }
+  buttons += `<button class="btn-action btn-cancel" type="button" data-live-action="${numero}" data-new-status="Annulée">${escapeHtml(t("btnCancel"))}</button>`;
+  if (o._stage === "delivery") {
+    buttons += `<button class="btn-action btn-deliver" type="button" data-live-action="${numero}" data-new-status="Livrée">${escapeHtml(t("btnDeliver"))}</button>`;
+  }
+  let assign = "";
+  if (o._stage === "driver") {
+    const activeDrivers = (DRIVERS || []).filter(d => String(d.statut || "").trim().toLowerCase() === "actif");
+    if (activeDrivers.length) {
+      const options = activeDrivers.map(d => {
+        const suffix = d.enLivraison ? " (" + t("statusEnLivraison") + ")" : "";
+        return `<option value="${escapeAttr(d.nom)}">${escapeHtml(d.nom + suffix)}</option>`;
+      }).join("");
+      assign = `<div class="assign-row"><select><option value="">${escapeHtml(t("chooseDriverPlaceholder"))}</option>${options}</select>
+        <button class="btn-assign" type="button" data-live-assign="${numero}">${escapeHtml(t("btnAssign"))}</button></div>`;
+    }
+  }
+  return `
+    <div class="live-card sev${row.sev}" data-live-num="${numero}" data-stage="${escapeAttr(o._stage)}" data-t0="${isFinite(o._t0) ? o._t0 : ""}">
+      <div class="live-top">
+        <div>
+          <div class="numero" style="font-size:12px;font-weight:800;color:var(--gold-600);">${escapeHtml(o.numero || "")}</div>
+          <div class="live-stage">${escapeHtml(stageLabel)}</div>
+          <div class="live-hint" data-live-hint>${escapeHtml(liveHintText(o._stage, row.sev))}</div>
+        </div>
+        <div class="live-timer" data-live-timer>${escapeHtml(liveFmtElapsed(row.el))}</div>
+      </div>
+      ${restoLine}
+      <div class="live-line"><b>${escapeHtml(t("liveClient"))} :</b> ${escapeHtml(o.client || "")} · ${escapeHtml(fmtPhone(o.telephone))}</div>
+      <div class="live-line muted">${escapeHtml(o.adresse || "")} (${escapeHtml(o.zone || "")}) · ${escapeHtml(String(o.total || 0))} DA · ${escapeHtml(o.horodatage || "")}</div>
+      <div class="articles">${escapeHtml(o.articles || "")}</div>
+      <div class="actions-row">${buttons}</div>
+      ${assign}
+    </div>`;
+}
+
+function renderLive() {
+  const rows = liveSorted();
+  const late = rows.filter(r => r.sev === 2).length;
+  const shown = LIVE_FILTER === "late" ? rows.filter(r => r.sev >= 1) : rows;
+  $("listLive").innerHTML = shown.length
+    ? shown.map(liveCardHtml).join("")
+    : emptyStateHtml(t(LIVE_FILTER === "late" ? "liveEmptyLate" : "liveEmpty"), "✅");
+  document.querySelectorAll("#listLive [data-live-action]").forEach(btn => {
+    btn.addEventListener("click", () => liveChangeStatus(btn.dataset.liveAction, btn.dataset.newStatus, btn));
+  });
+  document.querySelectorAll("#listLive [data-live-assign]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const select = btn.closest(".assign-row").querySelector("select");
+      liveAssign(btn.dataset.liveAssign, select ? select.value : "", btn);
+    });
+  });
+  liveUpdateCounters(rows);
+  liveAlertNewLate(rows);
+}
+
+function liveUpdateCounters(rows) {
+  rows = rows || liveSorted();
+  const late = rows.filter(r => r.sev === 2).length;
+  const lateOrWarn = rows.filter(r => r.sev >= 1).length;
+  $("liveFilterAll").textContent = t("liveAll") + " (" + rows.length + ")";
+  $("liveFilterLate").innerHTML = escapeHtml(t("liveLate")) + (lateOrWarn ? `<span class="n">${lateOrWarn}</span>` : "");
+  const badge = $("liveBadge");
+  badge.textContent = String(late);
+  badge.classList.toggle("hidden", late === 0);
+  document.title = (late ? "(" + late + ") " : "") + LIVE_BASE_TITLE;
+  if (LIVE_LAST_OK) {
+    const d = new Date(LIVE_LAST_OK);
+    const pad = (n) => String(n).padStart(2, "0");
+    $("liveUpdated").textContent = t("liveUpdated") + " " + pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+  }
+}
+
+/* Chaque seconde : chronomètres et couleurs, sans refaire toute la liste */
+function liveTick() {
+  const now = Date.now();
+  let needResort = false;
+  document.querySelectorAll("#listLive .live-card").forEach(card => {
+    const t0 = Number(card.dataset.t0);
+    if (!isFinite(t0) || !t0) return;
+    const el = now - t0;
+    const stage = card.dataset.stage;
+    const sev = liveSeverity(stage, el / 60000);
+    const timer = card.querySelector("[data-live-timer]");
+    if (timer) timer.textContent = liveFmtElapsed(el);
+    const had = card.classList.contains("sev2") ? 2 : card.classList.contains("sev1") ? 1 : 0;
+    if (had !== sev) {
+      card.classList.remove("sev0", "sev1", "sev2");
+      card.classList.add("sev" + sev);
+      const hint = card.querySelector("[data-live-hint]");
+      if (hint) hint.textContent = liveHintText(stage, sev);
+      needResort = true;
+    }
+  });
+  if (needResort && CURRENT_TAB === "live") renderLive();
+  else if (LIVE_ORDERS.length) liveUpdateCounters();
+}
+
+/* Sonnerie quand une commande passe au rouge pour la première fois */
+function liveAlertNewLate(rows) {
+  const current = {};
+  let fresh = false;
+  rows.forEach(r => {
+    if (r.sev === 2) {
+      current[r.o.numero] = true;
+      if (!LIVE_ALERTED[r.o.numero]) { LIVE_ALERTED[r.o.numero] = true; fresh = true; }
+    }
+  });
+  Object.keys(LIVE_ALERTED).forEach(k => { if (!current[k]) delete LIVE_ALERTED[k]; });
+  if (fresh && LIVE_SOUND) liveBeep();
+}
+
+function liveBeep() {
+  try {
+    if (!LIVE_AUDIO) LIVE_AUDIO = new (window.AudioContext || window.webkitAudioContext)();
+    if (LIVE_AUDIO.state === "suspended") LIVE_AUDIO.resume();
+    [0, 0.28, 0.56].forEach((delay, i) => {
+      const osc = LIVE_AUDIO.createOscillator();
+      const gain = LIVE_AUDIO.createGain();
+      osc.type = "sine";
+      osc.frequency.value = i === 1 ? 660 : 880;
+      gain.gain.setValueAtTime(0.0001, LIVE_AUDIO.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.35, LIVE_AUDIO.currentTime + delay + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, LIVE_AUDIO.currentTime + delay + 0.24);
+      osc.connect(gain); gain.connect(LIVE_AUDIO.destination);
+      osc.start(LIVE_AUDIO.currentTime + delay);
+      osc.stop(LIVE_AUDIO.currentTime + delay + 0.26);
+    });
+  } catch (e) { /* son indisponible */ }
+}
+
+async function liveChangeStatus(numero, newStatus, btn) {
+  const msgKey = newStatus === "Annulée" ? "liveCancelConfirm" : newStatus === "En attente" ? "liveConfirmConfirm" : "";
+  if (msgKey && !window.confirm(t(msgKey) + " " + numero)) return;
+  hideError($("errorBox"));
+  document.querySelectorAll("#listLive button").forEach(b => b.disabled = true);
+  try {
+    const data = await apiGet({ action: "updateOrderStatus", password: SESSION_PASSWORD, orderNumber: numero, newStatus: newStatus });
+    if (data.success) {
+      const o = ORDERS.find(x => String(x.numero) === String(numero));
+      if (o) o.statut = newStatus;
+      LIVE_ORDERS = LIVE_ORDERS.filter(x => String(x.numero) !== String(numero) || liveStageOf(newStatus));
+      LIVE_ORDERS.forEach(x => { if (String(x.numero) === String(numero)) { x.statut = newStatus; x._stage = liveStageOf(newStatus); } });
+      renderLive();
+      loadLive();
+    } else {
+      showError($("errorBox"), data.error || t("updateFailedGeneric"));
+      renderLive();
+    }
+  } catch (e) {
+    showError($("errorBox"), t("updateFailedGeneric"));
+    renderLive();
+  }
+}
+
+async function liveAssign(numero, driverName, btn) {
+  hideError($("errorBox"));
+  if (!driverName) { showError($("errorBox"), t("chooseDriverPlaceholder")); return; }
+  btn.disabled = true;
+  try {
+    const data = await apiGet({ action: "assignOrderToDriver", password: SESSION_PASSWORD, numero: numero, driverName: driverName });
+    if (data.success) {
+      showSuccess($("successBox"), t("orderAssigned"));
+      loadDrivers();
+      loadLive();
+    } else {
+      showError($("errorBox"), data.error || t("assignFailedGeneric"));
+    }
+  } catch (e) {
+    showError($("errorBox"), t("assignFailedGeneric"));
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function liveApplyLang() {
+  $("tabLiveLabel").textContent = t("tabLive");
+  $("liveFilterAll").textContent = t("liveAll");
+  $("liveFilterLate").textContent = t("liveLate");
+  $("liveSoundBtn").textContent = t(LIVE_SOUND ? "liveSoundOn" : "liveSoundOff");
+  $("liveRefreshBtn").textContent = t("liveRefresh");
+  $("liveNote").textContent = t("liveNote");
+  if (LIVE_ORDERS.length || LIVE_LAST_OK) renderLive();
+}
+
+function liveSetFilter(f) {
+  LIVE_FILTER = f;
+  $("liveFilterAll").classList.toggle("active", f === "all");
+  $("liveFilterLate").classList.toggle("active", f === "late");
+  renderLive();
+}
+
+function liveStart() {
+  loadLive();
+}
+
+function liveInit() {
+  liveApplyLang();
+  if (LIVE_POLL_ID) return;
+  let cycles = 0;
+  LIVE_POLL_ID = setInterval(() => {
+    if (document.hidden && CURRENT_TAB !== "live") return;
+    cycles++;
+    // Sur l'onglet Suivi : toutes les 20 s. Ailleurs : toutes les 60 s (pastille rouge à jour).
+    if (CURRENT_TAB === "live" || cycles % 3 === 0) loadLive();
+  }, LIVE_POLL_MS);
+  LIVE_TICK_ID = setInterval(liveTick, 1000);
+  loadLive();
+}
+
+function liveStop() {
+  if (LIVE_POLL_ID) { clearInterval(LIVE_POLL_ID); LIVE_POLL_ID = null; }
+  if (LIVE_TICK_ID) { clearInterval(LIVE_TICK_ID); LIVE_TICK_ID = null; }
+  LIVE_ORDERS = [];
+  LIVE_ALERTED = {};
+  document.title = LIVE_BASE_TITLE;
+}
+
+$("liveFilterAll").addEventListener("click", () => liveSetFilter("all"));
+$("liveFilterLate").addEventListener("click", () => liveSetFilter("late"));
+$("liveRefreshBtn").addEventListener("click", loadLive);
+$("liveSoundBtn").addEventListener("click", () => {
+  LIVE_SOUND = !LIVE_SOUND;
+  $("liveSoundBtn").classList.toggle("active", LIVE_SOUND);
+  $("liveSoundBtn").textContent = t(LIVE_SOUND ? "liveSoundOn" : "liveSoundOff");
+  if (LIVE_SOUND) liveBeep();   // déverrouille le son du navigateur et le fait entendre une fois
+});
+document.addEventListener("visibilitychange", () => { if (!document.hidden && SESSION_PASSWORD) loadLive(); });
 
 /* ============================================================
    PARTENAIRES & LIVREURS
