@@ -1713,8 +1713,8 @@ function updateConfirmState() {
     const q = DELIVERY.quote;
     if (q && !q.covered) showCheckoutError(t("zoneOut") + ". " + CONFIG.PHONE_DISPLAY);
     else showCheckoutError(t("checkoutNeedAddr"));
-  } else if (ok) {
-    box.classList.remove("show");
+  } else if (ok && box.dataset.sticky !== "1") {
+    box.classList.remove("show");   // une erreur d'envoi reste affichée jusqu'au prochain essai
   }
 }
 
@@ -2037,6 +2037,7 @@ function bindGlobalEvents() {
     closeOverlay("cartOverlay");
     prefillCheckoutFromSession();
     $("chkError").classList.remove("show");
+    $("chkError").dataset.sticky = "";
     openOverlay("checkoutOverlay");
     renderAll();
     if (hasCoords()) refreshQuote();   // tarif toujours revérifié par le serveur à l'ouverture
@@ -2071,6 +2072,7 @@ function submitOrder() {
   const errBox = $("chkError");
 
   errBox.classList.remove("show");
+  errBox.dataset.sticky = "";
 
   if (!MTForm.validate($("checkoutForm"))) return;
   if (!SELECTED_ZONE || !hasCoords()) {
@@ -2137,16 +2139,16 @@ function submitOrder() {
         ORDER_REQUEST_ID = "";
         refreshQuote();
         loadMenu();
-        showCheckoutError(err.serverMsg || t("sendError") + CONFIG.PHONE_DISPLAY + ".");
+        showCheckoutError(err.serverMsg || t("sendError") + CONFIG.PHONE_DISPLAY + ".", true);
       } else if (code === "gps_required" || code === "out_of_zone") {
         ORDER_REQUEST_ID = "";
         refreshQuote();
-        showCheckoutError(err.serverMsg || t("checkoutNeedAddr"));
+        showCheckoutError(err.serverMsg || t("checkoutNeedAddr"), true);
       } else if (code === "zone" || code === "rate" || code === "fields" || code === "phone") {
         ORDER_REQUEST_ID = "";
-        showCheckoutError(err.serverMsg || t("sendError") + CONFIG.PHONE_DISPLAY + ".");
+        showCheckoutError(err.serverMsg || t("sendError") + CONFIG.PHONE_DISPLAY + ".", true);
       } else {
-        showCheckoutError(t("sendError") + CONFIG.PHONE_DISPLAY + ".");
+        showCheckoutError(t("sendError") + CONFIG.PHONE_DISPLAY + ".", true);
       }
       console.error(err);
     })
@@ -2169,9 +2171,10 @@ function buildWhatsAppLink(orderNumber, p) {
   return "https://wa.me/" + CONFIG.WHATSAPP_NUMBER + "?text=" + encodeURIComponent(lines.join("\n"));
 }
 
-function showCheckoutError(msg) {
+function showCheckoutError(msg, sticky) {
   const errBox = $("chkError");
   errBox.textContent = msg;
+  errBox.dataset.sticky = sticky ? "1" : "";
   errBox.classList.add("show");
 }
 
