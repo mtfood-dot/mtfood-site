@@ -120,17 +120,20 @@
   .live-note{font-size:12px;color:var(--muted);margin:2px 0 12px;line-height:1.6;}
   .live-card{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);border:1px solid var(--border);
     border-inline-start:6px solid var(--blue-600);padding:14px 16px;margin-bottom:12px;}
-  .live-card.sev1{border-inline-start-color:#e67e22;background:#fff8ef;}
-  .live-card.sev2{border-inline-start-color:var(--danger);background:#fff1f0;animation:livePulse 1.6s ease-in-out infinite;}
+  .live-card.sev1{border-inline-start-color:#e0b400;background:#fffbe6;}
+  .live-card.sev2{border-inline-start-color:#e67e22;background:#fff1e0;}
+  .live-card.sev3{border-inline-start-color:var(--danger);background:#fff1f0;animation:livePulse 1.6s ease-in-out infinite;}
   @keyframes livePulse{0%,100%{box-shadow:0 0 0 0 rgba(192,57,43,.35);}50%{box-shadow:0 0 0 6px rgba(192,57,43,0);}}
   .live-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
   .live-stage{font-size:13px;font-weight:800;color:var(--blue-900);}
   .live-hint{font-size:12px;color:var(--muted);margin-top:2px;}
-  .live-card.sev1 .live-hint{color:#a45a10;}
-  .live-card.sev2 .live-hint{color:var(--danger);font-weight:700;}
+  .live-card.sev1 .live-hint{color:#8a6d00;}
+  .live-card.sev2 .live-hint{color:#b35a0a;font-weight:700;}
+  .live-card.sev3 .live-hint{color:var(--danger);font-weight:800;}
   .live-timer{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--blue-900);white-space:nowrap;}
-  .live-card.sev1 .live-timer{color:#c9650c;}
-  .live-card.sev2 .live-timer{color:var(--danger);}
+  .live-card.sev1 .live-timer{color:#a88300;}
+  .live-card.sev2 .live-timer{color:#c9650c;}
+  .live-card.sev3 .live-timer{color:var(--danger);}
   .live-line{font-size:13px;color:var(--text);margin-top:6px;line-height:1.6;}
   .live-line b{color:var(--blue-900);}
   .live-line.muted{color:var(--muted);}
@@ -862,7 +865,7 @@ const I18N = {
     liveSoundOff: "🔕 Son coupé",
     liveRefresh: "↻ Actualiser",
     liveUpdated: "Mis à jour à",
-    liveNote: "Les retards sont comptés depuis l'heure de la commande. Orange : à surveiller. Rouge : à traiter maintenant.",
+    liveNote: "Les retards sont comptés depuis l'heure de la commande. Jaune : à surveiller. Orange : à traiter. Rouge : urgent.",
     liveEmpty: "Aucune commande en cours. Tout est calme.",
     liveEmptyLate: "Aucune commande en retard.",
     liveLoadFailed: "Impossible de charger le suivi. Nouvel essai automatique.",
@@ -1119,7 +1122,7 @@ const I18N = {
     liveSoundOff: "🔕 الصوت متوقف",
     liveRefresh: "↻ تحديث",
     liveUpdated: "آخر تحديث",
-    liveNote: "يُحتسب التأخير منذ وقت الطلب. البرتقالي: للمراقبة. الأحمر: يجب التدخل الآن.",
+    liveNote: "يُحتسب التأخير منذ وقت الطلب. الأصفر: للمراقبة. البرتقالي: يجب المعالجة. الأحمر: عاجل.",
     liveEmpty: "لا توجد طلبات قيد التنفيذ. كل شيء هادئ.",
     liveEmptyLate: "لا توجد طلبات متأخرة.",
     liveLoadFailed: "تعذر تحميل المتابعة. ستتم المحاولة تلقائيا.",
@@ -1651,10 +1654,11 @@ async function onModerate(itemId, decision, btnEl) {
    (le serveur n'enregistre pas encore l'heure de chaque étape).
    Les seuils (en minutes) se règlent ici.
    ============================================================ */
+// Trois niveaux : warn = JAUNE (à surveiller), late = ORANGE (à traiter), crit = ROUGE (urgent)
 const LIVE_THRESHOLDS = {
-  restaurant: { warn: 3, late: 6 },    // attente d'acceptation par le restaurant
-  driver:     { warn: 9, late: 12 },   // accepté, attente d'un livreur (3 min de marge restaurant incluses)
-  delivery:   { warn: 30, late: 45 }   // en livraison, depuis la commande
+  restaurant: { warn: 3,  late: 6,  crit: 10 },   // attente d'acceptation par le restaurant
+  driver:     { warn: 9,  late: 12, crit: 18 },   // accepté, attente d'un livreur (3 min de marge restaurant incluses)
+  delivery:   { warn: 30, late: 45, crit: 60 }    // en livraison, depuis la commande
 };
 const LIVE_POLL_MS = 20000;
 let LIVE_ORDERS = [];
@@ -1666,7 +1670,7 @@ let LIVE_POLL_ID = null;
 let LIVE_TICK_ID = null;
 let LIVE_LOADING = false;
 let LIVE_LAST_OK = 0;
-let LIVE_ALERTED = {};         // numéro -> true quand l'alerte sonore a déjà été jouée
+let LIVE_ALERTED = {};         // numéro -> niveau (2 orange, 3 rouge) pour lequel la sonnerie a déjà été jouée
 let LIVE_AUDIO = null;
 let LIVE_BASE_TITLE = document.title;
 
@@ -1692,6 +1696,7 @@ function liveParseTime(horodatage) {
 function liveSeverity(stage, minutes) {
   const th = LIVE_THRESHOLDS[stage];
   if (!th) return 0;
+  if (minutes >= th.crit) return 3;
   if (minutes >= th.late) return 2;
   if (minutes >= th.warn) return 1;
   return 0;
@@ -1797,7 +1802,7 @@ function liveSorted() {
 
 function liveHintText(stage, sev) {
   const k = stage.charAt(0).toUpperCase() + stage.slice(1);
-  return t((sev === 2 ? "liveHintLate" : "liveHint") + k);
+  return t((sev >= 2 ? "liveHintLate" : "liveHint") + k);
 }
 
 function liveCardHtml(row) {
@@ -1858,7 +1863,6 @@ function liveCardHtml(row) {
 
 function renderLive() {
   const rows = liveSorted();
-  const late = rows.filter(r => r.sev === 2).length;
   const shown = LIVE_FILTER === "late" ? rows.filter(r => r.sev >= 1) : rows;
   $("listLive").innerHTML = shown.length
     ? shown.map(liveCardHtml).join("")
@@ -1878,7 +1882,7 @@ function renderLive() {
 
 function liveUpdateCounters(rows) {
   rows = rows || liveSorted();
-  const late = rows.filter(r => r.sev === 2).length;
+  const late = rows.filter(r => r.sev >= 2).length;     // orange + rouge : à traiter
   const lateOrWarn = rows.filter(r => r.sev >= 1).length;
   $("liveFilterAll").textContent = t("liveAll") + " (" + rows.length + ")";
   $("liveFilterLate").innerHTML = escapeHtml(t("liveLate")) + (lateOrWarn ? `<span class="n">${lateOrWarn}</span>` : "");
@@ -1905,9 +1909,9 @@ function liveTick() {
     const sev = liveSeverity(stage, el / 60000);
     const timer = card.querySelector("[data-live-timer]");
     if (timer) timer.textContent = liveFmtElapsed(el);
-    const had = card.classList.contains("sev2") ? 2 : card.classList.contains("sev1") ? 1 : 0;
+    const had = card.classList.contains("sev3") ? 3 : card.classList.contains("sev2") ? 2 : card.classList.contains("sev1") ? 1 : 0;
     if (had !== sev) {
-      card.classList.remove("sev0", "sev1", "sev2");
+      card.classList.remove("sev0", "sev1", "sev2", "sev3");
       card.classList.add("sev" + sev);
       const hint = card.querySelector("[data-live-hint]");
       if (hint) hint.textContent = liveHintText(stage, sev);
@@ -1918,14 +1922,14 @@ function liveTick() {
   else if (LIVE_ORDERS.length) liveUpdateCounters();
 }
 
-/* Sonnerie quand une commande passe au rouge pour la première fois */
+/* Sonnerie quand une commande atteint l'orange, puis de nouveau quand elle atteint le rouge */
 function liveAlertNewLate(rows) {
   const current = {};
   let fresh = false;
   rows.forEach(r => {
-    if (r.sev === 2) {
+    if (r.sev >= 2) {
       current[r.o.numero] = true;
-      if (!LIVE_ALERTED[r.o.numero]) { LIVE_ALERTED[r.o.numero] = true; fresh = true; }
+      if ((LIVE_ALERTED[r.o.numero] || 0) < r.sev) { LIVE_ALERTED[r.o.numero] = r.sev; fresh = true; }
     }
   });
   Object.keys(LIVE_ALERTED).forEach(k => { if (!current[k]) delete LIVE_ALERTED[k]; });
