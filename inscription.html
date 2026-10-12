@@ -161,7 +161,11 @@
 
   <section class="card success-box" id="successCard">
     <span class="emoji">✅</span>
-    <div id="successText">Compte créé avec succès ! Tu peux maintenant commander et suivre tes livraisons.</div>
+    <div id="successText" style="white-space:pre-line;">Compte créé avec succès ! Tu peux maintenant commander et suivre tes livraisons.</div>
+    <div id="pendingBox" style="display:none;margin-top:14px;">
+      <a id="waBtn" target="_blank" rel="noopener" style="display:block;background:#25D366;color:#fff;text-align:center;padding:14px;border-radius:12px;font-weight:700;text-decoration:none;"></a>
+      <a id="menuBtn" href="menu.html" style="display:block;margin-top:10px;text-align:center;color:inherit;text-decoration:underline;"></a>
+    </div>
   </section>
 
   <p class="footer-note" id="legalNote"></p>
@@ -187,7 +191,9 @@ const I18N = {
     hasAccountRow:"Déjà un compte ? ", loginLink:"Se connecter", guestLink:"Continuer sans compte",
     legalNote1:"En créant un compte, tu acceptes les ", legalLink1:"conditions d'utilisation", legalAnd:" et la ",
     legalLink2:"politique de confidentialité", legalNote2:".",
-    successPending:"Compte créé ! Il sera activé après un appel de notre service client (0560 78 84 97) pour confirmer ton numéro. Tu pourras alors commander.",
+    successPending:"✅ Ton compte est créé, mais il n'est pas encore actif.\n\nPour des raisons de sécurité, notre service client doit vérifier ton numéro de téléphone avant ta première commande.\n\n1) Appuie sur le bouton vert ci-dessous pour nous envoyer un message WhatsApp.\n2) Nous vérifions ton numéro et nous activons ton compte (ou nous t'appelons si tu n'as pas WhatsApp).\n3) Tu peux ensuite commander.",
+    waBtn:"💬 Demander la validation sur WhatsApp",
+    menuBtn:"Voir le menu en attendant",
     successText:"Compte créé avec succès ! Tu peux maintenant commander et suivre tes livraisons.",
     errExists:"Un compte existe déjà avec cet e-mail/numéro.", networkError:"Erreur de connexion. Vérifie ta connexion internet et réessaie."
   },
@@ -200,7 +206,9 @@ const I18N = {
     hasAccountRow:"لديك حساب بالفعل؟ ", loginLink:"تسجيل الدخول", guestLink:"المتابعة بدون حساب",
     legalNote1:"بإنشاء حساب، أنت توافق على ", legalLink1:"شروط الاستخدام", legalAnd:" و ",
     legalLink2:"سياسة الخصوصية", legalNote2:".",
-    successPending:"تم إنشاء الحساب! سيتم تفعيله بعد اتصال من خدمة الزبائن (0560 78 84 97) لتأكيد رقمك. بعدها يمكنك الطلب.",
+    successPending:"✅ تم إنشاء حسابك لكنه غير مفعّل بعد.\n\nلأسباب أمنية، يجب على خدمة الزبائن التأكد من رقم هاتفك قبل أول طلب.\n\n1) اضغط على الزر الأخضر لإرسال رسالة واتساب.\n2) نتحقق من رقمك ونفعّل حسابك (أو نتصل بك إن لم يكن لديك واتساب).\n3) بعدها يمكنك الطلب.",
+    waBtn:"💬 اطلب التفعيل عبر واتساب",
+    menuBtn:"تصفح القائمة في الانتظار",
     successText:"تم إنشاء الحساب بنجاح! يمكنك الآن الطلب وتتبع توصيلاتك.",
     errExists:"يوجد حساب بالفعل بهذا البريد/الرقم.", networkError:"خطأ في الاتصال. تحقق من اتصالك بالإنترنت وأعد المحاولة."
   }
@@ -278,8 +286,19 @@ async function doSignup(){
       clientId: data.clientId, prenom: data.prenom || prenom, nom: data.nom || nom,
       email: data.email || "", telephone: data.telephone || "", verifie: data.verifie !== false
     }));
-    if (data.verifie === false) $("successText").textContent = t("successPending");
-    setTimeout(() => { window.location.href = INSCRIPTION_NEXT; }, data.verifie === false ? 4500 : 1600);
+    if (data.verifie === false) {
+      $("successText").textContent = t("successPending");
+      const tel = data.telephone || identifier;
+      const msg = LANG === "ar"
+        ? "مرحبا MT Food، أنشأت حسابًا للتو.\nالاسم: " + (data.prenom || prenom) + " " + (data.nom || nom) + "\nالهاتف: " + tel + "\nيرجى التأكد من رقمي وتفعيل حسابي."
+        : "Bonjour MT Food, je viens de créer mon compte.\nNom : " + (data.prenom || prenom) + " " + (data.nom || nom) + "\nTéléphone : " + tel + "\nMerci de vérifier mon numéro et d'activer mon compte.";
+      $("waBtn").href = "https://wa.me/213560788497?text=" + encodeURIComponent(msg);
+      $("waBtn").textContent = t("waBtn");
+      $("menuBtn").textContent = t("menuBtn");
+      $("pendingBox").style.display = "block";
+      return;
+    }
+    setTimeout(() => { window.location.href = INSCRIPTION_NEXT; }, 1600);
   }
   try {
     const data = await apiGet({ action: "clientSignup", prenom, nom, identifiant: identifier, motDePasse: pwd });

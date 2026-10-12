@@ -980,9 +980,17 @@ function refreshPendingBar() {
   const bar = $("pendingBar"), session = getClientSession();
   if (!bar) return;
   if (!session || !session.clientId || session.verifie !== false) { bar.style.display = "none"; return; }
-  bar.textContent = LANG === "ar"
-    ? "⏳ حسابك بانتظار التأكيد: ستتصل بك خدمة الزبائن (0560 78 84 97) لتفعيله قبل أول طلب."
-    : "⏳ Ton compte est en attente de vérification : notre service client va t'appeler (0560 78 84 97) pour l'activer avant ta première commande.";
+  const tel = session.telephone || "";
+  const nm = ((session.prenom || "") + " " + (session.nom || "")).trim();
+  const wmsg = LANG === "ar"
+    ? "مرحبا MT Food، أرجو تفعيل حسابي.\nالاسم: " + nm + "\nالهاتف: " + tel
+    : "Bonjour MT Food, merci de vérifier mon numéro et d'activer mon compte.\nNom : " + nm + "\nTéléphone : " + tel;
+  const link = "https://wa.me/" + CONFIG.WHATSAPP_NUMBER + "?text=" + encodeURIComponent(wmsg);
+  bar.innerHTML = (LANG === "ar"
+    ? "⏳ <strong>حسابك غير مفعّل بعد.</strong> لأسباب أمنية، يجب أن تتأكد خدمة الزبائن من رقم هاتفك قبل أول طلب. أرسل لنا رسالة واتساب وسنفعّل حسابك."
+    : "⏳ <strong>Ton compte n'est pas encore actif.</strong> Pour des raisons de sécurité, notre service client doit vérifier ton numéro avant ta première commande. Envoie-nous un message WhatsApp et nous activons ton compte.")
+    + '<a href="' + link + '" target="_blank" rel="noopener" style="display:block;margin-top:8px;background:#25D366;color:#fff;text-align:center;padding:10px;border-radius:10px;font-weight:700;text-decoration:none;">'
+    + (LANG === "ar" ? "💬 اطلب التفعيل عبر واتساب" : "💬 Demander la validation sur WhatsApp") + "</a>";
   bar.style.display = "block";
   if (refreshPendingBar.done) return;
   refreshPendingBar.done = true;
