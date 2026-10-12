@@ -2180,7 +2180,7 @@ function submitOrder() {
         ORDER_REQUEST_ID = "";
         refreshQuote();
         showCheckoutError(err.serverMsg || t("checkoutNeedAddr"), true);
-      } else if (code === "zone" || code === "rate" || code === "fields" || code === "phone") {
+      } else if (code === "zone" || code === "rate" || code === "fields" || code === "phone" || code === "pending_client") {
         ORDER_REQUEST_ID = "";
         showCheckoutError(err.serverMsg || t("sendError") + CONFIG.PHONE_DISPLAY + ".", true);
       } else {
