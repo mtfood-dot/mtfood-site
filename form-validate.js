@@ -25,6 +25,8 @@
       required: "Ce champ est obligatoire.",
       select: "Choisis une option dans la liste.",
       phone: "Numéro de téléphone invalide (ex : 0555 12 34 56).",
+      mobile: "Entre un vrai numéro mobile algérien (05, 06 ou 07), par exemple 0555 12 34 56.",
+      identifierNew: "Entre un e-mail ou un vrai mobile algérien (05, 06 ou 07).",
       email: "Adresse e-mail invalide (ex : nom@email.com).",
       identifier: "Entre un e-mail ou un numéro de téléphone valide.",
       pin4: "Le code PIN doit contenir exactement 4 chiffres.",
@@ -41,6 +43,8 @@
       required: "هذا الحقل إلزامي.",
       select: "اختر خيارًا من القائمة.",
       phone: "رقم الهاتف غير صالح (مثال: 0555 12 34 56).",
+      mobile: "أدخل رقم هاتف جزائري حقيقي (05 أو 06 أو 07)، مثال: 0555 12 34 56.",
+      identifierNew: "أدخل بريدًا إلكترونيًا أو رقم هاتف جزائريًا حقيقيًا (05 أو 06 أو 07).",
       email: "عنوان البريد الإلكتروني غير صالح (مثال: name@email.com).",
       identifier: "أدخل بريدًا إلكترونيًا أو رقم هاتف صالحًا.",
       pin4: "يجب أن يتكون رمز PIN من 4 أرقام بالضبط.",
@@ -79,6 +83,16 @@
     var d = String(v).replace(/[\s.\-()]/g, "").replace(/^\+?213/, "").replace(/^0/, "");
     return /^[1-9]\d{7,8}$/.test(d);
   }
+  /* Mobile algérien réaliste : 05/06/07 + 8 chiffres, sans numéros évidemment faux (0000…, 12345…, 1212…) */
+  function isMobileDz(v) {
+    var d = String(v).replace(/[\s.\-()]/g, "").replace(/^\+?213/, "").replace(/^0/, "");
+    if (!/^[567]\d{8}$/.test(d)) return false;
+    var r = d.slice(1);
+    if (/^(\d)\1+$/.test(r)) return false;
+    if (/^(\d\d)\1{3}/.test(r)) return false;
+    if ("0123456789012".indexOf(r.slice(0, 5)) >= 0 || "9876543210987".indexOf(r.slice(0, 5)) >= 0) return false;
+    return true;
+  }
   function isEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v); }
   function todayStr() {
     var d = new Date();
@@ -96,6 +110,8 @@
 
     var rule = el.getAttribute("data-rule") || "";
     if (rule === "phone" && !isPhone(v)) return "phone";
+    if (rule === "mobile" && !isMobileDz(v)) return "mobile";
+    if (rule === "identifier-new" && !(v.indexOf("@") >= 0 ? isEmail(v) : isMobileDz(v))) return "identifierNew";
     if (rule === "email" && !isEmail(v)) return "email";
     if (rule === "identifier" && !(v.indexOf("@") >= 0 ? isEmail(v) : isPhone(v))) return "identifier";
     if (rule === "pin4" && !/^\d{4}$/.test(v)) return "pin4";

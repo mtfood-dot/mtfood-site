@@ -137,6 +137,7 @@
   .live-line{font-size:13px;color:var(--text);margin-top:6px;line-height:1.6;}
   .live-line b{color:var(--blue-900);}
   .live-line.muted{color:var(--muted);}
+  .live-unverified{margin-top:8px;background:#eef4ff;border:1.5px solid #9db8ee;color:#1d3f8a;border-radius:10px;padding:8px 10px;font-size:12.5px;font-weight:700;display:flex;align-items:center;flex-wrap:wrap;gap:4px;}
   .live-issue{margin-top:8px;background:#fff4e5;border:1.5px solid #f0a030;color:#8a4b00;border-radius:10px;padding:8px 10px;font-size:12.5px;font-weight:700;}
   .live-journal{font-size:11.5px;color:var(--muted);margin-top:8px;border-top:1px dashed var(--border);padding-top:6px;line-height:1.7;}
   .btn-action.btn-call{background:#eaf7ee;border:1px solid #bfe6c9;color:var(--green);text-decoration:none;text-align:center;}
@@ -892,6 +893,8 @@ const I18N = {
     btnCallDriver: "📞 Livreur",
     btnNote: "📝 Note",
     liveIssue: "⚠️ Problème signalé par le livreur",
+    liveUnverified: "📞 Numéro non vérifié : appelle le client.",
+    btnVerified: "✅ Numéro vérifié",
     liveNotePrompt: "Note pour l'équipe (ex. restaurant appelé, il prépare) :",
     liveCancelReason: "Motif d'annulation (facultatif) pour",
     liveConfirmConfirm: "Confirmer cette commande à la place du restaurant ?",
@@ -1154,6 +1157,8 @@ const I18N = {
     btnCallDriver: "📞 الموصّل",
     btnNote: "📝 ملاحظة",
     liveIssue: "⚠️ مشكلة أبلغ عنها السائق",
+    liveUnverified: "📞 الرقم غير مؤكَّد: اتصل بالزبون.",
+    btnVerified: "✅ تم التأكد من الرقم",
     liveNotePrompt: "ملاحظة للفريق (مثال: تم الاتصال بالمطعم، يقوم بالتحضير):",
     liveCancelReason: "سبب الإلغاء (اختياري) للطلب",
     liveConfirmConfirm: "هل تريد تأكيد هذا الطلب نيابة عن المطعم؟",
@@ -1871,6 +1876,8 @@ function liveCardHtml(row) {
   const drvPhone = drvMatch ? drvMatch[2] : "";
   const driverLine = o.livreur
     ? `<div class="live-line"><b>${escapeHtml(t("liveDriver"))} :</b> ${escapeHtml(drvName)}${drvPhone ? " · " + escapeHtml(fmtPhone(drvPhone)) : ""}</div>` : "";
+  const verifyHtml = (LIVE_V2 && o.numeroVerifie === false)
+    ? `<div class="live-unverified">${escapeHtml(t("liveUnverified"))} <button class="btn-action" type="button" data-live-verify="${numero}" style="background:#fff;border:1px solid #1a7d3a;color:#1a7d3a;margin-inline-start:6px;">${escapeHtml(t("btnVerified"))}</button></div>` : "";
   const issueHtml = o.issue
     ? `<div class="live-issue">${escapeHtml(t("liveIssue"))} : <b>${escapeHtml(o.issue.detail || "")}</b> · ${escapeHtml(o.issue.par || "")}</div>` : "";
   const journalHtml = (o.journal && o.journal.length)
@@ -1925,6 +1932,7 @@ function liveCardHtml(row) {
       <div class="live-line"><b>${escapeHtml(t("liveClient"))} :</b> ${escapeHtml(o.client || "")} · ${escapeHtml(fmtPhone(o.telephone))}</div>
       <div class="live-line muted">${escapeHtml(o.adresse || "")} (${escapeHtml(o.zone || "")}) · ${escapeHtml(String(o.total || 0))} DA · ${escapeHtml(o.horodatage || "")}</div>
       <div class="articles">${escapeHtml(o.articles || "")}</div>
+      ${verifyHtml}
       ${issueHtml}
       ${journalHtml}
       <div class="actions-row">${buttons}</div>
@@ -1940,6 +1948,9 @@ function renderLive() {
     : emptyStateHtml(t(LIVE_FILTER === "late" ? "liveEmptyLate" : "liveEmpty"), "✅");
   document.querySelectorAll("#listLive [data-live-action]").forEach(btn => {
     btn.addEventListener("click", () => liveChangeStatus(btn.dataset.liveAction, btn.dataset.newStatus, btn));
+  });
+  document.querySelectorAll("#listLive [data-live-verify]").forEach(btn => {
+    btn.addEventListener("click", () => liveVerifyPhone(btn.dataset.liveVerify, btn));
   });
   document.querySelectorAll("#listLive [data-live-note]").forEach(btn => {
     btn.addEventListener("click", () => liveAddNote(btn.dataset.liveNote, btn));
@@ -2056,6 +2067,18 @@ async function liveChangeStatus(numero, newStatus, btn) {
   } catch (e) {
     showError($("errorBox"), t("updateFailedGeneric"));
     renderLive();
+  }
+}
+
+async function liveVerifyPhone(numero, btn) {
+  hideError($("errorBox"));
+  btn.disabled = true;
+  try {
+    const data = await apiGet({ action: "csVerifyPhone", password: SESSION_PASSWORD, orderNumber: numero });
+    if (data.success) { loadLive(); }
+    else { showError($("errorBox"), data.error || t("updateFailedGeneric")); btn.disabled = false; }
+  } catch (e) {
+    showError($("errorBox"), t("updateFailedGeneric")); btn.disabled = false;
   }
 }
 
