@@ -152,6 +152,7 @@
 </main>
 
 <script src="/form-validate.js" defer></script>
+<script src="/google-signin.js?v=1"></script>
 <script>
 /* ============================================================
    CONFIGURATION
@@ -161,7 +162,7 @@ const CONFIG = {
   // Connexion Google : coller ici l'ID client OAuth Google (Google Cloud Console)
   // une fois créé. Tant que ce champ est vide, le bouton Google reste désactivé
   // pour ne jamais prétendre offrir une fonctionnalité qui ne marche pas.
-  GOOGLE_CLIENT_ID: "" // TODO: coller l'ID client Google ici
+  GOOGLE_CLIENT_ID: "1070331334746-vlif7ajib9s6ung9gtiqflrc6h09v16j.apps.googleusercontent.com"
 };
 
 const LANG_KEY = "mtd_lang";
@@ -301,14 +302,23 @@ $("fPassword").addEventListener("keyup", (e) => { if (e.key === "Enter") doLogin
 /* ============================================================
    CONNEXION GOOGLE — désactivée tant que GOOGLE_CLIENT_ID n'est pas renseigné
    ============================================================ */
-if (CONFIG.GOOGLE_CLIENT_ID) {
-  $("googleBtn").disabled = false;
-  $("googleBtn").title = "";
-  // L'intégration complète (Google Identity Services) se branche ici une fois
-  // l'ID client disponible : charger https://accounts.google.com/gsi/client,
-  // initialiser avec CONFIG.GOOGLE_CLIENT_ID, puis envoyer le jeton obtenu à
-  // une nouvelle action backend (ex. "clientLoginGoogle") pour créer/retrouver
-  // le compte côté Sheet "Clients".
+if (CONFIG.GOOGLE_CLIENT_ID && window.MTGoogle) {
+  MTGoogle.init({
+    buttonId: "googleBtn", clientId: CONFIG.GOOGLE_CLIENT_ID, text: "continue_with",
+    onCredential: async (credential) => {
+      hideError();
+      try {
+        const data = await apiGet({ action: "clientLoginGoogle", credential });
+        if (data && data.success) {
+          localStorage.setItem(SESSION_KEY, JSON.stringify({
+            clientId: data.clientId, prenom: data.prenom, nom: data.nom,
+            email: data.email || "", telephone: data.telephone || "", verifie: data.verifie !== false
+          }));
+          window.location.href = redirectTo;
+        } else { showError((data && data.error) || t("loginFailedGeneric")); }
+      } catch (e) { showError(t("networkError")); }
+    }
+  });
 }
 </script>
 </body>

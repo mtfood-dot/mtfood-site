@@ -172,10 +172,11 @@
 </main>
 
 <script src="/form-validate.js" defer></script>
+<script src="/google-signin.js?v=1"></script>
 <script>
 const CONFIG = {
   API_URL: "https://script.google.com/macros/s/AKfycbwgXOyXERonv0Yk7X-uhoHuE1Fj26RiYHPR4Tnr7Z_1Ly8wWjsvlE5sp3JJRukRR4ZF/exec",
-  GOOGLE_CLIENT_ID: "" // TODO: coller l'ID client Google une fois créé (Google Cloud Console)
+  GOOGLE_CLIENT_ID: "1070331334746-vlif7ajib9s6ung9gtiqflrc6h09v16j.apps.googleusercontent.com"
 };
 const LANG_KEY = "mtd_lang";
 const SESSION_KEY = "mtd_client_session";
@@ -321,9 +322,23 @@ async function doSignup(){
 }
 $("signupBtn").addEventListener("click", doSignup);
 
-if (CONFIG.GOOGLE_CLIENT_ID) {
-  $("googleBtn").disabled = false;
-  $("googleBtn").title = "";
+if (CONFIG.GOOGLE_CLIENT_ID && window.MTGoogle) {
+  MTGoogle.init({
+    buttonId: "googleBtn", clientId: CONFIG.GOOGLE_CLIENT_ID, text: "signup_with",
+    onCredential: async (credential) => {
+      hideError();
+      try {
+        const data = await apiGet({ action: "clientLoginGoogle", credential });
+        if (data && data.success) {
+          localStorage.setItem(SESSION_KEY, JSON.stringify({
+            clientId: data.clientId, prenom: data.prenom, nom: data.nom,
+            email: data.email || "", telephone: data.telephone || "", verifie: data.verifie !== false
+          }));
+          window.location.href = INSCRIPTION_NEXT;
+        } else { showError((data && data.error) || t("networkError")); }
+      } catch (e) { showError(t("networkError")); }
+    }
+  });
 }
 </script>
 </body>
