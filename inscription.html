@@ -187,6 +187,7 @@ const I18N = {
     hasAccountRow:"Déjà un compte ? ", loginLink:"Se connecter", guestLink:"Continuer sans compte",
     legalNote1:"En créant un compte, tu acceptes les ", legalLink1:"conditions d'utilisation", legalAnd:" et la ",
     legalLink2:"politique de confidentialité", legalNote2:".",
+    successPending:"Compte créé ! Il sera activé après un appel de notre service client (0560 78 84 97) pour confirmer ton numéro. Tu pourras alors commander.",
     successText:"Compte créé avec succès ! Tu peux maintenant commander et suivre tes livraisons.",
     errExists:"Un compte existe déjà avec cet e-mail/numéro.", networkError:"Erreur de connexion. Vérifie ta connexion internet et réessaie."
   },
@@ -199,6 +200,7 @@ const I18N = {
     hasAccountRow:"لديك حساب بالفعل؟ ", loginLink:"تسجيل الدخول", guestLink:"المتابعة بدون حساب",
     legalNote1:"بإنشاء حساب، أنت توافق على ", legalLink1:"شروط الاستخدام", legalAnd:" و ",
     legalLink2:"سياسة الخصوصية", legalNote2:".",
+    successPending:"تم إنشاء الحساب! سيتم تفعيله بعد اتصال من خدمة الزبائن (0560 78 84 97) لتأكيد رقمك. بعدها يمكنك الطلب.",
     successText:"تم إنشاء الحساب بنجاح! يمكنك الآن الطلب وتتبع توصيلاتك.",
     errExists:"يوجد حساب بالفعل بهذا البريد/الرقم.", networkError:"خطأ في الاتصال. تحقق من اتصالك بالإنترنت وأعد المحاولة."
   }
@@ -274,9 +276,10 @@ async function doSignup(){
     $("successCard").classList.add("show");
     localStorage.setItem(SESSION_KEY, JSON.stringify({
       clientId: data.clientId, prenom: data.prenom || prenom, nom: data.nom || nom,
-      email: data.email || "", telephone: data.telephone || ""
+      email: data.email || "", telephone: data.telephone || "", verifie: data.verifie !== false
     }));
-    setTimeout(() => { window.location.href = INSCRIPTION_NEXT; }, 1600);
+    if (data.verifie === false) $("successText").textContent = t("successPending");
+    setTimeout(() => { window.location.href = INSCRIPTION_NEXT; }, data.verifie === false ? 4500 : 1600);
   }
   try {
     const data = await apiGet({ action: "clientSignup", prenom, nom, identifiant: identifier, motDePasse: pwd });

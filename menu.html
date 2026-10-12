@@ -500,6 +500,7 @@ if ("serviceWorker" in navigator) {
 </div>
 
 <div class="resto-bar" id="restoBar" style="display:none;"></div>
+<div id="pendingBar" style="display:none;background:#fff4e0;border:1px solid #f0b34a;color:#7a4a00;margin:10px 14px;padding:10px 12px;border-radius:10px;font-size:14px;line-height:1.4;"></div>
 
 <nav class="tabs" id="tabs"></nav>
 
@@ -975,7 +976,26 @@ const CLIENT_SESSION_KEY = "mtd_client_session";
 function getClientSession() {
   try { return JSON.parse(localStorage.getItem(CLIENT_SESSION_KEY) || "null"); } catch(e) { return null; }
 }
+function refreshPendingBar() {
+  const bar = $("pendingBar"), session = getClientSession();
+  if (!bar) return;
+  if (!session || !session.clientId || session.verifie !== false) { bar.style.display = "none"; return; }
+  bar.textContent = LANG === "ar"
+    ? "⏳ حسابك بانتظار التأكيد: ستتصل بك خدمة الزبائن (0560 78 84 97) لتفعيله قبل أول طلب."
+    : "⏳ Ton compte est en attente de vérification : notre service client va t'appeler (0560 78 84 97) pour l'activer avant ta première commande.";
+  bar.style.display = "block";
+  if (refreshPendingBar.done) return;
+  refreshPendingBar.done = true;
+  jsonpRequest({ action: "clientStatus", clientId: session.clientId }).then(res => {
+    if (res && res.success && res.verifie) {
+      session.verifie = true;
+      try { localStorage.setItem(CLIENT_SESSION_KEY, JSON.stringify(session)); } catch (e) {}
+      bar.style.display = "none";
+    }
+  }).catch(() => {});
+}
 function updateAccountLink() {
+  refreshPendingBar();
   const session = getClientSession();
   const link = $("accountLinkTop");
   if (session && session.clientId) {

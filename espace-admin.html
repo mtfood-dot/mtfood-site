@@ -415,6 +415,7 @@ if ("serviceWorker" in navigator) {
         <span class="live-updated" id="liveUpdated"></span>
       </div>
       <div class="live-note" id="liveNote"></div>
+      <div id="pendingAccounts"></div>
       <div id="listLive"></div>
     </div>
 
@@ -895,6 +896,8 @@ const I18N = {
     liveIssue: "⚠️ Problème signalé par le livreur",
     liveUnverified: "📞 Numéro non vérifié : appelle le client.",
     btnVerified: "✅ Numéro vérifié",
+    pendAccTitle: "👤 Comptes à vérifier (appelle le client puis active)",
+    pendAccBtn: "✅ Activer le compte",
     liveNotePrompt: "Note pour l'équipe (ex. restaurant appelé, il prépare) :",
     liveCancelReason: "Motif d'annulation (facultatif) pour",
     liveConfirmConfirm: "Confirmer cette commande à la place du restaurant ?",
@@ -1159,6 +1162,8 @@ const I18N = {
     liveIssue: "⚠️ مشكلة أبلغ عنها السائق",
     liveUnverified: "📞 الرقم غير مؤكَّد: اتصل بالزبون.",
     btnVerified: "✅ تم التأكد من الرقم",
+    pendAccTitle: "👤 حسابات بانتظار التأكيد (اتصل بالزبون ثم فعّل)",
+    pendAccBtn: "✅ تفعيل الحساب",
     liveNotePrompt: "ملاحظة للفريق (مثال: تم الاتصال بالمطعم، يقوم بالتحضير):",
     liveCancelReason: "سبب الإلغاء (اختياري) للطلب",
     liveConfirmConfirm: "هل تريد تأكيد هذا الطلب نيابة عن المطعم؟",
@@ -1839,6 +1844,7 @@ async function loadLive() {
       return Object.assign({}, o, { _stage: stage, _t0: liveParseTime(o.horodatage), _restaurant: liveRestaurantOf(o), _exact: false });
     });
     LIVE_LAST_OK = Date.now();
+    loadPendingAccounts();
     if (CURRENT_TAB === "live") hideError($("errorBox"));
     renderLive();
   } catch (e) {
@@ -1938,6 +1944,22 @@ function liveCardHtml(row) {
       <div class="actions-row">${buttons}</div>
       ${assign}
     </div>`;
+}
+
+async function loadPendingAccounts() {
+  const box = $("pendingAccounts");
+  if (!box || !SESSION_PASSWORD) return;
+  try {
+    const d = await apiGet({ action: "csPendingAccounts", password: SESSION_PASSWORD });
+    if (!d || !d.success || !d.comptes || !d.comptes.length) { box.innerHTML = ""; return; }
+    box.innerHTML = '<div class="live-unverified" style="display:block;margin:0 0 10px;"><strong>' + escapeHtml(t("pendAccTitle")) + "</strong>" +
+      d.comptes.map(c => '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;"><span>' + escapeHtml(c.nom) + ' — <a href="tel:' + escapeHtml(c.telephone) + '">' + escapeHtml(c.telephone) + '</a></span><button class="btn-action" type="button" data-acc-activate="' + escapeHtml(c.clientId) + '" style="background:#fff;border:1px solid #1a7d3a;color:#1a7d3a;">' + escapeHtml(t("pendAccBtn")) + "</button></div>").join("") + "</div>";
+    box.querySelectorAll("[data-acc-activate]").forEach(btn => btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      try { await apiGet({ action: "csActivateAccount", password: SESSION_PASSWORD, clientId: btn.dataset.accActivate }); } catch (e) { /* recharge ci-dessous */ }
+      loadPendingAccounts();
+    }));
+  } catch (e) { /* facultatif */ }
 }
 
 function renderLive() {

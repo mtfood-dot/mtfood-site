@@ -282,7 +282,7 @@ async function doLogin() {
     if (data && data.success) {
       localStorage.setItem(SESSION_KEY, JSON.stringify({
         clientId: data.clientId, prenom: data.prenom, nom: data.nom,
-        email: data.email || "", telephone: data.telephone || ""
+        email: data.email || "", telephone: data.telephone || "", verifie: data.verifie !== false
       }));
       window.location.href = redirectTo;
     } else {
