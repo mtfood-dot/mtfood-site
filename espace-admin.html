@@ -137,6 +137,7 @@
   .live-line{font-size:13px;color:var(--text);margin-top:6px;line-height:1.6;}
   .live-line b{color:var(--blue-900);}
   .live-line.muted{color:var(--muted);}
+  .live-journal{font-size:11.5px;color:var(--muted);margin-top:8px;border-top:1px dashed var(--border);padding-top:6px;line-height:1.7;}
   .btn-action.btn-call{background:#eaf7ee;border:1px solid #bfe6c9;color:var(--green);text-decoration:none;text-align:center;}
   .order-card{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);
     border:1px solid var(--border);padding:16px;margin-bottom:12px;}
@@ -865,7 +866,7 @@ const I18N = {
     liveSoundOff: "🔕 Son coupé",
     liveRefresh: "↻ Actualiser",
     liveUpdated: "Mis à jour à",
-    liveNote: "Les retards sont comptés depuis l'heure de la commande. Jaune : à surveiller. Orange : à traiter. Rouge : urgent.",
+    liveNote: "Les retards sont comptés depuis la dernière étape connue (commande, acceptation, prise en charge). Jaune : à surveiller. Orange : à traiter. Rouge : urgent.",
     liveEmpty: "Aucune commande en cours. Tout est calme.",
     liveEmptyLate: "Aucune commande en retard.",
     liveLoadFailed: "Impossible de charger le suivi. Nouvel essai automatique.",
@@ -886,7 +887,11 @@ const I18N = {
     btnCallRestaurant: "📞 Restaurant",
     btnWaRestaurant: "WhatsApp restaurant",
     btnConfirmForRestaurant: "✓ Confirmer à la place du restaurant",
-    liveCancelConfirm: "Annuler cette commande ?",
+    liveDriver: "Livreur",
+    btnCallDriver: "📞 Livreur",
+    btnNote: "📝 Note",
+    liveNotePrompt: "Note pour l'équipe (ex. restaurant appelé, il prépare) :",
+    liveCancelReason: "Motif d'annulation (facultatif) pour",
     liveConfirmConfirm: "Confirmer cette commande à la place du restaurant ?",
   },
   ar: {
@@ -1122,7 +1127,7 @@ const I18N = {
     liveSoundOff: "🔕 الصوت متوقف",
     liveRefresh: "↻ تحديث",
     liveUpdated: "آخر تحديث",
-    liveNote: "يُحتسب التأخير منذ وقت الطلب. الأصفر: للمراقبة. البرتقالي: يجب المعالجة. الأحمر: عاجل.",
+    liveNote: "يُحتسب التأخير منذ آخر مرحلة معروفة (الطلب، القبول، الاستلام). الأصفر: للمراقبة. البرتقالي: يجب المعالجة. الأحمر: عاجل.",
     liveEmpty: "لا توجد طلبات قيد التنفيذ. كل شيء هادئ.",
     liveEmptyLate: "لا توجد طلبات متأخرة.",
     liveLoadFailed: "تعذر تحميل المتابعة. ستتم المحاولة تلقائيا.",
@@ -1143,7 +1148,11 @@ const I18N = {
     btnCallRestaurant: "📞 المطعم",
     btnWaRestaurant: "واتساب المطعم",
     btnConfirmForRestaurant: "✓ التأكيد نيابة عن المطعم",
-    liveCancelConfirm: "هل تريد إلغاء هذا الطلب؟",
+    liveDriver: "الموصّل",
+    btnCallDriver: "📞 الموصّل",
+    btnNote: "📝 ملاحظة",
+    liveNotePrompt: "ملاحظة للفريق (مثال: تم الاتصال بالمطعم، يقوم بالتحضير):",
+    liveCancelReason: "سبب الإلغاء (اختياري) للطلب",
     liveConfirmConfirm: "هل تريد تأكيد هذا الطلب نيابة عن المطعم؟",
   }
 };
@@ -1660,7 +1669,15 @@ const LIVE_THRESHOLDS = {
   driver:     { warn: 9,  late: 12, crit: 18 },   // accepté, attente d'un livreur (3 min de marge restaurant incluses)
   delivery:   { warn: 30, late: 45, crit: 60 }    // en livraison, depuis la commande
 };
+// Seuils exacts, utilisés quand le serveur fournit l'heure de l'étape (acceptation, prise par un livreur)
+const LIVE_THRESHOLDS_EXACT = {
+  restaurant: { warn: 3,  late: 6,  crit: 10 },   // depuis la commande
+  driver:     { warn: 3,  late: 6,  crit: 10 },   // depuis l'acceptation par le restaurant
+  delivery:   { warn: 20, late: 30, crit: 45 }    // depuis la prise en charge par le livreur
+};
 const LIVE_POLL_MS = 20000;
+let LIVE_V2 = null;            // null = pas encore testé, true = le serveur fournit les heures d'étapes
+let LIVE_V2_CHECKED = 0;
 let LIVE_ORDERS = [];
 let LIVE_FILTER = "all";
 let LIVE_SOUND = false;
@@ -1693,8 +1710,8 @@ function liveParseTime(horodatage) {
   return ms;
 }
 
-function liveSeverity(stage, minutes) {
-  const th = LIVE_THRESHOLDS[stage];
+function liveSeverity(stage, minutes, exact) {
+  const th = (exact ? LIVE_THRESHOLDS_EXACT : LIVE_THRESHOLDS)[stage];
   if (!th) return 0;
   if (minutes >= th.crit) return 3;
   if (minutes >= th.late) return 2;
@@ -1751,7 +1768,38 @@ function liveDateStr(d) {
   return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
 }
 
+/* Serveur à jour : une seule requête « liveOrders » (heures d'étapes, livreur, restaurant, journal) */
+async function liveFetchOrdersV2() {
+  const data = await apiGet({ action: "liveOrders", password: SESSION_PASSWORD });
+  if (data && data.success && Array.isArray(data.orders)) {
+    LIVE_V2 = true;
+    return data.orders.map(o => {
+      const stage = liveStageOf(o.statut);
+      let t0 = o.createdAt || NaN, exact = false;
+      if (stage === "driver" && o.acceptedAt) { t0 = o.acceptedAt; exact = true; }
+      else if (stage === "delivery" && o.takenAt) { t0 = o.takenAt; exact = true; }
+      else if (stage === "restaurant") exact = !!o.createdAt;
+      const d = new Date(o.createdAt || 0);
+      const pad = (n) => String(n).padStart(2, "0");
+      const local = new Date((o.createdAt || 0) + 3600000);
+      return Object.assign({}, o, {
+        horodatage: o.createdAt ? pad(local.getUTCDate()) + "/" + pad(local.getUTCMonth() + 1) + " " + pad(local.getUTCHours()) + ":" + pad(local.getUTCMinutes()) : "",
+        _t0: t0, _exact: exact, _restaurant: o.partenaire || ""
+      });
+    });
+  }
+  const msg = String((data && data.error) || "");
+  if (/mot de passe|password|essais/i.test(msg)) throw new Error(msg);
+  LIVE_V2 = false;            // ancien serveur : on revient au mode « depuis la création »
+  LIVE_V2_CHECKED = Date.now();
+  return null;
+}
+
 async function liveFetchOrders() {
+  if (LIVE_V2 !== false || Date.now() - LIVE_V2_CHECKED > 10 * 60 * 1000) {
+    const v2 = await liveFetchOrdersV2();
+    if (v2) return v2;
+  }
   const today = await apiGet({ action: "getAllOrders", password: SESSION_PASSWORD, date: liveDateStr(new Date()) });
   if (!today || !today.success) throw new Error((today && today.error) || "load");
   let yesterday = LIVE_YESTERDAY.orders;
@@ -1775,11 +1823,12 @@ async function loadLive() {
   if (LIVE_LOADING || !SESSION_PASSWORD) return;
   LIVE_LOADING = true;
   try {
-    await liveLoadMenuMap();
     const all = await liveFetchOrders();
+    if (!LIVE_V2) await liveLoadMenuMap();
     LIVE_ORDERS = all.filter(o => liveStageOf(o.statut)).map(o => {
       const stage = liveStageOf(o.statut);
-      return Object.assign({}, o, { _stage: stage, _t0: liveParseTime(o.horodatage), _restaurant: liveRestaurantOf(o) });
+      if (LIVE_V2) return Object.assign({}, o, { _stage: stage });
+      return Object.assign({}, o, { _stage: stage, _t0: liveParseTime(o.horodatage), _restaurant: liveRestaurantOf(o), _exact: false });
     });
     LIVE_LAST_OK = Date.now();
     if (CURRENT_TAB === "live") hideError($("errorBox"));
@@ -1796,7 +1845,7 @@ function liveSorted() {
   const now = Date.now();
   return LIVE_ORDERS.map(o => {
     const el = isFinite(o._t0) ? now - o._t0 : 0;
-    return { o: o, el: el, sev: liveSeverity(o._stage, el / 60000) };
+    return { o: o, el: el, sev: liveSeverity(o._stage, el / 60000, o._exact) };
   }).sort((a, b) => b.sev - a.sev || b.el - a.el);
 }
 
@@ -1814,10 +1863,23 @@ function liveCardHtml(row) {
   const restoLine = restoName
     ? `<div class="live-line"><b>${escapeHtml(t("liveRestaurant"))} :</b> ${escapeHtml(restoName)}${restoPhone ? " · " + escapeHtml(fmtPhone(restoPhone)) : ""}</div>`
     : `<div class="live-line muted">${escapeHtml(t("liveNoRestaurant"))}</div>`;
+  const drvMatch = /^(.*?)\s*\(([^)]*)\)\s*$/.exec(String(o.livreur || ""));
+  const drvName = drvMatch ? drvMatch[1] : String(o.livreur || "");
+  const drvPhone = drvMatch ? drvMatch[2] : "";
+  const driverLine = o.livreur
+    ? `<div class="live-line"><b>${escapeHtml(t("liveDriver"))} :</b> ${escapeHtml(drvName)}${drvPhone ? " · " + escapeHtml(fmtPhone(drvPhone)) : ""}</div>` : "";
+  const journalHtml = (o.journal && o.journal.length)
+    ? `<div class="live-journal">${o.journal.map(j => {
+        const lt = new Date((j.t || 0) + 3600000);
+        const pad2 = (n) => String(n).padStart(2, "0");
+        return `<div>${pad2(lt.getUTCHours())}:${pad2(lt.getUTCMinutes())} · ${escapeHtml(j.action)}${j.par ? " · " + escapeHtml(j.par) : ""}${j.detail ? " : " + escapeHtml(j.detail) : ""}</div>`;
+      }).join("")}</div>` : "";
   let buttons = "";
   const clientTel = String(o.telephone == null ? "" : o.telephone).replace(/[^\d+]/g, "");
   if (clientTel) buttons += `<a class="btn-action btn-call" href="tel:${escapeAttr(clientTel)}">${escapeHtml(t("btnCallClient"))}</a>`;
   const restoTel = String(restoPhone).replace(/[^\d+]/g, "");
+  const drvTel = String(drvPhone).replace(/[^\d+]/g, "");
+  if (drvTel) buttons += `<a class="btn-action btn-call" href="tel:${escapeAttr(drvTel)}">${escapeHtml(t("btnCallDriver"))}</a>`;
   if (restoTel) buttons += `<a class="btn-action btn-call" href="tel:${escapeAttr(restoTel)}">${escapeHtml(t("btnCallRestaurant"))}</a>`;
   const waClient = phoneToWaNumber(o.telephone);
   if (waClient) buttons += `<a class="btn-action btn-whatsapp" href="https://wa.me/${waClient}?text=${encodeURIComponent(t("waMsgIntro") + " N° " + (o.numero || ""))}" target="_blank" rel="noopener">${escapeHtml(t("btnWhatsapp"))}</a>`;
@@ -1826,6 +1888,7 @@ function liveCardHtml(row) {
   if (o._stage === "restaurant") {
     buttons += `<button class="btn-action btn-confirm" type="button" data-live-action="${numero}" data-new-status="En attente">${escapeHtml(t("btnConfirmForRestaurant"))}</button>`;
   }
+  if (LIVE_V2) buttons += `<button class="btn-action" type="button" data-live-note="${numero}" style="background:#fff;border:1px solid var(--border);color:var(--blue-900);">${escapeHtml(t("btnNote"))}</button>`;
   buttons += `<button class="btn-action btn-cancel" type="button" data-live-action="${numero}" data-new-status="Annulée">${escapeHtml(t("btnCancel"))}</button>`;
   if (o._stage === "delivery") {
     buttons += `<button class="btn-action btn-deliver" type="button" data-live-action="${numero}" data-new-status="Livrée">${escapeHtml(t("btnDeliver"))}</button>`;
@@ -1843,7 +1906,7 @@ function liveCardHtml(row) {
     }
   }
   return `
-    <div class="live-card sev${row.sev}" data-live-num="${numero}" data-stage="${escapeAttr(o._stage)}" data-t0="${isFinite(o._t0) ? o._t0 : ""}">
+    <div class="live-card sev${row.sev}" data-live-num="${numero}" data-stage="${escapeAttr(o._stage)}" data-t0="${isFinite(o._t0) ? o._t0 : ""}" data-exact="${o._exact ? "1" : "0"}">
       <div class="live-top">
         <div>
           <div class="numero" style="font-size:12px;font-weight:800;color:var(--gold-600);">${escapeHtml(o.numero || "")}</div>
@@ -1853,9 +1916,11 @@ function liveCardHtml(row) {
         <div class="live-timer" data-live-timer>${escapeHtml(liveFmtElapsed(row.el))}</div>
       </div>
       ${restoLine}
+      ${driverLine}
       <div class="live-line"><b>${escapeHtml(t("liveClient"))} :</b> ${escapeHtml(o.client || "")} · ${escapeHtml(fmtPhone(o.telephone))}</div>
       <div class="live-line muted">${escapeHtml(o.adresse || "")} (${escapeHtml(o.zone || "")}) · ${escapeHtml(String(o.total || 0))} DA · ${escapeHtml(o.horodatage || "")}</div>
       <div class="articles">${escapeHtml(o.articles || "")}</div>
+      ${journalHtml}
       <div class="actions-row">${buttons}</div>
       ${assign}
     </div>`;
@@ -1869,6 +1934,9 @@ function renderLive() {
     : emptyStateHtml(t(LIVE_FILTER === "late" ? "liveEmptyLate" : "liveEmpty"), "✅");
   document.querySelectorAll("#listLive [data-live-action]").forEach(btn => {
     btn.addEventListener("click", () => liveChangeStatus(btn.dataset.liveAction, btn.dataset.newStatus, btn));
+  });
+  document.querySelectorAll("#listLive [data-live-note]").forEach(btn => {
+    btn.addEventListener("click", () => liveAddNote(btn.dataset.liveNote, btn));
   });
   document.querySelectorAll("#listLive [data-live-assign]").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -1906,7 +1974,7 @@ function liveTick() {
     if (!isFinite(t0) || !t0) return;
     const el = now - t0;
     const stage = card.dataset.stage;
-    const sev = liveSeverity(stage, el / 60000);
+    const sev = liveSeverity(stage, el / 60000, card.dataset.exact === "1");
     const timer = card.querySelector("[data-live-timer]");
     if (timer) timer.textContent = liveFmtElapsed(el);
     const had = card.classList.contains("sev3") ? 3 : card.classList.contains("sev2") ? 2 : card.classList.contains("sev1") ? 1 : 0;
@@ -1956,12 +2024,18 @@ function liveBeep() {
 }
 
 async function liveChangeStatus(numero, newStatus, btn) {
-  const msgKey = newStatus === "Annulée" ? "liveCancelConfirm" : newStatus === "En attente" ? "liveConfirmConfirm" : "";
-  if (msgKey && !window.confirm(t(msgKey) + " " + numero)) return;
+  let motif = "";
+  if (newStatus === "Annulée") {
+    const answer = window.prompt(t("liveCancelReason") + " " + numero, "");
+    if (answer === null) return;          // « Annuler » dans la boîte : on ne touche à rien
+    motif = String(answer).trim();
+  } else if (newStatus === "En attente" && !window.confirm(t("liveConfirmConfirm") + " " + numero)) {
+    return;
+  }
   hideError($("errorBox"));
   document.querySelectorAll("#listLive button").forEach(b => b.disabled = true);
   try {
-    const data = await apiGet({ action: "updateOrderStatus", password: SESSION_PASSWORD, orderNumber: numero, newStatus: newStatus });
+    const data = await apiGet({ action: "updateOrderStatus", password: SESSION_PASSWORD, orderNumber: numero, newStatus: newStatus, motif: motif });
     if (data.success) {
       const o = ORDERS.find(x => String(x.numero) === String(numero));
       if (o) o.statut = newStatus;
@@ -1976,6 +2050,22 @@ async function liveChangeStatus(numero, newStatus, btn) {
   } catch (e) {
     showError($("errorBox"), t("updateFailedGeneric"));
     renderLive();
+  }
+}
+
+async function liveAddNote(numero, btn) {
+  const note = window.prompt(t("liveNotePrompt") + " " + numero, "");
+  if (note === null || !String(note).trim()) return;
+  hideError($("errorBox"));
+  btn.disabled = true;
+  try {
+    const data = await apiGet({ action: "csNote", password: SESSION_PASSWORD, orderNumber: numero, note: String(note).trim() });
+    if (data.success) { loadLive(); }
+    else showError($("errorBox"), data.error || t("updateFailedGeneric"));
+  } catch (e) {
+    showError($("errorBox"), t("updateFailedGeneric"));
+  } finally {
+    btn.disabled = false;
   }
 }
 
