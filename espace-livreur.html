@@ -145,6 +145,7 @@
   .order-card button:disabled{opacity:.6;}
   .btn-cancel{width:100%;margin-top:8px;background:#fff;border:1.5px solid #e0b4b4;color:#b3261e;border-radius:11px;
     padding:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;}
+  .btn-issue{width:100%;margin-top:8px;background:#fff7ea;border:1.5px solid #f0a030;color:#8a4b00;border-radius:11px;padding:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;}
   .cancel-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:flex-end;justify-content:center;}
   .cancel-sheet{background:#fff;width:100%;max-width:480px;border-radius:18px 18px 0 0;padding:18px 16px calc(16px + env(safe-area-inset-bottom));
     max-height:90vh;overflow:auto;}
@@ -334,6 +335,13 @@ const I18N = {
     accept: "Accepter",
     markDelivered: "Marquer comme livrée",
     cancelOrder: "Annuler la commande",
+    reportIssue: "⚠️ Signaler un problème",
+    issueTitle: "Quel est le problème ?",
+    issueSub: "Le service client est prévenu et peut appeler. La commande reste en cours.",
+    issueSend: "Envoyer au service client",
+    issueSent: "Problème signalé. Le service client est prévenu.",
+    issueFailed: "Impossible d'envoyer. Réessaie.",
+    issueNotePh: "Commentaire (facultatif)",
     cancelTitle: "Pourquoi annuler cette commande ?",
     cancelSub: "Choisis le motif : le service client le verra.",
     cancelBack: "Retour",
@@ -383,6 +391,13 @@ const I18N = {
     accept: "قبول",
     markDelivered: "تحديد كموصّلة",
     cancelOrder: "إلغاء الطلب",
+    reportIssue: "⚠️ الإبلاغ عن مشكلة",
+    issueTitle: "ما هي المشكلة؟",
+    issueSub: "تم إعلام خدمة العملاء ويمكنها الاتصال. يبقى الطلب قيد التنفيذ.",
+    issueSend: "إرسال إلى خدمة العملاء",
+    issueSent: "تم الإبلاغ. خدمة العملاء على علم.",
+    issueFailed: "تعذر الإرسال. أعد المحاولة.",
+    issueNotePh: "تعليق (اختياري)",
     cancelTitle: "لماذا تريد إلغاء هذا الطلب؟",
     cancelSub: "اختر السبب: سيراه فريق خدمة العملاء.",
     cancelBack: "رجوع",
@@ -706,6 +721,9 @@ function renderOrders() {
   document.querySelectorAll("[data-deliver]").forEach(btn => {
     btn.addEventListener("click", () => onDeliver(btn.dataset.deliver));
   });
+  document.querySelectorAll("[data-issue]").forEach(btn => {
+    btn.addEventListener("click", () => openCancel(btn.dataset.issue, true));
+  });
   document.querySelectorAll("[data-cancel]").forEach(btn => {
     btn.addEventListener("click", () => openCancel(btn.dataset.cancel));
   });
@@ -734,7 +752,7 @@ function orderCardHtml(o, kind) {
         ${actionBtn}
         <a class="btn-call" href="${telHref}">${escapeHtml(t("call"))}</a>
       </div>
-      ${kind === "mine" ? `<button class="btn-cancel" data-cancel="${escapeAttr(o.numero)}">${escapeHtml(t("cancelOrder"))}</button>` : ""}
+      ${kind === "mine" ? `<button class="btn-issue" data-issue="${escapeAttr(o.numero)}">${escapeHtml(t("reportIssue"))}</button><button class="btn-cancel" data-cancel="${escapeAttr(o.numero)}">${escapeHtml(t("cancelOrder"))}</button>` : ""}
     </div>
   `;
 }
@@ -792,47 +810,47 @@ const CANCEL_REASONS = [
   ["rClientCancelled", "Client a annulé"], ["rClientUnreachable", "Client injoignable"], ["rAddress", "Adresse introuvable"],
   ["rNotReady", "Commande non prête / restaurant fermé"], ["rDriver", "Problème du livreur (panne, accident)"], ["rOther", "Autre"]
 ];
-function openCancel(numero) {
+function openCancel(numero, issueMode) {
   closeCancel();
   const wrap = document.createElement("div");
   wrap.className = "cancel-modal"; wrap.id = "cancelModal";
   wrap.innerHTML = `<div class="cancel-sheet" role="dialog" aria-modal="true">
-    <h3>${escapeHtml(t("cancelTitle"))} <span style="color:var(--muted);font-weight:600">${escapeHtml(numero)}</span></h3>
-    <div class="sub">${escapeHtml(t("cancelSub"))}</div>
-    ${CANCEL_REASONS.map((r, i) => `<label class="cancel-reason"><input type="radio" name="cancelReason" value="${i}"> ${escapeHtml(t(r[0]))}</label>`).join("")}
-    <input class="cancel-other hidden" id="cancelOther" maxlength="120" placeholder="${escapeAttr(t("cancelOtherPh"))}">
+    <h3>${escapeHtml(t(issueMode ? "issueTitle" : "cancelTitle"))} <span style="color:var(--muted);font-weight:600">${escapeHtml(numero)}</span></h3>
+    <div class="sub">${escapeHtml(t(issueMode ? "issueSub" : "cancelSub"))}</div>
+    ${CANCEL_REASONS.map((r, i) => (issueMode && r[0] === "rClientCancelled") ? "" : `<label class="cancel-reason"><input type="radio" name="cancelReason" value="${i}"> ${escapeHtml(t(r[0]))}</label>`).join("")}
+    <input class="cancel-other ${issueMode ? "" : "hidden"}" id="cancelOther" maxlength="120" placeholder="${escapeAttr(t(issueMode ? "issueNotePh" : "cancelOtherPh"))}">
     <div class="cancel-err" id="cancelErr"></div>
     <div class="cancel-btns"><button class="back" id="cancelBack">${escapeHtml(t("cancelBack"))}</button>
-    <button class="go" id="cancelGo">${escapeHtml(t("cancelConfirm"))}</button></div></div>`;
+    <button class="go" id="cancelGo">${escapeHtml(t(issueMode ? "issueSend" : "cancelConfirm"))}</button></div></div>`;
   document.body.appendChild(wrap);
   wrap.addEventListener("click", ev => { if (ev.target === wrap) closeCancel(); });
   wrap.querySelectorAll("input[name=cancelReason]").forEach(inp => inp.addEventListener("change", () => {
     wrap.querySelectorAll(".cancel-reason").forEach(l => l.classList.toggle("sel", l.contains(inp) && inp.checked));
     const other = CANCEL_REASONS[Number(inp.value)][0] === "rOther";
-    $("cancelOther").classList.toggle("hidden", !other);
+    if (!issueMode) $("cancelOther").classList.toggle("hidden", !other);
     $("cancelErr").textContent = "";
   }));
   $("cancelBack").addEventListener("click", closeCancel);
-  $("cancelGo").addEventListener("click", () => onCancel(numero));
+  $("cancelGo").addEventListener("click", () => onCancel(numero, issueMode));
 }
 function closeCancel() { const m = $("cancelModal"); if (m) m.remove(); }
-async function onCancel(numero) {
+async function onCancel(numero, issueMode) {
   const sel = document.querySelector("input[name=cancelReason]:checked");
   if (!sel) { $("cancelErr").textContent = t("cancelPick"); return; }
   const r = CANCEL_REASONS[Number(sel.value)];
   let motif = r[1];
+  const extra = ($("cancelOther").value || "").trim();
   if (r[0] === "rOther") {
-    const extra = ($("cancelOther").value || "").trim();
     if (!extra) { $("cancelErr").textContent = t("cancelPick"); return; }
     motif = "Autre : " + extra;
-  }
+  } else if (issueMode && extra) motif += " — " + extra;
   const go = $("cancelGo"); go.disabled = true;
   try {
-    const data = await apiPost({ action: "driverCancelOrder", orderNumber: numero, motif: motif });
-    if (data.success) { closeCancel(); await loadAll(); }
+    const data = await apiPost({ action: issueMode ? "driverReportIssue" : "driverCancelOrder", orderNumber: numero, motif: motif });
+    if (data.success) { closeCancel(); if (issueMode) alert(t("issueSent")); await loadAll(); }
     else { $("cancelErr").textContent = data.error || t("cancelFailed"); go.disabled = false; if (/plus en livraison|assign/i.test(data.error || "")) loadAll(); }
   } catch (e) {
-    $("cancelErr").textContent = t("cancelFailed"); go.disabled = false;
+    $("cancelErr").textContent = t(issueMode ? "issueFailed" : "cancelFailed"); go.disabled = false;
   }
 }
 

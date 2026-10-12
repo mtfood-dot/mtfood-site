@@ -137,6 +137,7 @@
   .live-line{font-size:13px;color:var(--text);margin-top:6px;line-height:1.6;}
   .live-line b{color:var(--blue-900);}
   .live-line.muted{color:var(--muted);}
+  .live-issue{margin-top:8px;background:#fff4e5;border:1.5px solid #f0a030;color:#8a4b00;border-radius:10px;padding:8px 10px;font-size:12.5px;font-weight:700;}
   .live-journal{font-size:11.5px;color:var(--muted);margin-top:8px;border-top:1px dashed var(--border);padding-top:6px;line-height:1.7;}
   .btn-action.btn-call{background:#eaf7ee;border:1px solid #bfe6c9;color:var(--green);text-decoration:none;text-align:center;}
   .order-card{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);
@@ -890,6 +891,7 @@ const I18N = {
     liveDriver: "Livreur",
     btnCallDriver: "📞 Livreur",
     btnNote: "📝 Note",
+    liveIssue: "⚠️ Problème signalé par le livreur",
     liveNotePrompt: "Note pour l'équipe (ex. restaurant appelé, il prépare) :",
     liveCancelReason: "Motif d'annulation (facultatif) pour",
     liveConfirmConfirm: "Confirmer cette commande à la place du restaurant ?",
@@ -1151,6 +1153,7 @@ const I18N = {
     liveDriver: "الموصّل",
     btnCallDriver: "📞 الموصّل",
     btnNote: "📝 ملاحظة",
+    liveIssue: "⚠️ مشكلة أبلغ عنها السائق",
     liveNotePrompt: "ملاحظة للفريق (مثال: تم الاتصال بالمطعم، يقوم بالتحضير):",
     liveCancelReason: "سبب الإلغاء (اختياري) للطلب",
     liveConfirmConfirm: "هل تريد تأكيد هذا الطلب نيابة عن المطعم؟",
@@ -1845,7 +1848,7 @@ function liveSorted() {
   const now = Date.now();
   return LIVE_ORDERS.map(o => {
     const el = isFinite(o._t0) ? now - o._t0 : 0;
-    return { o: o, el: el, sev: liveSeverity(o._stage, el / 60000, o._exact) };
+    return { o: o, el: el, sev: Math.max(liveSeverity(o._stage, el / 60000, o._exact), o.issue ? 2 : 0) };
   }).sort((a, b) => b.sev - a.sev || b.el - a.el);
 }
 
@@ -1868,6 +1871,8 @@ function liveCardHtml(row) {
   const drvPhone = drvMatch ? drvMatch[2] : "";
   const driverLine = o.livreur
     ? `<div class="live-line"><b>${escapeHtml(t("liveDriver"))} :</b> ${escapeHtml(drvName)}${drvPhone ? " · " + escapeHtml(fmtPhone(drvPhone)) : ""}</div>` : "";
+  const issueHtml = o.issue
+    ? `<div class="live-issue">${escapeHtml(t("liveIssue"))} : <b>${escapeHtml(o.issue.detail || "")}</b> · ${escapeHtml(o.issue.par || "")}</div>` : "";
   const journalHtml = (o.journal && o.journal.length)
     ? `<div class="live-journal">${o.journal.map(j => {
         const lt = new Date((j.t || 0) + 3600000);
@@ -1906,7 +1911,7 @@ function liveCardHtml(row) {
     }
   }
   return `
-    <div class="live-card sev${row.sev}" data-live-num="${numero}" data-stage="${escapeAttr(o._stage)}" data-t0="${isFinite(o._t0) ? o._t0 : ""}" data-exact="${o._exact ? "1" : "0"}">
+    <div class="live-card sev${row.sev}" data-live-num="${numero}" data-stage="${escapeAttr(o._stage)}" data-t0="${isFinite(o._t0) ? o._t0 : ""}" data-exact="${o._exact ? "1" : "0"}" data-issue="${o.issue ? "1" : "0"}">
       <div class="live-top">
         <div>
           <div class="numero" style="font-size:12px;font-weight:800;color:var(--gold-600);">${escapeHtml(o.numero || "")}</div>
@@ -1920,6 +1925,7 @@ function liveCardHtml(row) {
       <div class="live-line"><b>${escapeHtml(t("liveClient"))} :</b> ${escapeHtml(o.client || "")} · ${escapeHtml(fmtPhone(o.telephone))}</div>
       <div class="live-line muted">${escapeHtml(o.adresse || "")} (${escapeHtml(o.zone || "")}) · ${escapeHtml(String(o.total || 0))} DA · ${escapeHtml(o.horodatage || "")}</div>
       <div class="articles">${escapeHtml(o.articles || "")}</div>
+      ${issueHtml}
       ${journalHtml}
       <div class="actions-row">${buttons}</div>
       ${assign}
@@ -1974,7 +1980,7 @@ function liveTick() {
     if (!isFinite(t0) || !t0) return;
     const el = now - t0;
     const stage = card.dataset.stage;
-    const sev = liveSeverity(stage, el / 60000, card.dataset.exact === "1");
+    const sev = Math.max(liveSeverity(stage, el / 60000, card.dataset.exact === "1"), card.dataset.issue === "1" ? 2 : 0);
     const timer = card.querySelector("[data-live-timer]");
     if (timer) timer.textContent = liveFmtElapsed(el);
     const had = card.classList.contains("sev3") ? 3 : card.classList.contains("sev2") ? 2 : card.classList.contains("sev1") ? 1 : 0;
