@@ -161,7 +161,7 @@
   }
 
   /* ---------- CATEGORY TABS ---------- */
-  .resto-bar{max-width:960px;margin:12px auto 0;padding:0 16px;display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .resto-bar{max-width:960px;margin:12px auto 0;padding:0 16px;display:flex;gap:8px;justify-content:safe center;overflow-x:auto;-webkit-overflow-scrolling:touch;}
   .resto-chip{flex:0 0 auto;width:78px;display:flex;flex-direction:column;align-items:center;gap:5px;border:none;background:none;color:var(--blue-900);padding:2px 0;font-weight:800;font-size:11.5px;line-height:1.2;cursor:pointer;font-family:inherit;}
   .resto-chip .logo{width:58px;height:58px;border-radius:50%;background:#fff;border:2.5px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:18px;font-weight:800;color:var(--blue-900);}
   .resto-chip .logo img{width:100%;height:100%;object-fit:cover;display:block;}
@@ -169,8 +169,8 @@
   .resto-chip.active .logo{border-color:var(--gold-500,#e0a800);box-shadow:0 0 0 2px rgba(224,168,0,.25);}
   .resto-chip.active .nm{color:var(--gold-600,#b8860b);}
   .tabs{
-    display:flex;gap:4px;overflow-x:auto;padding:16px 10px 6px;
-    background:var(--bg);scrollbar-width:none;
+    display:flex;gap:4px;overflow-x:auto;padding:16px 10px 6px;max-width:960px;margin:0 auto;
+    background:var(--bg);scrollbar-width:none;justify-content:safe center;
   }
   .tabs::-webkit-scrollbar{display:none;}
   .tab{
@@ -405,7 +405,7 @@
   .boost-box{max-width:960px;margin:14px auto 0;padding:0 12px;}
   .boost-box-title{font-size:13px;font-weight:800;color:var(--blue-900);text-align:center;margin-bottom:10px;}
   .boost-strip{display:flex;gap:12px;overflow-x:auto;padding:4px 4px 10px;scroll-snap-type:x proximity;
-    -webkit-overflow-scrolling:touch;justify-content:safe start;}
+    -webkit-overflow-scrolling:touch;justify-content:safe center;}
   .boost-item{flex:0 0 150px;scroll-snap-align:start;display:block;text-decoration:none;color:inherit;background:var(--card);
     border-radius:var(--radius-md);box-shadow:var(--shadow-sm);border:1px solid var(--border);overflow:hidden;position:relative;}
   .boost-item .boost-img{width:100%;aspect-ratio:1/1;background:var(--blue-100) center/cover no-repeat;}
