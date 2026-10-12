@@ -111,9 +111,6 @@
   header.top .account-link-top:active{background:#ddeaf9;}
 
   /* ---------- VÉRIFICATION DE ZONE ---------- */
-  .resto-bar{max-width:960px;margin:12px auto 0;padding:0 16px;display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
-  .resto-chip{flex:0 0 auto;border:1.5px solid var(--border);background:#fff;color:var(--blue-900);border-radius:999px;padding:8px 14px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;}
-  .resto-chip.active{background:var(--blue-900);border-color:var(--blue-900);color:#fff;}
   .zone-check{max-width:960px;margin:14px auto 0;padding:0 16px;}
   .zone-check-toggle{display:flex;align-items:center;gap:8px;margin:0 auto;background:#fff;
     border:1.5px solid var(--border);border-radius:999px;padding:10px 18px;font-weight:700;font-size:13px;
@@ -165,8 +162,12 @@
 
   /* ---------- CATEGORY TABS ---------- */
   .resto-bar{max-width:960px;margin:12px auto 0;padding:0 16px;display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
-  .resto-chip{flex:0 0 auto;border:1.5px solid var(--border);background:#fff;color:var(--blue-900);border-radius:999px;padding:8px 14px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;}
-  .resto-chip.active{background:var(--blue-900);border-color:var(--blue-900);color:#fff;}
+  .resto-chip{flex:0 0 auto;width:78px;display:flex;flex-direction:column;align-items:center;gap:5px;border:none;background:none;color:var(--blue-900);padding:2px 0;font-weight:800;font-size:11.5px;line-height:1.2;cursor:pointer;font-family:inherit;}
+  .resto-chip .logo{width:58px;height:58px;border-radius:50%;background:#fff;border:2.5px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:18px;font-weight:800;color:var(--blue-900);}
+  .resto-chip .logo img{width:100%;height:100%;object-fit:cover;display:block;}
+  .resto-chip .nm{max-width:78px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .resto-chip.active .logo{border-color:var(--gold-500,#e0a800);box-shadow:0 0 0 2px rgba(224,168,0,.25);}
+  .resto-chip.active .nm{color:var(--gold-600,#b8860b);}
   .tabs{
     display:flex;gap:4px;overflow-x:auto;padding:16px 10px 6px;
     background:var(--bg);scrollbar-width:none;
@@ -775,7 +776,7 @@ const I18N = {
     close: "Fermer",
     add: "Ajouter",
     allCat: "Tous",
-    allRestos: "Tous les restaurants",
+    allRestos: "Tous",
     cartEmpty: "Votre panier est vide.",
     catalogUpdating: "Notre catalogue est en cours de mise à jour.\nAppelez-nous pour commander directement.",
     loadError: "Impossible de charger le menu pour le moment.\nVérifiez votre connexion ou appelez-nous.",
@@ -909,7 +910,7 @@ const I18N = {
     close: "إغلاق",
     add: "أضف",
     allCat: "الكل",
-    allRestos: "كل المطاعم",
+    allRestos: "الكل",
     cartEmpty: "سلتك فارغة.",
     catalogUpdating: "قائمتنا قيد التحديث حاليًا.\nاتصلوا بنا للطلب مباشرة.",
     loadError: "تعذر تحميل القائمة حاليًا.\nتحقق من اتصالك أو اتصل بنا.",
@@ -1393,15 +1394,28 @@ function menuForResto() {
   const k = ACTIVE_RESTO.toLowerCase();
   return MENU.filter(i => String(i.partenaire || "").trim().toLowerCase() === k);
 }
+/* Logo : branding/restos/<nom-en-minuscules-sans-accents-avec-tirets>.png ; sinon initiales */
+function restoSlug(n) {
+  return String(n || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+function restoInitials(n) {
+  const w = String(n || "").trim().split(/\s+/).filter(Boolean);
+  return ((w[0] || "?")[0] + (w.length > 1 ? w[1][0] : "")).toUpperCase();
+}
 function renderRestoBar() {
   const bar = $("restoBar");
   const names = restoNames();
   if (!names.length) { bar.style.display = "none"; bar.innerHTML = ""; return; }
   if (ACTIVE_RESTO && !names.some(n => n.toLowerCase() === ACTIVE_RESTO.toLowerCase())) ACTIVE_RESTO = "";
   bar.style.display = "flex";
-  bar.innerHTML = [""].concat(names).map(n =>
-    `<button type="button" class="resto-chip ${n === ACTIVE_RESTO ? "active" : ""}" data-resto="${escapeAttr(n)}">${escapeHtml(n || t("allRestos"))}</button>`
-  ).join("");
+  bar.innerHTML = [""].concat(names).map(n => {
+    const inner = n
+      ? `<img src="branding/restos/${escapeAttr(restoSlug(n))}.png" alt="" loading="lazy" data-ini="${escapeAttr(restoInitials(n))}">`
+      : "🍽️";
+    return `<button type="button" class="resto-chip ${n === ACTIVE_RESTO ? "active" : ""}" data-resto="${escapeAttr(n)}" aria-label="${escapeAttr(n || t("allRestos"))}">` +
+      `<span class="logo">${inner}</span><span class="nm">${escapeHtml(n || t("allRestos"))}</span></button>`;
+  }).join("");
+  bar.querySelectorAll(".logo img").forEach(img => img.addEventListener("error", () => { img.parentNode.textContent = img.dataset.ini; }));
   bar.querySelectorAll(".resto-chip").forEach(btn => btn.addEventListener("click", () => {
     ACTIVE_RESTO = btn.dataset.resto; ACTIVE_CATEGORY = ALL_CAT; renderRestoBar(); renderTabs(); renderGrid();
   }));
