@@ -492,18 +492,6 @@ if ("serviceWorker" in navigator) {
   <div class="boost-strip" id="boostStrip"></div>
 </div>
 
-<div class="zone-check" id="zoneCheck">
-  <button class="zone-check-toggle" id="zoneCheckToggle" type="button">📍 <span id="zoneCheckToggleText">Vérifier si on livre chez toi</span></button>
-  <div class="zone-check-panel hidden" id="zoneCheckPanel" data-mtform data-note-before="#zoneCheckResult">
-    <label id="zoneCheckLabel" for="zoneCheckInput">Ton adresse ou ton quartier</label>
-    <div class="zone-check-row">
-      <input type="text" id="zoneCheckInput" data-required data-error-after=".zone-check-row" placeholder="Ex: Meftah Centre, Souakria...">
-      <button id="zoneCheckBtn" type="button">Vérifier</button>
-    </div>
-    <div class="zone-check-result" id="zoneCheckResult"></div>
-  </div>
-</div>
-
 <nav class="tabs" id="tabs"></nav>
 
 <main>
@@ -1008,22 +996,6 @@ function normalizeForZoneSearch(s) {
     .replace(/[^a-z0-9؀-ۿ\s]/g, " ")
     .trim();
 }
-async function checkZoneAvailability() {
-  const raw = $("zoneCheckInput").value;
-  const box = $("zoneCheckResult");
-  box.classList.remove("show", "ok", "ko");
-  if (!MTForm.validate($("zoneCheckPanel"))) return;
-  if (!normalizeForZoneSearch(raw)) { MTForm.fail($("zoneCheckInput"), t("zoneCheckEmpty")); return; }
-  box.textContent = t("addrVerifying"); box.classList.add("show");
-  const found = await geocodeAddress(raw);
-  box.classList.remove("show");
-  if (!found) { box.textContent = t("addrCheckNeedPos"); box.classList.add("show", "ko"); return; }
-  try {
-    const q = await fetchQuote(found.lat, found.lng);
-    box.textContent = q.covered ? (t("zoneCheckOk") + q.zoneNom + " (" + q.fee + " DA)") : t("zoneOut");
-    box.classList.add("show", q.covered ? "ok" : "ko");
-  } catch (e) { box.textContent = t("quoteError"); box.classList.add("show", "ko"); }
-}
 
 /* ============================================================
    LANGUE (FR / AR)
@@ -1077,10 +1049,6 @@ function applyLanguage() {
   $("footerPrivacyLink").textContent = t("footerPrivacyLink");
   $("footerJoinLink").textContent = t("footerJoinLink");
   $("footerDriverLink").textContent = t("footerDriverLink");
-  $("zoneCheckToggleText").textContent = t("zoneCheckToggleText");
-  $("zoneCheckLabel").textContent = t("zoneCheckLabel");
-  $("zoneCheckInput").placeholder = t("zoneCheckPlaceholder");
-  $("zoneCheckBtn").textContent = t("zoneCheckBtn");
   updateAccountLink();
   applyAddrLanguage();
 
@@ -2044,12 +2012,6 @@ function bindGlobalEvents() {
   });
 
   $("confirmOrderBtn").addEventListener("click", submitOrder);
-
-  $("zoneCheckToggle").addEventListener("click", () => {
-    $("zoneCheckPanel").classList.toggle("hidden");
-  });
-  $("zoneCheckBtn").addEventListener("click", checkZoneAvailability);
-  $("zoneCheckInput").addEventListener("keyup", (e) => { if (e.key === "Enter") checkZoneAvailability(); });
 
   updateAccountLink();
 }
