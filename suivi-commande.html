@@ -102,6 +102,15 @@ main{max-width:520px;margin:0 auto;padding:20px 16px 0;}
   margin-bottom:16px;display:none;overflow:hidden;}
 #map.show{display:block;}
 
+.cancel-box{max-width:520px;margin:14px auto 0;background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:14px;}
+.cancel-box.hidden{display:none;}
+.cancel-box p{margin:0 0 8px;font-size:13px;line-height:1.6;color:var(--muted);}
+.cancel-box input{width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px;font-family:inherit;font-size:14px;margin-bottom:8px;}
+.cancel-box button{width:100%;background:#fff;border:1.5px solid #e0b4b4;color:#b3261e;border-radius:10px;padding:11px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;}
+.cancel-box button:disabled{opacity:.6;}
+.cancel-box .cmsg{font-size:13px;font-weight:700;margin-top:8px;min-height:1em;}
+.cancel-box .cmsg.err{color:#b3261e;}
+.cancel-box a{color:var(--blue-700,#1d4e9e);font-weight:800;}
 .wait-note{text-align:center;padding:28px 16px;color:var(--muted);font-size:13px;line-height:1.6;}
 .wait-note .emoji{font-size:30px;display:block;margin-bottom:8px;}
 
@@ -160,6 +169,15 @@ if ("serviceWorker" in navigator) {
     <span id="waitNoteText">En attente que le livreur partage sa position…</span>
   </div>
 
+  <div class="cancel-box hidden" id="cancelBox">
+    <p id="cancelHint"></p>
+    <div id="cancelForm">
+      <input type="tel" id="cancelPhone" inputmode="tel" autocomplete="tel" placeholder="">
+      <button type="button" id="cancelBtn"></button>
+    </div>
+    <div class="cmsg" id="cancelMsg"></div>
+  </div>
+
   <footer id="footerNote">MT Delivery — البريد السريع · Meftah, Blida</footer>
 </main>
 
@@ -191,6 +209,14 @@ const I18N = {
     waitAConfirmer: "Le restaurant doit accepter ta commande. Elle est envoyée aux livreurs dès qu'il l'a acceptée.",
     statutAnnulee: "Annulée",
     annuleeMsg: "Cette commande a été annulée. Pour toute question, appelle-nous.",
+    cancelHintFree: "Tu peux annuler tant que le restaurant n'a pas accepté. Entre le numéro de téléphone utilisé pour la commande.",
+    cancelPhonePh: "Ton numéro de téléphone",
+    cancelBtn: "Annuler ma commande",
+    cancelAsk: "Annuler cette commande ?",
+    cancelDone: "Ta commande est annulée.",
+    cancelNeedPhone: "Entre le numéro de téléphone de la commande.",
+    cancelFail: "Impossible d'annuler. Réessaie ou appelle-nous.",
+    cancelHintCall: "Pour annuler ou modifier cette commande, appelle le service client : ",
     footerNote: "MT Delivery — البريد السريع · Meftah, Blida"
   },
   ar: {
@@ -216,6 +242,14 @@ const I18N = {
     waitAConfirmer: "على المطعم قبول طلبك. يُرسل إلى الموصلين فور قبوله.",
     statutAnnulee: "ملغى",
     annuleeMsg: "تم إلغاء هذا الطلب. لأي استفسار، اتصل بنا.",
+    cancelHintFree: "يمكنك الإلغاء ما دام المطعم لم يقبل الطلب. أدخل رقم الهاتف المستعمل في الطلب.",
+    cancelPhonePh: "رقم هاتفك",
+    cancelBtn: "إلغاء طلبي",
+    cancelAsk: "هل تريد إلغاء هذا الطلب؟",
+    cancelDone: "تم إلغاء طلبك.",
+    cancelNeedPhone: "أدخل رقم هاتف الطلب.",
+    cancelFail: "تعذر الإلغاء. أعد المحاولة أو اتصل بنا.",
+    cancelHintCall: "لإلغاء هذا الطلب أو تعديله، اتصل بخدمة العملاء: ",
     footerNote: "البريد السريع MT Delivery · مفتاح، البليدة"
   }
 };
@@ -234,6 +268,9 @@ function applyLanguage(){
   $("fNumero").placeholder = t("numeroPlaceholder");
   $("searchBtn").textContent = t("searchBtn");
   $("footerNote").textContent = t("footerNote");
+  $("cancelPhone").placeholder = t("cancelPhonePh");
+  $("cancelBtn").textContent = t("cancelBtn");
+  if (typeof LAST_STATUT !== "undefined") updateCancelBox(LAST_STATUT);
 }
 
 $("langToggle").addEventListener("click", function(){
@@ -368,6 +405,40 @@ function ensureMap(lat, lng){
   });
 }
 
+const CS_PHONE = "0560 78 84 97";
+let LAST_STATUT = "";
+function updateCancelBox(statut){
+  LAST_STATUT = statut;
+  const box = $("cancelBox");
+  if (!CURRENT_NUMERO || !statut || statut === "Annulée" || statut === "Livrée") { box.classList.add("hidden"); return; }
+  box.classList.remove("hidden");
+  if (statut === "À confirmer") {
+    $("cancelHint").textContent = t("cancelHintFree");
+    $("cancelForm").style.display = "";
+  } else {
+    $("cancelHint").innerHTML = escapeHtml(t("cancelHintCall")) + '<a href="tel:' + CS_PHONE.replace(/\s/g, "") + '"><bdi dir="ltr">' + CS_PHONE + '</bdi></a>';
+    $("cancelForm").style.display = "none";
+    $("cancelMsg").textContent = "";
+  }
+}
+async function cancelOrder(){
+  const phone = $("cancelPhone").value.trim();
+  const msg = $("cancelMsg");
+  msg.className = "cmsg";
+  if (phone.replace(/\D/g, "").length < 8) { msg.className = "cmsg err"; msg.textContent = t("cancelNeedPhone"); return; }
+  if (!confirm(t("cancelAsk"))) return;
+  $("cancelBtn").disabled = true;
+  try {
+    const res = await fetch(CONFIG.API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "clientCancelOrder", numero: CURRENT_NUMERO, telephone: phone }) });
+    const data = JSON.parse(await res.text());
+    if (data.success) { msg.textContent = t("cancelDone"); await fetchOnce(); }
+    else { msg.className = "cmsg err"; msg.textContent = data.error || t("cancelFail"); if (data.code === "too_late") await fetchOnce(); }
+  } catch (e) { msg.className = "cmsg err"; msg.textContent = t("cancelFail"); }
+  finally { $("cancelBtn").disabled = false; }
+}
+$("cancelBtn").addEventListener("click", cancelOrder);
+
 function render(data){
   $("statusCard").classList.add("show");
   const meta = statusMeta(data.statut);
@@ -384,6 +455,7 @@ function render(data){
   }
 
   const statut = String(data.statut || "").trim();
+  updateCancelBox(statut);
 
   if (statut === "À confirmer" || statut === "Annulée") {
     $("map").classList.remove("show");

@@ -111,6 +111,9 @@
   header.top .account-link-top:active{background:#ddeaf9;}
 
   /* ---------- VÉRIFICATION DE ZONE ---------- */
+  .resto-bar{max-width:960px;margin:12px auto 0;padding:0 16px;display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .resto-chip{flex:0 0 auto;border:1.5px solid var(--border);background:#fff;color:var(--blue-900);border-radius:999px;padding:8px 14px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .resto-chip.active{background:var(--blue-900);border-color:var(--blue-900);color:#fff;}
   .zone-check{max-width:960px;margin:14px auto 0;padding:0 16px;}
   .zone-check-toggle{display:flex;align-items:center;gap:8px;margin:0 auto;background:#fff;
     border:1.5px solid var(--border);border-radius:999px;padding:10px 18px;font-weight:700;font-size:13px;
@@ -161,6 +164,9 @@
   }
 
   /* ---------- CATEGORY TABS ---------- */
+  .resto-bar{max-width:960px;margin:12px auto 0;padding:0 16px;display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .resto-chip{flex:0 0 auto;border:1.5px solid var(--border);background:#fff;color:var(--blue-900);border-radius:999px;padding:8px 14px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .resto-chip.active{background:var(--blue-900);border-color:var(--blue-900);color:#fff;}
   .tabs{
     display:flex;gap:4px;overflow-x:auto;padding:16px 10px 6px;
     background:var(--bg);scrollbar-width:none;
@@ -492,6 +498,8 @@ if ("serviceWorker" in navigator) {
   <div class="boost-strip" id="boostStrip"></div>
 </div>
 
+<div class="resto-bar" id="restoBar" style="display:none;"></div>
+
 <nav class="tabs" id="tabs"></nav>
 
 <main>
@@ -767,6 +775,7 @@ const I18N = {
     close: "Fermer",
     add: "Ajouter",
     allCat: "Tous",
+    allRestos: "Tous les restaurants",
     cartEmpty: "Votre panier est vide.",
     catalogUpdating: "Notre catalogue est en cours de mise à jour.\nAppelez-nous pour commander directement.",
     loadError: "Impossible de charger le menu pour le moment.\nVérifiez votre connexion ou appelez-nous.",
@@ -900,6 +909,7 @@ const I18N = {
     close: "إغلاق",
     add: "أضف",
     allCat: "الكل",
+    allRestos: "كل المطاعم",
     cartEmpty: "سلتك فارغة.",
     catalogUpdating: "قائمتنا قيد التحديث حاليًا.\nاتصلوا بنا للطلب مباشرة.",
     loadError: "تعذر تحميل القائمة حاليًا.\nتحقق من اتصالك أو اتصل بنا.",
@@ -936,6 +946,7 @@ const I18N = {
 let MENU = [];
 let CART = {};           // { itemId: { item, qty } }
 let ACTIVE_CATEGORY = ALL_CAT;
+let ACTIVE_RESTO = ""; // vide = tous les restaurants
 let SELECTED_ZONE = null;
 let EMPTY_MSG_KEY = null;
 let LANG = (function(){
@@ -1055,7 +1066,7 @@ function applyLanguage() {
   if (SELECTED_ZONE) updateCheckoutTotals();
   else $("chkFee").textContent = t("chooseZonePlaceholder");
 
-  if (MENU.length) { renderTabs(); renderGrid(); }
+  if (MENU.length) { renderRestoBar(); renderTabs(); renderGrid(); }
   else if (EMPTY_MSG_KEY) { $("emptyMsg").textContent = t(EMPTY_MSG_KEY); }
   renderCartLines();
 }
@@ -1206,6 +1217,7 @@ function loadMenu() {
         showEmpty("catalogUpdating");
         return;
       }
+      renderRestoBar();
       renderTabs();
       renderGrid();
       applyReorderIfAny();
@@ -1230,6 +1242,8 @@ function applyFeaturedItem() {
   const item = MENU.find(i => String(i.id) === String(id));
   if (!item) return;
   ACTIVE_CATEGORY = ALL_CAT;
+  ACTIVE_RESTO = "";
+  renderRestoBar();
   renderTabs();
   renderGrid();
   if (!CART[item.id]) changeQty(item.id, 1);
@@ -1368,8 +1382,33 @@ function catIcon(cat) {
   return '<svg viewBox="0 0 48 48" focusable="false">' + CAT_SVG[key] + '</svg>';
 }
 
+/* Restaurants : liste déduite de la colonne « Partenaire » du menu ; « Tous » inclut aussi les plats sans restaurant */
+function restoNames() {
+  const seen = {}, out = [];
+  MENU.forEach(i => { const n = String(i.partenaire || "").trim(); const k = n.toLowerCase(); if (n && !seen[k]) { seen[k] = 1; out.push(n); } });
+  return out.sort((a, b) => a.localeCompare(b));
+}
+function menuForResto() {
+  if (!ACTIVE_RESTO) return MENU;
+  const k = ACTIVE_RESTO.toLowerCase();
+  return MENU.filter(i => String(i.partenaire || "").trim().toLowerCase() === k);
+}
+function renderRestoBar() {
+  const bar = $("restoBar");
+  const names = restoNames();
+  if (!names.length) { bar.style.display = "none"; bar.innerHTML = ""; return; }
+  if (ACTIVE_RESTO && !names.some(n => n.toLowerCase() === ACTIVE_RESTO.toLowerCase())) ACTIVE_RESTO = "";
+  bar.style.display = "flex";
+  bar.innerHTML = [""].concat(names).map(n =>
+    `<button type="button" class="resto-chip ${n === ACTIVE_RESTO ? "active" : ""}" data-resto="${escapeAttr(n)}">${escapeHtml(n || t("allRestos"))}</button>`
+  ).join("");
+  bar.querySelectorAll(".resto-chip").forEach(btn => btn.addEventListener("click", () => {
+    ACTIVE_RESTO = btn.dataset.resto; ACTIVE_CATEGORY = ALL_CAT; renderRestoBar(); renderTabs(); renderGrid();
+  }));
+}
+
 function renderTabs() {
-  const cats = [ALL_CAT, ...Array.from(new Set(MENU.map(i => i.categorie || "Autre"))).sort((a, b) => catRank(a) - catRank(b))];
+  const cats = [ALL_CAT, ...Array.from(new Set(menuForResto().map(i => i.categorie || "Autre"))).sort((a, b) => catRank(a) - catRank(b))];
   $("tabs").innerHTML = cats.map(c =>
     `<div class="tab ${c === ACTIVE_CATEGORY ? "active" : ""}" data-cat="${escapeAttr(c)}" role="button" tabindex="0">` +
     `<span class="ico" aria-hidden="true">${catIcon(c)}</span>` +
@@ -1387,9 +1426,10 @@ function renderTabs() {
    GRILLE DE PRODUITS
    ============================================================ */
 function renderGrid() {
+  const base = menuForResto();
   const list = ACTIVE_CATEGORY === ALL_CAT
-    ? MENU
-    : MENU.filter(i => (i.categorie || "Autre") === ACTIVE_CATEGORY);
+    ? base
+    : base.filter(i => (i.categorie || "Autre") === ACTIVE_CATEGORY);
 
   $("grid").innerHTML = list.map(item => {
     const qty = CART[item.id] ? CART[item.id].qty : 0;
