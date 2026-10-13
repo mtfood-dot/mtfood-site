@@ -260,7 +260,8 @@
   .resto-card .meta{min-width:0;flex:1;}
   .resto-card .rn{font-size:16px;font-weight:800;color:var(--blue-900);line-height:1.25;overflow-wrap:anywhere;}
   .resto-card .rc{font-size:12.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .resto-card .rt{font-size:12px;color:var(--blue-900);opacity:.8;font-weight:600;margin-top:2px;}
+  .resto-card .rt{font-size:13px;color:var(--blue-900);font-weight:700;margin-top:3px;}
+  .resto-card .rt .dot{opacity:.5;}
   .resto-card .rs{font-size:12px;color:var(--gold-600,#b8860b);font-weight:700;margin-top:3px;}
   .resto-card .rh{font-size:12.5px;color:var(--blue-700);margin-top:4px;line-height:1.35;}
   .resto-card .chev{flex:0 0 auto;color:var(--muted);font-size:22px;line-height:1;}
@@ -835,7 +836,7 @@ const I18N = {
     noDishFound: "Aucun plat ne correspond à ta recherche.",
     dishCount: "{n} plat(s)",
     prepOnly: "Préparation ≈ {m} min",
-    etaRange: "Livraison ≈ {a}–{b} min",
+    etaRange: "{a}–{b} min",
     backLabel: "Retour",
     cartEmpty: "Votre panier est vide.",
     catalogUpdating: "Notre catalogue est en cours de mise à jour.\nAppelez-nous pour commander directement.",
@@ -978,7 +979,7 @@ const I18N = {
     noDishFound: "لا يوجد طبق مطابق لبحثك.",
     dishCount: "{n} طبق",
     prepOnly: "التحضير ≈ {m} د",
-    etaRange: "التوصيل ≈ {a}–{b} د",
+    etaRange: "{a}–{b} د",
     backLabel: "رجوع",
     cartEmpty: "سلتك فارغة.",
     catalogUpdating: "قائمتنا قيد التحديث حاليًا.\nاتصلوا بنا للطلب مباشرة.",
@@ -1572,6 +1573,13 @@ function loadRestoInfo() {
     renderRestoBar();
   }).catch(() => {});
 }
+function etaCardHtml(name) {
+  const tx = etaText(name);
+  if (!tx) return "";
+  const q = DELIVERY.quote;
+  const fee = (q && q.covered && isFinite(q.fee)) ? ' <span class="dot">•</span> <bdi dir="ltr">' + escapeHtml(String(q.fee)) + ' DA</bdi>' : "";
+  return '<div class="rt"><span aria-hidden="true">⏱</span> ' + escapeHtml(tx) + fee + '</div>';
+}
 function etaText(name) {
   const p = RESTO_PREP[norm(name)];
   if (!p) return "";
@@ -1617,7 +1625,7 @@ function renderRestoBar() {
       '<span class="logo-circle">' + logoHtml(r.name) + '</span>' +
       '<span class="meta"><div class="rn">' + escapeHtml(r.name) + '</div>' +
       '<div class="rs">' + escapeHtml(dishCountText(r.items.length)) + '</div>' +
-      (etaText(r.name) ? '<div class="rt">' + escapeHtml(etaText(r.name)) + '</div>' : '') + hint + '</span>' +
+      etaCardHtml(r.name) + hint + '</span>' +
       '<span class="chev" aria-hidden="true">›</span></button>';
   }).join("");
   bindLogoFallback(box);
