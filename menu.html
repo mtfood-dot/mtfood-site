@@ -835,6 +835,7 @@ const I18N = {
     noRestoFound: "Aucun restaurant ne correspond à ta recherche.",
     noDishFound: "Aucun plat ne correspond à ta recherche.",
     dishCount: "{n} plat(s)",
+    reorderMissing: "{n} plat(s) de cette commande ne sont plus disponibles et n'ont pas été ajoutés.",
     menuSoon: "Menu bientôt disponible",
     menuSoonLong: "Le menu de ce restaurant sera bientôt disponible.",
     prepOnly: "Préparation ≈ {m} min",
@@ -980,6 +981,7 @@ const I18N = {
     noRestoFound: "لا يوجد مطعم مطابق لبحثك.",
     noDishFound: "لا يوجد طبق مطابق لبحثك.",
     dishCount: "{n} طبق",
+    reorderMissing: "{n} من أطباق هذا الطلب لم تعد متوفرة ولم تتم إضافتها.",
     menuSoon: "القائمة قريبًا",
     menuSoonLong: "ستتوفر قائمة هذا المطعم قريبًا.",
     prepOnly: "التحضير ≈ {m} د",
@@ -1375,13 +1377,19 @@ function applyReorderIfAny() {
   let panier;
   try { panier = JSON.parse(localStorage.getItem("mtd_reorder_cart") || "null"); } catch(e) { panier = null; }
   if (!panier || !panier.length) return;
-  localStorage.removeItem("mtd_reorder_cart");
+  try { localStorage.removeItem("mtd_reorder_cart"); } catch(e) {}
+  let missing = 0, partner = null;
   panier.forEach(line => {
-    const item = MENU.find(m => m.id === line.id || (m.nom || "").trim().toLowerCase() === (line.nom || "").trim().toLowerCase());
-    if (item) CART[item.id] = { item, qty: (CART[item.id] ? CART[item.id].qty : 0) + (line.qty || 1) };
+    const item = MENU.find(m => (line.id != null && m.id === line.id) || norm(m.nom) === norm(line.nom));
+    if (!item) { missing++; return; }
+    const pk = String(item.partenaire || "").trim().toLowerCase();
+    if (partner === null) partner = pk;
+    if (pk !== partner) { missing++; return; }
+    CART[item.id] = { item, qty: (CART[item.id] ? CART[item.id].qty : 0) + (line.qty || 1) };
   });
   updateCartBar();
   if (Object.keys(CART).length) { renderCartLines(); openOverlay("cartOverlay"); }
+  if (missing) showCartNotice(t("reorderMissing").replace("{n}", missing));
 }
 
 /* ============================================================
