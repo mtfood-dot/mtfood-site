@@ -260,6 +260,7 @@
   .resto-card .meta{min-width:0;flex:1;}
   .resto-card .rn{font-size:16px;font-weight:800;color:var(--blue-900);line-height:1.25;overflow-wrap:anywhere;}
   .resto-card .rc{font-size:12.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .resto-card .rt{font-size:12px;color:var(--blue-900);opacity:.8;font-weight:600;margin-top:2px;}
   .resto-card .rs{font-size:12px;color:var(--gold-600,#b8860b);font-weight:700;margin-top:3px;}
   .resto-card .rh{font-size:12.5px;color:var(--blue-700);margin-top:4px;line-height:1.35;}
   .resto-card .chev{flex:0 0 auto;color:var(--muted);font-size:22px;line-height:1;}
@@ -708,6 +709,9 @@ const CONFIG = {
   // (format international sans + ni espaces : 213 + numéro sans le 0)
   WHATSAPP_NUMBER: "213560788497",
 
+  // Estimation du délai affiché au client : préparation (par restaurant) + trajet + marge
+  ETA_MIN_PER_KM: 3, ETA_BUFFER_MIN: 5, ETA_RANGE_MIN: 10,
+
   // Zones de livraison : le centre de référence, les distances (3 / 5 / 7 km) et les tarifs
   // (150 / 250 / 350 DA) sont gérés côté serveur (Apps Script + onglet Zones) : rien à modifier ici.
 };
@@ -830,6 +834,8 @@ const I18N = {
     noRestoFound: "Aucun restaurant ne correspond à ta recherche.",
     noDishFound: "Aucun plat ne correspond à ta recherche.",
     dishCount: "{n} plat(s)",
+    prepOnly: "Préparation ≈ {m} min",
+    etaRange: "Livraison ≈ {a}–{b} min",
     backLabel: "Retour",
     cartEmpty: "Votre panier est vide.",
     catalogUpdating: "Notre catalogue est en cours de mise à jour.\nAppelez-nous pour commander directement.",
@@ -971,6 +977,8 @@ const I18N = {
     noRestoFound: "لا يوجد مطعم مطابق لبحثك.",
     noDishFound: "لا يوجد طبق مطابق لبحثك.",
     dishCount: "{n} طبق",
+    prepOnly: "التحضير ≈ {m} د",
+    etaRange: "التوصيل ≈ {a}–{b} د",
     backLabel: "رجوع",
     cartEmpty: "سلتك فارغة.",
     catalogUpdating: "قائمتنا قيد التحديث حاليًا.\nاتصلوا بنا للطلب مباشرة.",
@@ -1323,6 +1331,7 @@ function loadMenu() {
       renderGrid();
       applyReorderIfAny();
       applyFeaturedItem();
+      loadRestoInfo();
     })
     .catch(err => {
       showEmpty("loadError");
@@ -1552,6 +1561,28 @@ function homeResults() {
   return out;
 }
 
+/* Temps de préparation par restaurant (feuille Partenaires) : aucune valeur inventée, rien n'est affiché sans donnée */
+let RESTO_PREP = {};
+function loadRestoInfo() {
+  jsonpRequest({ action: "restoInfo" }, 15000).then(res => {
+    if (!res || !res.success || !res.restos) return;
+    const m = {};
+    Object.keys(res.restos).forEach(k => { const v = res.restos[k]; if (v && v.prepMin > 0) m[norm(k)] = Number(v.prepMin); });
+    RESTO_PREP = m;
+    renderRestoBar();
+  }).catch(() => {});
+}
+function etaText(name) {
+  const p = RESTO_PREP[norm(name)];
+  if (!p) return "";
+  const q = DELIVERY.quote;
+  if (q && q.covered && isFinite(q.distanceKm)) {
+    const a = Math.round(p + q.distanceKm * CONFIG.ETA_MIN_PER_KM + CONFIG.ETA_BUFFER_MIN);
+    return t("etaRange").replace("{a}", a).replace("{b}", a + CONFIG.ETA_RANGE_MIN);
+  }
+  return t("prepOnly").replace("{m}", p);
+}
+
 function setViewChrome() {
   const inResto = ACTIVE_RESTO !== null;
   document.body.classList.toggle("in-resto", inResto);
@@ -1566,7 +1597,7 @@ function setViewChrome() {
       $("restoHeadLogo").innerHTML = logoHtml(r.name);
       bindLogoFallback($("restoHead"));
       $("restoHeadName").textContent = r.name;
-      $("restoHeadInfo").textContent = dishCountText(r.items.length);
+      $("restoHeadInfo").textContent = dishCountText(r.items.length) + (etaText(r.name) ? " · " + etaText(r.name) : "");
     }
   }
 }
@@ -1585,7 +1616,8 @@ function renderRestoBar() {
     return '<button type="button" class="resto-card" data-key="' + escapeAttr(r.key) + '">' +
       '<span class="logo-circle">' + logoHtml(r.name) + '</span>' +
       '<span class="meta"><div class="rn">' + escapeHtml(r.name) + '</div>' +
-      '<div class="rs">' + escapeHtml(dishCountText(r.items.length)) + '</div>' + hint + '</span>' +
+      '<div class="rs">' + escapeHtml(dishCountText(r.items.length)) + '</div>' +
+      (etaText(r.name) ? '<div class="rt">' + escapeHtml(etaText(r.name)) + '</div>' : '') + hint + '</span>' +
       '<span class="chev" aria-hidden="true">›</span></button>';
   }).join("");
   bindLogoFallback(box);
@@ -1899,6 +1931,7 @@ function invalidateReference() {
 
 function renderAll() {
   syncSelectedZone();
+  if (typeof renderRestoBar === "function" && MENU && MENU.length) renderRestoBar();
   renderAddrBar();
   renderAddrQuote();
   renderZoneSummary();
