@@ -835,6 +835,8 @@ const I18N = {
     noRestoFound: "Aucun restaurant ne correspond à ta recherche.",
     noDishFound: "Aucun plat ne correspond à ta recherche.",
     dishCount: "{n} plat(s)",
+    menuSoon: "Menu bientôt disponible",
+    menuSoonLong: "Le menu de ce restaurant sera bientôt disponible.",
     prepOnly: "Préparation ≈ {m} min",
     etaRange: "{a}–{b} min",
     backLabel: "Retour",
@@ -978,6 +980,8 @@ const I18N = {
     noRestoFound: "لا يوجد مطعم مطابق لبحثك.",
     noDishFound: "لا يوجد طبق مطابق لبحثك.",
     dishCount: "{n} طبق",
+    menuSoon: "القائمة قريبًا",
+    menuSoonLong: "ستتوفر قائمة هذا المطعم قريبًا.",
     prepOnly: "التحضير ≈ {m} د",
     etaRange: "{a}–{b} د",
     backLabel: "رجوع",
@@ -1524,6 +1528,10 @@ function restoList() {
     r.items.forEach(i => { const c = itemCat(i), id = catId(c); if (!seen[id]) { seen[id] = 1; r.cats.push(c); } });
     r.cats.sort((x, y) => catRank(x) - catRank(y));
   });
+  Object.keys(PARTNERS).forEach(n => {
+    const id = n.toLowerCase();
+    if (!map[id]) out.push({ key: n, name: n, slug: restoSlug(n), items: [], cats: [], soon: true });
+  });
   return out.sort((x, y) => x.name.localeCompare(y.name));
 }
 function currentResto() {
@@ -1552,6 +1560,10 @@ function homeResults() {
   const q = norm(SEARCH_Q), all = ACTIVE_CATEGORY === ALL_CAT, cid = catId(ACTIVE_CATEGORY);
   const out = [];
   restoList().forEach(r => {
+    if (r.soon) {
+      if (all && (!q || norm(r.name).includes(q))) out.push({ r: r, hits: [] });
+      return;
+    }
     const pool = all ? r.items : r.items.filter(i => catId(itemCat(i)) === cid);
     if (!pool.length) return;
     if (!q) { out.push({ r: r, hits: [] }); return; }
@@ -1564,10 +1576,13 @@ function homeResults() {
 
 /* Temps de préparation par restaurant (feuille Partenaires) : aucune valeur inventée, rien n'est affiché sans donnée */
 let RESTO_PREP = {};
+let PARTNERS = {};
 function loadRestoInfo() {
   jsonpRequest({ action: "restoInfo" }, 15000).then(res => {
     if (!res || !res.success || !res.restos) return;
-    const m = {};
+    const m = {}, p = {};
+    Object.keys(res.restos).forEach(k => { if (String(k).trim()) p[String(k).trim()] = 1; });
+    PARTNERS = p;
     Object.keys(res.restos).forEach(k => { const v = res.restos[k]; if (v && v.prepMin > 0) m[norm(k)] = Number(v.prepMin); });
     RESTO_PREP = m;
     renderRestoBar();
@@ -1605,7 +1620,7 @@ function setViewChrome() {
       $("restoHeadLogo").innerHTML = logoHtml(r.name);
       bindLogoFallback($("restoHead"));
       $("restoHeadName").textContent = r.name;
-      $("restoHeadInfo").textContent = dishCountText(r.items.length) + (etaText(r.name) ? " · " + etaText(r.name) : "");
+      $("restoHeadInfo").textContent = (r.soon ? t("menuSoon") : dishCountText(r.items.length)) + (etaText(r.name) ? " · " + etaText(r.name) : "");
     }
   }
 }
@@ -1624,7 +1639,7 @@ function renderRestoBar() {
     return '<button type="button" class="resto-card" data-key="' + escapeAttr(r.key) + '">' +
       '<span class="logo-circle">' + logoHtml(r.name) + '</span>' +
       '<span class="meta"><div class="rn">' + escapeHtml(r.name) + '</div>' +
-      '<div class="rs">' + escapeHtml(dishCountText(r.items.length)) + '</div>' +
+      '<div class="rs">' + escapeHtml(r.soon ? t('menuSoon') : dishCountText(r.items.length)) + '</div>' +
       etaCardHtml(r.name) + hint + '</span>' +
       '<span class="chev" aria-hidden="true">›</span></button>';
   }).join("");
@@ -1689,7 +1704,7 @@ function renderGrid() {
   }).join("");
   const nr = $("noResult");
   nr.style.display = list.length ? "none" : "block";
-  nr.textContent = list.length ? "" : t("noDishFound");
+  { const cr = currentResto(); nr.textContent = list.length ? "" : t(cr && cr.soon ? "menuSoonLong" : "noDishFound"); }
   bindCardEvents();
 }
 
