@@ -244,6 +244,39 @@
   .change-addr{margin-top:8px;background:none;border:none;color:var(--blue-700);font-weight:800;font-size:13.5px;cursor:pointer;padding:4px 0;font-family:inherit;text-decoration:underline;}
   .addr-fixed{padding:11px 13px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-weight:700;color:var(--blue-900);}
 
+
+  /* ---------- NAVIGATION RESTAURANTS (accueil + page restaurant) ---------- */
+  .search-box{max-width:960px;margin:12px auto 0;padding:0 16px;}
+  .search-box input{width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:999px;padding:12px 16px 12px 44px;font-family:inherit;font-size:15px;color:var(--blue-900);
+    background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23697a96' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E") no-repeat 15px center;}
+  html[dir="rtl"] .search-box input{padding:12px 44px 12px 16px;background-position:right 15px center;}
+  .search-box input:focus{outline:none;border-color:var(--blue-600);}
+  .resto-list{display:grid;grid-template-columns:1fr;gap:12px;padding-top:8px;}
+  @media(min-width:640px){.resto-list{grid-template-columns:1fr 1fr;}}
+  .resto-card{display:flex;align-items:center;gap:12px;text-align:start;width:100%;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);padding:12px;cursor:pointer;font-family:inherit;color:inherit;-webkit-tap-highlight-color:transparent;}
+  .resto-card:active{transform:scale(.99);}
+  .logo-circle{flex:0 0 auto;width:64px;height:64px;border-radius:50%;background:#fff;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:20px;font-weight:800;color:var(--blue-900);}
+  .logo-circle img{width:100%;height:100%;object-fit:cover;display:block;}
+  .resto-card .meta{min-width:0;flex:1;}
+  .resto-card .rn{font-size:16px;font-weight:800;color:var(--blue-900);line-height:1.25;}
+  .resto-card .rc{font-size:12.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .resto-card .rs{font-size:12px;color:var(--gold-600,#b8860b);font-weight:700;margin-top:3px;}
+  .resto-card .rh{font-size:12.5px;color:var(--blue-700);margin-top:4px;line-height:1.35;}
+  .resto-card .chev{flex:0 0 auto;color:var(--muted);font-size:22px;line-height:1;}
+  html[dir="rtl"] .resto-card .chev{transform:scaleX(-1);}
+  .resto-head{max-width:960px;margin:0 auto;padding:12px 16px 0;display:flex;align-items:center;gap:12px;}
+  .resto-head .back{flex:0 0 auto;width:40px;height:40px;border-radius:50%;border:1.5px solid var(--border);background:var(--card);font-size:20px;line-height:1;color:var(--blue-900);cursor:pointer;font-family:inherit;}
+  html[dir="rtl"] .resto-head .back{transform:scaleX(-1);}
+  .resto-head .logo-circle{width:56px;height:56px;font-size:18px;}
+  .resto-head .rn{font-size:19px;font-weight:800;color:var(--blue-900);line-height:1.2;}
+  .resto-head .rc{font-size:12.5px;color:var(--muted);margin-top:2px;}
+  .no-result{max-width:960px;margin:24px auto;padding:0 16px;text-align:center;color:var(--muted);font-size:14.5px;display:none;}
+  body:not(.in-resto) .resto-head{display:none;}
+  body.in-resto header.top, body.in-resto .boost-box, body.in-resto .promo-section, body.in-resto .join-section{display:none !important;}
+  body:not(.in-resto) #grid{display:none;}
+  body.in-resto #restoList{display:none;}
+  body.in-resto #tabs{position:sticky;top:0;z-index:20;box-shadow:0 2px 6px rgba(10,38,71,.06);}
+
   /* ---------- PRODUCT GRID ---------- */
   main{padding:6px 16px 10px;max-width:960px;margin:0 auto;}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
@@ -498,20 +531,29 @@ if ("serviceWorker" in navigator) {
   <button class="lang-toggle" id="langToggle" type="button">AR</button>
 </header>
 
-<div class="boost-box hidden" id="boostBox">
-  <div class="boost-box-title" id="boostBoxTitle">À la une</div>
-  <div class="boost-strip" id="boostStrip"></div>
+<div id="pendingBar" style="display:none;background:#fff4e0;border:1px solid #f0b34a;color:#7a4a00;margin:10px 14px;padding:10px 12px;border-radius:10px;font-size:14px;line-height:1.4;"></div>
+
+<div class="resto-head" id="restoHead">
+  <button class="back" id="restoBack" type="button" aria-label="Retour">←</button>
+  <span class="logo-circle" id="restoHeadLogo"></span>
+  <div style="min-width:0;"><div class="rn" id="restoHeadName"></div><div class="rc" id="restoHeadInfo"></div></div>
 </div>
 
-<div class="resto-bar" id="restoBar" style="display:none;"></div>
-<div id="pendingBar" style="display:none;background:#fff4e0;border:1px solid #f0b34a;color:#7a4a00;margin:10px 14px;padding:10px 12px;border-radius:10px;font-size:14px;line-height:1.4;"></div>
+<div class="search-box"><input type="search" id="searchInput" autocomplete="off" enterkeyhint="search" placeholder="Restaurant, plat, pizza, tacos…"></div>
 
 <nav class="tabs" id="tabs"></nav>
 
 <main>
+  <div id="restoList" class="resto-list"></div>
   <div id="grid" class="grid"></div>
+  <div id="noResult" class="no-result"></div>
   <div id="emptyMsg" class="empty-msg" style="display:none;"></div>
 </main>
+
+<div class="boost-box hidden" id="boostBox">
+  <div class="boost-box-title" id="boostBoxTitle">À la une</div>
+  <div class="boost-strip" id="boostStrip"></div>
+</div>
 
 
 <div class="promo-section">
@@ -783,6 +825,12 @@ const I18N = {
     add: "Ajouter",
     allCat: "Tous",
     allRestos: "Tous",
+    searchPlaceholder: "Restaurant, plat, pizza, tacos…",
+    dishSearchPlaceholder: "Chercher un plat…",
+    noRestoFound: "Aucun restaurant ne correspond à ta recherche.",
+    noDishFound: "Aucun plat ne correspond à ta recherche.",
+    dishCount: "{n} plat(s)",
+    backLabel: "Retour",
     cartEmpty: "Votre panier est vide.",
     catalogUpdating: "Notre catalogue est en cours de mise à jour.\nAppelez-nous pour commander directement.",
     loadError: "Impossible de charger le menu pour le moment.\nVérifiez votre connexion ou appelez-nous.",
@@ -918,6 +966,12 @@ const I18N = {
     add: "أضف",
     allCat: "الكل",
     allRestos: "الكل",
+    searchPlaceholder: "مطعم، طبق، بيتزا، تاكوس…",
+    dishSearchPlaceholder: "ابحث عن طبق…",
+    noRestoFound: "لا يوجد مطعم مطابق لبحثك.",
+    noDishFound: "لا يوجد طبق مطابق لبحثك.",
+    dishCount: "{n} طبق",
+    backLabel: "رجوع",
     cartEmpty: "سلتك فارغة.",
     catalogUpdating: "قائمتنا قيد التحديث حاليًا.\nاتصلوا بنا للطلب مباشرة.",
     loadError: "تعذر تحميل القائمة حاليًا.\nتحقق من اتصالك أو اتصل بنا.",
@@ -954,7 +1008,9 @@ const I18N = {
 let MENU = [];
 let CART = {};           // { itemId: { item, qty } }
 let ACTIVE_CATEGORY = ALL_CAT;
-let ACTIVE_RESTO = ""; // vide = tous les restaurants
+let ACTIVE_RESTO = null; // null = accueil ; sinon clé du restaurant ouvert (texte de la colonne Partenaire)
+let SEARCH_Q = "";
+let NAV_PUSHED = false;
 let SELECTED_ZONE = null;
 let EMPTY_MSG_KEY = null;
 let LANG = (function(){
@@ -1261,6 +1317,7 @@ function loadMenu() {
         showEmpty("catalogUpdating");
         return;
       }
+      applyRouteFromUrl(history.state);
       renderRestoBar();
       renderTabs();
       renderGrid();
@@ -1282,11 +1339,12 @@ function applyFeaturedItem() {
   let id = null;
   try { id = new URLSearchParams(location.search).get("item"); } catch (e) {}
   if (!id) return;
-  try { history.replaceState(null, "", location.pathname); } catch (e) {}
   const item = MENU.find(i => String(i.id) === String(id));
-  if (!item) return;
+  if (!item) { try { history.replaceState(null, "", location.pathname); } catch (e) {} return; }
   ACTIVE_CATEGORY = ALL_CAT;
-  ACTIVE_RESTO = "";
+  SEARCH_Q = "";
+  ACTIVE_RESTO = restoKeyOf(item);
+  syncUrl(false);
   renderRestoBar();
   renderTabs();
   renderGrid();
@@ -1426,67 +1484,149 @@ function catIcon(cat) {
   return '<svg viewBox="0 0 48 48" focusable="false">' + CAT_SVG[key] + '</svg>';
 }
 
-/* Restaurants : liste déduite de la colonne « Partenaire » du menu ; « Tous » inclut aussi les plats sans restaurant */
-function restoNames() {
-  const seen = {}, out = [];
-  MENU.forEach(i => { const n = String(i.partenaire || "").trim(); const k = n.toLowerCase(); if (n && !seen[k]) { seen[k] = 1; out.push(n); } });
-  return out.sort((a, b) => a.localeCompare(b));
-}
-function menuForResto() {
-  if (!ACTIVE_RESTO) return MENU;
-  const k = ACTIVE_RESTO.toLowerCase();
-  return MENU.filter(i => String(i.partenaire || "").trim().toLowerCase() === k);
-}
-/* Logo : branding/restos/<nom-en-minuscules-sans-accents-avec-tirets>.png ; sinon initiales */
+/* ============================================================
+   NAVIGATION : accueil (restaurants) → page restaurant (plats)
+   Données réelles uniquement : le restaurant = colonne « Partenaire » du menu,
+   ses cuisines = catégories de ses plats.
+   ============================================================ */
+function norm(v) { return String(v == null ? "" : v).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim(); }
+function catId(c) { return norm(c || "Autre"); }
+function itemCat(i) { return i.categorie || "Autre"; }
+function restoKeyOf(i) { return String(i.partenaire || "").trim(); }
 function restoSlug(n) {
-  return String(n || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return String(n || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }
 function restoInitials(n) {
   const w = String(n || "").trim().split(/\s+/).filter(Boolean);
   return ((w[0] || "?")[0] + (w.length > 1 ? w[1][0] : "")).toUpperCase();
 }
+/* Les plats sans restaurant renseigné sont regroupés sous le nom de la marque. */
+function restoDisplay(key) { return key || "MT Food"; }
+function restoList() {
+  const map = {}, out = [];
+  MENU.forEach(i => {
+    const k = restoKeyOf(i), id = k.toLowerCase();
+    if (!map[id]) { map[id] = { key: k, name: restoDisplay(k), slug: restoSlug(restoDisplay(k)), items: [], cats: [] }; out.push(map[id]); }
+    map[id].items.push(i);
+  });
+  out.forEach(r => {
+    const seen = {};
+    r.items.forEach(i => { const c = itemCat(i), id = catId(c); if (!seen[id]) { seen[id] = 1; r.cats.push(c); } });
+    r.cats.sort((x, y) => catRank(x) - catRank(y));
+  });
+  return out.sort((x, y) => x.name.localeCompare(y.name));
+}
+function currentResto() {
+  if (ACTIVE_RESTO === null) return null;
+  const k = ACTIVE_RESTO.toLowerCase();
+  return restoList().find(r => r.key.toLowerCase() === k) || null;
+}
+function menuForResto() {
+  const r = currentResto();
+  return r ? r.items : MENU;
+}
+function logoHtml(name) {
+  return '<img src="branding/restos/' + escapeAttr(restoSlug(name)) + '.png" alt="" loading="lazy" data-ini="' + escapeAttr(restoInitials(name)) + '">';
+}
+function bindLogoFallback(root) {
+  root.querySelectorAll(".logo-circle img").forEach(img => img.addEventListener("error", () => { img.parentNode.textContent = img.dataset.ini; }));
+}
+function cuisinesText(r) { return r.cats.map(catLabel).join(" · "); }
+
+/* Restaurants affichés sur l'accueil : catégorie + recherche (nom du restaurant, plat, catégorie) */
+function homeResults() {
+  const q = norm(SEARCH_Q), all = ACTIVE_CATEGORY === ALL_CAT, cid = catId(ACTIVE_CATEGORY);
+  const out = [];
+  restoList().forEach(r => {
+    const pool = all ? r.items : r.items.filter(i => catId(itemCat(i)) === cid);
+    if (!pool.length) return;
+    if (!q) { out.push({ r: r, hits: [] }); return; }
+    const nameHit = norm(r.name).includes(q);
+    const hits = pool.filter(i => norm(i.nom).includes(q) || norm(i.nom_ar).includes(q) || norm(itemCat(i)).includes(q) || norm(i.categorie_ar).includes(q));
+    if (nameHit || hits.length) out.push({ r: r, hits: nameHit ? [] : hits.slice(0, 2), dishHit: hits.length > 0 });
+  });
+  return out;
+}
+
+function setViewChrome() {
+  const inResto = ACTIVE_RESTO !== null;
+  document.body.classList.toggle("in-resto", inResto);
+  const input = $("searchInput");
+  input.placeholder = t(inResto ? "dishSearchPlaceholder" : "searchPlaceholder");
+  if (input.value !== SEARCH_Q) input.value = SEARCH_Q;
+  $("restoBack").setAttribute("aria-label", t("backLabel"));
+  if (inResto) {
+    const r = currentResto();
+    if (r) {
+      $("restoHeadLogo").className = "logo-circle";
+      $("restoHeadLogo").innerHTML = logoHtml(r.name);
+      bindLogoFallback($("restoHead"));
+      $("restoHeadName").textContent = r.name;
+      $("restoHeadInfo").textContent = cuisinesText(r);
+    }
+  }
+}
+
+/* Accueil : liste des restaurants (appelée à chaque rendu ; sur la page restaurant elle ne fait que mettre l'en-tête à jour) */
 function renderRestoBar() {
-  const bar = $("restoBar");
-  const names = restoNames();
-  if (!names.length) { bar.style.display = "none"; bar.innerHTML = ""; return; }
-  if (ACTIVE_RESTO && !names.some(n => n.toLowerCase() === ACTIVE_RESTO.toLowerCase())) ACTIVE_RESTO = "";
-  bar.style.display = "flex";
-  bar.innerHTML = [""].concat(names).map(n => {
-    const inner = n
-      ? `<img src="branding/restos/${escapeAttr(restoSlug(n))}.png" alt="" loading="lazy" data-ini="${escapeAttr(restoInitials(n))}">`
-      : "🍽️";
-    return `<button type="button" class="resto-chip ${n === ACTIVE_RESTO ? "active" : ""}" data-resto="${escapeAttr(n)}" aria-label="${escapeAttr(n || t("allRestos"))}">` +
-      `<span class="logo">${inner}</span><span class="nm">${escapeHtml(n || t("allRestos"))}</span></button>`;
+  if (ACTIVE_RESTO !== null && !currentResto()) ACTIVE_RESTO = null;
+  setViewChrome();
+  const box = $("restoList");
+  if (ACTIVE_RESTO !== null) { box.innerHTML = ""; return; }
+  const res = homeResults();
+  box.innerHTML = res.map(x => {
+    const r = x.r;
+    const hint = x.hits && x.hits.length
+      ? '<div class="rh">' + x.hits.map(i => escapeHtml(itemName(i)) + " · <bdi dir=\"ltr\">" + escapeHtml(String(i.prix)) + " DA</bdi>").join("<br>") + "</div>" : "";
+    return '<button type="button" class="resto-card" data-key="' + escapeAttr(r.key) + '">' +
+      '<span class="logo-circle">' + logoHtml(r.name) + '</span>' +
+      '<span class="meta"><div class="rn">' + escapeHtml(r.name) + '</div>' +
+      '<div class="rc">' + escapeHtml(cuisinesText(r)) + '</div>' +
+      '<div class="rs">' + escapeHtml(t("dishCount").replace("{n}", r.items.length)) + '</div>' + hint + '</span>' +
+      '<span class="chev" aria-hidden="true">›</span></button>';
   }).join("");
-  bar.querySelectorAll(".logo img").forEach(img => img.addEventListener("error", () => { img.parentNode.textContent = img.dataset.ini; }));
-  bar.querySelectorAll(".resto-chip").forEach(btn => btn.addEventListener("click", () => {
-    ACTIVE_RESTO = btn.dataset.resto; ACTIVE_CATEGORY = ALL_CAT; renderRestoBar(); renderTabs(); renderGrid();
+  bindLogoFallback(box);
+  box.querySelectorAll(".resto-card").forEach(btn => btn.addEventListener("click", () => {
+    const x = res.find(z => z.r.key === btn.dataset.key);
+    openResto(btn.dataset.key, !!(x && x.dishHit));
   }));
+  const nr = $("noResult");
+  nr.style.display = res.length ? "none" : "block";
+  nr.textContent = res.length ? "" : t("noRestoFound");
 }
 
 function renderTabs() {
-  const cats = [ALL_CAT, ...Array.from(new Set(menuForResto().map(i => i.categorie || "Autre"))).sort((a, b) => catRank(a) - catRank(b))];
-  $("tabs").innerHTML = cats.map(c =>
-    `<div class="tab ${c === ACTIVE_CATEGORY ? "active" : ""}" data-cat="${escapeAttr(c)}" role="button" tabindex="0">` +
+  const base = menuForResto();
+  const seen = {}, cats = [];
+  base.forEach(i => { const c = itemCat(i), id = catId(c); if (!seen[id]) { seen[id] = 1; cats.push(c); } });
+  cats.sort((a, b) => catRank(a) - catRank(b));
+  const list = [ALL_CAT, ...cats];
+  const activeId = ACTIVE_CATEGORY === ALL_CAT ? ALL_CAT : catId(ACTIVE_CATEGORY);
+  $("tabs").innerHTML = list.map(c =>
+    `<div class="tab ${(c === ALL_CAT ? ALL_CAT : catId(c)) === activeId ? "active" : ""}" data-cat="${escapeAttr(c)}" role="button" tabindex="0">` +
     `<span class="ico" aria-hidden="true">${catIcon(c)}</span>` +
     `<span class="lbl">${escapeHtml(catLabel(c))}</span></div>`
   ).join("");
-
   $("tabs").querySelectorAll(".tab").forEach(tab => {
-    const pick = () => { ACTIVE_CATEGORY = tab.dataset.cat; renderTabs(); renderGrid(); };
+    const pick = () => {
+      ACTIVE_CATEGORY = tab.dataset.cat;
+      renderTabs(); renderRestoBar(); renderGrid();
+      syncUrl();
+    };
     tab.addEventListener("click", pick);
     tab.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
   });
 }
 
 /* ============================================================
-   GRILLE DE PRODUITS
+   PLATS D'UN RESTAURANT
    ============================================================ */
 function renderGrid() {
-  const base = menuForResto();
-  const list = ACTIVE_CATEGORY === ALL_CAT
-    ? base
-    : base.filter(i => (i.categorie || "Autre") === ACTIVE_CATEGORY);
+  if (ACTIVE_RESTO === null) { $("grid").innerHTML = ""; return; }
+  const q = norm(SEARCH_Q), cid = catId(ACTIVE_CATEGORY);
+  const list = menuForResto().filter(i =>
+    (ACTIVE_CATEGORY === ALL_CAT || catId(itemCat(i)) === cid) &&
+    (!q || norm(i.nom).includes(q) || norm(i.nom_ar).includes(q) || norm(i.description).includes(q)));
 
   $("grid").innerHTML = list.map(item => {
     const qty = CART[item.id] ? CART[item.id].qty : 0;
@@ -1504,9 +1644,69 @@ function renderGrid() {
         </div>
       </div>`;
   }).join("");
-
+  const nr = $("noResult");
+  nr.style.display = list.length ? "none" : "block";
+  nr.textContent = list.length ? "" : t("noDishFound");
   bindCardEvents();
 }
+
+/* ---------- Routage : ?resto=<slug>&cat=<catégorie> ---------- */
+function syncUrl(push) {
+  let url = location.pathname;
+  const r = currentResto();
+  if (r) {
+    url += "?resto=" + encodeURIComponent(r.slug);
+    if (ACTIVE_CATEGORY !== ALL_CAT) url += "&cat=" + encodeURIComponent(ACTIVE_CATEGORY);
+  }
+  try {
+    if (push) { history.pushState({ nav: 1 }, "", url); NAV_PUSHED = true; }
+    else history.replaceState(history.state, "", url);
+  } catch (e) {}
+}
+/* Catégorie de départ dans un restaurant : celle de l'accueil si le restaurant la propose, sinon « Tous » */
+function startCategoryFor(r) {
+  if (ACTIVE_CATEGORY === ALL_CAT) return ALL_CAT;
+  const cid = catId(ACTIVE_CATEGORY);
+  const found = r.cats.find(c => catId(c) === cid);
+  return found || ALL_CAT;
+}
+function openResto(key, keepQuery) {
+  const r = restoList().find(z => z.key === key);
+  if (!r) return;
+  try { history.replaceState({ nav: 1, home: 1, cat: ACTIVE_CATEGORY, q: SEARCH_Q }, "", location.href); } catch (e) {}
+  ACTIVE_CATEGORY = startCategoryFor(r);
+  ACTIVE_RESTO = r.key;
+  if (!keepQuery) SEARCH_Q = "";
+  syncUrl(true);
+  renderRestoBar(); renderTabs(); renderGrid();
+  window.scrollTo(0, 0);
+}
+function goHome() {
+  ACTIVE_RESTO = null; SEARCH_Q = ""; ACTIVE_CATEGORY = ALL_CAT;
+  syncUrl(false);
+  renderRestoBar(); renderTabs(); renderGrid();
+  window.scrollTo(0, 0);
+}
+function applyRouteFromUrl(state) {
+  let sp;
+  try { sp = new URLSearchParams(location.search); } catch (e) { sp = new URLSearchParams(""); }
+  const slug = sp.get("resto"), cat = sp.get("cat");
+  const r = slug ? restoList().find(z => z.slug === slug) : null;
+  if (r) {
+    ACTIVE_RESTO = r.key; SEARCH_Q = "";
+    const found = cat ? r.cats.find(c => catId(c) === catId(cat)) : null;
+    ACTIVE_CATEGORY = found || ALL_CAT;
+  } else {
+    ACTIVE_RESTO = null;
+    if (state && state.home) { ACTIVE_CATEGORY = state.cat || ALL_CAT; SEARCH_Q = state.q || ""; }
+    else { ACTIVE_CATEGORY = ALL_CAT; SEARCH_Q = ""; }
+  }
+}
+window.addEventListener("popstate", (e) => {
+  if (!MENU.length) return;
+  applyRouteFromUrl(e.state);
+  renderRestoBar(); renderTabs(); renderGrid();
+});
 
 function addBtnHtml(id) {
   return `<button class="add-btn" data-add="${id}">${t("add")}</button>`;
@@ -2109,6 +2309,17 @@ function bindGlobalEvents() {
   });
 
   $("confirmOrderBtn").addEventListener("click", submitOrder);
+
+  let _sT = 0;
+  $("searchInput").addEventListener("input", () => {
+    SEARCH_Q = $("searchInput").value;
+    clearTimeout(_sT);
+    _sT = setTimeout(() => { if (ACTIVE_RESTO === null) renderRestoBar(); else renderGrid(); }, 120);
+  });
+  $("restoBack").addEventListener("click", () => {
+    if (NAV_PUSHED && history.state && history.state.nav) { history.back(); }
+    else goHome();
+  });
 
   updateAccountLink();
 }
