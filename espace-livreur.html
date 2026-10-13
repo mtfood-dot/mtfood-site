@@ -132,6 +132,9 @@
   .order-card .meta b{color:var(--text);font-weight:700;}
   .order-card .articles{font-size:13px;color:var(--text);background:var(--bg);border-radius:var(--radius-sm);
     padding:8px 10px;margin:8px 0;line-height:1.5;}
+  .order-card .ready-badge{display:inline-block;font-size:12.5px;font-weight:800;border-radius:999px;padding:5px 11px;margin:2px 0 6px;}
+  .order-card .ready-badge.yes{background:#e5f6ea;color:var(--green,#1a7d3a);}
+  .order-card .ready-badge.no{background:#f1f3f7;color:#667085;}
   .order-card .zone-badge{display:inline-block;background:var(--blue-100);color:var(--blue-700);
     font-size:11px;font-weight:700;border-radius:999px;padding:3px 10px;margin-bottom:6px;}
   .order-card .actions{display:flex;gap:8px;margin-top:10px;}
@@ -361,6 +364,8 @@ const I18N = {
     confirmAccept: "Accepter cette commande ?",
     confirmDelivered: "Confirmer que cette commande a été livrée ?",
     zoneLabel: "Zone",
+    readyYes: "🍽️ Prête : à récupérer au restaurant",
+    readyNo: "⏳ En préparation au restaurant",
     totalLabel: "Total",
   },
   ar: {
@@ -417,6 +422,8 @@ const I18N = {
     confirmAccept: "هل تريد قبول هذا الطلب؟",
     confirmDelivered: "تأكيد أن هذا الطلب تم توصيله؟",
     zoneLabel: "المنطقة",
+    readyYes: "🍽️ جاهز: يمكنك استلامه من المطعم",
+    readyNo: "⏳ قيد التحضير في المطعم",
     totalLabel: "المجموع",
   }
 };
@@ -745,6 +752,7 @@ function orderCardHtml(o, kind) {
         <div class="client">${escapeHtml(o.client || "")}</div>
         <div class="total">${escapeHtml(String(o.total || 0))} DA</div>
       </div>
+      ${typeof o.prete === "boolean" ? `<div class="ready-badge ${o.prete ? "yes" : "no"}">${escapeHtml(t(o.prete ? "readyYes" : "readyNo"))}</div>` : ""}
       <div class="meta"><b>${escapeHtml(o.numero || "")}</b> · ${escapeHtml(o.horodatage || "")}</div>
       <div class="meta">📍 ${escapeHtml(o.adresse || "")}</div>
       <div class="articles">${escapeHtml(o.articles || "")}</div>

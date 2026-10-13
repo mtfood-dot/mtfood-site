@@ -203,6 +203,8 @@
   .live-actions{display:flex;gap:10px;margin-top:12px;}
   .live-actions button{flex:1;border:none;border-radius:var(--radius-sm);padding:12px;font-weight:800;font-size:14.5px;font-family:inherit;cursor:pointer;}
   .live-actions .acc{background:var(--green,#1a7d3a);color:#fff;}
+  .live-actions .rdy{background:var(--blue-900,#0f2f66);color:#fff;}
+  .live-card .st.ready{background:#eaf7ee;color:var(--green);}
   .live-actions .ref{background:#fdeceb;color:var(--danger,#c62828);}
   .live-actions .ref.confirm{background:var(--danger,#c62828);color:#fff;}
   .live-actions button:disabled{opacity:.55;}
@@ -442,6 +444,9 @@ const I18N = {
     liveNone: "Aucune commande en cours. Les nouvelles commandes s'affichent ici automatiquement.",
     liveStNew: "À accepter",
     liveStOk: "Acceptée · en attente du livreur",
+    liveStReady: "Prête · à récupérer",
+    liveReady: "Commande prête",
+    liveReadyDone: "Commande marquée prête : le livreur et le client la voient.",
     liveStRoad: "En livraison",
     liveAccept: "Accepter",
     liveRefuse: "Refuser",
@@ -548,6 +553,9 @@ const I18N = {
     liveNone: "لا توجد طلبات قيد التنفيذ. تظهر الطلبات الجديدة هنا تلقائيًا.",
     liveStNew: "بانتظار القبول",
     liveStOk: "مقبول · بانتظار الموصل",
+    liveStReady: "جاهز · بانتظار الاستلام",
+    liveReady: "الطلب جاهز",
+    liveReadyDone: "تم تحديد الطلب كجاهز: يراه الموصل والزبون.",
     liveStRoad: "قيد التوصيل",
     liveAccept: "قبول",
     liveRefuse: "رفض",
@@ -1085,6 +1093,7 @@ function renderLive(fresh) {
   $("listLive").innerHTML = LIVE_ORDERS.length
     ? LIVE_ORDERS.map(o => liveCardHtml(o, freshSet.has(String(o.numero)))).join("")
     : emptyStateHtml(t("liveNone"), "🛎️");
+  $("listLive").querySelectorAll("[data-rdy]").forEach(b => b.addEventListener("click", () => markReady(b.dataset.rdy, b)));
   $("listLive").querySelectorAll("[data-acc]").forEach(b => b.addEventListener("click", () => decideLive(b.dataset.acc, true, b)));
   $("listLive").querySelectorAll("[data-ref]").forEach(b => b.addEventListener("click", () => {
     // Refus en deux appuis (pas de fenêtre de confirmation du navigateur)
@@ -1098,7 +1107,7 @@ function renderLive(fresh) {
 }
 
 function liveCardHtml(o, isFresh) {
-  const st = o.statut === "À confirmer" ? ["new", t("liveStNew")] : o.statut === "En livraison" ? ["road", t("liveStRoad")] : ["ok", t("liveStOk")];
+  const st = o.statut === "À confirmer" ? ["new", t("liveStNew")] : o.statut === "En livraison" ? ["road", t("liveStRoad")] : o.prete ? ["ready", t("liveStReady")] : ["ok", t("liveStOk")];
   const num = escapeAttr(String(o.numero || ""));
   return `
     <div class="order-card live-card ${o.statut === "À confirmer" ? "new" : ""}">
@@ -1114,7 +1123,23 @@ function liveCardHtml(o, isFresh) {
         <button type="button" class="acc" data-acc="${num}">${escapeHtml(t("liveAccept"))}</button>
         <button type="button" class="ref" data-ref="${num}">${escapeHtml(t("liveRefuse"))}</button>
       </div>` : ""}
+      ${(o.statut === "En attente" || o.statut === "En livraison") && !o.prete ? `<div class="live-actions">
+        <button type="button" class="rdy" data-rdy="${num}">${escapeHtml(t("liveReady"))}</button>
+      </div>` : ""}
     </div>`;
+}
+
+async function markReady(numero, btn) {
+  hideError($("errorBox")); hideSuccess($("successBox"));
+  btn.disabled = true;
+  try {
+    const data = await apiGet({ action: "partnerReady", orderNumber: numero });
+    if (data && data.success) showSuccess($("successBox"), t("liveReadyDone"));
+    else showError($("errorBox"), (data && data.error) || t("loadFailedGeneric"));
+  } catch (e) {
+    showError($("errorBox"), t("loadFailedGeneric"));
+  }
+  await loadLive(true);
 }
 
 async function decideLive(numero, accept, btn) {
