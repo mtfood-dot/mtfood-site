@@ -302,6 +302,7 @@ if ("serviceWorker" in navigator) {
         <span class="live-info" id="liveInfo"></span>
         <button class="btn-refresh" id="refreshLiveBtn" type="button"><span id="refreshLiveLabel">↻ Actualiser</span></button>
       </div>
+      <div id="ratingLine" class="live-info" style="display:block;margin:0 0 10px;font-weight:700;"></div>
       <div id="listLive"></div>
     </div>
 
@@ -446,6 +447,7 @@ const I18N = {
     liveStOk: "Acceptée · en attente du livreur",
     liveStReady: "Prête · à récupérer",
     liveReady: "Commande prête",
+    ratingLine: "⭐ Avis clients : {m} / 5 ({n} avis)", ratingNone: "⭐ Pas encore d'avis clients.",
     liveReadyDone: "Commande marquée prête : le livreur et le client la voient.",
     liveStRoad: "En livraison",
     liveAccept: "Accepter",
@@ -555,6 +557,7 @@ const I18N = {
     liveStOk: "مقبول · بانتظار الموصل",
     liveStReady: "جاهز · بانتظار الاستلام",
     liveReady: "الطلب جاهز",
+    ratingLine: "⭐ تقييم الزبائن: {m} / 5 ({n} تقييم)", ratingNone: "⭐ لا توجد تقييمات بعد.",
     liveReadyDone: "تم تحديد الطلب كجاهز: يراه الموصل والزبون.",
     liveStRoad: "قيد التوصيل",
     liveAccept: "قبول",
@@ -1052,6 +1055,16 @@ document.addEventListener("visibilitychange", () => {
 });
 $("refreshLiveBtn").addEventListener("click", () => loadLive(true));
 
+let RATING_AT = 0;
+async function loadRating() {
+  if (!SESSION || Date.now() - RATING_AT < 300000) return;
+  RATING_AT = Date.now();
+  try {
+    const d = await apiGet({ action: "partnerRatings" });
+    if (!d || !d.success) return;
+    $("ratingLine").textContent = d.total ? t("ratingLine").replace("{m}", d.moyenne.toFixed(1)).replace("{n}", d.total) : t("ratingNone");
+  } catch (e) { /* silencieux */ }
+}
 async function loadLive(force) {
   if (!SESSION || (LIVE_BUSY && !force)) return;
   LIVE_BUSY = true;
@@ -1069,6 +1082,7 @@ async function loadLive(force) {
     const hh = new Date(); const pad = n => String(n).padStart(2, "0");
     $("liveInfo").textContent = t("liveUpdated").replace("{h}", pad(hh.getHours()) + ":" + pad(hh.getMinutes()));
     renderLive(fresh);
+    loadRating();
   } catch (e) {
     /* réseau : on réessaie au prochain passage */
   } finally {

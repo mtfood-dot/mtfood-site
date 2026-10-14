@@ -121,6 +121,21 @@ main{max-width:520px;margin:0 auto;padding:20px 16px 0;}
 .cancel-box .cmsg{font-size:13px;font-weight:700;margin-top:8px;min-height:1em;}
 .cancel-box .cmsg.err{color:#b3261e;}
 .cancel-box a{color:var(--blue-700,#1d4e9e);font-weight:800;}
+.rate-box{max-width:520px;margin:14px auto 0;background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:16px;}
+.rate-box.hidden{display:none;}
+.rate-box h3{margin:0 0 4px;font-size:16px;color:var(--blue-900);}
+.rate-box p{margin:0 0 10px;font-size:13px;line-height:1.6;color:var(--muted);}
+.rate-row{margin:10px 0 4px;font-size:13.5px;font-weight:800;color:var(--text);}
+.stars{display:flex;gap:4px;direction:ltr;}
+.stars button{background:none;border:0;font-size:34px;line-height:1;color:#c9d3e0;cursor:pointer;padding:2px 3px;font-family:inherit;}
+.stars button.on{color:#f0a500;}
+.rate-box textarea,.rate-box input{width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px;font-family:inherit;font-size:14px;margin-top:10px;}
+.rate-box textarea{min-height:70px;resize:vertical;}
+.rate-box .go{width:100%;margin-top:10px;background:var(--blue-700,#1d4e9e);color:#fff;border:0;border-radius:10px;padding:12px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;}
+.rate-box .go:disabled{opacity:.6;}
+.rate-box .rmsg{font-size:13px;font-weight:700;margin-top:8px;min-height:1em;}
+.rate-box .rmsg.err{color:#b3261e;}
+.rate-box .rmsg.ok{color:#1c7c3a;}
 .wait-note{text-align:center;padding:28px 16px;color:var(--muted);font-size:13px;line-height:1.6;}
 .wait-note .emoji{font-size:30px;display:block;margin-bottom:8px;}
 
@@ -189,6 +204,23 @@ if ("serviceWorker" in navigator) {
     <div class="cmsg" id="cancelMsg"></div>
   </div>
 
+  <div class="rate-box hidden" id="rateBox">
+    <h3 id="rateTitle"></h3>
+    <p id="rateHint"></p>
+    <div id="rateForm">
+      <div class="rate-row" id="rateRestoLbl"></div>
+      <div class="stars" id="starsResto" role="radiogroup"></div>
+      <div id="rateDriverWrap">
+        <div class="rate-row" id="rateDriverLbl"></div>
+        <div class="stars" id="starsDriver" role="radiogroup"></div>
+      </div>
+      <textarea id="rateComment" maxlength="300"></textarea>
+      <input type="tel" id="ratePhone" inputmode="tel" autocomplete="tel">
+      <button type="button" class="go" id="rateBtn"></button>
+    </div>
+    <div class="rmsg" id="rateMsg"></div>
+  </div>
+
   <footer id="footerNote">MT Delivery — البريد السريع · Meftah, Blida</footer>
 </main>
 
@@ -229,6 +261,11 @@ const I18N = {
     cancelNeedPhone: "Entre le numéro de téléphone de la commande.",
     cancelFail: "Impossible d'annuler. Réessaie ou appelle-nous.",
     cancelHintCall: "Pour annuler ou modifier cette commande, appelle le service client : ",
+    rateTitle: "Comment s'est passée ta commande ?", rateHint: "Ton avis nous aide à améliorer le service. Il ne prend que quelques secondes.",
+    rateResto: "Le restaurant (qualité, préparation)", rateDriver: "Le livreur (rapidité, amabilité)",
+    rateCommentPh: "Un commentaire ? (facultatif)", ratePhonePh: "Le numéro de téléphone de la commande", rateBtn: "Envoyer mon avis",
+    rateNeedNote: "Choisis au moins une note avec les étoiles.", rateNeedPhone: "Entre le numéro de téléphone de la commande.",
+    rateThanks: "Merci pour ton avis !", rateFail: "Impossible d'envoyer l'avis. Réessaie un peu plus tard.", starLabel: "étoiles",
     footerNote: "MT Delivery — البريد السريع · Meftah, Blida"
   },
   ar: {
@@ -263,6 +300,11 @@ const I18N = {
     cancelNeedPhone: "أدخل رقم هاتف الطلب.",
     cancelFail: "تعذر الإلغاء. أعد المحاولة أو اتصل بنا.",
     cancelHintCall: "لإلغاء هذا الطلب أو تعديله، اتصل بخدمة العملاء: ",
+    rateTitle: "كيف كان طلبك؟", rateHint: "رأيك يساعدنا على تحسين الخدمة. يستغرق ثوان فقط.",
+    rateResto: "المطعم (الجودة والتحضير)", rateDriver: "عامل التوصيل (السرعة واللطف)",
+    rateCommentPh: "تعليق؟ (اختياري)", ratePhonePh: "رقم هاتف الطلب", rateBtn: "إرسال رأيي",
+    rateNeedNote: "اختر تقييما واحدا على الأقل بالنجوم.", rateNeedPhone: "أدخل رقم هاتف الطلب.",
+    rateThanks: "شكرا على رأيك!", rateFail: "تعذر إرسال الرأي. أعد المحاولة لاحقا.", starLabel: "نجوم",
     footerNote: "البريد السريع MT Delivery · مفتاح، البليدة"
   }
 };
@@ -284,6 +326,7 @@ function applyLanguage(){
   $("cancelPhone").placeholder = t("cancelPhonePh");
   $("cancelBtn").textContent = t("cancelBtn");
   if (typeof LAST_STATUT !== "undefined") updateCancelBox(LAST_STATUT);
+  if (typeof updateRatingBox === "function") updateRatingBox(LAST_STATUT, LAST_DRIVER);
 }
 
 $("langToggle").addEventListener("click", function(){
@@ -452,6 +495,50 @@ async function cancelOrder(){
 }
 $("cancelBtn").addEventListener("click", cancelOrder);
 
+/* ---------- Avis après livraison ---------- */
+let LAST_DRIVER = "";
+const RATE = { resto: 0, driver: 0 };
+function ratedKey(){ return "mtd_rated_" + CURRENT_NUMERO; }
+function wasRated(){ try { return localStorage.getItem(ratedKey()) === "1"; } catch (e) { return false; } }
+function drawStars(id, key){
+  const box = $(id);
+  box.innerHTML = [1, 2, 3, 4, 5].map(n =>
+    '<button type="button" role="radio" aria-checked="' + (RATE[key] === n) + '" aria-label="' + n + ' ' + escapeHtml(t("starLabel")) + '" data-n="' + n + '" class="' + (n <= RATE[key] ? "on" : "") + '">★</button>').join("");
+  box.querySelectorAll("button").forEach(b => b.addEventListener("click", () => { RATE[key] = Number(b.dataset.n); drawStars(id, key); }));
+}
+function updateRatingBox(statut, driverName){
+  LAST_STATUT = statut || LAST_STATUT; LAST_DRIVER = driverName || "";
+  const box = $("rateBox");
+  if (!CURRENT_NUMERO || statut !== "Livrée") { box.classList.add("hidden"); return; }
+  box.classList.remove("hidden");
+  $("rateTitle").textContent = t("rateTitle");
+  if (wasRated()) { $("rateHint").textContent = ""; $("rateForm").style.display = "none"; $("rateMsg").className = "rmsg ok"; $("rateMsg").textContent = t("rateThanks"); return; }
+  $("rateHint").textContent = t("rateHint");
+  $("rateRestoLbl").textContent = t("rateResto");
+  $("rateDriverLbl").textContent = t("rateDriver");
+  $("rateDriverWrap").style.display = driverName ? "" : "none";
+  $("rateComment").placeholder = t("rateCommentPh");
+  $("ratePhone").placeholder = t("ratePhonePh");
+  $("rateBtn").textContent = t("rateBtn");
+  drawStars("starsResto", "resto"); drawStars("starsDriver", "driver");
+}
+async function sendRating(){
+  const msg = $("rateMsg"); msg.className = "rmsg";
+  const phone = $("ratePhone").value.trim();
+  if (!RATE.resto && !(LAST_DRIVER && RATE.driver)) { msg.className = "rmsg err"; msg.textContent = t("rateNeedNote"); return; }
+  if (phone.replace(/\D/g, "").length < 8) { msg.className = "rmsg err"; msg.textContent = t("rateNeedPhone"); return; }
+  $("rateBtn").disabled = true;
+  try {
+    const res = await fetch(CONFIG.API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "rateOrder", numero: CURRENT_NUMERO, telephone: phone, noteResto: RATE.resto || "", noteLivreur: LAST_DRIVER ? (RATE.driver || "") : "", commentaire: $("rateComment").value.trim() }) });
+    const data = JSON.parse(await res.text());
+    if (data.success) { try { localStorage.setItem(ratedKey(), "1"); } catch (e) {} $("rateForm").style.display = "none"; $("rateHint").textContent = ""; msg.className = "rmsg ok"; msg.textContent = t("rateThanks"); }
+    else { msg.className = "rmsg err"; msg.textContent = data.error || t("rateFail"); }
+  } catch (e) { msg.className = "rmsg err"; msg.textContent = t("rateFail"); }
+  finally { $("rateBtn").disabled = false; }
+}
+$("rateBtn").addEventListener("click", sendRating);
+
 function renderSteps(statut, prete){
   const box = $("steps");
   const idx = { "À confirmer": 0, "En attente": 1, "En livraison": 2, "Livrée": 3 }[statut];
@@ -480,6 +567,7 @@ function render(data){
   const statut = String(data.statut || "").trim();
   renderSteps(statut, !!data.prete);
   updateCancelBox(statut);
+  updateRatingBox(statut, data.livreurNom || "");
 
   if (statut === "À confirmer" || statut === "Annulée") {
     $("map").classList.remove("show");

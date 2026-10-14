@@ -396,6 +396,7 @@ if ("serviceWorker" in navigator) {
       <button class="tab-btn" id="tabPubBtn" type="button"><span id="tabPubLabel"></span></button>
       <button class="tab-btn" id="tabBoostBtn" type="button"><span id="tabBoostLabel"></span><span id="boostBadge" class="tab-count hidden">0</span></button>
       <button class="tab-btn" id="tabZonesBtn" type="button"><span id="tabZonesLabel"></span></button>
+      <button class="tab-btn" id="tabRatingsBtn" type="button"><span id="tabRatingsLabel"></span></button>
     </div>
 
     <div id="ordersView">
@@ -552,6 +553,14 @@ if ("serviceWorker" in navigator) {
       </div>
       <div class="boost-sum" id="boostSummary"></div>
       <div id="listBoostAdmin"></div>
+    </div>
+
+    <div id="ratingsView" class="hidden">
+      <div class="refresh-row">
+        <div></div>
+        <button class="btn-refresh" id="refreshRatingsBtn" type="button"><span id="refreshRatingsLabel">↻ Actualiser</span></button>
+      </div>
+      <div id="ratingsBody"></div>
     </div>
 
     <div id="zonesView" class="hidden">
@@ -843,6 +852,14 @@ const I18N = {
     saveAdFailedGeneric: "Impossible d'enregistrer la publicité. Réessaie.",
     deleteAdFailedGeneric: "Impossible de supprimer la publicité. Réessaie.",
     tabZones: "Zones",
+    tabRatings: "Avis",
+    ratingsRestos: "Restaurants (du plus bas au plus haut)",
+    ratingsDrivers: "Livreurs (du plus bas au plus haut)",
+    ratingsRecent: "Derniers avis",
+    ratingsNone: "Aucun avis pour le moment.",
+    ratingsCount: "avis",
+    ratingsRestoShort: "Restaurant",
+    ratingsDriverShort: "Livreur",
     subheadingZones: "Zones de livraison",
     noZones: "Aucune zone configurée.",
     zoneFormTitleNew: "Ajouter une zone",
@@ -1110,6 +1127,14 @@ const I18N = {
     saveAdFailedGeneric: "تعذر حفظ الإعلان. أعد المحاولة.",
     deleteAdFailedGeneric: "تعذر حذف الإعلان. أعد المحاولة.",
     tabZones: "المناطق",
+    tabRatings: "التقييمات",
+    ratingsRestos: "المطاعم (من الأدنى إلى الأعلى)",
+    ratingsDrivers: "عمال التوصيل (من الأدنى إلى الأعلى)",
+    ratingsRecent: "آخر التقييمات",
+    ratingsNone: "لا توجد تقييمات حاليا.",
+    ratingsCount: "تقييم",
+    ratingsRestoShort: "المطعم",
+    ratingsDriverShort: "عامل التوصيل",
     subheadingZones: "مناطق التوصيل",
     noZones: "لا توجد مناطق مضافة.",
     zoneFormTitleNew: "إضافة منطقة",
@@ -1231,6 +1256,7 @@ function applyLanguage() {
   $("adFormCancelBtn").textContent = t("btnAdCancel");
   $("adFormTitle").textContent = $("adFormId").value ? t("adFormTitleEdit") : t("adFormTitleNew");
   $("tabZonesLabel").textContent = t("tabZones");
+  $("tabRatingsLabel").textContent = t("tabRatings");
   if (typeof liveApplyLang === "function") liveApplyLang();
   $("refreshZonesLabel").textContent = t("refreshLabel");
   $("subheadingZones").textContent = t("subheadingZones");
@@ -1387,6 +1413,8 @@ $("refreshPubBtn").addEventListener("click", loadAdsAdmin);
 $("tabBoostBtn").addEventListener("click", () => switchTab("boost"));
 $("tabZonesBtn").addEventListener("click", () => switchTab("zones"));
 $("refreshZonesBtn").addEventListener("click", loadZonesAdmin);
+$("tabRatingsBtn").addEventListener("click", () => switchTab("ratings"));
+$("refreshRatingsBtn").addEventListener("click", loadRatingsAdmin);
 
 function switchTab(tab) {
   CURRENT_TAB = tab;
@@ -1399,6 +1427,7 @@ function switchTab(tab) {
   $("tabPubBtn").classList.toggle("active", tab === "pub");
   $("tabBoostBtn").classList.toggle("active", tab === "boost");
   $("tabZonesBtn").classList.toggle("active", tab === "zones");
+  $("tabRatingsBtn").classList.toggle("active", tab === "ratings");
   $("ordersView").classList.toggle("hidden", tab !== "orders");
   $("liveView").classList.toggle("hidden", tab !== "live");
   $("moderationView").classList.toggle("hidden", tab !== "moderation");
@@ -1408,6 +1437,7 @@ function switchTab(tab) {
   $("pubView").classList.toggle("hidden", tab !== "pub");
   $("boostView").classList.toggle("hidden", tab !== "boost");
   $("zonesView").classList.toggle("hidden", tab !== "zones");
+  $("ratingsView").classList.toggle("hidden", tab !== "ratings");
   hideError($("errorBox"));
   hideSuccess($("successBox"));
   if (tab === "live") liveStart();
@@ -1418,6 +1448,37 @@ function switchTab(tab) {
   if (tab === "pub") loadAdsAdmin();
   if (tab === "boost") loadBoostAdmin();
   if (tab === "zones") loadZonesAdmin();
+  if (tab === "ratings") loadRatingsAdmin();
+}
+
+/* ============================================================
+   AVIS DES CLIENTS
+   ============================================================ */
+function starsText(n) { n = Math.round(Number(n) || 0); return "★★★★★".slice(0, n) + "☆☆☆☆☆".slice(0, 5 - n); }
+function ratingRowsHtml(list) {
+  if (!list || !list.length) return '<div class="partner-card"><div class="meta">' + escapeHtml(t("ratingsNone")) + '</div></div>';
+  return list.map(x => '<div class="partner-card"><div class="nom">' + escapeHtml(x.nom) + '</div><div class="meta">' +
+    (x.moyenne != null ? '<b style="color:' + (x.moyenne < 3 ? "#b3261e" : "inherit") + '">' + x.moyenne.toFixed(1) + ' / 5</b> ' + starsText(x.moyenne) : "—") +
+    ' · ' + x.total + ' ' + escapeHtml(t("ratingsCount")) + '</div></div>').join("");
+}
+async function loadRatingsAdmin() {
+  hideError($("errorBox"));
+  const box = $("ratingsBody");
+  try {
+    const d = await apiGet({ action: "csRatings", password: SESSION_PASSWORD });
+    if (!d.success) { showError($("errorBox"), d.error || t("loadFailedGeneric")); return; }
+    const recent = (d.recent || []).map(x => {
+      const when = x.t ? new Date(x.t).toLocaleString(LANG === "ar" ? "ar-DZ" : "fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "";
+      const low = (x.noteResto && x.noteResto <= 2) || (x.noteLivreur && x.noteLivreur <= 2);
+      return '<div class="partner-card"' + (low ? ' style="border:1.5px solid #e0b4b4"' : "") + '><div class="nom">' + escapeHtml(x.numero) + " · " + escapeHtml(x.resto || "—") + '</div><div class="meta">' + escapeHtml(when) + " · " + escapeHtml(x.client || "") + "</div>" +
+        (x.noteResto ? "<div>" + escapeHtml(t("ratingsRestoShort")) + " : " + starsText(x.noteResto) + "</div>" : "") +
+        (x.noteLivreur ? "<div>" + escapeHtml(t("ratingsDriverShort")) + " (" + escapeHtml(x.driver || "—") + ") : " + starsText(x.noteLivreur) + "</div>" : "") +
+        (x.commentaire ? '<div style="margin-top:6px;font-size:13px;">« ' + escapeHtml(x.commentaire) + " »</div>" : "") + "</div>";
+    }).join("");
+    box.innerHTML = '<div class="subheading">' + escapeHtml(t("ratingsRestos")) + "</div>" + ratingRowsHtml(d.restaurants) +
+      '<div class="subheading">' + escapeHtml(t("ratingsDrivers")) + "</div>" + ratingRowsHtml(d.livreurs) +
+      '<div class="subheading">' + escapeHtml(t("ratingsRecent")) + "</div>" + (recent || '<div class="partner-card"><div class="meta">' + escapeHtml(t("ratingsNone")) + "</div></div>");
+  } catch (e) { showError($("errorBox"), t("loadFailedGeneric")); }
 }
 
 /* ============================================================

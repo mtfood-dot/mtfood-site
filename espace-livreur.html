@@ -224,6 +224,7 @@ if ("serviceWorker" in navigator) {
       <div>
         <div class="who" id="whoText"></div>
         <div class="zone" id="zoneText"></div>
+        <div class="zone" id="ratingLine"></div>
         <div class="gps-badge hidden" id="gpsBadge"><span class="dot"></span><span id="gpsBadgeText">Position partagée</span></div>
         <button class="btn-gps-enable hidden" id="gpsEnableBtn" type="button">📍 <span id="gpsEnableBtnText">Activer le partage de position</span></button>
       </div>
@@ -365,6 +366,7 @@ const I18N = {
     confirmDelivered: "Confirmer que cette commande a été livrée ?",
     zoneLabel: "Zone",
     readyYes: "🍽️ Prête : à récupérer au restaurant",
+    ratingLine: "⭐ Ma note : {m} / 5 ({n} avis)", ratingNone: "⭐ Pas encore d'avis clients.",
     readyNo: "⏳ En préparation au restaurant",
     totalLabel: "Total",
   },
@@ -423,6 +425,7 @@ const I18N = {
     confirmDelivered: "تأكيد أن هذا الطلب تم توصيله؟",
     zoneLabel: "المنطقة",
     readyYes: "🍽️ جاهز: يمكنك استلامه من المطعم",
+    ratingLine: "⭐ تقييمي: {m} / 5 ({n} تقييم)", ratingNone: "⭐ لا توجد تقييمات بعد.",
     readyNo: "⏳ قيد التحضير في المطعم",
     totalLabel: "المجموع",
   }
@@ -582,11 +585,19 @@ function updateSessionBar() {
   $("zoneText").textContent = t("zoneLabel") + " : " + SESSION.zone;
 }
 
+async function loadRating() {
+  try {
+    const d = await apiGet({ action: "driverRatings" });
+    if (!d || !d.success) return;
+    $("ratingLine").textContent = d.total ? t("ratingLine").replace("{m}", d.moyenne.toFixed(1)).replace("{n}", d.total) : t("ratingNone");
+  } catch (e) { /* silencieux */ }
+}
 function enterApp() {
   $("loginScreen").classList.add("hidden");
   $("appScreen").classList.remove("hidden");
   updateSessionBar();
   loadAll();
+  loadRating();
   if (SESSION && SESSION.telephone) {
     registerPushToken_("driver", SESSION.telephone, "");
   }
