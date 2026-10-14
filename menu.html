@@ -263,6 +263,11 @@
   .resto-card .rt{font-size:13px;color:var(--blue-900);font-weight:700;margin-top:3px;}
   .resto-card .rt .dot{opacity:.5;}
   .resto-card .rs{font-size:12px;color:var(--gold-600,#b8860b);font-weight:700;margin-top:3px;}
+  .resto-card.closed{opacity:.72;}
+  .resto-card .rx{font-size:13px;color:#b3261e;font-weight:800;margin-top:3px;}
+  .closed-banner{display:none;max-width:960px;margin:10px auto 0;padding:11px 14px;background:#fdecea;color:#b3261e;border:1.5px solid #f0c4c0;border-radius:12px;font-size:14px;font-weight:800;text-align:center;box-sizing:border-box;}
+  .closed-banner.show{display:block;}
+  .add-btn:disabled{background:#e4e8ee;color:#7b8798;cursor:not-allowed;box-shadow:none;}
   .resto-card .rh{font-size:12.5px;color:var(--blue-700);margin-top:4px;line-height:1.35;}
   .resto-card .chev{flex:0 0 auto;color:var(--muted);font-size:22px;line-height:1;}
   html[dir="rtl"] .resto-card .chev{transform:scaleX(-1);}
@@ -540,6 +545,8 @@ if ("serviceWorker" in navigator) {
   <span class="logo-circle" id="restoHeadLogo"></span>
   <div style="min-width:0;"><div class="rn" id="restoHeadName"></div><div class="rc" id="restoHeadInfo"></div></div>
 </div>
+
+<div class="closed-banner" id="closedBanner" role="status"></div>
 
 <div class="search-box"><input type="search" id="searchInput" autocomplete="off" enterkeyhint="search" placeholder="Restaurant, plat, pizza, tacos…"></div>
 
@@ -837,6 +844,9 @@ const I18N = {
     dishCount: "{n} plat(s)",
     reorderMissing: "{n} plat(s) de cette commande ne sont plus disponibles et n'ont pas été ajoutés.",
     menuSoon: "Menu bientôt disponible",
+    closedShort: "Fermé", closedTemp: "Fermé temporairement", closedAt: "Fermé · ouvre à {at}", closedTomorrow: "Fermé · ouvre demain à {at}", closedDay: "Fermé · ouvre {day} à {at}",
+    closedOrder: "Ce restaurant est fermé pour le moment : tu peux voir le menu, mais pas commander.",
+    days: { dimanche: "dimanche", lundi: "lundi", mardi: "mardi", mercredi: "mercredi", jeudi: "jeudi", vendredi: "vendredi", samedi: "samedi" },
     menuSoonLong: "Le menu de ce restaurant sera bientôt disponible.",
     prepOnly: "Préparation ≈ {m} min",
     etaRange: "{a}–{b} min",
@@ -983,6 +993,9 @@ const I18N = {
     dishCount: "{n} طبق",
     reorderMissing: "{n} من أطباق هذا الطلب لم تعد متوفرة ولم تتم إضافتها.",
     menuSoon: "القائمة قريبًا",
+    closedShort: "مغلق", closedTemp: "مغلق مؤقتًا", closedAt: "مغلق · يفتح على {at}", closedTomorrow: "مغلق · يفتح غدًا على {at}", closedDay: "مغلق · يفتح {day} على {at}",
+    closedOrder: "هذا المطعم مغلق حاليًا: يمكنك رؤية القائمة لكن لا يمكنك الطلب.",
+    days: { dimanche: "الأحد", lundi: "الاثنين", mardi: "الثلاثاء", mercredi: "الأربعاء", jeudi: "الخميس", vendredi: "الجمعة", samedi: "السبت" },
     menuSoonLong: "ستتوفر قائمة هذا المطعم قريبًا.",
     prepOnly: "التحضير ≈ {m} د",
     etaRange: "{a}–{b} د",
@@ -1585,6 +1598,20 @@ function homeResults() {
 /* Temps de préparation par restaurant (feuille Partenaires) : aucune valeur inventée, rien n'est affiché sans donnée */
 let RESTO_PREP = {};
 let PARTNERS = {};
+let RESTO_OPEN = {};
+function restoClosedInfo(name) { const v = RESTO_OPEN[norm(name || "")]; return v && v.open === false ? v : null; }
+function closedText(name) {
+  const v = restoClosedInfo(name);
+  if (!v) return "";
+  if (v.manual) return t("closedTemp");
+  const n = v.next;
+  if (!n || !n.at) return t("closedShort");
+  if (n.off === 0) return t("closedAt").replace("{at}", n.at);
+  if (n.off === 1) return t("closedTomorrow").replace("{at}", n.at);
+  const dn = (I18N[LANG] && I18N[LANG].days && I18N[LANG].days[n.day]) || n.day;
+  return t("closedDay").replace("{day}", dn).replace("{at}", n.at);
+}
+setInterval(() => { if (document.visibilityState === "visible") loadRestoInfo(); }, 300000);
 function loadRestoInfo() {
   jsonpRequest({ action: "restoInfo" }, 15000).then(res => {
     if (!res || !res.success || !res.restos) return;
@@ -1593,10 +1620,15 @@ function loadRestoInfo() {
     PARTNERS = p;
     Object.keys(res.restos).forEach(k => { const v = res.restos[k]; if (v && v.prepMin > 0) m[norm(k)] = Number(v.prepMin); });
     RESTO_PREP = m;
+    const o = {};
+    Object.keys(res.restos).forEach(k => { const v = res.restos[k]; if (v && typeof v.open === "boolean") o[norm(k)] = { open: v.open, hours: v.hours || "", next: v.next || null, manual: !!v.manual }; });
+    RESTO_OPEN = o;
     renderRestoBar();
+    if (ACTIVE_RESTO !== null) renderGrid();
   }).catch(() => {});
 }
 function etaCardHtml(name) {
+  if (restoClosedInfo(name)) return '<div class="rx"><span aria-hidden="true">🔒</span> ' + escapeHtml(closedText(name)) + "</div>";
   const tx = etaText(name);
   if (!tx) return "";
   const q = DELIVERY.quote;
@@ -1621,6 +1653,7 @@ function setViewChrome() {
   input.placeholder = t(inResto ? "dishSearchPlaceholder" : "searchPlaceholder");
   if (input.value !== SEARCH_Q) input.value = SEARCH_Q;
   $("restoBack").setAttribute("aria-label", t("backLabel"));
+  if (!inResto) { const bn0 = $("closedBanner"); if (bn0) bn0.classList.remove("show"); }
   if (inResto) {
     const r = currentResto();
     if (r) {
@@ -1628,7 +1661,10 @@ function setViewChrome() {
       $("restoHeadLogo").innerHTML = logoHtml(r.name);
       bindLogoFallback($("restoHead"));
       $("restoHeadName").textContent = r.name;
-      $("restoHeadInfo").textContent = (r.soon ? t("menuSoon") : dishCountText(r.items.length)) + (etaText(r.name) ? " · " + etaText(r.name) : "");
+      const cl = closedText(r.name);
+      $("restoHeadInfo").textContent = (r.soon ? t("menuSoon") : dishCountText(r.items.length)) + (cl ? " · " + cl : (etaText(r.name) ? " · " + etaText(r.name) : ""));
+      const bn = $("closedBanner");
+      if (bn) { bn.textContent = cl ? "🔒 " + t("closedOrder") : ""; bn.classList.toggle("show", !!cl); }
     }
   }
 }
@@ -1644,7 +1680,7 @@ function renderRestoBar() {
     const r = x.r;
     const hint = x.hits && x.hits.length
       ? '<div class="rh">' + x.hits.map(i => escapeHtml(itemName(i)) + " · <bdi dir=\"ltr\">" + escapeHtml(String(i.prix)) + " DA</bdi>").join("<br>") + "</div>" : "";
-    return '<button type="button" class="resto-card" data-key="' + escapeAttr(r.key) + '">' +
+    return '<button type="button" class="resto-card' + (restoClosedInfo(r.name) ? ' closed' : '') + '" data-key="' + escapeAttr(r.key) + '">' +
       '<span class="logo-circle">' + logoHtml(r.name) + '</span>' +
       '<span class="meta"><div class="rn">' + escapeHtml(r.name) + '</div>' +
       '<div class="rs">' + escapeHtml(r.soon ? t('menuSoon') : dishCountText(r.items.length)) + '</div>' +
@@ -1775,6 +1811,8 @@ window.addEventListener("popstate", (e) => {
 });
 
 function addBtnHtml(id) {
+  const it = MENU.find(i => String(i.id) === String(id));
+  if (it && restoClosedInfo(it.partenaire)) return `<button class="add-btn" disabled>${t("closedShort")}</button>`;
   return `<button class="add-btn" data-add="${id}">${t("add")}</button>`;
 }
 function qtyStepperHtml(id, qty) {
@@ -1813,6 +1851,7 @@ function showCartNotice(msg) {
 function changeQty(id, delta) {
   const item = MENU.find(i => String(i.id) === String(id));
   if (!item) return;
+  if (delta > 0 && restoClosedInfo(item.partenaire)) { showCartNotice(t("closedOrder")); return; }
   if (delta > 0 && !CART[id]) {
     const cp = cartPartner();
     if (cp !== null && cp !== String(item.partenaire || "").trim().toLowerCase()) {
@@ -2481,7 +2520,7 @@ function submitOrder() {
         ORDER_REQUEST_ID = "";
         refreshQuote();
         showCheckoutError(err.serverMsg || t("checkoutNeedAddr"), true);
-      } else if (code === "zone" || code === "rate" || code === "fields" || code === "phone" || code === "pending_client") {
+      } else if (code === "closed" || code === "zone" || code === "rate" || code === "fields" || code === "phone" || code === "pending_client") {
         ORDER_REQUEST_ID = "";
         showCheckoutError(err.serverMsg || t("sendError") + CONFIG.PHONE_DISPLAY + ".", true);
       } else {
