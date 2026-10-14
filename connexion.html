@@ -152,7 +152,7 @@
 </main>
 
 <script src="/form-validate.js" defer></script>
-<script src="/google-signin.js?v=2"></script>
+<script src="/google-signin.js?v=3"></script>
 <script>
 /* ============================================================
    CONFIGURATION
@@ -310,9 +310,11 @@ if (CONFIG.GOOGLE_CLIENT_ID && window.MTGoogle) {
       try {
         const data = await apiGet({ action: "clientLoginGoogle", credential });
         if (data && data.success) {
+          let tel = data.telephone || "";
+          if (!tel) { try { tel = await MTGoogle.askPhone(data.clientId, apiGet); } catch (e) { tel = ""; } }
           localStorage.setItem(SESSION_KEY, JSON.stringify({
             clientId: data.clientId, prenom: data.prenom, nom: data.nom,
-            email: data.email || "", telephone: data.telephone || "", verifie: data.verifie !== false
+            email: data.email || "", telephone: tel, verifie: data.verifie !== false
           }));
           window.location.href = redirectTo;
         } else { showError((data && data.error) || t("loginFailedGeneric")); }
