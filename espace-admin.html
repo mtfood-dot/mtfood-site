@@ -397,6 +397,7 @@ if ("serviceWorker" in navigator) {
       <button class="tab-btn" id="tabBoostBtn" type="button"><span id="tabBoostLabel"></span><span id="boostBadge" class="tab-count hidden">0</span></button>
       <button class="tab-btn" id="tabZonesBtn" type="button"><span id="tabZonesLabel"></span></button>
       <button class="tab-btn" id="tabRatingsBtn" type="button"><span id="tabRatingsLabel"></span></button>
+      <button class="tab-btn" id="tabFraudBtn" type="button"><span id="tabFraudLabel"></span></button>
     </div>
 
     <div id="ordersView">
@@ -553,6 +554,18 @@ if ("serviceWorker" in navigator) {
       </div>
       <div class="boost-sum" id="boostSummary"></div>
       <div id="listBoostAdmin"></div>
+    </div>
+
+    <div id="fraudView" class="hidden">
+      <div class="refresh-row">
+        <div class="live-bar" style="margin:0;">
+          <button class="live-chip active" id="fraudD30" type="button"></button>
+          <button class="live-chip" id="fraudD90" type="button"></button>
+        </div>
+        <button class="btn-refresh" id="refreshFraudBtn" type="button"><span id="refreshFraudLabel">↻ Actualiser</span></button>
+      </div>
+      <div class="live-note" id="fraudNote"></div>
+      <div id="fraudBody"></div>
     </div>
 
     <div id="ratingsView" class="hidden">
@@ -853,6 +866,11 @@ const I18N = {
     deleteAdFailedGeneric: "Impossible de supprimer la publicité. Réessaie.",
     tabZones: "Zones",
     tabRatings: "Avis",
+    tabFraud: "Fraude",
+    fraudD30: "30 jours", fraudD90: "90 jours",
+    fraudNote: "Rouge : 2 annulations suspectes ou plus, ou 4 annulations. Orange : 1 annulation suspecte ou 2 annulations. « Suspecte » = annulée après l'acceptation du restaurant ET la prise en charge par un livreur.",
+    fraudClients: "Clients qui annulent", fraudDrivers: "Livreurs qui annulent", fraudNone: "Aucun cas sur la période.",
+    fraudCancels: "annulation(s)", fraudSuspect: "suspecte(s)", fraudOn: "commande(s)", fraudSuspectTag: "suspecte", fraudBy: "Livreur", fraudAt: "Resto",
     ratingsRestos: "Restaurants (du plus bas au plus haut)",
     ratingsDrivers: "Livreurs (du plus bas au plus haut)",
     ratingsRecent: "Derniers avis",
@@ -1128,6 +1146,11 @@ const I18N = {
     deleteAdFailedGeneric: "تعذر حذف الإعلان. أعد المحاولة.",
     tabZones: "المناطق",
     tabRatings: "التقييمات",
+    tabFraud: "الاحتيال",
+    fraudD30: "30 يوما", fraudD90: "90 يوما",
+    fraudNote: "أحمر: إلغاءان مشبوهان أو أكثر، أو 4 إلغاءات. برتقالي: إلغاء مشبوه واحد أو إلغاءان. «مشبوه» = أُلغي بعد قبول المطعم وتكفل عامل التوصيل.",
+    fraudClients: "الزبائن الذين يلغون", fraudDrivers: "عمال التوصيل الذين يلغون", fraudNone: "لا توجد حالات في هذه الفترة.",
+    fraudCancels: "إلغاء", fraudSuspect: "مشبوه", fraudOn: "طلب", fraudSuspectTag: "مشبوه", fraudBy: "عامل التوصيل", fraudAt: "المطعم",
     ratingsRestos: "المطاعم (من الأدنى إلى الأعلى)",
     ratingsDrivers: "عمال التوصيل (من الأدنى إلى الأعلى)",
     ratingsRecent: "آخر التقييمات",
@@ -1257,6 +1280,9 @@ function applyLanguage() {
   $("adFormTitle").textContent = $("adFormId").value ? t("adFormTitleEdit") : t("adFormTitleNew");
   $("tabZonesLabel").textContent = t("tabZones");
   $("tabRatingsLabel").textContent = t("tabRatings");
+  $("tabFraudLabel").textContent = t("tabFraud");
+  $("fraudD30").textContent = t("fraudD30"); $("fraudD90").textContent = t("fraudD90");
+  $("fraudNote").textContent = t("fraudNote");
   if (typeof liveApplyLang === "function") liveApplyLang();
   $("refreshZonesLabel").textContent = t("refreshLabel");
   $("subheadingZones").textContent = t("subheadingZones");
@@ -1415,6 +1441,10 @@ $("tabZonesBtn").addEventListener("click", () => switchTab("zones"));
 $("refreshZonesBtn").addEventListener("click", loadZonesAdmin);
 $("tabRatingsBtn").addEventListener("click", () => switchTab("ratings"));
 $("refreshRatingsBtn").addEventListener("click", loadRatingsAdmin);
+$("tabFraudBtn").addEventListener("click", () => switchTab("fraud"));
+$("refreshFraudBtn").addEventListener("click", () => loadFraudAdmin());
+$("fraudD30").addEventListener("click", () => { FRAUD_DAYS = 30; $("fraudD30").classList.add("active"); $("fraudD90").classList.remove("active"); loadFraudAdmin(); });
+$("fraudD90").addEventListener("click", () => { FRAUD_DAYS = 90; $("fraudD90").classList.add("active"); $("fraudD30").classList.remove("active"); loadFraudAdmin(); });
 
 function switchTab(tab) {
   CURRENT_TAB = tab;
@@ -1428,6 +1458,7 @@ function switchTab(tab) {
   $("tabBoostBtn").classList.toggle("active", tab === "boost");
   $("tabZonesBtn").classList.toggle("active", tab === "zones");
   $("tabRatingsBtn").classList.toggle("active", tab === "ratings");
+  $("tabFraudBtn").classList.toggle("active", tab === "fraud");
   $("ordersView").classList.toggle("hidden", tab !== "orders");
   $("liveView").classList.toggle("hidden", tab !== "live");
   $("moderationView").classList.toggle("hidden", tab !== "moderation");
@@ -1438,6 +1469,7 @@ function switchTab(tab) {
   $("boostView").classList.toggle("hidden", tab !== "boost");
   $("zonesView").classList.toggle("hidden", tab !== "zones");
   $("ratingsView").classList.toggle("hidden", tab !== "ratings");
+  $("fraudView").classList.toggle("hidden", tab !== "fraud");
   hideError($("errorBox"));
   hideSuccess($("successBox"));
   if (tab === "live") liveStart();
@@ -1449,6 +1481,37 @@ function switchTab(tab) {
   if (tab === "boost") loadBoostAdmin();
   if (tab === "zones") loadZonesAdmin();
   if (tab === "ratings") loadRatingsAdmin();
+  if (tab === "fraud") loadFraudAdmin();
+}
+
+/* ============================================================
+   FRAUDE : clients et livreurs qui annulent
+   ============================================================ */
+let FRAUD_DAYS = 30;
+const FRAUD_COLORS = { rouge: ["#fdecea", "#b3261e"], orange: ["#fff4e0", "#b26a00"], vert: ["#e8f5ec", "#1c7c3a"] };
+function fraudCardHtml(e, isClient) {
+  const col = FRAUD_COLORS[e.niveau] || FRAUD_COLORS.vert;
+  const det = (e.details || []).map(d => {
+    const when = d.t ? new Date(d.t).toLocaleString(LANG === "ar" ? "ar-DZ" : "fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "";
+    return '<div style="border-top:1px solid #e6ebf2;padding:6px 0;font-size:12.5px;"><b>' + escapeHtml(d.numero) + "</b> · " + escapeHtml(when) +
+      (d.suspect ? ' <span style="color:#b3261e;font-weight:800;">⚠ ' + escapeHtml(t("fraudSuspectTag")) + "</span>" : "") +
+      "<br>" + escapeHtml(t("fraudAt")) + " : " + escapeHtml(d.resto) + (isClient ? " · " + escapeHtml(t("fraudBy")) + " : " + escapeHtml(d.livreur) : "") +
+      '<br><span style="color:#4a5b70;">« ' + escapeHtml(d.motif) + " »</span></div>";
+  }).join("");
+  return '<div class="partner-card" style="border-inline-start:5px solid ' + col[1] + ';"><div class="nom">' + escapeHtml(e.nom) +
+    (isClient && e.telephone ? ' · <bdi dir="ltr">' + escapeHtml(e.telephone) + "</bdi>" : "") +
+    '</div><div class="meta"><span style="background:' + col[0] + ";color:" + col[1] + ';font-weight:800;padding:2px 8px;border-radius:99px;">' + e.annulees + " " + escapeHtml(t("fraudCancels")) +
+    (e.suspectes ? " · " + e.suspectes + " " + escapeHtml(t("fraudSuspect")) : "") + "</span> · " + e.total + " " + escapeHtml(t("fraudOn")) + "</div>" + det + "</div>";
+}
+async function loadFraudAdmin() {
+  hideError($("errorBox"));
+  try {
+    const d = await apiGet({ action: "csFraud", password: SESSION_PASSWORD, days: FRAUD_DAYS });
+    if (!d.success) { showError($("errorBox"), d.error || t("loadFailedGeneric")); return; }
+    const none = '<div class="partner-card"><div class="meta">' + escapeHtml(t("fraudNone")) + "</div></div>";
+    $("fraudBody").innerHTML = '<div class="subheading">' + escapeHtml(t("fraudClients")) + "</div>" + ((d.clients || []).map(e => fraudCardHtml(e, true)).join("") || none) +
+      '<div class="subheading">' + escapeHtml(t("fraudDrivers")) + "</div>" + ((d.livreurs || []).map(e => fraudCardHtml(e, false)).join("") || none);
+  } catch (e) { showError($("errorBox"), t("loadFailedGeneric")); }
 }
 
 /* ============================================================
