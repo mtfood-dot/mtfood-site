@@ -6,7 +6,7 @@
                               (ajoute la mention « * Champ obligatoire » en bas ;
                                data-note-before="#id" pour la placer avant un élément)
      - data-required          sur chaque champ obligatoire
-     - data-rule="..."        règle de format : phone | email | identifier | pin4 |
+     - data-rule="..."        règle de format : phone | email | identifier | pin4 | pin4new |
                               code6 | min8 | url | positive | nonneg | date
      - data-match="#autre"    le champ doit être identique à un autre champ
      - data-error-after="#id" (optionnel) où insérer le message d'erreur
@@ -30,6 +30,7 @@
       email: "Adresse e-mail invalide (ex : nom@email.com).",
       identifier: "Entre un e-mail ou un numéro de téléphone valide.",
       pin4: "Le code PIN doit contenir exactement 4 chiffres.",
+      pin4new: "Code trop simple. Choisis un autre code (pas 1234, 0000, 1111…).",
       code6: "Le code doit contenir 6 chiffres.",
       min8: "8 caractères minimum.",
       url: "Lien invalide : il doit commencer par https://",
@@ -48,6 +49,7 @@
       email: "عنوان البريد الإلكتروني غير صالح (مثال: name@email.com).",
       identifier: "أدخل بريدًا إلكترونيًا أو رقم هاتف صالحًا.",
       pin4: "يجب أن يتكون رمز PIN من 4 أرقام بالضبط.",
+      pin4new: "الرمز بسيط جدًا. اختر رمزًا آخر (ليس 1234 أو 0000 أو 1111…).",
       code6: "يجب أن يتكون الرمز من 6 أرقام.",
       min8: "8 أحرف على الأقل.",
       url: "رابط غير صالح: يجب أن يبدأ بـ https://",
@@ -115,6 +117,12 @@
     if (rule === "email" && !isEmail(v)) return "email";
     if (rule === "identifier" && !(v.indexOf("@") >= 0 ? isEmail(v) : isPhone(v))) return "identifier";
     if (rule === "pin4" && !/^\d{4}$/.test(v)) return "pin4";
+    if (rule === "pin4new") {
+      if (!/^\d{4}$/.test(v)) return "pin4";
+      var d = v.split("").map(Number), same = d.every(function (x) { return x === d[0]; });
+      var up = d.every(function (x, i) { return i === 0 || x === d[i - 1] + 1; }), down = d.every(function (x, i) { return i === 0 || x === d[i - 1] - 1; });
+      if (same || up || down || v.slice(0, 2) === v.slice(2) || v === "2580" || v === "1379") return "pin4new";
+    }
     if (rule === "code6" && !/^\d{6}$/.test(v)) return "code6";
     if (rule === "min8" && v.length < 8) return "min8";
     if (rule === "url" && !/^https:\/\/\S+$/i.test(v)) return "url";

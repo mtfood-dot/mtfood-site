@@ -180,11 +180,11 @@ if ("serviceWorker" in navigator) {
       </div>
       <div class="field">
         <label id="lblPin" for="pin">Choisis un code PIN (4 chiffres)</label>
-        <input type="password" id="pin" data-required data-rule="pin4" placeholder="Ex: 1234" inputmode="numeric" maxlength="4" autocomplete="off">
+        <input type="password" id="pin" data-required data-rule="pin4new" placeholder="••••" inputmode="numeric" maxlength="4" autocomplete="off">
       </div>
       <div class="field">
         <label id="lblPinConfirm" for="pinConfirm">Confirme ton code PIN</label>
-        <input type="password" id="pinConfirm" data-required data-rule="pin4" placeholder="Ex: 1234" inputmode="numeric" maxlength="4" autocomplete="off">
+        <input type="password" id="pinConfirm" data-required data-rule="pin4" placeholder="••••" inputmode="numeric" maxlength="4" autocomplete="off">
       </div>
       <div class="field">
         <label id="lblEmail" for="email">E-mail (optionnel)</label>
@@ -314,9 +314,9 @@ function applyLanguage(){
   document.getElementById("optPlein").textContent = t("optPlein");
   document.getElementById("optPartiel").textContent = t("optPartiel");
   document.getElementById("lblPin").textContent = t("lblPin");
-  document.getElementById("pin").placeholder = t("pinPlaceholder");
+  document.getElementById("pin").placeholder = "••••";
   document.getElementById("lblPinConfirm").textContent = t("lblPinConfirm");
-  document.getElementById("pinConfirm").placeholder = t("pinPlaceholder");
+  document.getElementById("pinConfirm").placeholder = "••••";
   document.getElementById("lblNotes").textContent = t("lblNotes");
   document.getElementById("lblEmail").textContent = t("lblEmail");
   document.getElementById("emailHint").textContent = t("emailHint");
