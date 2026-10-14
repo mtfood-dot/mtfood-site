@@ -91,6 +91,16 @@ main{max-width:520px;margin:0 auto;padding:20px 16px 0;}
 .status-attente{background:var(--gold-100);color:var(--gold-600);}
 .status-livraison{background:var(--blue-100);color:var(--blue-700);}
 .status-livree{background:#e5f6ea;color:var(--green);}
+.steps{display:flex;margin:16px 0 2px;padding:0;list-style:none;}
+.steps li{flex:1;text-align:center;position:relative;font-size:11.5px;font-weight:700;color:var(--muted,#8a94a6);line-height:1.25;padding:0 2px;}
+.steps li .b{display:flex;width:26px;height:26px;margin:0 auto 6px;border-radius:50%;background:#e6eaf1;color:#fff;align-items:center;justify-content:center;font-size:13px;position:relative;z-index:1;}
+.steps li::before{content:"";position:absolute;top:12px;inset-inline-start:-50%;width:100%;height:3px;background:#e6eaf1;}
+.steps li:first-child::before{display:none;}
+.steps li.done{color:var(--blue-900);}
+.steps li.done .b,.steps li.done::before{background:var(--green,#1f9d55);}
+.steps li.now{color:var(--blue-900);}
+.steps li.now .b{background:var(--blue-700,#1a4a9a);box-shadow:0 0 0 4px rgba(26,74,154,.18);}
+.steps li.now::before{background:var(--green,#1f9d55);}
 .status-badge .dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
 .status-livraison .dot{animation:pulse 1.4s infinite;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
@@ -160,6 +170,7 @@ if ("serviceWorker" in navigator) {
       <span class="status-badge" id="statusBadge"><span class="dot"></span><span id="statusBadgeText"></span></span>
       <span class="maj-text" id="majText"></span>
     </div>
+    <ol class="steps hidden" id="steps" aria-label=""></ol>
     <div class="livreur-nom hidden" id="livreurNomRow"></div>
   </div>
 
@@ -196,6 +207,7 @@ const I18N = {
     numeroRequired: "Merci d'entrer un numéro de commande.",
     notFound: "Commande introuvable. Vérifie le numéro et réessaie.",
     loadError: "Erreur de connexion. Vérifie ta connexion et réessaie.",
+    stepPrete: "Prête, en attente du livreur", stepRecue: "Commande reçue", stepPrep: "En préparation", stepRoute: "En route", stepLivree: "Livrée",
     statutEnAttente: "En attente d'un livreur",
     statutEnLivraison: "En cours de livraison",
     statutLivree: "Livrée",
@@ -229,6 +241,7 @@ const I18N = {
     numeroRequired: "يرجى إدخال رقم الطلب.",
     notFound: "الطلب غير موجود. تحقق من الرقم وأعد المحاولة.",
     loadError: "خطأ في الاتصال. تحقق من اتصالك وأعد المحاولة.",
+    stepPrete: "جاهز، بانتظار الموصل", stepRecue: "تم الاستلام", stepPrep: "قيد التحضير", stepRoute: "في الطريق", stepLivree: "تم التوصيل",
     statutEnAttente: "بانتظار عامل توصيل",
     statutEnLivraison: "جاري التوصيل",
     statutLivree: "تم التوصيل",
@@ -439,6 +452,16 @@ async function cancelOrder(){
 }
 $("cancelBtn").addEventListener("click", cancelOrder);
 
+function renderSteps(statut, prete){
+  const box = $("steps");
+  const idx = { "À confirmer": 0, "En attente": 1, "En livraison": 2, "Livrée": 3 }[statut];
+  if (idx === undefined) { box.classList.add("hidden"); return; }
+  const labels = [t("stepRecue"), prete ? t("stepPrete") : t("stepPrep"), t("stepRoute"), t("stepLivree")];
+  box.innerHTML = labels.map((l, i) =>
+    '<li class="' + (i < idx || idx === 3 ? "done" : i === idx ? "now" : "") + '"><span class="b">' + (i < idx || idx === 3 ? "✓" : "") + '</span>' + escapeHtml(l) + '</li>').join("");
+  box.classList.remove("hidden");
+}
+
 function render(data){
   $("statusCard").classList.add("show");
   const meta = statusMeta(data.statut);
@@ -455,6 +478,7 @@ function render(data){
   }
 
   const statut = String(data.statut || "").trim();
+  renderSteps(statut, !!data.prete);
   updateCancelBox(statut);
 
   if (statut === "À confirmer" || statut === "Annulée") {

@@ -883,6 +883,7 @@ const I18N = {
     liveHintLateDriver: "Aucun livreur : assigner ou relancer.",
     liveHintLateDelivery: "Livraison trop longue : appeler le livreur ou le client.",
     liveRestaurant: "Restaurant",
+    liveReadySince: "Commande prête depuis",
     liveNoRestaurant: "Livraison directe (sans restaurant)",
     liveClient: "Client",
     liveAddress: "Adresse",
@@ -1149,6 +1150,7 @@ const I18N = {
     liveHintLateDriver: "لا يوجد موصّل: عيّن موصّلا أو أعد التنبيه.",
     liveHintLateDelivery: "التوصيل طويل جدا: اتصل بالموصّل أو الزبون.",
     liveRestaurant: "المطعم",
+    liveReadySince: "الطلب جاهز منذ",
     liveNoRestaurant: "توصيل مباشر (بدون مطعم)",
     liveClient: "الزبون",
     liveAddress: "العنوان",
@@ -1877,6 +1879,11 @@ function liveCardHtml(row) {
   const restoLine = restoName
     ? `<div class="live-line"><b>${escapeHtml(t("liveRestaurant"))} :</b> ${escapeHtml(restoName)}${restoPhone ? " · " + escapeHtml(fmtPhone(restoPhone)) : ""}</div>`
     : `<div class="live-line muted">${escapeHtml(t("liveNoRestaurant"))}</div>`;
+  let readyLine = "";
+  if (o.readyAt) {
+    const rt = new Date(o.readyAt + 3600000), p2 = (n) => String(n).padStart(2, "0");
+    readyLine = `<div class="live-line" style="color:#1a7d3a;font-weight:800;">🍽️ ${escapeHtml(t("liveReadySince"))} ${p2(rt.getUTCHours())}:${p2(rt.getUTCMinutes())}</div>`;
+  }
   const drvMatch = /^(.*?)\s*\(([^)]*)\)\s*$/.exec(String(o.livreur || ""));
   const drvName = drvMatch ? drvMatch[1] : String(o.livreur || "");
   const drvPhone = drvMatch ? drvMatch[2] : "";
@@ -1934,6 +1941,7 @@ function liveCardHtml(row) {
         <div class="live-timer" data-live-timer>${escapeHtml(liveFmtElapsed(row.el))}</div>
       </div>
       ${restoLine}
+      ${readyLine}
       ${driverLine}
       <div class="live-line"><b>${escapeHtml(t("liveClient"))} :</b> ${escapeHtml(o.client || "")} · ${escapeHtml(fmtPhone(o.telephone))}</div>
       <div class="live-line muted">${escapeHtml(o.adresse || "")} (${escapeHtml(o.zone || "")}) · ${escapeHtml(String(o.total || 0))} DA · ${escapeHtml(o.horodatage || "")}</div>
