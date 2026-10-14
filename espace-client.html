@@ -240,16 +240,18 @@ $("tabHistory").addEventListener("click", () => {
   render();
 });
 
+function parseArticles(txt){
+  // Format enregistré à la commande : "2x Pizza margherita (600 DA), 1x Eau 50 cl (50 DA)"
+  const out = []; const re = /(\d+)\s*x\s+(.+?)\s*\(\s*\d+(?:[.,]\d+)?\s*DA\s*\)/gi; let m;
+  while ((m = re.exec(String(txt || ""))) !== null) out.push({ nom: m[2].trim(), qty: parseInt(m[1], 10) || 1 });
+  return out;
+}
 async function reorder(numero){
-  // Action backend à ajouter : reorder (retourne le détail des articles de la
-  // commande "numero" pour pré-remplir un nouveau panier). En attendant, on
-  // renvoie simplement vers le menu avec le numéro en référence.
-  try {
-    const data = await apiGet({ action: "reorder", clientId: SESSION.clientId, numero });
-    if (data && data.success && data.panier) {
-      localStorage.setItem("mtd_reorder_cart", JSON.stringify(data.panier));
-    }
-  } catch(e) {}
+  const o = ORDERS.history.concat(ORDERS.current).find(x => String(x.numero) === String(numero));
+  const panier = o ? parseArticles(o.articles) : [];
+  if (panier.length) {
+    try { localStorage.setItem("mtd_reorder_cart", JSON.stringify(panier)); } catch(e) {}
+  }
   window.location.href = "menu.html?reorder=" + encodeURIComponent(numero);
 }
 window.reorder = reorder;
