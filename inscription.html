@@ -172,7 +172,7 @@
 </main>
 
 <script src="/form-validate.js" defer></script>
-<script src="/google-signin.js?v=2"></script>
+<script src="/google-signin.js?v=3"></script>
 <script>
 const CONFIG = {
   API_URL: "https://script.google.com/macros/s/AKfycbwgXOyXERonv0Yk7X-uhoHuE1Fj26RiYHPR4Tnr7Z_1Ly8wWjsvlE5sp3JJRukRR4ZF/exec",
@@ -330,9 +330,11 @@ if (CONFIG.GOOGLE_CLIENT_ID && window.MTGoogle) {
       try {
         const data = await apiGet({ action: "clientLoginGoogle", credential });
         if (data && data.success) {
+          let tel = data.telephone || "";
+          if (!tel) { try { tel = await MTGoogle.askPhone(data.clientId, apiGet); } catch (e) { tel = ""; } }
           localStorage.setItem(SESSION_KEY, JSON.stringify({
             clientId: data.clientId, prenom: data.prenom, nom: data.nom,
-            email: data.email || "", telephone: data.telephone || "", verifie: data.verifie !== false
+            email: data.email || "", telephone: tel, verifie: data.verifie !== false
           }));
           window.location.href = INSCRIPTION_NEXT;
         } else { showError((data && data.error) || t("networkError")); }
