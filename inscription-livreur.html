@@ -156,10 +156,10 @@ if ("serviceWorker" in navigator) {
       </div>
       <div class="field">
         <label id="lblZone" for="zone">Zone de livraison</label>
-        <select id="zone" data-required>
+        <select id="zone">
+          <option value="Les deux" id="optLesDeux" selected>Toutes les zones</option>
           <option value="Meftah Centre" id="optCentre">Meftah Centre</option>
           <option value="Meftah Dehors" id="optDehors">Meftah Dehors</option>
-          <option value="Les deux" id="optLesDeux">Les deux</option>
         </select>
       </div>
       <div class="field">
@@ -220,10 +220,10 @@ const I18N = {
     introText: "Remplis ce formulaire pour t'inscrire. Nous te contacterons rapidement.",
     lblNom: "Nom complet",
     lblTelephone: "Numéro de téléphone",
-    lblZone: "Zone de livraison",
+    lblZone: "Zone de livraison (facultatif)",
     optCentre: "Meftah Centre",
     optDehors: "Meftah Dehors",
-    optLesDeux: "Les deux",
+    optLesDeux: "Toutes les zones",
     lblVehicule: "Type de véhicule",
     optMoto: "Moto",
     optVoiture: "Voiture",
@@ -256,10 +256,10 @@ const I18N = {
     introText: "املأ هذه الاستمارة للتسجيل. سنتواصل معك في أقرب وقت.",
     lblNom: "الاسم الكامل",
     lblTelephone: "رقم الهاتف",
-    lblZone: "منطقة التوصيل",
+    lblZone: "منطقة التوصيل (اختياري)",
     optCentre: "مفتاح المركز",
     optDehors: "مفتاح خارج المركز",
-    optLesDeux: "كلاهما",
+    optLesDeux: "كل المناطق",
     lblVehicule: "نوع المركبة",
     optMoto: "دراجة نارية",
     optVoiture: "سيارة",
@@ -356,7 +356,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
     const nom = document.getElementById("nom").value.trim();
     const telephone = document.getElementById("telephone").value.trim();
-    const zone = document.getElementById("zone").value;
+    const zone = document.getElementById("zone").value || "Les deux";
     const vehicule = document.getElementById("vehicule").value;
     const disponibilite = document.getElementById("disponibilite").value;
     const pin = document.getElementById("pin").value.trim();
@@ -369,7 +369,7 @@ document.addEventListener("DOMContentLoaded", function(){
       return;
     }
 
-    if(!nom || !telephone || !zone || !vehicule || !disponibilite || !pin || !pinConfirm){
+    if(!nom || !telephone || !vehicule || !disponibilite || !pin || !pinConfirm){
       errorBox.textContent = t("fillRequired");
       errorBox.classList.add("show");
       return;
