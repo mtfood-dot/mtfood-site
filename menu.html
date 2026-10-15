@@ -270,6 +270,15 @@
   .resto-card .rt .dot{opacity:.5;}
   .resto-card .rs{font-size:12px;color:var(--gold-600,#b8860b);font-weight:700;margin-top:3px;}
   .resto-card.closed{opacity:.72;}
+  .resto-card.far{opacity:.55;}
+  .resto-card .tier{font-weight:800;color:var(--blue-900);white-space:nowrap;}
+  .resto-card .tier u{text-decoration:none;color:#c3ccd9;}
+  .filters{display:flex;gap:8px;overflow-x:auto;padding:4px 16px 10px;max-width:960px;margin:0 auto;box-sizing:border-box;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .filters::-webkit-scrollbar{display:none;}
+  .fchip{flex:0 0 auto;border:1.5px solid var(--border);background:var(--card);color:var(--blue-900);border-radius:999px;padding:8px 14px;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;}
+  .fchip.on{background:var(--blue-900);border-color:var(--blue-900);color:#fff;}
+  .fsep{flex:0 0 1px;background:var(--border);margin:4px 2px;}
+  body.in-resto .filters{display:none;}
   .resto-card .rx{font-size:13px;color:#b3261e;font-weight:800;margin-top:3px;}
   .closed-banner{display:none;max-width:960px;margin:10px auto 0;padding:11px 14px;background:#fdecea;color:#b3261e;border:1.5px solid #f0c4c0;border-radius:12px;font-size:14px;font-weight:800;text-align:center;box-sizing:border-box;}
   .closed-banner.show{display:block;}
@@ -560,6 +569,7 @@ if ("serviceWorker" in navigator) {
 <div class="search-box"><input type="search" id="searchInput" autocomplete="off" enterkeyhint="search" placeholder="Restaurant, plat, pizza, tacos…"></div>
 
 <nav class="tabs" id="tabs"></nav>
+<div class="filters" id="filters"></div>
 
 <main>
   <div id="restoList" class="resto-list"></div>
@@ -849,6 +859,8 @@ const I18N = {
     searchPlaceholder: "Restaurant, plat, pizza, tacos…",
     dishSearchPlaceholder: "Chercher un plat…",
     noRestoFound: "Aucun restaurant ne correspond à ta recherche.",
+    fAll: "Toutes les villes", fOpen: "Ouvert maintenant", fPrice: "Prix", fReset: "Réinitialiser",
+    outZoneCard: "📍 Hors de ta zone de livraison", outZoneOrder: "Ce restaurant ne livre pas à ton adresse. Change d'adresse ou choisis un autre restaurant.", outZoneShort: "Hors zone",
     noDishFound: "Aucun plat ne correspond à ta recherche.",
     dishCount: "{n} plat(s)",
     reorderMissing: "{n} plat(s) de cette commande ne sont plus disponibles et n'ont pas été ajoutés.",
@@ -998,6 +1010,8 @@ const I18N = {
     searchPlaceholder: "مطعم، طبق، بيتزا، تاكوس…",
     dishSearchPlaceholder: "ابحث عن طبق…",
     noRestoFound: "لا يوجد مطعم مطابق لبحثك.",
+    fAll: "كل المدن", fOpen: "مفتوح الآن", fPrice: "السعر", fReset: "إعادة التعيين",
+    outZoneCard: "📍 خارج منطقة التوصيل الخاصة بك", outZoneOrder: "هذا المطعم لا يوصّل إلى عنوانك. غيّر العنوان أو اختر مطعمًا آخر.", outZoneShort: "خارج المنطقة",
     noDishFound: "لا يوجد طبق مطابق لبحثك.",
     dishCount: "{n} طبق",
     reorderMissing: "{n} من أطباق هذا الطلب لم تعد متوفرة ولم تتم إضافتها.",
@@ -1577,7 +1591,7 @@ function logoHtml(name) {
   return '<img src="branding/restos/' + escapeAttr(restoSlug(name)) + '.png" alt="" loading="lazy" data-ini="' + escapeAttr(restoInitials(name)) + '">';
 }
 function bindLogoFallback(root) {
-  root.querySelectorAll(".logo-circle img").forEach(img => img.addEventListener("error", () => { img.parentNode.textContent = img.dataset.ini; }));
+  root.querySelectorAll(".logo-circle img").forEach(img => img.addEventListener("error", () => { if (img.parentNode) img.parentNode.textContent = img.dataset.ini; }));
 }
 function restoCoverSrc(r) {
   const it = (r.items || []).find(i => i.photo);
@@ -1616,13 +1630,35 @@ function homeResults() {
     const hits = pool.filter(i => norm(i.nom).includes(q) || norm(i.nom_ar).includes(q) || norm(itemCat(i)).includes(q) || norm(i.categorie_ar).includes(q));
     if (nameHit || hits.length) out.push({ r: r, hits: nameHit ? [] : hits.slice(0, 2), dishHit: hits.length > 0 });
   });
-  return out;
+  const f = out.filter(x => {
+    const r = x.r;
+    if (FILTERS.ville && norm(restoVille(r)) !== norm(FILTERS.ville)) return false;
+    if (FILTERS.prix && priceTier(r) !== FILTERS.prix) return false;
+    if (FILTERS.open && restoClosedInfo(r.name)) return false;
+    return true;
+  });
+  // Les restaurants qui ne livrent pas à l'adresse du client passent en fin de liste (ordre alphabétique conservé)
+  return f.filter(x => !restoOutOfZone(x.r.name)).concat(f.filter(x => restoOutOfZone(x.r.name)));
 }
 
 /* Temps de préparation par restaurant (feuille Partenaires) : aucune valeur inventée, rien n'est affiché sans donnée */
 let RESTO_PREP = {};
 let PARTNERS = {};
 let RESTO_OPEN = {};
+let RESTO_VILLE = {};          // restaurant -> ville (colonne « Ville » de la feuille Partenaires)
+let RESTO_QUOTES = {};         // restaurant -> { covered, fee, km } pour l'adresse du client (calculé par le serveur)
+const PRICE_T1 = 600, PRICE_T2 = 1100;   // prix moyen d'un plat (DA) : < T1 = niveau 1, < T2 = niveau 2, sinon niveau 3
+const FILTERS = { ville: "", prix: 0, open: false };
+function restoQuoteOf(name) { return RESTO_QUOTES[norm(name || "")] || null; }
+function restoOutOfZone(name) { const q = restoQuoteOf(name); return !!(q && q.covered === false); }
+function priceTier(r) {
+  const p = (r.items || []).map(i => Number(i.prix)).filter(n => isFinite(n) && n > 0);
+  if (!p.length) return 0;
+  const avg = p.reduce((a, b) => a + b, 0) / p.length;
+  return avg < PRICE_T1 ? 1 : (avg < PRICE_T2 ? 2 : 3);
+}
+function tierHtml(n) { return n ? '<span class="tier" dir="ltr">' + [1, 2, 3].map(k => k <= n ? "<b>DA</b>" : "<u>DA</u>").join(" ") + "</span>" : ""; }
+function restoVille(r) { return RESTO_VILLE[norm(r.name)] || ""; }
 function restoClosedInfo(name) { const v = RESTO_OPEN[norm(name || "")]; return v && v.open === false ? v : null; }
 function closedText(name) {
   const v = restoClosedInfo(name);
@@ -1647,6 +1683,9 @@ function loadRestoInfo() {
     const o = {};
     Object.keys(res.restos).forEach(k => { const v = res.restos[k]; if (v && typeof v.open === "boolean") o[norm(k)] = { open: v.open, hours: v.hours || "", next: v.next || null, manual: !!v.manual }; });
     RESTO_OPEN = o;
+    const vv = {};
+    Object.keys(res.restos).forEach(k => { const v = res.restos[k]; if (v && v.ville) vv[norm(k)] = String(v.ville); });
+    RESTO_VILLE = vv;
     renderRestoBar();
     if (ACTIVE_RESTO !== null) renderGrid();
   }).catch(() => {});
@@ -1655,16 +1694,16 @@ function etaCardHtml(name) {
   if (restoClosedInfo(name)) return '<div class="rx"><span aria-hidden="true">🔒</span> ' + escapeHtml(closedText(name)) + "</div>";
   const tx = etaText(name);
   if (!tx) return "";
-  const q = DELIVERY.quote;
+  const q = restoQuoteOf(name);
   const fee = (q && q.covered && isFinite(q.fee)) ? ' <span class="dot">•</span> <bdi dir="ltr">' + escapeHtml(String(q.fee)) + ' DA</bdi>' : "";
   return '<div class="rt"><span aria-hidden="true">⏱</span> ' + escapeHtml(tx) + fee + '</div>';
 }
 function etaText(name) {
   const p = RESTO_PREP[norm(name)];
   if (!p) return "";
-  const q = DELIVERY.quote;
-  if (q && q.covered && isFinite(q.distanceKm)) {
-    const a = Math.round(p + q.distanceKm * CONFIG.ETA_MIN_PER_KM + CONFIG.ETA_BUFFER_MIN);
+  const q = restoQuoteOf(name);
+  if (q && q.covered && isFinite(q.km)) {
+    const a = Math.round(p + q.km * CONFIG.ETA_MIN_PER_KM + CONFIG.ETA_BUFFER_MIN);
     return t("etaRange").replace("{a}", a).replace("{b}", a + CONFIG.ETA_RANGE_MIN);
   }
   return t("prepOnly").replace("{m}", p);
@@ -1687,10 +1726,11 @@ function setViewChrome() {
       bindLogoFallback($("restoHead")); bindCoverFallback($("restoHead"));
       $("restoHeadName").textContent = r.name;
       const cl = closedText(r.name);
-      { const q = DELIVERY.quote, fee = (q && q.covered && isFinite(q.fee)) ? " • " + q.fee + " DA" : "";
+      { const q = restoQuoteOf(r.name), fee = (q && q.covered && isFinite(q.fee)) ? " • " + q.fee + " DA" : "";
         $("restoHeadInfo").textContent = r.soon ? t("menuSoon") : (cuisinesText(r) + (cl ? " · " + cl : (etaText(r.name) ? " · " + etaText(r.name) + fee : ""))); }
       const bn = $("closedBanner");
-      if (bn) { bn.textContent = cl ? "🔒 " + t("closedOrder") : ""; bn.classList.toggle("show", !!cl); }
+      const far = !cl && restoOutOfZone(r.name);
+      if (bn) { bn.textContent = cl ? "🔒 " + t("closedOrder") : (far ? "📍 " + t("outZoneOrder") : ""); bn.classList.toggle("show", !!(cl || far)); }
     }
   }
 }
@@ -1702,15 +1742,16 @@ function renderRestoBar() {
   const box = $("restoList");
   if (ACTIVE_RESTO !== null) { box.innerHTML = ""; return; }
   const res = homeResults();
+  renderFilters();
   box.innerHTML = res.map(x => {
     const r = x.r;
     const hint = x.hits && x.hits.length
       ? '<div class="rh">' + x.hits.map(i => escapeHtml(itemName(i)) + " · <bdi dir=\"ltr\">" + escapeHtml(String(i.prix)) + " DA</bdi>").join("<br>") + "</div>" : "";
-    return '<button type="button" class="resto-card' + (restoClosedInfo(r.name) ? ' closed' : '') + '" data-key="' + escapeAttr(r.key) + '">' +
+    return '<button type="button" class="resto-card' + (restoClosedInfo(r.name) ? ' closed' : '') + (restoOutOfZone(r.name) ? ' far' : '') + '" data-key="' + escapeAttr(r.key) + '">' +
       '<span class="rcover">' + coverInner(r) + (restoCoverSrc(r).logo ? "" : '<span class="logo-circle rbadge">' + logoHtml(r.name) + '</span>') + '</span>' +
       '<span class="meta"><div class="rn">' + escapeHtml(r.name) + '</div>' +
-      (r.soon ? '<div class="rs">' + escapeHtml(t('menuSoon')) + '</div>' : '<div class="rc">' + escapeHtml(cuisinesText(r)) + '</div>') +
-      etaCardHtml(r.name) + hint + '</span></button>';
+      (r.soon ? '<div class="rs">' + escapeHtml(t('menuSoon')) + '</div>' : '<div class="rc">' + escapeHtml(cuisinesText(r)) + (priceTier(r) ? " · " + tierHtml(priceTier(r)) : "") + '</div>') +
+      (restoOutOfZone(r.name) ? '<div class="rx">' + escapeHtml(t("outZoneCard")) + "</div>" : etaCardHtml(r.name)) + hint + '</span></button>';
   }).join("");
   bindLogoFallback(box); bindCoverFallback(box);
   box.querySelectorAll(".resto-card").forEach(btn => btn.addEventListener("click", () => {
@@ -1721,6 +1762,33 @@ function renderRestoBar() {
   nr.style.display = res.length ? "none" : "block";
   nr.textContent = res.length ? "" : t("noRestoFound");
 }
+
+function renderFilters() {
+  const box = $("filters"); if (!box) return;
+  const villes = [];
+  Object.keys(RESTO_VILLE).forEach(k => { const v = RESTO_VILLE[k]; if (v && !villes.some(x => norm(x) === norm(v))) villes.push(v); });
+  villes.sort((a, b) => a.localeCompare(b));
+  const chip = (cls, attrs, label) => '<button type="button" class="fchip' + (cls ? " " + cls : "") + '" ' + attrs + ">" + label + "</button>";
+  let h = "";
+  if (villes.length > 1) {
+    h += chip(!FILTERS.ville ? "on" : "", 'data-f="ville" data-v=""', escapeHtml(t("fAll")));
+    villes.forEach(v => { h += chip(norm(FILTERS.ville) === norm(v) ? "on" : "", 'data-f="ville" data-v="' + escapeAttr(v) + '"', escapeHtml(v)); });
+    h += '<span class="fsep"></span>';
+  }
+  [1, 2, 3].forEach(n => { h += chip(FILTERS.prix === n ? "on" : "", 'data-f="prix" data-v="' + n + '" dir="ltr"', [1, 2, 3].map(k => k <= n ? "DA" : "·").join(" ")); });
+  h += '<span class="fsep"></span>' + chip(FILTERS.open ? "on" : "", 'data-f="open"', escapeHtml(t("fOpen")));
+  if (FILTERS.ville || FILTERS.prix || FILTERS.open) h += chip("", 'data-f="reset"', "✕ " + escapeHtml(t("fReset")));
+  box.innerHTML = h;
+}
+document.addEventListener("click", ev => {
+  const b = ev.target.closest && ev.target.closest("#filters .fchip"); if (!b) return;
+  const f = b.dataset.f, v = b.dataset.v;
+  if (f === "ville") FILTERS.ville = v || "";
+  else if (f === "prix") FILTERS.prix = FILTERS.prix === Number(v) ? 0 : Number(v);
+  else if (f === "open") FILTERS.open = !FILTERS.open;
+  else if (f === "reset") { FILTERS.ville = ""; FILTERS.prix = 0; FILTERS.open = false; }
+  renderRestoBar();
+});
 
 function renderTabs() {
   const base = menuForResto();
@@ -1838,6 +1906,7 @@ window.addEventListener("popstate", (e) => {
 function addBtnHtml(id) {
   const it = MENU.find(i => String(i.id) === String(id));
   if (it && restoClosedInfo(it.partenaire)) return `<button class="add-btn" disabled>${t("closedShort")}</button>`;
+  if (it && restoOutOfZone(it.partenaire)) return `<button class="add-btn" disabled>${t("outZoneShort")}</button>`;
   return `<button class="add-btn" data-add="${id}">${t("add")}</button>`;
 }
 function qtyStepperHtml(id, qty) {
@@ -1877,6 +1946,7 @@ function changeQty(id, delta) {
   const item = MENU.find(i => String(i.id) === String(id));
   if (!item) return;
   if (delta > 0 && restoClosedInfo(item.partenaire)) { showCartNotice(t("closedOrder")); return; }
+  if (delta > 0 && restoOutOfZone(item.partenaire)) { showCartNotice(t("outZoneOrder")); return; }
   if (delta > 0 && !CART[id]) {
     const cp = cartPartner();
     if (cp !== null && cp !== String(item.partenaire || "").trim().toLowerCase()) {
@@ -1895,6 +1965,7 @@ function changeQty(id, delta) {
   if (ctrl) ctrl.innerHTML = next > 0 ? qtyStepperHtml(id, next) : addBtnHtml(id);
   bindCardEvents();
   updateCartBar();
+  ensureQuoteForCart();
 }
 
 /* ============================================================
@@ -1953,7 +2024,22 @@ let QUOTE_BUSY = false;
 let QUOTE_FAILED = false;
 let QUOTE_SEQ = 0;
 
-function emptyDelivery() { return { line: "", repere: "", lat: null, lng: null, source: "", quote: null }; }
+function emptyDelivery() { return { line: "", repere: "", lat: null, lng: null, source: "", quote: null, quoteResto: "" }; }
+/* Frais, distance et couverture de chaque restaurant pour l'adresse du client (calculés par le serveur) */
+function refreshRestoQuotes(seq) {
+  jsonpRequest({ action: "restosPour", lat: DELIVERY.lat.toFixed(6), lng: DELIVERY.lng.toFixed(6) }, 15000).then(res => {
+    if (seq !== QUOTE_SEQ || !res || !res.success || !res.restos) return;
+    const m = {};
+    Object.keys(res.restos).forEach(k => { m[norm(k)] = res.restos[k]; });
+    RESTO_QUOTES = m;
+    if (typeof renderRestoBar === "function" && MENU && MENU.length) { renderRestoBar(); if (ACTIVE_RESTO !== null) renderGrid(); }
+  }).catch(() => {});
+}
+/* Le restaurant du panier change : le devis (frais, rayon) doit être redemandé pour ce restaurant */
+function ensureQuoteForCart() {
+  if (!hasCoords() || QUOTE_BUSY || !DELIVERY.quote) return;
+  if ((DELIVERY.quoteResto || "") !== quoteRestoName().toLowerCase()) refreshQuote();
+}
 
 function loadDelivery() {
   try {
@@ -1987,8 +2073,11 @@ function syncSelectedZone() {
 }
 function hasCoords() { return DELIVERY.lat != null && DELIVERY.lng != null; }
 
-function fetchQuote(lat, lng) {
-  return jsonpRequest({ action: "deliveryQuote", lat: lat.toFixed(6), lng: lng.toFixed(6) }, 15000).then(res => {
+function quoteRestoName() { const l = Object.values(CART)[0]; return l ? String(l.item.partenaire || "").trim() : ""; }
+function fetchQuote(lat, lng, resto) {
+  const req = { action: "deliveryQuote", lat: lat.toFixed(6), lng: lng.toFixed(6) };
+  if (resto) req.resto = resto;
+  return jsonpRequest(req, 15000).then(res => {
     if (!res || !res.success) { const e = new Error((res && res.error) || "quote"); e.code = res && res.code; throw e; }
     return res.covered
       ? { covered: true, zoneId: res.zone.id, zoneNom: res.zone.nom, fee: Number(res.zone.frais), distanceKm: res.distanceKm, rang: res.rang }
@@ -2003,8 +2092,10 @@ function refreshQuote() {
   const seq = ++QUOTE_SEQ;
   QUOTE_BUSY = true; QUOTE_FAILED = false;
   DELIVERY.quote = null; syncSelectedZone(); renderAll();
-  return fetchQuote(DELIVERY.lat, DELIVERY.lng)
-    .then(q => { if (seq !== QUOTE_SEQ) return; DELIVERY.quote = q; })
+  const rn = quoteRestoName();
+  refreshRestoQuotes(seq);
+  return fetchQuote(DELIVERY.lat, DELIVERY.lng, rn)
+    .then(q => { if (seq !== QUOTE_SEQ) return; DELIVERY.quote = q; DELIVERY.quoteResto = rn.toLowerCase(); })
     .catch(() => { if (seq !== QUOTE_SEQ) return; DELIVERY.quote = null; QUOTE_FAILED = true; })
     .finally(() => { if (seq !== QUOTE_SEQ) return; QUOTE_BUSY = false; syncSelectedZone(); renderAll(); });
 }
@@ -2018,7 +2109,7 @@ function setReference(lat, lng, source) {
 /* Adresse écrite modifiée : coordonnées, zone et tarif ne sont plus valables */
 function invalidateReference() {
   QUOTE_SEQ++; QUOTE_BUSY = false; QUOTE_FAILED = false;
-  DELIVERY.lat = null; DELIVERY.lng = null; DELIVERY.source = ""; DELIVERY.quote = null;
+  DELIVERY.lat = null; DELIVERY.lng = null; DELIVERY.source = ""; DELIVERY.quote = null; RESTO_QUOTES = {};
   syncSelectedZone();
   saveDelivery();
   renderAll();

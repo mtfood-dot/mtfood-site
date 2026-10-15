@@ -165,6 +165,20 @@ if ("serviceWorker" in navigator) {
         <input type="text" id="adresse" data-required>
       </div>
       <div class="field">
+        <label id="lblVille" for="ville">Ville</label>
+        <select id="ville" data-required></select>
+      </div>
+      <div class="field">
+        <label id="lblPos">Position de l'établissement</label>
+        <button type="button" id="posBtn" style="width:100%;padding:12px;border:1.5px solid var(--blue-600);background:#fff;color:var(--blue-800);border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;"></button>
+        <div id="posMsg" style="font-size:12.5px;margin-top:6px;color:var(--muted,#697a96);"></div>
+      </div>
+      <div class="field">
+        <label id="lblRayon" for="rayon">Rayon de livraison souhaité</label>
+        <select id="rayon"><option value="3">3 km</option><option value="5" selected>5 km</option><option value="7">7 km</option></select>
+        <div id="rayonHint" style="font-size:12px;margin-top:5px;color:var(--muted,#697a96);"></div>
+      </div>
+      <div class="field">
         <label id="lblZone" for="zone">Zone de livraison</label>
         <select id="zone" data-required>
           <option value="Meftah Centre" id="optCentre">Meftah Centre</option>
@@ -207,6 +221,8 @@ if ("serviceWorker" in navigator) {
 <div class="footer-note" id="footerNote">MT Delivery — البريد السريع · Meftah, Blida</div>
 
 <script>
+const CITIES = ["Meftah", "Bougara", "Larbaa", "Blida", "Boufarik", "Birtouta", "Sidi Moussa", "Khemis El Khechna"];   // à compléter selon les villes ouvertes
+let POS = null;   // { lat, lng } : position de l'établissement, demandée seulement au clic
 const I18N = {
   fr: {
     tagline: "Rejoins notre réseau de partenaires",
@@ -220,6 +236,9 @@ const I18N = {
     optSnack: "Snack",
     optAutre: "Autre",
     lblAdresse: "Adresse",
+    lblVille: "Ville", villeChoose: "Choisis ta ville", villeOther: "Autre",
+    lblPos: "Position de l'établissement (recommandé)", posBtn: "📍 Utiliser ma position actuelle", posOk: "✓ Position enregistrée.", posWait: "Localisation…", posFail: "Position non disponible : le service client te contactera pour la confirmer.", posHint: "Appuie ici quand tu es dans ton établissement.",
+    lblRayon: "Rayon de livraison souhaité", rayonHint: "Le service client confirme le rayon définitif.", villeRequired: "Choisis ta ville.",
     lblZone: "Zone de livraison",
     optCentre: "Meftah Centre",
     optDehors: "Meftah Dehors",
@@ -253,6 +272,9 @@ const I18N = {
     optSnack: "سناك",
     optAutre: "أخرى",
     lblAdresse: "العنوان",
+    lblVille: "المدينة", villeChoose: "اختر مدينتك", villeOther: "أخرى",
+    lblPos: "موقع المؤسسة (موصى به)", posBtn: "📍 استخدام موقعي الحالي", posOk: "✓ تم حفظ الموقع.", posWait: "جارٍ تحديد الموقع…", posFail: "الموقع غير متاح: سيتصل بك خدمة الزبائن لتأكيده.", posHint: "اضغط هنا وأنت داخل مؤسستك.",
+    lblRayon: "نطاق التوصيل المطلوب", rayonHint: "خدمة الزبائن تؤكد النطاق النهائي.", villeRequired: "اختر مدينتك.",
     lblZone: "منطقة التوصيل",
     optCentre: "مفتاح المركز",
     optDehors: "مفتاح خارج المركز",
@@ -296,6 +318,15 @@ function applyLanguage(){
   document.getElementById("optAutre").textContent = t("optAutre");
   document.getElementById("lblAdresse").textContent = t("lblAdresse");
   document.getElementById("lblZone").textContent = t("lblZone");
+  document.getElementById("lblVille").textContent = t("lblVille");
+  document.getElementById("lblPos").textContent = t("lblPos");
+  document.getElementById("lblRayon").textContent = t("lblRayon");
+  document.getElementById("rayonHint").textContent = t("rayonHint");
+  if(!POS) document.getElementById("posBtn").textContent = t("posBtn");
+  if(!POS) document.getElementById("posMsg").textContent = t("posHint");
+  { const sel = document.getElementById("ville"), cur = sel.value;
+    sel.innerHTML = '<option value="">' + t("villeChoose") + '</option>' + CITIES.map(c => '<option value="' + c + '">' + c + '</option>').join("") + '<option value="Autre">' + t("villeOther") + '</option>';
+    sel.value = cur; }
   document.getElementById("optCentre").textContent = t("optCentre");
   document.getElementById("optDehors").textContent = t("optDehors");
   document.getElementById("optLesDeux").textContent = t("optLesDeux");
@@ -350,6 +381,16 @@ document.addEventListener("DOMContentLoaded", function(){
   applyLanguage();
   document.getElementById("langToggle").addEventListener("click", toggleLanguage);
 
+  document.getElementById("posBtn").addEventListener("click", function(){
+    const msg = document.getElementById("posMsg");
+    if(!navigator.geolocation){ msg.textContent = t("posFail"); return; }
+    msg.textContent = t("posWait");
+    navigator.geolocation.getCurrentPosition(function(pos){
+      POS = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      document.getElementById("posBtn").textContent = t("posOk");
+      msg.textContent = "";
+    }, function(){ POS = null; msg.textContent = t("posFail"); }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 });
+  });
   const form = document.getElementById("registerForm");
   const errorBox = document.getElementById("errorBox");
   const submitBtn = document.getElementById("submitBtn");
@@ -374,6 +415,12 @@ document.addEventListener("DOMContentLoaded", function(){
       return;
     }
 
+    const ville = document.getElementById("ville").value;
+    if(!ville){
+      errorBox.textContent = t("villeRequired");
+      errorBox.classList.add("show");
+      return;
+    }
     if(!nom || !type || !adresse || !zone || !telephone){
       errorBox.textContent = t("fillRequired");
       errorBox.classList.add("show");
@@ -390,6 +437,11 @@ document.addEventListener("DOMContentLoaded", function(){
         payload: JSON.stringify({ nom, type, adresse, zone, telephone, email, horaires, description })
       });
       if(data && data.success){
+        try{
+          const g = { action: "partnerGeoSubmit", telephone: telephone, ville: ville, rayon: document.getElementById("rayon").value };
+          if(POS){ g.lat = POS.lat.toFixed(6); g.lng = POS.lng.toFixed(6); }
+          await apiGet(g);
+        }catch(_){}
         document.getElementById("formCard").classList.add("hidden");
         document.getElementById("successCard").classList.remove("hidden");
       } else {
