@@ -273,11 +273,14 @@
   .resto-card.far{opacity:.55;}
   .resto-card .tier{font-weight:800;color:var(--blue-900);white-space:nowrap;}
   .resto-card .tier u{text-decoration:none;color:#c3ccd9;}
-  .filters{display:flex;gap:8px;overflow-x:auto;padding:4px 16px 10px;max-width:960px;margin:0 auto;box-sizing:border-box;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
-  .filters::-webkit-scrollbar{display:none;}
-  .fchip{flex:0 0 auto;border:1.5px solid var(--border);background:var(--card);color:var(--blue-900);border-radius:999px;padding:8px 14px;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;}
+  .filters{max-width:960px;margin:0 auto;padding:4px 16px 10px;box-sizing:border-box;}
+  .filters .frow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;}
+  .fsel{flex:1 1 160px;min-width:0;border:1.5px solid var(--border);background:var(--card);color:var(--blue-900);border-radius:999px;padding:10px 14px;font-family:inherit;font-size:14px;font-weight:700;}
+  .fprice{flex:1 1 200px;display:flex;align-items:center;gap:6px;border:1.5px solid var(--border);background:var(--card);border-radius:999px;padding:4px 14px;}
+  .fprice .finp{width:100%;min-width:0;border:none;outline:none;background:transparent;font-family:inherit;font-size:14px;font-weight:700;color:var(--blue-900);text-align:center;padding:6px 0;}
+  .fprice .fdash,.fprice .fda{color:var(--muted);font-weight:700;font-size:13px;}
+  .fchip{flex:0 0 auto;border:1.5px solid var(--border);background:var(--card);color:var(--blue-900);border-radius:999px;padding:9px 14px;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;}
   .fchip.on{background:var(--blue-900);border-color:var(--blue-900);color:#fff;}
-  .fsep{flex:0 0 1px;background:var(--border);margin:4px 2px;}
   body.in-resto .filters{display:none;}
   .resto-card .rx{font-size:13px;color:#b3261e;font-weight:800;margin-top:3px;}
   .closed-banner{display:none;max-width:960px;margin:10px auto 0;padding:11px 14px;background:#fdecea;color:#b3261e;border:1.5px solid #f0c4c0;border-radius:12px;font-size:14px;font-weight:800;text-align:center;box-sizing:border-box;}
@@ -859,7 +862,7 @@ const I18N = {
     searchPlaceholder: "Restaurant, plat, pizza, tacos…",
     dishSearchPlaceholder: "Chercher un plat…",
     noRestoFound: "Aucun restaurant ne correspond à ta recherche.",
-    fAll: "Toutes les villes", fOpen: "Ouvert maintenant", fPrice: "Prix", fReset: "Réinitialiser",
+    fAll: "Toutes les villes", fCity: "Ville", fMin: "Min", fMax: "Max", fOpen: "Ouvert maintenant", fPrice: "Prix", fReset: "Réinitialiser",
     outZoneCard: "📍 Hors de ta zone de livraison", outZoneOrder: "Ce restaurant ne livre pas à ton adresse. Change d'adresse ou choisis un autre restaurant.", outZoneShort: "Hors zone",
     noDishFound: "Aucun plat ne correspond à ta recherche.",
     dishCount: "{n} plat(s)",
@@ -1010,7 +1013,7 @@ const I18N = {
     searchPlaceholder: "مطعم، طبق، بيتزا، تاكوس…",
     dishSearchPlaceholder: "ابحث عن طبق…",
     noRestoFound: "لا يوجد مطعم مطابق لبحثك.",
-    fAll: "كل المدن", fOpen: "مفتوح الآن", fPrice: "السعر", fReset: "إعادة التعيين",
+    fAll: "كل المدن", fCity: "المدينة", fMin: "الأدنى", fMax: "الأقصى", fOpen: "مفتوح الآن", fPrice: "السعر", fReset: "إعادة التعيين",
     outZoneCard: "📍 خارج منطقة التوصيل الخاصة بك", outZoneOrder: "هذا المطعم لا يوصّل إلى عنوانك. غيّر العنوان أو اختر مطعمًا آخر.", outZoneShort: "خارج المنطقة",
     noDishFound: "لا يوجد طبق مطابق لبحثك.",
     dishCount: "{n} طبق",
@@ -1632,8 +1635,11 @@ function homeResults() {
   });
   const f = out.filter(x => {
     const r = x.r;
-    if (FILTERS.ville && norm(restoVille(r)) !== norm(FILTERS.ville)) return false;
-    if (FILTERS.prix && priceTier(r) !== FILTERS.prix) return false;
+    if (FILTERS.ville && cityKey(restoVille(r)) !== cityKey(FILTERS.ville)) return false;
+    if (FILTERS.pmin !== null || FILTERS.pmax !== null) {
+      const lo = FILTERS.pmin === null ? 0 : FILTERS.pmin, hi = FILTERS.pmax === null ? Infinity : FILTERS.pmax;
+      if (!(r.items || []).some(i => { const n = Number(i.prix); return isFinite(n) && n >= lo && n <= hi; })) return false;   // au moins un plat dans la fourchette
+    }
     if (FILTERS.open && restoClosedInfo(r.name)) return false;
     return true;
   });
@@ -1648,7 +1654,10 @@ let RESTO_OPEN = {};
 let RESTO_VILLE = {};          // restaurant -> ville (colonne « Ville » de la feuille Partenaires)
 let RESTO_QUOTES = {};         // restaurant -> { covered, fee, km } pour l'adresse du client (calculé par le serveur)
 const PRICE_T1 = 600, PRICE_T2 = 1100;   // prix moyen d'un plat (DA) : < T1 = niveau 1, < T2 = niveau 2, sinon niveau 3
-const FILTERS = { ville: "", prix: 0, open: false };
+const FILTERS = { ville: "", pmin: null, pmax: null, open: false };
+const FILTER_CITIES = ["Bougara", "Larbaa", "Meftah", "Bouinan"];   // villes proposées dans la liste
+const CITY_ALIAS = { bouinane: "bouinan", bouinen: "bouinan" };
+function cityKey(v) { const k = norm(v); return CITY_ALIAS[k] || k; }
 function restoQuoteOf(name) { return RESTO_QUOTES[norm(name || "")] || null; }
 function restoOutOfZone(name) { const q = restoQuoteOf(name); return !!(q && q.covered === false); }
 function priceTier(r) {
@@ -1763,32 +1772,35 @@ function renderRestoBar() {
   nr.textContent = res.length ? "" : t("noRestoFound");
 }
 
-function renderFilters() {
+let FILTERS_BUILT = false;
+function buildFilters() {
   const box = $("filters"); if (!box) return;
-  const villes = [];
-  Object.keys(RESTO_VILLE).forEach(k => { const v = RESTO_VILLE[k]; if (v && !villes.some(x => norm(x) === norm(v))) villes.push(v); });
-  villes.sort((a, b) => a.localeCompare(b));
-  const chip = (cls, attrs, label) => '<button type="button" class="fchip' + (cls ? " " + cls : "") + '" ' + attrs + ">" + label + "</button>";
-  let h = "";
-  if (villes.length > 1) {
-    h += chip(!FILTERS.ville ? "on" : "", 'data-f="ville" data-v=""', escapeHtml(t("fAll")));
-    villes.forEach(v => { h += chip(norm(FILTERS.ville) === norm(v) ? "on" : "", 'data-f="ville" data-v="' + escapeAttr(v) + '"', escapeHtml(v)); });
-    h += '<span class="fsep"></span>';
-  }
-  [1, 2, 3].forEach(n => { h += chip(FILTERS.prix === n ? "on" : "", 'data-f="prix" data-v="' + n + '" dir="ltr"', [1, 2, 3].map(k => k <= n ? "DA" : "·").join(" ")); });
-  h += '<span class="fsep"></span>' + chip(FILTERS.open ? "on" : "", 'data-f="open"', escapeHtml(t("fOpen")));
-  if (FILTERS.ville || FILTERS.prix || FILTERS.open) h += chip("", 'data-f="reset"', "✕ " + escapeHtml(t("fReset")));
-  box.innerHTML = h;
+  box.innerHTML =
+    '<div class="frow">' +
+      '<select id="fVille" class="fsel" aria-label=""></select>' +
+      '<span class="fprice"><input id="fMin" type="text" inputmode="numeric" maxlength="6" class="finp" dir="ltr"><span class="fdash">–</span><input id="fMax" type="text" inputmode="numeric" maxlength="6" class="finp" dir="ltr"><span class="fda">DA</span></span>' +
+    '</div>' +
+    '<div class="frow"><button type="button" class="fchip" id="fOpen"></button><button type="button" class="fchip" id="fReset" style="display:none;"></button></div>';
+  $("fVille").addEventListener("change", () => { FILTERS.ville = $("fVille").value; renderRestoBar(); });
+  const num = id => { const v = $(id).value.replace(/[^\d]/g, ""); if ($(id).value !== v) $(id).value = v; return v === "" ? null : Number(v); };
+  let tm = null;
+  const onPrice = () => { FILTERS.pmin = num("fMin"); FILTERS.pmax = num("fMax"); clearTimeout(tm); tm = setTimeout(renderRestoBar, 250); };
+  $("fMin").addEventListener("input", onPrice); $("fMax").addEventListener("input", onPrice);
+  $("fOpen").addEventListener("click", () => { FILTERS.open = !FILTERS.open; renderRestoBar(); });
+  $("fReset").addEventListener("click", () => { FILTERS.ville = ""; FILTERS.pmin = null; FILTERS.pmax = null; FILTERS.open = false; $("fMin").value = ""; $("fMax").value = ""; renderRestoBar(); });
+  FILTERS_BUILT = true;
 }
-document.addEventListener("click", ev => {
-  const b = ev.target.closest && ev.target.closest("#filters .fchip"); if (!b) return;
-  const f = b.dataset.f, v = b.dataset.v;
-  if (f === "ville") FILTERS.ville = v || "";
-  else if (f === "prix") FILTERS.prix = FILTERS.prix === Number(v) ? 0 : Number(v);
-  else if (f === "open") FILTERS.open = !FILTERS.open;
-  else if (f === "reset") { FILTERS.ville = ""; FILTERS.prix = 0; FILTERS.open = false; }
-  renderRestoBar();
-});
+function renderFilters() {
+  if (!$("filters")) return;
+  if (!FILTERS_BUILT) buildFilters();
+  const sel = $("fVille");
+  sel.innerHTML = '<option value="">' + escapeHtml(t("fAll")) + "</option>" + FILTER_CITIES.map(c => '<option value="' + escapeAttr(c) + '">' + escapeHtml(c) + "</option>").join("");
+  sel.value = FILTERS.ville; sel.setAttribute("aria-label", t("fCity"));
+  $("fMin").placeholder = t("fMin"); $("fMax").placeholder = t("fMax");
+  $("fOpen").textContent = t("fOpen"); $("fOpen").classList.toggle("on", FILTERS.open);
+  const any = !!(FILTERS.ville || FILTERS.pmin !== null || FILTERS.pmax !== null || FILTERS.open);
+  $("fReset").textContent = "✕ " + t("fReset"); $("fReset").style.display = any ? "" : "none";
+}
 
 function renderTabs() {
   const base = menuForResto();
