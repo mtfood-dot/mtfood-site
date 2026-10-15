@@ -253,12 +253,18 @@
   .search-box input:focus{outline:none;border-color:var(--blue-600);}
   .resto-list{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;padding-top:8px;}
   @media(min-width:640px){.resto-list{grid-template-columns:repeat(2,minmax(0,1fr));}}
-  .resto-card{display:flex;align-items:center;gap:12px;text-align:start;width:100%;min-width:0;box-sizing:border-box;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);padding:12px;cursor:pointer;font-family:inherit;color:inherit;-webkit-tap-highlight-color:transparent;}
+  .resto-card{display:flex;align-items:stretch;gap:0;text-align:start;width:100%;min-width:0;box-sizing:border-box;background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow-sm);padding:0;overflow:hidden;cursor:pointer;font-family:inherit;color:inherit;-webkit-tap-highlight-color:transparent;}
   .resto-card:active{transform:scale(.99);}
   .logo-circle{flex:0 0 auto;width:64px;height:64px;border-radius:50%;background:#fff;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:20px;font-weight:800;color:var(--blue-900);}
   .logo-circle img{width:100%;height:100%;object-fit:cover;display:block;}
-  .resto-card .meta{min-width:0;flex:1;}
-  .resto-card .rn{font-size:16px;font-weight:800;color:var(--blue-900);line-height:1.25;overflow-wrap:anywhere;}
+  .rcover{position:relative;flex:0 0 auto;display:flex;align-items:center;justify-content:center;overflow:hidden;background:linear-gradient(135deg,var(--blue-700),var(--blue-900));color:#fff;font-weight:800;letter-spacing:.5px;}
+  .rcover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}
+  .rcover img.contain{object-fit:contain;padding:10px;box-sizing:border-box;}
+  .rcover img.contain.ok{background:#fff;}
+  .resto-card .rcover{width:112px;min-height:112px;font-size:26px;}
+  .resto-card .rbadge{position:absolute;bottom:6px;inset-inline-start:6px;z-index:2;width:30px;height:30px;font-size:11px;border-width:1.5px;}
+  .resto-card .meta{min-width:0;flex:1;padding:12px 14px;display:flex;flex-direction:column;justify-content:center;}
+  .resto-card .rn{font-size:17px;font-weight:800;color:var(--blue-900);line-height:1.25;overflow-wrap:anywhere;}
   .resto-card .rc{font-size:12.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .resto-card .rt{font-size:13px;color:var(--blue-900);font-weight:700;margin-top:3px;}
   .resto-card .rt .dot{opacity:.5;}
@@ -269,14 +275,15 @@
   .closed-banner.show{display:block;}
   .add-btn:disabled{background:#e4e8ee;color:#7b8798;cursor:not-allowed;box-shadow:none;}
   .resto-card .rh{font-size:12.5px;color:var(--blue-700);margin-top:4px;line-height:1.35;}
-  .resto-card .chev{flex:0 0 auto;color:var(--muted);font-size:22px;line-height:1;}
-  html[dir="rtl"] .resto-card .chev{transform:scaleX(-1);}
-  .resto-head{max-width:960px;margin:0 auto;padding:12px 16px 0;display:flex;align-items:center;gap:12px;}
-  .resto-head .back{flex:0 0 auto;width:40px;height:40px;border-radius:50%;border:1.5px solid var(--border);background:var(--card);font-size:20px;line-height:1;color:var(--blue-900);cursor:pointer;font-family:inherit;}
+  .resto-head{max-width:960px;margin:0 auto;padding:0 0 4px;}
+  .resto-head .hero{position:relative;height:190px;border-radius:0 0 22px 22px;overflow:hidden;font-size:54px;}
+  .resto-head .back{position:absolute;top:14px;inset-inline-start:14px;z-index:3;width:44px;height:44px;border-radius:50%;border:none;background:#fff;box-shadow:0 2px 10px rgba(10,38,71,.25);font-size:22px;line-height:1;color:var(--blue-900);cursor:pointer;font-family:inherit;}
   html[dir="rtl"] .resto-head .back{transform:scaleX(-1);}
-  .resto-head .logo-circle{width:56px;height:56px;font-size:18px;}
-  .resto-head .rn{font-size:19px;font-weight:800;color:var(--blue-900);line-height:1.2;}
-  .resto-head .rc{font-size:12.5px;color:var(--muted);margin-top:2px;}
+  .resto-head .hinfo{display:flex;align-items:center;gap:12px;padding:0 16px;margin-top:-30px;position:relative;z-index:2;}
+  .resto-head .logo-circle{width:64px;height:64px;font-size:18px;box-shadow:0 2px 8px rgba(10,38,71,.18);}
+  .resto-head .hinfo .txt{min-width:0;padding-top:30px;}
+  .resto-head .rn{font-size:22px;font-weight:800;color:var(--blue-900);line-height:1.2;}
+  .resto-head .rc{font-size:13px;color:var(--muted);margin-top:3px;}
   .no-result{max-width:960px;margin:24px auto;padding:0 16px;text-align:center;color:var(--muted);font-size:14.5px;display:none;}
   body:not(.in-resto) .resto-head{display:none;}
   body.in-resto header.top, body.in-resto .boost-box, body.in-resto .promo-section, body.in-resto .join-section{display:none !important;}
@@ -541,9 +548,11 @@ if ("serviceWorker" in navigator) {
 <div id="pendingBar" style="display:none;background:#fff4e0;border:1px solid #f0b34a;color:#7a4a00;margin:10px 14px;padding:10px 12px;border-radius:10px;font-size:14px;line-height:1.4;"></div>
 
 <div class="resto-head" id="restoHead">
-  <button class="back" id="restoBack" type="button" aria-label="Retour">←</button>
-  <span class="logo-circle" id="restoHeadLogo"></span>
-  <div style="min-width:0;"><div class="rn" id="restoHeadName"></div><div class="rc" id="restoHeadInfo"></div></div>
+  <div class="hero rcover" id="restoHero"><button class="back" id="restoBack" type="button" aria-label="Retour">←</button></div>
+  <div class="hinfo">
+    <span class="logo-circle" id="restoHeadLogo"></span>
+    <div class="txt"><div class="rn" id="restoHeadName"></div><div class="rc" id="restoHeadInfo"></div></div>
+  </div>
 </div>
 
 <div class="closed-banner" id="closedBanner" role="status"></div>
@@ -1570,6 +1579,21 @@ function logoHtml(name) {
 function bindLogoFallback(root) {
   root.querySelectorAll(".logo-circle img").forEach(img => img.addEventListener("error", () => { img.parentNode.textContent = img.dataset.ini; }));
 }
+function restoCoverSrc(r) {
+  const it = (r.items || []).find(i => i.photo);
+  return it ? { src: it.photo, logo: false } : { src: "branding/restos/" + restoSlug(r.name) + ".png", logo: true };
+}
+function coverInner(r) {
+  const c = restoCoverSrc(r);
+  return '<span class="rini">' + escapeHtml(restoInitials(r.name)) + '</span><img class="' + (c.logo ? "contain" : "") + '" src="' + escapeAttr(c.src) + '" alt="" loading="lazy">';
+}
+function bindCoverFallback(root) {
+  root.querySelectorAll(".rcover img").forEach(img => {
+    img.addEventListener("error", () => { img.remove(); });
+    img.addEventListener("load", () => { img.classList.add("ok"); });
+    if (img.complete) { if (img.naturalWidth) img.classList.add("ok"); else img.remove(); }
+  });
+}
 function dishCountText(n) {
   if (LANG === "ar") return n + " " + (n === 1 ? "طبق" : "أطباق");
   return n + (n === 1 ? " plat" : " plats");
@@ -1659,10 +1683,12 @@ function setViewChrome() {
     if (r) {
       $("restoHeadLogo").className = "logo-circle";
       $("restoHeadLogo").innerHTML = logoHtml(r.name);
-      bindLogoFallback($("restoHead"));
+      { const hero = $("restoHero"), back = $("restoBack"); hero.querySelectorAll(".rini,img").forEach(n => n.remove()); hero.insertAdjacentHTML("afterbegin", coverInner(r)); hero.appendChild(back); }
+      bindLogoFallback($("restoHead")); bindCoverFallback($("restoHead"));
       $("restoHeadName").textContent = r.name;
       const cl = closedText(r.name);
-      $("restoHeadInfo").textContent = (r.soon ? t("menuSoon") : dishCountText(r.items.length)) + (cl ? " · " + cl : (etaText(r.name) ? " · " + etaText(r.name) : ""));
+      { const q = DELIVERY.quote, fee = (q && q.covered && isFinite(q.fee)) ? " • " + q.fee + " DA" : "";
+        $("restoHeadInfo").textContent = r.soon ? t("menuSoon") : (cuisinesText(r) + (cl ? " · " + cl : (etaText(r.name) ? " · " + etaText(r.name) + fee : ""))); }
       const bn = $("closedBanner");
       if (bn) { bn.textContent = cl ? "🔒 " + t("closedOrder") : ""; bn.classList.toggle("show", !!cl); }
     }
@@ -1681,13 +1707,12 @@ function renderRestoBar() {
     const hint = x.hits && x.hits.length
       ? '<div class="rh">' + x.hits.map(i => escapeHtml(itemName(i)) + " · <bdi dir=\"ltr\">" + escapeHtml(String(i.prix)) + " DA</bdi>").join("<br>") + "</div>" : "";
     return '<button type="button" class="resto-card' + (restoClosedInfo(r.name) ? ' closed' : '') + '" data-key="' + escapeAttr(r.key) + '">' +
-      '<span class="logo-circle">' + logoHtml(r.name) + '</span>' +
+      '<span class="rcover">' + coverInner(r) + (restoCoverSrc(r).logo ? "" : '<span class="logo-circle rbadge">' + logoHtml(r.name) + '</span>') + '</span>' +
       '<span class="meta"><div class="rn">' + escapeHtml(r.name) + '</div>' +
-      '<div class="rs">' + escapeHtml(r.soon ? t('menuSoon') : dishCountText(r.items.length)) + '</div>' +
-      etaCardHtml(r.name) + hint + '</span>' +
-      '<span class="chev" aria-hidden="true">›</span></button>';
+      (r.soon ? '<div class="rs">' + escapeHtml(t('menuSoon')) + '</div>' : '<div class="rc">' + escapeHtml(cuisinesText(r)) + '</div>') +
+      etaCardHtml(r.name) + hint + '</span></button>';
   }).join("");
-  bindLogoFallback(box);
+  bindLogoFallback(box); bindCoverFallback(box);
   box.querySelectorAll(".resto-card").forEach(btn => btn.addEventListener("click", () => {
     const x = res.find(z => z.r.key === btn.dataset.key);
     openResto(btn.dataset.key, !!(x && x.dishHit));

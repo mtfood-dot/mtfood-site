@@ -398,6 +398,7 @@ if ("serviceWorker" in navigator) {
       <button class="tab-btn" id="tabZonesBtn" type="button"><span id="tabZonesLabel"></span></button>
       <button class="tab-btn" id="tabRatingsBtn" type="button"><span id="tabRatingsLabel"></span></button>
       <button class="tab-btn" id="tabFraudBtn" type="button"><span id="tabFraudLabel"></span></button>
+      <button class="tab-btn" id="tabCaisseBtn" type="button"><span id="tabCaisseLabel"></span></button>
     </div>
 
     <div id="ordersView">
@@ -566,6 +567,15 @@ if ("serviceWorker" in navigator) {
       </div>
       <div class="live-note" id="fraudNote"></div>
       <div id="fraudBody"></div>
+    </div>
+
+    <div id="caisseView" class="hidden">
+      <div class="refresh-row">
+        <div></div>
+        <button class="btn-refresh" id="refreshCaisseBtn" type="button"><span id="refreshCaisseLabel"></span></button>
+      </div>
+      <div class="live-note" id="caisseNote"></div>
+      <div id="caisseBody"></div>
     </div>
 
     <div id="ratingsView" class="hidden">
@@ -866,6 +876,17 @@ const I18N = {
     deleteAdFailedGeneric: "Impossible de supprimer la publicité. Réessaie.",
     tabZones: "Zones",
     tabRatings: "Avis",
+    tabCaisse: "Caisse",
+    caisseRefresh: "↻ Actualiser",
+    caisseNote: "Calcul sur les commandes livrées (paiement à la livraison). Commission MT : {pct} % des plats. Le livreur garde les frais de livraison. Plafond de cash par livreur : {lim} DA.",
+    caisseTotals: "Cash à récupérer chez les livreurs : {a} DA · Commissions MT : {b} DA · À reverser aux restaurants : {c} DA",
+    caisseDrivers: "Livreurs : cash à récupérer", caisseRestos: "Restaurants : à reverser",
+    caisseNone: "Aucune commande livrée pour le moment.",
+    caisseCashIn: "Encaissé", caisseKept: "Frais gardés", caisseDue: "À verser à MT", caissePaid: "Déjà versé", caisseBalance: "Solde",
+    caisseOver: "Au-dessus du plafond", caisseDelivered: "livrée(s)",
+    caisseDishes: "Plats", caisseCommission: "Commission", caisseToPay: "À reverser", caissePaidResto: "Déjà payé",
+    caisseAmount: "Montant (DA)", caisseNoteIn: "Note (facultatif)", caisseAddDriver: "Enregistrer le versement", caisseAddResto: "Enregistrer le paiement",
+    caisseBadAmount: "Montant invalide.", caisseSaved: "Enregistré.",
     tabFraud: "Fraude",
     fraudD30: "30 jours", fraudD90: "90 jours",
     fraudNote: "Rouge : 2 annulations suspectes ou plus, ou 4 annulations. Orange : 1 annulation suspecte ou 2 annulations. « Suspecte » = annulée après l'acceptation du restaurant ET la prise en charge par un livreur.",
@@ -1146,6 +1167,17 @@ const I18N = {
     deleteAdFailedGeneric: "تعذر حذف الإعلان. أعد المحاولة.",
     tabZones: "المناطق",
     tabRatings: "التقييمات",
+    tabCaisse: "الصندوق",
+    caisseRefresh: "↻ تحديث",
+    caisseNote: "الحساب على الطلبات المسلّمة (الدفع عند الاستلام). عمولة MT: {pct}٪ من ثمن الأطباق. عامل التوصيل يحتفظ برسوم التوصيل. سقف النقد لكل عامل: {lim} دج.",
+    caisseTotals: "نقد يجب استرجاعه من عمال التوصيل: {a} دج · عمولات MT: {b} دج · مستحقات المطاعم: {c} دج",
+    caisseDrivers: "عمال التوصيل: النقد المستحق", caisseRestos: "المطاعم: المبلغ المستحق",
+    caisseNone: "لا توجد طلبات مسلّمة حتى الآن.",
+    caisseCashIn: "المحصَّل", caisseKept: "الرسوم المحتفظ بها", caisseDue: "المستحق لـ MT", caissePaid: "المدفوع", caisseBalance: "الرصيد",
+    caisseOver: "فوق السقف", caisseDelivered: "مسلَّم",
+    caisseDishes: "الأطباق", caisseCommission: "العمولة", caisseToPay: "المستحق للمطعم", caissePaidResto: "المدفوع",
+    caisseAmount: "المبلغ (دج)", caisseNoteIn: "ملاحظة (اختياري)", caisseAddDriver: "تسجيل الدفعة", caisseAddResto: "تسجيل الدفع",
+    caisseBadAmount: "مبلغ غير صالح.", caisseSaved: "تم التسجيل.",
     tabFraud: "الاحتيال",
     fraudD30: "30 يوما", fraudD90: "90 يوما",
     fraudNote: "أحمر: إلغاءان مشبوهان أو أكثر، أو 4 إلغاءات. برتقالي: إلغاء مشبوه واحد أو إلغاءان. «مشبوه» = أُلغي بعد قبول المطعم وتكفل عامل التوصيل.",
@@ -1283,6 +1315,9 @@ function applyLanguage() {
   $("tabFraudLabel").textContent = t("tabFraud");
   $("fraudD30").textContent = t("fraudD30"); $("fraudD90").textContent = t("fraudD90");
   $("fraudNote").textContent = t("fraudNote");
+  $("tabCaisseLabel").textContent = t("tabCaisse");
+  $("refreshCaisseLabel").textContent = t("caisseRefresh");
+  if (CAISSE_DATA) renderCaisse(); else $("caisseNote").textContent = "";
   if (typeof liveApplyLang === "function") liveApplyLang();
   $("refreshZonesLabel").textContent = t("refreshLabel");
   $("subheadingZones").textContent = t("subheadingZones");
@@ -1442,6 +1477,8 @@ $("refreshZonesBtn").addEventListener("click", loadZonesAdmin);
 $("tabRatingsBtn").addEventListener("click", () => switchTab("ratings"));
 $("refreshRatingsBtn").addEventListener("click", loadRatingsAdmin);
 $("tabFraudBtn").addEventListener("click", () => switchTab("fraud"));
+$("tabCaisseBtn").addEventListener("click", () => switchTab("caisse"));
+$("refreshCaisseBtn").addEventListener("click", () => loadCaisseAdmin());
 $("refreshFraudBtn").addEventListener("click", () => loadFraudAdmin());
 $("fraudD30").addEventListener("click", () => { FRAUD_DAYS = 30; $("fraudD30").classList.add("active"); $("fraudD90").classList.remove("active"); loadFraudAdmin(); });
 $("fraudD90").addEventListener("click", () => { FRAUD_DAYS = 90; $("fraudD90").classList.add("active"); $("fraudD30").classList.remove("active"); loadFraudAdmin(); });
@@ -1459,6 +1496,7 @@ function switchTab(tab) {
   $("tabZonesBtn").classList.toggle("active", tab === "zones");
   $("tabRatingsBtn").classList.toggle("active", tab === "ratings");
   $("tabFraudBtn").classList.toggle("active", tab === "fraud");
+  $("tabCaisseBtn").classList.toggle("active", tab === "caisse");
   $("ordersView").classList.toggle("hidden", tab !== "orders");
   $("liveView").classList.toggle("hidden", tab !== "live");
   $("moderationView").classList.toggle("hidden", tab !== "moderation");
@@ -1470,6 +1508,7 @@ function switchTab(tab) {
   $("zonesView").classList.toggle("hidden", tab !== "zones");
   $("ratingsView").classList.toggle("hidden", tab !== "ratings");
   $("fraudView").classList.toggle("hidden", tab !== "fraud");
+  $("caisseView").classList.toggle("hidden", tab !== "caisse");
   hideError($("errorBox"));
   hideSuccess($("successBox"));
   if (tab === "live") liveStart();
@@ -1482,6 +1521,7 @@ function switchTab(tab) {
   if (tab === "zones") loadZonesAdmin();
   if (tab === "ratings") loadRatingsAdmin();
   if (tab === "fraud") loadFraudAdmin();
+  if (tab === "caisse") loadCaisseAdmin();
 }
 
 /* ============================================================
@@ -1513,6 +1553,67 @@ async function loadFraudAdmin() {
       '<div class="subheading">' + escapeHtml(t("fraudDrivers")) + "</div>" + ((d.livreurs || []).map(e => fraudCardHtml(e, false)).join("") || none);
   } catch (e) { showError($("errorBox"), t("loadFailedGeneric")); }
 }
+
+/* ============================================================
+   CAISSE : cash des livreurs (COD) et commission MT
+   ============================================================ */
+let CAISSE_DATA = null;
+function da(n) { return Math.round(Number(n) || 0).toLocaleString(LANG === "ar" ? "ar-DZ" : "fr-FR"); }
+function caisseLine(label, val, strong) { return '<span style="display:inline-block;margin-inline-end:12px;">' + escapeHtml(label) + " : " + (strong ? "<b>" : "") + da(val) + " DA" + (strong ? "</b>" : "") + "</span>"; }
+function caisseForm(type, nom) {
+  return '<div class="caisse-form" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">' +
+    '<input type="text" inputmode="decimal" class="caisse-amt" placeholder="' + escapeHtml(t("caisseAmount")) + '" style="flex:1 1 110px;min-width:90px;padding:8px;border:1px solid #cfd8e3;border-radius:8px;">' +
+    '<input type="text" maxlength="120" class="caisse-note" placeholder="' + escapeHtml(t("caisseNoteIn")) + '" style="flex:2 1 150px;min-width:110px;padding:8px;border:1px solid #cfd8e3;border-radius:8px;">' +
+    '<button type="button" class="btn-refresh caisse-add" data-type="' + type + '" data-nom="' + escapeHtml(nom) + '">' +
+    escapeHtml(t(type === "livreur" ? "caisseAddDriver" : "caisseAddResto")) + "</button></div>";
+}
+function renderCaisse() {
+  const d = CAISSE_DATA; if (!d) return;
+  const pct = Math.round((d.params.commission || 0) * 1000) / 10;
+  $("caisseNote").textContent = t("caisseNote").replace("{pct}", pct).replace("{lim}", da(d.params.plafond));
+  const tt = d.totaux || {};
+  const none = '<div class="partner-card"><div class="meta">' + escapeHtml(t("caisseNone")) + "</div></div>";
+  const drv = (d.livreurs || []).map(x => {
+    const col = x.depasse ? "#b3261e" : (x.solde > 0 ? "#b26a00" : "#1c7c3a");
+    return '<div class="partner-card" style="border-inline-start:5px solid ' + col + ';"><div class="nom">' + escapeHtml(x.nom) +
+      (x.depasse ? ' <span style="color:#b3261e;font-weight:800;">⚠ ' + escapeHtml(t("caisseOver")) + "</span>" : "") +
+      '</div><div class="meta">' + x.livrees + " " + escapeHtml(t("caisseDelivered")) + "<br>" +
+      caisseLine(t("caisseCashIn"), x.encaisse) + caisseLine(t("caisseKept"), x.garde) + caisseLine(t("caisseDue"), x.du) + caisseLine(t("caissePaid"), x.verse) +
+      '<br><span style="color:' + col + ';">' + caisseLine(t("caisseBalance"), x.solde, true) + "</span></div>" + caisseForm("livreur", x.nom) + "</div>";
+  }).join("") || none;
+  const rst = (d.restos || []).map(x => {
+    return '<div class="partner-card" style="border-inline-start:5px solid ' + (x.solde > 0 ? "#b26a00" : "#1c7c3a") + ';"><div class="nom">' + escapeHtml(x.nom) +
+      '</div><div class="meta">' + x.livrees + " " + escapeHtml(t("caisseDelivered")) + "<br>" +
+      caisseLine(t("caisseDishes"), x.plats) + caisseLine(t("caisseCommission"), x.commission) + caisseLine(t("caisseToPay"), x.aVerser) + caisseLine(t("caissePaidResto"), x.paye) +
+      "<br>" + caisseLine(t("caisseBalance"), x.solde, true) + "</div>" + caisseForm("resto", x.nom) + "</div>";
+  }).join("") || none;
+  $("caisseBody").innerHTML = '<div class="partner-card"><div class="meta"><b>' +
+    escapeHtml(t("caisseTotals").replace("{a}", da(tt.duParLivreurs)).replace("{b}", da(tt.commissions)).replace("{c}", da(tt.aVerserRestos))) + "</b></div></div>" +
+    '<div class="subheading">' + escapeHtml(t("caisseDrivers")) + "</div>" + drv +
+    '<div class="subheading">' + escapeHtml(t("caisseRestos")) + "</div>" + rst;
+}
+async function loadCaisseAdmin() {
+  hideError($("errorBox"));
+  try {
+    const d = await apiGet({ action: "csCaisse", password: SESSION_PASSWORD });
+    if (!d.success) { showError($("errorBox"), d.error || t("loadFailedGeneric")); return; }
+    CAISSE_DATA = d; renderCaisse();
+  } catch (e) { showError($("errorBox"), t("loadFailedGeneric")); }
+}
+$("caisseBody").addEventListener("click", async (ev) => {
+  const btn = ev.target.closest(".caisse-add"); if (!btn || btn.disabled) return;
+  const form = btn.closest(".caisse-form");
+  const amt = form.querySelector(".caisse-amt").value.trim();
+  const n = Number(amt.replace(",", "."));
+  if (!amt || !isFinite(n) || n === 0) { showError($("errorBox"), t("caisseBadAmount")); return; }
+  hideError($("errorBox")); btn.disabled = true;
+  try {
+    const d = await apiGet({ action: "csCaisseAdd", password: SESSION_PASSWORD, type: btn.dataset.type, nom: btn.dataset.nom, montant: amt, note: form.querySelector(".caisse-note").value.trim() });
+    if (!d.success) { showError($("errorBox"), d.error || t("loadFailedGeneric")); btn.disabled = false; return; }
+    showSuccess($("successBox"), t("caisseSaved"));
+    await loadCaisseAdmin();
+  } catch (e) { showError($("errorBox"), t("loadFailedGeneric")); btn.disabled = false; }
+});
 
 /* ============================================================
    AVIS DES CLIENTS
