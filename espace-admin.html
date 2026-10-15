@@ -442,6 +442,9 @@ if ("serviceWorker" in navigator) {
       </div>
       <div class="subheading" id="subheadingPartners"></div>
       <div id="listPartners"></div>
+      <div class="subheading" id="subheadingGeo"></div>
+      <div class="live-note" id="geoNote"></div>
+      <div id="geoBody"></div>
       <div class="refresh-row">
         <div class="subheading" id="subheadingDrivers" style="margin:16px 0 10px;"></div>
         <button class="btn-refresh" id="addDriverToggleBtn" type="button"><span id="addDriverToggleLabel"></span></button>
@@ -876,6 +879,10 @@ const I18N = {
     deleteAdFailedGeneric: "Impossible de supprimer la publicité. Réessaie.",
     tabZones: "Zones",
     tabRatings: "Avis",
+    geoTitle: "Zone de livraison de chaque restaurant",
+    geoNote: "La position (latitude, longitude) et le rayon définissent où le restaurant livre. Sans rayon : limite par défaut de {max} km. Sans position : calcul depuis le centre de Meftah.",
+    geoVille: "Ville", geoLat: "Latitude", geoLng: "Longitude", geoRayon: "Rayon (km)", geoSave: "Enregistrer", geoSaved: "Enregistré.",
+    geoProposed: "Proposé par le restaurant", geoApply: "Valider {n} km", geoMap: "Voir sur la carte", geoNoPos: "Position manquante", geoDefaultRay: "rayon par défaut",
     tabCaisse: "Caisse",
     caisseRefresh: "↻ Actualiser",
     caisseNote: "Calcul sur les commandes livrées (paiement à la livraison). Commission MT : {pct} % des plats. Le livreur garde les frais de livraison. Plafond de cash par livreur : {lim} DA.",
@@ -1167,6 +1174,10 @@ const I18N = {
     deleteAdFailedGeneric: "تعذر حذف الإعلان. أعد المحاولة.",
     tabZones: "المناطق",
     tabRatings: "التقييمات",
+    geoTitle: "منطقة التوصيل لكل مطعم",
+    geoNote: "الموقع (خط العرض والطول) والنطاق يحددان أين يوصّل المطعم. بدون نطاق: الحد الافتراضي {max} كم. بدون موقع: الحساب من مركز المفتاح.",
+    geoVille: "المدينة", geoLat: "خط العرض", geoLng: "خط الطول", geoRayon: "النطاق (كم)", geoSave: "حفظ", geoSaved: "تم الحفظ.",
+    geoProposed: "اقتراح المطعم", geoApply: "اعتماد {n} كم", geoMap: "عرض على الخريطة", geoNoPos: "الموقع ناقص", geoDefaultRay: "النطاق الافتراضي",
     tabCaisse: "الصندوق",
     caisseRefresh: "↻ تحديث",
     caisseNote: "الحساب على الطلبات المسلّمة (الدفع عند الاستلام). عمولة MT: {pct}٪ من ثمن الأطباق. عامل التوصيل يحتفظ برسوم التوصيل. سقف النقد لكل عامل: {lim} دج.",
@@ -1316,6 +1327,8 @@ function applyLanguage() {
   $("fraudD30").textContent = t("fraudD30"); $("fraudD90").textContent = t("fraudD90");
   $("fraudNote").textContent = t("fraudNote");
   $("tabCaisseLabel").textContent = t("tabCaisse");
+  $("subheadingGeo").textContent = t("geoTitle");
+  if (GEO_DATA) renderGeo();
   $("refreshCaisseLabel").textContent = t("caisseRefresh");
   if (CAISSE_DATA) renderCaisse(); else $("caisseNote").textContent = "";
   if (typeof liveApplyLang === "function") liveApplyLang();
@@ -1553,6 +1566,51 @@ async function loadFraudAdmin() {
       '<div class="subheading">' + escapeHtml(t("fraudDrivers")) + "</div>" + ((d.livreurs || []).map(e => fraudCardHtml(e, false)).join("") || none);
   } catch (e) { showError($("errorBox"), t("loadFailedGeneric")); }
 }
+
+/* ============================================================
+   ZONE DE LIVRAISON DE CHAQUE RESTAURANT : ville, position, rayon
+   ============================================================ */
+let GEO_DATA = null;
+function geoInput(cls, label, val, w, mode) {
+  return '<label style="flex:' + w + ' 1 ' + (w * 60) + 'px;min-width:' + (w * 45) + 'px;font-size:11.5px;font-weight:700;color:#4a5b70;">' + escapeHtml(label) +
+    '<input type="text" class="' + cls + '" inputmode="' + (mode || "decimal") + '" value="' + escapeAttr(val == null ? "" : String(val)) + '" style="width:100%;box-sizing:border-box;margin-top:3px;padding:8px;border:1px solid #cfd8e3;border-radius:8px;font-size:14px;"></label>';
+}
+function renderGeo() {
+  const d = GEO_DATA; if (!d) return;
+  $("geoNote").textContent = t("geoNote").replace("{max}", d.maxKm || "—");
+  $("geoBody").innerHTML = (d.partners || []).map(x => {
+    const noPos = x.lat == null || x.lng == null;
+    const prop = (x.proposition && x.proposition !== x.rayon)
+      ? '<div style="font-size:12.5px;margin-top:6px;">' + escapeHtml(t("geoProposed")) + " : <b>" + x.proposition + ' km</b> <button type="button" class="btn-refresh geo-apply" data-v="' + x.proposition + '" style="margin-inline-start:6px;">' + escapeHtml(t("geoApply").replace("{n}", x.proposition)) + "</button></div>" : "";
+    const map = noPos ? "" : ' · <a href="https://www.google.com/maps?q=' + encodeURIComponent(x.lat + "," + x.lng) + '" target="_blank" rel="noopener">' + escapeHtml(t("geoMap")) + "</a>";
+    return '<div class="partner-card geo-card" data-nom="' + escapeAttr(x.nom) + '" style="border-inline-start:5px solid ' + (noPos ? "#b26a00" : "#1c7c3a") + ';"><div class="nom">' + escapeHtml(x.nom) +
+      ' <span style="font-size:12px;color:#697a96;font-weight:600;">' + escapeHtml(x.statut) + "</span></div>" +
+      '<div class="meta">' + (noPos ? '<span style="color:#b26a00;font-weight:800;">⚠ ' + escapeHtml(t("geoNoPos")) + "</span> · " : "") + (x.rayon ? x.rayon + " km" : escapeHtml(t("geoDefaultRay"))) + map + "</div>" + prop +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">' + geoInput("geo-ville", t("geoVille"), x.ville, 2, "text") + geoInput("geo-lat", t("geoLat"), x.lat, 2) + geoInput("geo-lng", t("geoLng"), x.lng, 2) + geoInput("geo-ray", t("geoRayon"), x.rayon, 1) + "</div>" +
+      '<div style="margin-top:8px;"><button type="button" class="btn-refresh geo-save">' + escapeHtml(t("geoSave")) + "</button></div></div>";
+  }).join("");
+}
+async function loadGeoAdmin() {
+  try {
+    const d = await apiGet({ action: "csGeoList", password: SESSION_PASSWORD });
+    if (d.success) { GEO_DATA = d; renderGeo(); }
+  } catch (e) {}
+}
+$("geoBody").addEventListener("click", async (ev) => {
+  const card = ev.target.closest(".geo-card"); if (!card) return;
+  const apply = ev.target.closest(".geo-apply");
+  if (apply) card.querySelector(".geo-ray").value = apply.dataset.v;
+  if (!ev.target.closest(".geo-save") && !apply) return;
+  const btn = card.querySelector(".geo-save"); if (btn.disabled) return;
+  const q = c => card.querySelector(c).value.trim();
+  hideError($("errorBox")); btn.disabled = true;
+  try {
+    const d = await apiGet({ action: "csGeoSet", password: SESSION_PASSWORD, nom: card.dataset.nom, ville: q(".geo-ville"), lat: q(".geo-lat"), lng: q(".geo-lng"), rayon: q(".geo-ray") });
+    if (!d.success) { showError($("errorBox"), d.error || t("loadFailedGeneric")); btn.disabled = false; return; }
+    showSuccess($("successBox"), t("geoSaved"));
+    await loadGeoAdmin();
+  } catch (e) { showError($("errorBox"), t("loadFailedGeneric")); btn.disabled = false; }
+});
 
 /* ============================================================
    CAISSE : cash des livreurs (COD) et commission MT
@@ -2436,7 +2494,7 @@ async function loadPartners() {
     if (data.success) {
       PARTNERS = data.partners || [];
       updateRequestsUi();
-      if (CURRENT_TAB === "partners") renderPartners();
+      if (CURRENT_TAB === "partners") { renderPartners(); loadGeoAdmin(); }
     } else if (CURRENT_TAB === "partners") {
       showError($("errorBox"), data.error || t("loadPartnersFailedGeneric"));
     }
