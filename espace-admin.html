@@ -886,7 +886,7 @@ const I18N = {
     tabCaisse: "Caisse",
     caisseRefresh: "↻ Actualiser",
     caisseNote: "Calcul sur les commandes livrées (paiement à la livraison). Commission MT : {pct} % des plats. Le livreur garde les frais de livraison. Plafond de cash par livreur : {lim} DA.",
-    caisseTotals: "Cash à récupérer chez les livreurs : {a} DA · Commissions MT : {b} DA · À reverser aux restaurants : {c} DA",
+    caisseTotals: "Cash à récupérer chez les livreurs : {a} DA · Commissions MT : {b} DA · À reverser aux restaurants : {c} DA · Livraisons offertes (coût MT) : {d} DA",
     caisseDrivers: "Livreurs : cash à récupérer", caisseRestos: "Restaurants : à reverser",
     caisseNone: "Aucune commande livrée pour le moment.",
     caisseCashIn: "Encaissé", caisseKept: "Frais gardés", caisseDue: "À verser à MT", caissePaid: "Déjà versé", caisseBalance: "Solde",
@@ -1181,7 +1181,7 @@ const I18N = {
     tabCaisse: "الصندوق",
     caisseRefresh: "↻ تحديث",
     caisseNote: "الحساب على الطلبات المسلّمة (الدفع عند الاستلام). عمولة MT: {pct}٪ من ثمن الأطباق. عامل التوصيل يحتفظ برسوم التوصيل. سقف النقد لكل عامل: {lim} دج.",
-    caisseTotals: "نقد يجب استرجاعه من عمال التوصيل: {a} دج · عمولات MT: {b} دج · مستحقات المطاعم: {c} دج",
+    caisseTotals: "نقد يجب استرجاعه من عمال التوصيل: {a} دج · عمولات MT: {b} دج · مستحقات المطاعم: {c} دج · توصيل مجاني (تكلفة MT): {d} دج",
     caisseDrivers: "عمال التوصيل: النقد المستحق", caisseRestos: "المطاعم: المبلغ المستحق",
     caisseNone: "لا توجد طلبات مسلّمة حتى الآن.",
     caisseCashIn: "المحصَّل", caisseKept: "الرسوم المحتفظ بها", caisseDue: "المستحق لـ MT", caissePaid: "المدفوع", caisseBalance: "الرصيد",
@@ -1646,7 +1646,7 @@ function renderCaisse() {
       "<br>" + caisseLine(t("caisseBalance"), x.solde, true) + "</div>" + caisseForm("resto", x.nom) + "</div>";
   }).join("") || none;
   $("caisseBody").innerHTML = '<div class="partner-card"><div class="meta"><b>' +
-    escapeHtml(t("caisseTotals").replace("{a}", da(tt.duParLivreurs)).replace("{b}", da(tt.commissions)).replace("{c}", da(tt.aVerserRestos))) + "</b></div></div>" +
+    escapeHtml(t("caisseTotals").replace("{a}", da(tt.duParLivreurs)).replace("{b}", da(tt.commissions)).replace("{c}", da(tt.aVerserRestos)).replace("{d}", da(tt.livraisonsOffertes || 0))) + "</b></div></div>" +
     '<div class="subheading">' + escapeHtml(t("caisseDrivers")) + "</div>" + drv +
     '<div class="subheading">' + escapeHtml(t("caisseRestos")) + "</div>" + rst;
 }

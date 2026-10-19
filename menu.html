@@ -401,6 +401,13 @@
   .zone-opt.selected{border-color:var(--blue-600);background:var(--blue-100);}
   .zone-opt .fee{font-weight:800;color:var(--blue-700);}
 
+  .loy{margin:8px 0 0;font-size:13px;line-height:1.5;}
+  .loy .lg{background:#e8f7ee;color:#0b6b35;border-radius:10px;padding:8px 10px;font-weight:700;margin-top:6px;}
+  .loy .lh{background:#fff6e0;color:#7a5200;border-radius:10px;padding:8px 10px;margin-top:6px;}
+  .loy .lp{color:var(--muted);margin-top:6px;}
+  .loy .lbar{height:6px;border-radius:99px;background:#e6e9ef;margin-top:4px;overflow:hidden;}
+  .loy .lbar i{display:block;height:100%;background:#1db954;}
+  .totals .line .was{text-decoration:line-through;opacity:.6;margin-inline-end:6px;}
   .cod-note{
     background:var(--gold-100);border:1px solid #ecd48a;color:#7a5b00;font-size:12.5px;
     padding:11px 13px;border-radius:11px;margin:16px 0;display:flex;gap:9px;align-items:flex-start;font-weight:500;
@@ -630,6 +637,7 @@ if ("serviceWorker" in navigator) {
     <div class="totals">
       <div class="line"><span id="lblSubtotalCart">Sous-total</span><span id="sumSubtotal">0 DA</span></div>
       <div class="line total"><span id="lblTotalCart">Total</span><span id="sumTotalCart">0 DA</span></div>
+      <div class="loy" id="loyCart"></div>
     </div>
     <button class="submit-btn" id="goCheckoutBtn">Passer la commande</button>
   </div>
@@ -665,6 +673,7 @@ if ("serviceWorker" in navigator) {
       <div class="line"><span id="lblSubtotalChk">Sous-total</span><span id="chkSubtotal">0 DA</span></div>
       <div class="line"><span id="lblDeliveryChk">Livraison</span><span id="chkFee">—</span></div>
       <div class="line total"><span id="lblTotalChk">Total à payer</span><span id="chkTotal">0 DA</span></div>
+      <div class="loy" id="loyChk"></div>
     </div>
 
     <div class="cod-note">💵 <span id="codNoteText">Paiement <b>à la livraison</b> (cash). Aucun paiement en ligne requis.</span></div>
@@ -797,6 +806,11 @@ const I18N = {
     deliveryTo: "Livraison :",
     distFromCenter: "À {d} km du centre de Meftah",
     deliveryFeeLbl: "Frais de livraison",
+    loyFreeAmount: "🎁 Livraison offerte : tes plats dépassent {n} DA.",
+    loyFreeLoyal: "🎁 Livraison offerte sur cette commande : merci pour ta fidélité !",
+    loyMore: "Plus que {x} DA de plats pour avoir la livraison offerte.",
+    loyProgress: "Fidélité : {c}/{n} commandes cette semaine (plats d'au moins {m} DA). La commande n°{n1} a la livraison offerte. Nouvelle semaine le samedi.",
+    loyFreeWord: "Offerte",
     changeAddr: "Modifier l'adresse",
     checkoutNeedAddr: "Localise ton adresse avant de confirmer la commande.",
     addrCheckNeedPos: "Écris une rue ou un lieu précis, ou utilise ta position (page Adresse).",
@@ -948,6 +962,11 @@ const I18N = {
     deliveryTo: "التوصيل:",
     distFromCenter: "على بعد {d} كم من وسط المفتاح",
     deliveryFeeLbl: "رسوم التوصيل",
+    loyFreeAmount: "🎁 التوصيل مجاني: مشترياتك تتجاوز {n} دج.",
+    loyFreeLoyal: "🎁 التوصيل مجاني لهذا الطلب: شكرًا على وفائك!",
+    loyMore: "بقي {x} دج من الأطباق للحصول على توصيل مجاني.",
+    loyProgress: "الوفاء: {c}/{n} طلبات هذا الأسبوع (أطباق بقيمة {m} دج على الأقل). الطلب رقم {n1} توصيله مجاني. أسبوع جديد كل سبت.",
+    loyFreeWord: "مجاني",
     changeAddr: "تعديل العنوان",
     checkoutNeedAddr: "حدّد موقع عنوانك قبل تأكيد الطلب.",
     addrCheckNeedPos: "اكتب شارعًا أو مكانًا دقيقًا، أو استخدم موقعك (صفحة العنوان).",
@@ -1357,6 +1376,7 @@ document.addEventListener("DOMContentLoaded", () => {
   applyLanguage();
   initAddress();
   loadMenu();
+  loadLoyalty();
   bindGlobalEvents();
 });
 
@@ -2014,6 +2034,7 @@ function renderCartLines() {
   const { subtotal } = cartTotals();
   $("sumSubtotal").textContent = subtotal + " DA";
   $("sumTotalCart").textContent = subtotal + " DA";
+  renderLoyalty();
 
   $("cartLines").querySelectorAll("[data-inc2]").forEach(b =>
     b.addEventListener("click", () => { changeQty(b.dataset.inc2, 1); renderCartLines(); }));
@@ -2147,12 +2168,50 @@ function updateCheckoutTotals() {
   const { subtotal } = cartTotals();
   $("chkSubtotal").textContent = subtotal + " DA";
   if (SELECTED_ZONE) {
-    $("chkFee").textContent = SELECTED_ZONE.fee + " DA";
-    $("chkTotal").textContent = (subtotal + SELECTED_ZONE.fee) + " DA";
+    const d = deliveryFor(subtotal);
+    if (d.free) $("chkFee").innerHTML = '<span class="was">' + d.real + ' DA</span><b>' + escapeHtml(t("loyFreeWord")) + '</b>';
+    else $("chkFee").textContent = d.fee + " DA";
+    $("chkTotal").textContent = (subtotal + d.fee) + " DA";
   } else {
     $("chkFee").textContent = t("chooseZonePlaceholder");
     $("chkTotal").textContent = subtotal + " DA";
   }
+  renderLoyalty();
+}
+
+/* ---- Fidélité : livraison offerte (le serveur décide et recalcule tout à la commande) ---- */
+let LOY = null;   // { freeFrom, needed, min, count, eligible } pour le client connecté
+function loadLoyalty() {
+  const s = getClientSession();
+  if (!s || !s.clientId) { LOY = null; renderLoyalty(); return Promise.resolve(); }
+  return jsonpRequest({ action: "loyaltyInfo", clientId: s.clientId }, 15000)
+    .then(res => { LOY = res && res.success ? res : null; })
+    .catch(() => { LOY = null; })
+    .then(() => { renderLoyalty(); if (SELECTED_ZONE) updateCheckoutTotals(); });
+}
+function deliveryFor(subtotal) {
+  if (!SELECTED_ZONE) return null;
+  let reason = "";
+  if (LOY) {
+    if (LOY.freeFrom > 0 && subtotal >= LOY.freeFrom) reason = "montant";
+    else if (LOY.eligible) reason = "fidelite";
+  }
+  return { fee: reason ? 0 : SELECTED_ZONE.fee, real: SELECTED_ZONE.fee, free: !!reason, reason: reason };
+}
+function renderLoyalty() {
+  const { subtotal } = cartTotals();
+  let h = "";
+  if (LOY && subtotal > 0) {
+    const byAmount = LOY.freeFrom > 0 && subtotal >= LOY.freeFrom;
+    if (byAmount) h += '<div class="lg">' + escapeHtml(t("loyFreeAmount").replace("{n}", LOY.freeFrom)) + '</div>';
+    else if (LOY.eligible) h += '<div class="lg">' + escapeHtml(t("loyFreeLoyal")) + '</div>';
+    else if (LOY.freeFrom > 0) h += '<div class="lh">' + escapeHtml(t("loyMore").replace("{x}", LOY.freeFrom - subtotal)) + '</div>';
+    if (LOY.needed > 0 && !byAmount && !LOY.eligible) {
+      h += '<div class="lp">' + escapeHtml(t("loyProgress").replace("{c}", LOY.count).replace("{n}", LOY.needed).replace("{m}", LOY.min).replace("{n1}", LOY.needed + 1))
+        + '<div class="lbar"><i style="width:' + Math.min(100, Math.round(100 * LOY.count / LOY.needed)) + '%"></i></div></div>';
+    }
+  }
+  ["loyCart", "loyChk"].forEach(id => { const el = $(id); if (el) el.innerHTML = h; });
 }
 
 /* ---- Barre du haut ---- */
@@ -2538,6 +2597,7 @@ function bindGlobalEvents() {
     $("chkError").classList.remove("show");
     $("chkError").dataset.sticky = "";
     openOverlay("checkoutOverlay");
+    loadLoyalty();
     renderAll();
     if (hasCoords()) refreshQuote();   // tarif toujours revérifié par le serveur à l'ouverture
   });
@@ -2588,7 +2648,8 @@ function submitOrder() {
   }
 
   const { subtotal } = cartTotals();
-  const total = subtotal + SELECTED_ZONE.fee;
+  const dl = deliveryFor(subtotal);
+  const total = subtotal + dl.fee;
 
   const session = getClientSession() || {};
   // Identifiant d'envoi : conservé tant que la commande n'est pas confirmée (évite les doublons si on réessaie).
@@ -2600,7 +2661,7 @@ function submitOrder() {
     address: address,
     zone: SELECTED_ZONE.label,
     zoneId: SELECTED_ZONE.id,
-    deliveryFee: SELECTED_ZONE.fee,
+    deliveryFee: dl.fee,
     lat: DELIVERY.lat,
     lng: DELIVERY.lng,
     notes: notes,
@@ -2629,6 +2690,7 @@ function submitOrder() {
       $("waConfirmBtn").href = buildWhatsAppLink(res.orderNumber, payload);
       openOverlay("successOverlay");
       resetOrder();
+      loadLoyalty();
     })
     .catch(err => {
       const code = err && err.code;
@@ -2642,6 +2704,7 @@ function submitOrder() {
         // Prix, frais ou plat modifiés : on recharge le menu et les zones, le client revérifie son panier.
         ORDER_REQUEST_ID = "";
         refreshQuote();
+        loadLoyalty();
         loadMenu();
         showCheckoutError(err.serverMsg || t("sendError") + CONFIG.PHONE_DISPLAY + ".", true);
       } else if (code === "gps_required" || code === "out_of_zone") {
