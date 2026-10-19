@@ -399,6 +399,7 @@ if ("serviceWorker" in navigator) {
       <button class="tab-btn" id="tabRatingsBtn" type="button"><span id="tabRatingsLabel"></span></button>
       <button class="tab-btn" id="tabFraudBtn" type="button"><span id="tabFraudLabel"></span></button>
       <button class="tab-btn" id="tabCaisseBtn" type="button"><span id="tabCaisseLabel"></span></button>
+      <button class="tab-btn" id="tabStatsBtn" type="button"><span id="tabStatsLabel"></span></button>
     </div>
 
     <div id="ordersView">
@@ -570,6 +571,21 @@ if ("serviceWorker" in navigator) {
       </div>
       <div class="live-note" id="fraudNote"></div>
       <div id="fraudBody"></div>
+    </div>
+
+    <div id="statsView" class="hidden">
+      <div class="refresh-row">
+        <div class="live-bar" style="margin:0;">
+          <button class="live-chip" data-sd="1" type="button"></button>
+          <button class="live-chip active" data-sd="7" type="button"></button>
+          <button class="live-chip" data-sd="30" type="button"></button>
+          <button class="live-chip" data-sd="0" type="button"></button>
+        </div>
+        <button class="btn-refresh" id="refreshStatsBtn" type="button"><span id="refreshStatsLabel"></span></button>
+      </div>
+      <div id="statsBody"></div>
+      <div class="partner-card" style="margin-top:14px;"><div class="meta"><b id="backupTitle"></b><br><span id="backupNote" style="color:var(--muted);font-size:12.5px;"></span></div>
+        <button class="btn-refresh" id="backupBtn" type="button" style="margin-top:8px;"><span id="backupLabel"></span></button></div>
     </div>
 
     <div id="caisseView" class="hidden">
@@ -884,6 +900,13 @@ const I18N = {
     geoVille: "Ville", geoLat: "Latitude", geoLng: "Longitude", geoRayon: "Rayon (km)", geoSave: "Enregistrer", geoSaved: "Enregistré.",
     geoProposed: "Proposé par le restaurant", geoApply: "Valider {n} km", geoMap: "Voir sur la carte", geoNoPos: "Position manquante", geoDefaultRay: "rayon par défaut",
     tabCaisse: "Caisse",
+    tabStats: "Statistiques", sdToday: "Aujourd'hui", sd7: "7 jours", sd30: "30 jours", sdAll: "Tout",
+    stDelivered: "Livrées", stCancelled: "Annulées", stRate: "Taux d'annulation", stSales: "Chiffre d'affaires (plats)", stBasket: "Panier moyen",
+    stCommission: "Commissions MT", stOffered: "Livraisons offertes (coût MT)", stNewClients: "Nouveaux clients", stInProgress: "En cours",
+    stPerDay: "Commandes livrées par jour", stTopRestos: "Top restaurants", stTopDishes: "Top plats", stZones: "Zones les plus commandées",
+    stAlerts: "⚠️ Restaurants avec beaucoup d'annulations", stNone: "Aucune donnée sur cette période.", stAlertLine: "{n} : {a} annulées sur {t} commandes",
+    backupTitle: "Sauvegarde du Sheet", backupNote: "Une copie automatique est faite chaque nuit (14 conservées dans Drive, dossier « MT Food - Sauvegardes »).",
+    backupNow: "💾 Sauvegarder maintenant", backupDone: "Sauvegarde faite : ", backupBusy: "Sauvegarde en cours…",
     caisseRefresh: "↻ Actualiser",
     caisseNote: "Calcul sur les commandes livrées (paiement à la livraison). Commission MT : {pct} % des plats. Le livreur garde les frais de livraison. Plafond de cash par livreur : {lim} DA.",
     caisseTotals: "Cash à récupérer chez les livreurs : {a} DA · Commissions MT : {b} DA · À reverser aux restaurants : {c} DA · Livraisons offertes (coût MT) : {d} DA",
@@ -1179,6 +1202,13 @@ const I18N = {
     geoVille: "المدينة", geoLat: "خط العرض", geoLng: "خط الطول", geoRayon: "النطاق (كم)", geoSave: "حفظ", geoSaved: "تم الحفظ.",
     geoProposed: "اقتراح المطعم", geoApply: "اعتماد {n} كم", geoMap: "عرض على الخريطة", geoNoPos: "الموقع ناقص", geoDefaultRay: "النطاق الافتراضي",
     tabCaisse: "الصندوق",
+    tabStats: "الإحصائيات", sdToday: "اليوم", sd7: "7 أيام", sd30: "30 يوما", sdAll: "الكل",
+    stDelivered: "تم التسليم", stCancelled: "ملغاة", stRate: "نسبة الإلغاء", stSales: "رقم المعاملات (الأطباق)", stBasket: "متوسط السلة",
+    stCommission: "عمولات MT", stOffered: "توصيل مجاني (تكلفة MT)", stNewClients: "زبائن جدد", stInProgress: "قيد التنفيذ",
+    stPerDay: "الطلبات المسلّمة يوميا", stTopRestos: "أفضل المطاعم", stTopDishes: "أفضل الأطباق", stZones: "أكثر المناطق طلبا",
+    stAlerts: "⚠️ مطاعم بنسبة إلغاء مرتفعة", stNone: "لا توجد بيانات في هذه الفترة.", stAlertLine: "{n}: {a} ملغاة من {t} طلبات",
+    backupTitle: "نسخة احتياطية للجدول", backupNote: "تُنشأ نسخة تلقائية كل ليلة (تُحفظ 14 نسخة في Drive، مجلد « MT Food - Sauvegardes »).",
+    backupNow: "💾 احفظ نسخة الآن", backupDone: "تمت النسخة الاحتياطية: ", backupBusy: "جارٍ الحفظ…",
     caisseRefresh: "↻ تحديث",
     caisseNote: "الحساب على الطلبات المسلّمة (الدفع عند الاستلام). عمولة MT: {pct}٪ من ثمن الأطباق. عامل التوصيل يحتفظ برسوم التوصيل. سقف النقد لكل عامل: {lim} دج.",
     caisseTotals: "نقد يجب استرجاعه من عمال التوصيل: {a} دج · عمولات MT: {b} دج · مستحقات المطاعم: {c} دج · توصيل مجاني (تكلفة MT): {d} دج",
@@ -1327,6 +1357,10 @@ function applyLanguage() {
   $("fraudD30").textContent = t("fraudD30"); $("fraudD90").textContent = t("fraudD90");
   $("fraudNote").textContent = t("fraudNote");
   $("tabCaisseLabel").textContent = t("tabCaisse");
+  $("tabStatsLabel").textContent = t("tabStats"); $("refreshStatsLabel").textContent = t("caisseRefresh");
+  document.querySelectorAll("[data-sd]").forEach(b => { b.textContent = t({ "1": "sdToday", "7": "sd7", "30": "sd30", "0": "sdAll" }[b.dataset.sd]); });
+  $("backupTitle").textContent = t("backupTitle"); $("backupNote").textContent = t("backupNote"); $("backupLabel").textContent = t("backupNow");
+  if (STATS_DATA) renderStats();
   $("subheadingGeo").textContent = t("geoTitle");
   if (GEO_DATA) renderGeo();
   $("refreshCaisseLabel").textContent = t("caisseRefresh");
@@ -1491,6 +1525,23 @@ $("tabRatingsBtn").addEventListener("click", () => switchTab("ratings"));
 $("refreshRatingsBtn").addEventListener("click", loadRatingsAdmin);
 $("tabFraudBtn").addEventListener("click", () => switchTab("fraud"));
 $("tabCaisseBtn").addEventListener("click", () => switchTab("caisse"));
+$("tabStatsBtn").addEventListener("click", () => switchTab("stats"));
+$("refreshStatsBtn").addEventListener("click", () => loadStatsAdmin());
+document.querySelectorAll("[data-sd]").forEach(b => b.addEventListener("click", () => {
+  STATS_DAYS = Number(b.dataset.sd);
+  document.querySelectorAll("[data-sd]").forEach(x => x.classList.toggle("active", x === b));
+  loadStatsAdmin();
+}));
+$("backupBtn").addEventListener("click", async () => {
+  const btn = $("backupBtn"); if (btn.disabled) return;
+  hideError($("errorBox")); hideSuccess($("successBox")); btn.disabled = true; $("backupLabel").textContent = t("backupBusy");
+  try {
+    const d = await apiGet({ action: "csBackup", password: SESSION_PASSWORD });
+    if (!d.success) showError($("errorBox"), d.error || t("loadFailedGeneric"));
+    else showSuccess($("successBox"), t("backupDone") + d.name);
+  } catch (e) { showError($("errorBox"), t("loadFailedGeneric")); }
+  btn.disabled = false; $("backupLabel").textContent = t("backupNow");
+});
 $("refreshCaisseBtn").addEventListener("click", () => loadCaisseAdmin());
 $("refreshFraudBtn").addEventListener("click", () => loadFraudAdmin());
 $("fraudD30").addEventListener("click", () => { FRAUD_DAYS = 30; $("fraudD30").classList.add("active"); $("fraudD90").classList.remove("active"); loadFraudAdmin(); });
@@ -1510,6 +1561,8 @@ function switchTab(tab) {
   $("tabRatingsBtn").classList.toggle("active", tab === "ratings");
   $("tabFraudBtn").classList.toggle("active", tab === "fraud");
   $("tabCaisseBtn").classList.toggle("active", tab === "caisse");
+  $("tabStatsBtn").classList.toggle("active", tab === "stats");
+  $("statsView").classList.toggle("hidden", tab !== "stats");
   $("ordersView").classList.toggle("hidden", tab !== "orders");
   $("liveView").classList.toggle("hidden", tab !== "live");
   $("moderationView").classList.toggle("hidden", tab !== "moderation");
@@ -1535,6 +1588,7 @@ function switchTab(tab) {
   if (tab === "ratings") loadRatingsAdmin();
   if (tab === "fraud") loadFraudAdmin();
   if (tab === "caisse") loadCaisseAdmin();
+  if (tab === "stats") loadStatsAdmin();
 }
 
 /* ============================================================
@@ -1649,6 +1703,35 @@ function renderCaisse() {
     escapeHtml(t("caisseTotals").replace("{a}", da(tt.duParLivreurs)).replace("{b}", da(tt.commissions)).replace("{c}", da(tt.aVerserRestos)).replace("{d}", da(tt.livraisonsOffertes || 0))) + "</b></div></div>" +
     '<div class="subheading">' + escapeHtml(t("caisseDrivers")) + "</div>" + drv +
     '<div class="subheading">' + escapeHtml(t("caisseRestos")) + "</div>" + rst;
+}
+let STATS_DAYS = 7, STATS_DATA = null;
+async function loadStatsAdmin() {
+  hideError($("errorBox"));
+  try {
+    const d = await apiGet({ action: "csStats", password: SESSION_PASSWORD, days: STATS_DAYS });
+    if (!d.success) { showError($("errorBox"), d.error || t("loadFailedGeneric")); return; }
+    STATS_DATA = d; renderStats();
+  } catch (e) { showError($("errorBox"), t("loadFailedGeneric")); }
+}
+function renderStats() {
+  const d = STATS_DATA; if (!d) return;
+  const card = (v, l) => '<div class="stat-card"><div class="value"><bdi dir="ltr">' + escapeHtml(v) + '</bdi></div><div class="label">' + escapeHtml(l) + "</div></div>";
+  const list = (title, rows, fmt) => '<div class="subheading">' + escapeHtml(title) + "</div>" +
+    (rows.length ? '<div class="partner-card"><div class="meta">' + rows.map(fmt).join("<br>") + "</div></div>" : '<div class="live-note">' + escapeHtml(t("stNone")) + "</div>");
+  const max = Math.max(1, ...d.jours.map(x => x.n));
+  const bars = '<div id="statsBars" style="display:flex;align-items:flex-end;gap:3px;height:110px;">' + d.jours.map(x =>
+    '<div title="' + escapeHtml(x.jour + " : " + x.n) + '" style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;min-width:0;">' +
+    '<span style="font-size:10px;color:var(--muted);">' + (x.n || "") + '</span><div style="width:100%;border-radius:4px 4px 0 0;background:var(--blue-700);height:' + Math.max(2, Math.round(90 * x.n / max)) + 'px;opacity:' + (x.n ? 1 : .25) + ';"></div></div>').join("") + "</div>" +
+    '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:3px;"><span>' + escapeHtml(d.jours[0].jour) + "</span><span>" + escapeHtml(d.jours[d.jours.length - 1].jour) + "</span></div>";
+  $("statsBody").innerHTML =
+    '<div class="stats-row">' + card(da(d.livrees), t("stDelivered")) + card(da(d.annulees), t("stCancelled")) + card(d.tauxAnnulation + " %", t("stRate")) + card(da(d.enCours), t("stInProgress")) + "</div>" +
+    '<div class="stats-row" style="margin-top:10px;">' + card(da(d.plats) + " DA", t("stSales")) + card(da(d.panierMoyen) + " DA", t("stBasket")) + card(da(d.commissions) + " DA", t("stCommission")) + "</div>" +
+    '<div class="stats-row" style="margin-top:10px;">' + card(da(d.livraisonsOffertes) + " DA (" + da(d.livraisonsOffertesNb) + ")", t("stOffered")) + card(da(d.nouveauxClients), t("stNewClients")) + "</div>" +
+    '<div class="subheading">' + escapeHtml(t("stPerDay")) + '</div><div class="partner-card"><div class="meta">' + bars + "</div></div>" +
+    (d.alertes.length ? '<div class="subheading">' + escapeHtml(t("stAlerts")) + '</div><div class="partner-card" id="statsAlerts"><div class="meta">' + d.alertes.map(a => escapeHtml(t("stAlertLine").replace("{n}", a.nom).replace("{a}", a.annulees).replace("{t}", a.total))).join("<br>") + "</div></div>" : "") +
+    list(t("stTopRestos"), d.topRestos, r => "<b>" + escapeHtml(r.nom) + "</b> · " + da(r.livrees) + " · " + da(r.plats) + " DA") +
+    list(t("stTopDishes"), d.topPlats, r => "<b>" + escapeHtml(r.nom) + "</b> · ×" + da(r.n)) +
+    list(t("stZones"), d.zones, r => "<b>" + escapeHtml(r.nom) + "</b> · " + da(r.n));
 }
 async function loadCaisseAdmin() {
   hideError($("errorBox"));
