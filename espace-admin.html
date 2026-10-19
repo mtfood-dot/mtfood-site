@@ -902,14 +902,14 @@ const I18N = {
     tabCaisse: "Caisse",
     tabStats: "Statistiques", sdToday: "Aujourd'hui", sd7: "7 jours", sd30: "30 jours", sdAll: "Tout",
     stDelivered: "Livrées", stCancelled: "Annulées", stRate: "Taux d'annulation", stSales: "Chiffre d'affaires (plats)", stBasket: "Panier moyen",
-    stCommission: "Commissions MT", stOffered: "Livraisons offertes (coût MT)", stNewClients: "Nouveaux clients", stInProgress: "En cours",
+    stCommission: "Commissions MT", stOffered: "Livraisons offertes (coût MT)", stNewClients: "Nouveaux clients", stPromo: "Remises promo (coût MT)", stInProgress: "En cours",
     stPerDay: "Commandes livrées par jour", stTopRestos: "Top restaurants", stTopDishes: "Top plats", stZones: "Zones les plus commandées",
     stAlerts: "⚠️ Restaurants avec beaucoup d'annulations", stNone: "Aucune donnée sur cette période.", stAlertLine: "{n} : {a} annulées sur {t} commandes",
     backupTitle: "Sauvegarde du Sheet", backupNote: "Une copie automatique est faite chaque nuit (14 conservées dans Drive, dossier « MT Food - Sauvegardes »).",
     backupNow: "💾 Sauvegarder maintenant", backupDone: "Sauvegarde faite : ", backupBusy: "Sauvegarde en cours…",
     caisseRefresh: "↻ Actualiser",
     caisseNote: "Calcul sur les commandes livrées (paiement à la livraison). Commission MT : {pct} % des plats. Le livreur garde les frais de livraison. Plafond de cash par livreur : {lim} DA.",
-    caisseTotals: "Cash à récupérer chez les livreurs : {a} DA · Commissions MT : {b} DA · À reverser aux restaurants : {c} DA · Livraisons offertes (coût MT) : {d} DA",
+    caisseTotals: "Cash à récupérer chez les livreurs : {a} DA · Commissions MT : {b} DA · À reverser aux restaurants : {c} DA · Livraisons offertes (coût MT) : {d} DA · Remises promo (coût MT) : {e} DA",
     caisseDrivers: "Livreurs : cash à récupérer", caisseRestos: "Restaurants : à reverser",
     caisseNone: "Aucune commande livrée pour le moment.",
     caisseCashIn: "Encaissé", caisseKept: "Frais gardés", caisseDue: "À verser à MT", caissePaid: "Déjà versé", caisseBalance: "Solde",
@@ -1204,14 +1204,14 @@ const I18N = {
     tabCaisse: "الصندوق",
     tabStats: "الإحصائيات", sdToday: "اليوم", sd7: "7 أيام", sd30: "30 يوما", sdAll: "الكل",
     stDelivered: "تم التسليم", stCancelled: "ملغاة", stRate: "نسبة الإلغاء", stSales: "رقم المعاملات (الأطباق)", stBasket: "متوسط السلة",
-    stCommission: "عمولات MT", stOffered: "توصيل مجاني (تكلفة MT)", stNewClients: "زبائن جدد", stInProgress: "قيد التنفيذ",
+    stCommission: "عمولات MT", stOffered: "توصيل مجاني (تكلفة MT)", stNewClients: "زبائن جدد", stPromo: "خصومات الرموز (تكلفة MT)", stInProgress: "قيد التنفيذ",
     stPerDay: "الطلبات المسلّمة يوميا", stTopRestos: "أفضل المطاعم", stTopDishes: "أفضل الأطباق", stZones: "أكثر المناطق طلبا",
     stAlerts: "⚠️ مطاعم بنسبة إلغاء مرتفعة", stNone: "لا توجد بيانات في هذه الفترة.", stAlertLine: "{n}: {a} ملغاة من {t} طلبات",
     backupTitle: "نسخة احتياطية للجدول", backupNote: "تُنشأ نسخة تلقائية كل ليلة (تُحفظ 14 نسخة في Drive، مجلد « MT Food - Sauvegardes »).",
     backupNow: "💾 احفظ نسخة الآن", backupDone: "تمت النسخة الاحتياطية: ", backupBusy: "جارٍ الحفظ…",
     caisseRefresh: "↻ تحديث",
     caisseNote: "الحساب على الطلبات المسلّمة (الدفع عند الاستلام). عمولة MT: {pct}٪ من ثمن الأطباق. عامل التوصيل يحتفظ برسوم التوصيل. سقف النقد لكل عامل: {lim} دج.",
-    caisseTotals: "نقد يجب استرجاعه من عمال التوصيل: {a} دج · عمولات MT: {b} دج · مستحقات المطاعم: {c} دج · توصيل مجاني (تكلفة MT): {d} دج",
+    caisseTotals: "نقد يجب استرجاعه من عمال التوصيل: {a} دج · عمولات MT: {b} دج · مستحقات المطاعم: {c} دج · توصيل مجاني (تكلفة MT): {d} دج · خصومات الرموز (تكلفة MT): {e} دج",
     caisseDrivers: "عمال التوصيل: النقد المستحق", caisseRestos: "المطاعم: المبلغ المستحق",
     caisseNone: "لا توجد طلبات مسلّمة حتى الآن.",
     caisseCashIn: "المحصَّل", caisseKept: "الرسوم المحتفظ بها", caisseDue: "المستحق لـ MT", caissePaid: "المدفوع", caisseBalance: "الرصيد",
@@ -1700,7 +1700,7 @@ function renderCaisse() {
       "<br>" + caisseLine(t("caisseBalance"), x.solde, true) + "</div>" + caisseForm("resto", x.nom) + "</div>";
   }).join("") || none;
   $("caisseBody").innerHTML = '<div class="partner-card"><div class="meta"><b>' +
-    escapeHtml(t("caisseTotals").replace("{a}", da(tt.duParLivreurs)).replace("{b}", da(tt.commissions)).replace("{c}", da(tt.aVerserRestos)).replace("{d}", da(tt.livraisonsOffertes || 0))) + "</b></div></div>" +
+    escapeHtml(t("caisseTotals").replace("{a}", da(tt.duParLivreurs)).replace("{b}", da(tt.commissions)).replace("{c}", da(tt.aVerserRestos)).replace("{d}", da(tt.livraisonsOffertes || 0)).replace("{e}", da(tt.remisesPromo || 0))) + "</b></div></div>" +
     '<div class="subheading">' + escapeHtml(t("caisseDrivers")) + "</div>" + drv +
     '<div class="subheading">' + escapeHtml(t("caisseRestos")) + "</div>" + rst;
 }
@@ -1726,7 +1726,7 @@ function renderStats() {
   $("statsBody").innerHTML =
     '<div class="stats-row">' + card(da(d.livrees), t("stDelivered")) + card(da(d.annulees), t("stCancelled")) + card(d.tauxAnnulation + " %", t("stRate")) + card(da(d.enCours), t("stInProgress")) + "</div>" +
     '<div class="stats-row" style="margin-top:10px;">' + card(da(d.plats) + " DA", t("stSales")) + card(da(d.panierMoyen) + " DA", t("stBasket")) + card(da(d.commissions) + " DA", t("stCommission")) + "</div>" +
-    '<div class="stats-row" style="margin-top:10px;">' + card(da(d.livraisonsOffertes) + " DA (" + da(d.livraisonsOffertesNb) + ")", t("stOffered")) + card(da(d.nouveauxClients), t("stNewClients")) + "</div>" +
+    '<div class="stats-row" style="margin-top:10px;">' + card(da(d.livraisonsOffertes) + " DA (" + da(d.livraisonsOffertesNb) + ")", t("stOffered")) + card(da(d.nouveauxClients), t("stNewClients")) + card(da(d.remisesPromo || 0) + " DA (" + da(d.remisesPromoNb || 0) + ")", t("stPromo")) + "</div>" +
     '<div class="subheading">' + escapeHtml(t("stPerDay")) + '</div><div class="partner-card"><div class="meta">' + bars + "</div></div>" +
     (d.alertes.length ? '<div class="subheading">' + escapeHtml(t("stAlerts")) + '</div><div class="partner-card" id="statsAlerts"><div class="meta">' + d.alertes.map(a => escapeHtml(t("stAlertLine").replace("{n}", a.nom).replace("{a}", a.annulees).replace("{t}", a.total))).join("<br>") + "</div></div>" : "") +
     list(t("stTopRestos"), d.topRestos, r => "<b>" + escapeHtml(r.nom) + "</b> · " + da(r.livrees) + " · " + da(r.plats) + " DA") +

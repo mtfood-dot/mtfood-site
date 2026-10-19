@@ -401,6 +401,22 @@
   .zone-opt.selected{border-color:var(--blue-600);background:var(--blue-100);}
   .zone-opt .fee{font-weight:800;color:var(--blue-700);}
 
+  #chkPromoLine[hidden],.sa-save[hidden],.saved-addrs[hidden]{display:none!important;}
+  .promo-row{display:flex;gap:8px;}
+  .promo-row input{flex:1;min-width:0;text-transform:uppercase;}
+  .promo-row button{border:0;border-radius:10px;padding:0 16px;font-weight:800;background:var(--blue-700);color:#fff;cursor:pointer;}
+  .promo-row button:disabled{opacity:.5;}
+  .promo-msg{font-size:13px;margin-top:6px;}
+  .promo-msg.ok{color:#0b6b35;font-weight:700;} .promo-msg.err{color:#b3261e;}
+  .saved-addrs{margin:4px 0 10px;}
+  .saved-addrs .sa-title{font-size:12.5px;font-weight:800;color:var(--muted);margin-bottom:6px;}
+  .saved-addrs .sa-list{display:flex;flex-wrap:wrap;gap:8px;}
+  .sa-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:99px;padding:6px 8px 6px 12px;background:#fff;font-weight:700;font-size:13px;cursor:pointer;}
+  .sa-chip small{font-weight:500;color:var(--muted);max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .sa-chip .sa-del{border:0;background:#eef0f4;border-radius:50%;width:20px;height:20px;line-height:20px;padding:0;cursor:pointer;color:#555;}
+  .sa-save{display:flex;gap:8px;margin-top:8px;}
+  .sa-save select{flex:1;min-width:0;}
+  .sa-save button{border:1px solid var(--blue-700);color:var(--blue-700);background:#fff;border-radius:10px;padding:8px 12px;font-weight:800;cursor:pointer;}
   .loy{margin:8px 0 0;font-size:13px;line-height:1.5;}
   .loy .lg{background:#e8f7ee;color:#0b6b35;border-radius:10px;padding:8px 10px;font-weight:700;margin-top:6px;}
   .loy .lh{background:#fff6e0;color:#7a5200;border-radius:10px;padding:8px 10px;margin-top:6px;}
@@ -669,8 +685,15 @@ if ("serviceWorker" in navigator) {
       <textarea id="fNotes" rows="2" placeholder="Ex: sans oignon, sonner à l'interphone..."></textarea>
     </div>
 
+    <div class="field promo-field">
+      <label id="lblPromo" for="fPromo">Code promo</label>
+      <div class="promo-row"><input type="text" id="fPromo" maxlength="20" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="BIENVENUE"><button id="promoBtn" type="button">Appliquer</button></div>
+      <div class="promo-msg" id="promoMsg" role="status" aria-live="polite"></div>
+    </div>
+
     <div class="totals">
       <div class="line"><span id="lblSubtotalChk">Sous-total</span><span id="chkSubtotal">0 DA</span></div>
+      <div class="line" id="chkPromoLine" hidden><span id="lblPromoChk">Code promo</span><b id="chkPromo"></b></div>
       <div class="line"><span id="lblDeliveryChk">Livraison</span><span id="chkFee">—</span></div>
       <div class="line total"><span id="lblTotalChk">Total à payer</span><span id="chkTotal">0 DA</span></div>
       <div class="loy" id="loyChk"></div>
@@ -689,6 +712,10 @@ if ("serviceWorker" in navigator) {
     <button class="close-x" data-close="addrOverlay" type="button" aria-label="Fermer">✕</button>
     <h2 id="addrTitle">Adresse de livraison</h2>
 
+    <div class="saved-addrs" id="savedAddrs" hidden>
+      <div class="sa-title" id="saTitle">Mes adresses</div>
+      <div class="sa-list" id="saList"></div>
+    </div>
     <button class="gps-btn" id="gpsBtn" type="button"><span aria-hidden="true">📍</span> <span id="gpsBtnText">Utiliser ma position actuelle</span></button>
     <div class="gps-msg" id="gpsMsg" role="status" aria-live="polite"></div>
     <div class="gps-where" id="gpsWhere" aria-live="polite"></div>
@@ -712,6 +739,10 @@ if ("serviceWorker" in navigator) {
     <div class="field">
       <label id="lblAddrRepere" for="addrRepere">Précisions (bâtiment, étage, repère)</label>
       <input type="text" id="addrRepere" placeholder="Ex: près de la pharmacie...">
+    </div>
+    <div class="sa-save" id="saSave" hidden>
+      <select id="saLabel" aria-label="Nom de l'adresse"></select>
+      <button type="button" id="saSaveBtn">Enregistrer cette adresse</button>
     </div>
     <button class="submit-btn" id="addrSaveBtn" type="button">Confirmer l'adresse</button>
   </div>
@@ -811,6 +842,8 @@ const I18N = {
     loyMore: "Plus que {x} DA de plats pour avoir la livraison offerte.",
     loyProgress: "Fidélité : {c}/{n} commandes cette semaine (plats d'au moins {m} DA). La commande n°{n1} a la livraison offerte. Nouvelle semaine le samedi.",
     loyFreeWord: "Offerte",
+    promoLbl: "Code promo", promoApply: "Appliquer", promoLine: "Code {c}", promoOk: "Code {c} appliqué : −{r} DA", promoNeedLogin: "Connecte-toi pour utiliser un code.", promoEmpty: "Saisis un code promo.", promoErr: "Impossible de vérifier le code, réessaie.",
+    saTitle: "Mes adresses", saHome: "Maison", saWork: "Travail", saOther: "Autre", saSave: "Enregistrer cette adresse", saSaved: "Adresse enregistrée.", saDel: "Supprimer", saMax: "5 adresses maximum : supprime-en une d'abord.",
     changeAddr: "Modifier l'adresse",
     checkoutNeedAddr: "Localise ton adresse avant de confirmer la commande.",
     addrCheckNeedPos: "Écris une rue ou un lieu précis, ou utilise ta position (page Adresse).",
@@ -967,6 +1000,8 @@ const I18N = {
     loyMore: "بقي {x} دج من الأطباق للحصول على توصيل مجاني.",
     loyProgress: "الوفاء: {c}/{n} طلبات هذا الأسبوع (أطباق بقيمة {m} دج على الأقل). الطلب رقم {n1} توصيله مجاني. أسبوع جديد كل سبت.",
     loyFreeWord: "مجاني",
+    promoLbl: "رمز الخصم", promoApply: "تطبيق", promoLine: "الرمز {c}", promoOk: "تم تطبيق الرمز {c}: −{r} دج", promoNeedLogin: "سجّل الدخول لاستعمال الرمز.", promoEmpty: "أدخل رمز الخصم.", promoErr: "تعذّر التحقق من الرمز، أعد المحاولة.",
+    saTitle: "عناويني", saHome: "المنزل", saWork: "العمل", saOther: "آخر", saSave: "احفظ هذا العنوان", saSaved: "تم حفظ العنوان.", saDel: "حذف", saMax: "5 عناوين كحد أقصى: احذف عنوانا أولا.",
     changeAddr: "تعديل العنوان",
     checkoutNeedAddr: "حدّد موقع عنوانك قبل تأكيد الطلب.",
     addrCheckNeedPos: "اكتب شارعًا أو مكانًا دقيقًا، أو استخدم موقعك (صفحة العنوان).",
@@ -1235,6 +1270,7 @@ function applyLanguage() {
   $("footerDriverLink").textContent = t("footerDriverLink");
   updateAccountLink();
   applyAddrLanguage();
+  applyPromoLanguage();
 
   if (SELECTED_ZONE) updateCheckoutTotals();
   else $("chkFee").textContent = t("chooseZonePlaceholder");
@@ -2156,6 +2192,7 @@ function renderAll() {
   renderZoneSummary();
   updateCheckoutTotals();
   updateConfirmState();
+  if (typeof renderSavedAddrs === "function" && $("savedAddrs")) renderSavedAddrs();
 }
 
 function zoneText(q) { return q.zoneNom + " · " + q.distanceKm.toString().replace(".", LANG === "ar" ? "٫" : ",") + " km"; }
@@ -2171,13 +2208,86 @@ function updateCheckoutTotals() {
     const d = deliveryFor(subtotal);
     if (d.free) $("chkFee").innerHTML = '<span class="was">' + d.real + ' DA</span><b>' + escapeHtml(t("loyFreeWord")) + '</b>';
     else $("chkFee").textContent = d.fee + " DA";
-    $("chkTotal").textContent = (subtotal + d.fee) + " DA";
+    $("chkTotal").textContent = (subtotal - promoRemise() + d.fee) + " DA";
   } else {
     $("chkFee").textContent = t("chooseZonePlaceholder");
-    $("chkTotal").textContent = subtotal + " DA";
+    $("chkTotal").textContent = (subtotal - promoRemise()) + " DA";
   }
+  const pl = $("chkPromoLine");
+  if (pl) { pl.hidden = !(PROMO && PROMO.remise > 0); if (!pl.hidden) $("chkPromo").textContent = "−" + PROMO.remise + " DA"; }
   renderLoyalty();
 }
+
+/* ---- Code promo : le serveur valide et recalcule la remise à la commande ---- */
+let PROMO = null;   // { code, remise }
+function promoRemise() { return PROMO ? PROMO.remise : 0; }
+function applyPromoLanguage() {
+  $("lblPromo").textContent = t("promoLbl"); $("promoBtn").textContent = t("promoApply"); $("lblPromoChk").textContent = t("promoLbl");
+  $("saTitle").textContent = t("saTitle"); $("saSaveBtn").textContent = t("saSave");
+  const sel = $("saLabel"), cur = sel.value;
+  sel.innerHTML = ["saHome", "saWork", "saOther"].map(k => '<option value="' + k + '">' + escapeHtml(t(k)) + "</option>").join("");
+  if (cur) sel.value = cur;
+  renderSavedAddrs();
+}
+function setPromoMsg(text, kind) { const m = $("promoMsg"); m.textContent = text || ""; m.className = "promo-msg" + (kind ? " " + kind : ""); }
+async function applyPromo(silent) {
+  const code = $("fPromo").value.trim().toUpperCase();
+  const session = getClientSession();
+  if (!code) { PROMO = null; if (!silent) setPromoMsg(t("promoEmpty"), "err"); updateCheckoutTotals(); return; }
+  if (!session || !session.clientId) { PROMO = null; setPromoMsg(t("promoNeedLogin"), "err"); updateCheckoutTotals(); return; }
+  const { subtotal } = cartTotals();
+  $("promoBtn").disabled = true;
+  try {
+    const res = await jsonpRequest({ action: "promoCheck", code: code, subtotal: subtotal, clientId: session.clientId }, 15000);
+    if (res && res.success && res.ok) { PROMO = { code: res.code, remise: Number(res.remise) || 0 }; setPromoMsg(t("promoOk").replace("{c}", res.code).replace("{r}", PROMO.remise), "ok"); }
+    else { PROMO = null; setPromoMsg((res && (res.message || res.error)) || t("promoErr"), "err"); }
+  } catch (e) { PROMO = null; setPromoMsg(t("promoErr"), "err"); }
+  $("promoBtn").disabled = false;
+  updateCheckoutTotals();
+}
+
+/* ---- Adresses enregistrées (sur cet appareil uniquement) ---- */
+const SAVED_ADDR_KEY = "mtSavedAddrs";
+function getSavedAddrs() {
+  try {
+    const a = JSON.parse(localStorage.getItem(SAVED_ADDR_KEY) || "[]");
+    return Array.isArray(a) ? a.filter(x => x && isFinite(Number(x.lat)) && isFinite(Number(x.lng))).slice(0, 5) : [];
+  } catch (e) { return []; }
+}
+function putSavedAddrs(a) { try { localStorage.setItem(SAVED_ADDR_KEY, JSON.stringify(a.slice(0, 5))); } catch (e) {} }
+function renderSavedAddrs() {
+  const list = getSavedAddrs(), box = $("savedAddrs");
+  if (!box) return;
+  box.hidden = !list.length;
+  $("saList").innerHTML = list.map((a, i) =>
+    '<span class="sa-chip" data-sa="' + i + '" role="button" tabindex="0">' + escapeHtml(t(a.key) || a.key) + " <small>" + escapeHtml(a.line || "") + '</small>' +
+    '<button type="button" class="sa-del" data-sadel="' + i + '" aria-label="' + escapeHtml(t("saDel")) + '">✕</button></span>').join("");
+  $("saSave").hidden = !(hasCoords() && DELIVERY.line);
+}
+async function useSavedAddr(i) {
+  const a = getSavedAddrs()[i]; if (!a) return;
+  DELIVERY.line = String(a.line || "").slice(0, 160); DELIVERY.repere = String(a.repere || "").slice(0, 120);
+  DELIVERY.quote = null;
+  $("addrLine").value = DELIVERY.line; $("addrRepere").value = DELIVERY.repere;
+  await setReference(Number(a.lat), Number(a.lng), a.source === "typed" ? "typed" : "gps");
+  renderAll(); renderSavedAddrs();
+  if (DELIVERY.quote && DELIVERY.quote.covered) closeOverlay("addrOverlay");
+}
+function saveCurrentAddr() {
+  if (!hasCoords() || !DELIVERY.line) return;
+  const list = getSavedAddrs(), key = $("saLabel").value || "saOther";
+  const entry = { key: key, line: DELIVERY.line, repere: DELIVERY.repere, lat: DELIVERY.lat, lng: DELIVERY.lng, source: DELIVERY.source || "gps" };
+  const idx = key === "saOther" ? -1 : list.findIndex(x => x.key === key);
+  if (idx >= 0) list[idx] = entry;
+  else { if (list.length >= 5) { showGpsMsg(t("saMax")); return; } list.push(entry); }
+  putSavedAddrs(list); renderSavedAddrs(); showGpsMsg(t("saSaved"), "ok");
+}
+document.addEventListener("click", (ev) => {
+  const del = ev.target.closest && ev.target.closest("[data-sadel]");
+  if (del) { ev.stopPropagation(); const l = getSavedAddrs(); l.splice(Number(del.dataset.sadel), 1); putSavedAddrs(l); renderSavedAddrs(); return; }
+  const chip = ev.target.closest && ev.target.closest("[data-sa]");
+  if (chip) useSavedAddr(Number(chip.dataset.sa));
+});
 
 /* ---- Fidélité : livraison offerte (le serveur décide et recalcule tout à la commande) ---- */
 let LOY = null;   // { freeFrom, needed, min, count, eligible } pour le client connecté
@@ -2300,6 +2410,7 @@ function openAddrSheet() {
   $("gpsMsg").className = "gps-msg";
   $("gpsWhere").className = "gps-where";
   renderAddrQuote();
+  renderSavedAddrs();
   openOverlay("addrOverlay");
 }
 
@@ -2336,6 +2447,10 @@ function initAddress() {
   $("changeAddrBtn").addEventListener("click", () => { closeOverlay("checkoutOverlay"); openAddrSheet(); });
   $("addrSaveBtn").addEventListener("click", saveAddrSheet);
   $("gpsBtn").addEventListener("click", useMyLocation);
+  $("saSaveBtn").addEventListener("click", saveCurrentAddr);
+  $("promoBtn").addEventListener("click", () => applyPromo(false));
+  $("fPromo").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); applyPromo(false); } });
+  $("fPromo").addEventListener("input", () => { if (PROMO) { PROMO = null; setPromoMsg(""); updateCheckoutTotals(); } });
   $("addrSearchBtn").addEventListener("click", runAddrSearch);
   $("addrSearch").addEventListener("input", onAddrSearchInput);
   $("addrSearch").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); runAddrSearch(); } });
@@ -2598,6 +2713,7 @@ function bindGlobalEvents() {
     $("chkError").dataset.sticky = "";
     openOverlay("checkoutOverlay");
     loadLoyalty();
+    if (PROMO) applyPromo(true);
     renderAll();
     if (hasCoords()) refreshQuote();   // tarif toujours revérifié par le serveur à l'ouverture
   });
@@ -2649,7 +2765,7 @@ function submitOrder() {
 
   const { subtotal } = cartTotals();
   const dl = deliveryFor(subtotal);
-  const total = subtotal + dl.fee;
+  const total = subtotal - promoRemise() + dl.fee;
 
   const session = getClientSession() || {};
   // Identifiant d'envoi : conservé tant que la commande n'est pas confirmée (évite les doublons si on réessaie).
@@ -2666,6 +2782,7 @@ function submitOrder() {
     lng: DELIVERY.lng,
     notes: notes,
     total: total,
+    promo: PROMO ? PROMO.code : "",
     clientId: session.clientId || "",
     requestId: ORDER_REQUEST_ID,
     items: Object.values(CART).map(l => ({ id: l.item.id, nom: l.item.nom, prix: l.item.prix, qty: l.qty }))
@@ -2690,6 +2807,7 @@ function submitOrder() {
       $("waConfirmBtn").href = buildWhatsAppLink(res.orderNumber, payload);
       openOverlay("successOverlay");
       resetOrder();
+      PROMO = null; $("fPromo").value = ""; setPromoMsg(""); updateCheckoutTotals();
       loadLoyalty();
     })
     .catch(err => {
@@ -2700,11 +2818,15 @@ function submitOrder() {
         window.location.href = "connexion.html?next=menu.html";
         return;
       }
-      if (code === "price_changed" || code === "unavailable") {
+      if (code === "promo") {
+        ORDER_REQUEST_ID = ""; PROMO = null; setPromoMsg(err.serverMsg || t("promoErr"), "err"); updateCheckoutTotals();
+        showCheckoutError(err.serverMsg || t("promoErr"), true);
+      } else if (code === "price_changed" || code === "unavailable") {
         // Prix, frais ou plat modifiés : on recharge le menu et les zones, le client revérifie son panier.
         ORDER_REQUEST_ID = "";
         refreshQuote();
         loadLoyalty();
+        if (PROMO) applyPromo(true);
         loadMenu();
         showCheckoutError(err.serverMsg || t("sendError") + CONFIG.PHONE_DISPLAY + ".", true);
       } else if (code === "gps_required" || code === "out_of_zone") {
