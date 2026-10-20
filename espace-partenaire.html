@@ -101,6 +101,15 @@
     border-radius:13px;padding:14px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;
   }
   .btn-primary:disabled{opacity:.6;cursor:default;}
+  .hrow{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+  .hrow .dn{width:84px;font-weight:800;font-size:13.5px;display:flex;align-items:center;gap:6px;}
+  .hrow .dn input{width:auto;margin:0;}
+  .hrow .slots{display:flex;flex-direction:column;gap:6px;flex:1;min-width:150px;}
+  .hrow .slot{display:flex;align-items:center;gap:6px;}
+  .hrow .slot input[type=time]{width:auto;flex:1;padding:8px 8px;font-size:14px;}
+  .hrow .closed-lbl{color:var(--muted);font-size:13px;font-weight:700;}
+  .mini-btn{background:#fff;border:1.5px solid var(--border);border-radius:999px;padding:5px 11px;font-size:12px;font-weight:800;color:var(--blue-700);cursor:pointer;font-family:inherit;}
+  .set-title{font-size:15px;font-weight:900;color:var(--blue-900);margin:0 0 4px;}
   .error-box{background:#fdeceb;border:1px solid #f3c6c1;color:var(--danger);border-radius:var(--radius-sm);
     padding:11px 14px;font-size:13px;margin-top:12px;line-height:1.5;display:none;}
   .error-box.show{display:block;}
@@ -316,6 +325,9 @@ if ("serviceWorker" in navigator) {
       <button class="tab-btn" id="tabSales" type="button">
         <span id="tabSalesLabel">Mes ventes</span>
       </button>
+      <button class="tab-btn" id="tabSettings" type="button">
+        <span id="tabSettingsLabel">⚙️ Réglages</span>
+      </button>
       <button class="tab-btn" id="tabBoost" type="button">
         <span id="tabBoostLabel">Publicité</span> <span class="count" id="countBoost" style="display:none">0</span>
       </button>
@@ -420,6 +432,30 @@ if ("serviceWorker" in navigator) {
       <div id="salesBody"></div>
     </div>
 
+    <div id="panelSettings" class="hidden">
+      <div class="card">
+        <h3 class="set-title" id="setHoursTitle"></h3>
+        <p class="field-hint" id="setHoursHint"></p>
+        <div id="hoursEditor"></div>
+        <div style="display:flex;gap:8px;margin:12px 0;flex-wrap:wrap;"><button class="mini-btn" id="copyMonBtn" type="button"></button></div>
+        <button class="btn-primary" id="saveHoursBtn" type="button"></button>
+      </div>
+      <div class="card">
+        <h3 class="set-title" id="setPrepTitle"></h3>
+        <p class="field-hint" id="setPrepHint"></p>
+        <div class="field"><input id="prepInput" type="number" min="5" max="180" inputmode="numeric"></div>
+        <button class="btn-primary" id="savePrepBtn" type="button"></button>
+      </div>
+      <div class="card">
+        <h3 class="set-title" id="setPhoneTitle"></h3>
+        <p class="field-hint" id="setPhoneHint"></p>
+        <div class="field"><label id="lblCurPhone"></label><input id="curPhone" type="text" disabled></div>
+        <div class="field"><label id="lblNewPhone"></label><input id="newPhone" type="tel" inputmode="tel" placeholder="05 55 12 34 56"></div>
+        <div class="field"><label id="lblPinConfirm"></label><input id="pinConfirm" type="password" inputmode="numeric" autocomplete="off"></div>
+        <button class="btn-primary" id="savePhoneBtn" type="button"></button>
+      </div>
+    </div>
+
     <div id="panelBoost" class="hidden" data-mtform data-note-before="#boostSendBtn">
       <div class="boost-info" id="boostInfo"></div>
       <section class="card">
@@ -500,6 +536,11 @@ const I18N = {
     logoutBtn: "Déconnexion",
     tabMenuLabel: "Mon menu",
     tabLiveLabel: "En cours",
+    tabSettingsLabel: "⚙️ Réglages", setHoursTitle: "🕐 Horaires d'ouverture", setHoursHint: "Les clients ne peuvent commander que pendant ces heures. Décoche un jour pour le fermer. Une fermeture après minuit est possible (ex. 18:00 → 01:00).",
+    dayNames: ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"], closedDay: "Fermé", addSlot: "+ Pause", rmSlot: "✕", copyMon: "Copier lundi sur tous les jours", saveHours: "Enregistrer les horaires",
+    hoursSaved: "Horaires enregistrés.", hoursNeedDay: "Choisis au moins un jour ouvert.", hoursNotSet: "Horaires pas encore définis : ton restaurant est considéré ouvert tout le temps.",
+    setPrepTitle: "⏱️ Temps de préparation", setPrepHint: "Affiché aux clients avant la commande (en minutes, entre 5 et 180).", savePrep: "Enregistrer", prepSaved: "Temps de préparation enregistré.",
+    setPhoneTitle: "📞 Téléphone de connexion", setPhoneHint: "Ce numéro sert à te connecter. Après le changement, tu devras te reconnecter avec le nouveau numéro (même code PIN).", lblCurPhone: "Numéro actuel", lblNewPhone: "Nouveau numéro", lblPinConfirm: "Ton code PIN (pour confirmer)", savePhone: "Changer mon numéro", phoneChanged: "Numéro modifié. Reconnecte-toi avec le nouveau numéro.", settingsFail: "Impossible d'enregistrer. Réessaie.",
     tabSalesLabel: "Mes ventes", salesToday: "Aujourd'hui", sales7: "7 jours", sales30: "30 jours", salesAll: "Tout",
     salesDelivered: "Commandes livrées", salesCancelled: "Annulées", salesDishes: "Ventes (plats)", salesCommission: "Commission MT ({r} %)", salesNet: "Net pour toi",
     salesBalance: "MT te doit actuellement", salesPaid: "Déjà payé par MT", salesNone: "Aucune vente sur cette période.",
@@ -618,6 +659,11 @@ const I18N = {
     logoutBtn: "تسجيل الخروج",
     tabMenuLabel: "قائمتي",
     tabLiveLabel: "قيد التنفيذ",
+    tabSettingsLabel: "⚙️ الإعدادات", setHoursTitle: "🕐 أوقات العمل", setHoursHint: "لا يمكن للزبائن الطلب إلا خلال هذه الأوقات. ألغِ تحديد اليوم لإغلاقه. يمكن الإغلاق بعد منتصف الليل (مثال: 18:00 ← 01:00).",
+    dayNames: ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"], closedDay: "مغلق", addSlot: "+ استراحة", rmSlot: "✕", copyMon: "نسخ الاثنين إلى كل الأيام", saveHours: "حفظ الأوقات",
+    hoursSaved: "تم حفظ الأوقات.", hoursNeedDay: "اختر يومًا واحدًا على الأقل.", hoursNotSet: "لم تُحدَّد الأوقات بعد: مطعمك يُعتبر مفتوحًا دائمًا.",
+    setPrepTitle: "⏱️ وقت التحضير", setPrepHint: "يُعرض للزبائن قبل الطلب (بالدقائق، بين 5 و180).", savePrep: "حفظ", prepSaved: "تم حفظ وقت التحضير.",
+    setPhoneTitle: "📞 هاتف الدخول", setPhoneHint: "هذا الرقم يُستعمل لتسجيل الدخول. بعد التغيير ستعيد الدخول بالرقم الجديد (نفس الرمز السري).", lblCurPhone: "الرقم الحالي", lblNewPhone: "الرقم الجديد", lblPinConfirm: "رمزك السري (للتأكيد)", savePhone: "تغيير رقمي", phoneChanged: "تم تغيير الرقم. أعد الدخول بالرقم الجديد.", settingsFail: "تعذر الحفظ. أعد المحاولة.",
     tabSalesLabel: "مبيعاتي", salesToday: "اليوم", sales7: "7 أيام", sales30: "30 يوما", salesAll: "الكل",
     salesDelivered: "الطلبات المسلّمة", salesCancelled: "ملغاة", salesDishes: "المبيعات (الأطباق)", salesCommission: "عمولة MT ({r} %)", salesNet: "الصافي لك",
     salesBalance: "المبلغ الذي تدين به MT لك حاليا", salesPaid: "ما دفعته MT لك", salesNone: "لا توجد مبيعات في هذه الفترة.",
@@ -772,6 +818,7 @@ function applyLanguage() {
   $("tabMenuLabel").textContent = t("tabMenuLabel");
   $("tabLiveLabel").textContent = t("tabLiveLabel");
   $("tabSalesLabel").textContent = t("tabSalesLabel");
+  applySettingsLang();
   document.querySelectorAll("[data-sales]").forEach(b => { b.textContent = t({ "1": "salesToday", "7": "sales7", "30": "sales30", "0": "salesAll" }[b.dataset.sales]); });
   if (typeof SALES_DATA !== "undefined" && SALES_DATA) renderSales();
   if (typeof renderShop === "function") renderShop();
@@ -936,6 +983,82 @@ $("shopToggle").addEventListener("change", async () => {
 
 /* ---- Mes ventes ---- */
 let SALES_DAYS = 7, SALES_DATA = null;
+/* ============================================================
+   RÉGLAGES : horaires, temps de préparation, téléphone
+   ============================================================ */
+const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
+let SETTINGS = null, HOURS_EDIT = null;
+function applySettingsLang() {
+  const ids = { setHoursTitle: "setHoursTitle", setHoursHint: "setHoursHint", copyMonBtn: "copyMon", saveHoursBtn: "saveHours", setPrepTitle: "setPrepTitle", setPrepHint: "setPrepHint", savePrepBtn: "savePrep", setPhoneTitle: "setPhoneTitle", setPhoneHint: "setPhoneHint", lblCurPhone: "lblCurPhone", lblNewPhone: "lblNewPhone", lblPinConfirm: "lblPinConfirm", savePhoneBtn: "savePhone", tabSettingsLabel: "tabSettingsLabel" };
+  Object.keys(ids).forEach(id => { const el = $(id); if (el) el.textContent = t(ids[id]); });
+  if (HOURS_EDIT) renderHours();
+}
+async function loadSettings() {
+  try {
+    const d = await apiGet({ action: "partnerSettings" });
+    if (!d || !d.success) return;
+    SETTINGS = d;
+    HOURS_EDIT = d.days.map(x => ({ open: x.slots.length > 0, slots: x.slots.length ? x.slots.map(s => [s[0], s[1]]) : [["10:00", "23:00"]] }));
+    $("prepInput").value = d.prepMin || "";
+    $("curPhone").value = d.telephone || "";
+    renderHours();
+    if (!d.defined) showSuccess($("successBox"), t("hoursNotSet"));
+  } catch (e) { /* silencieux */ }
+}
+function renderHours() {
+  $("hoursEditor").innerHTML = DAY_ORDER.map(d => {
+    const h = HOURS_EDIT[d];
+    const slots = h.open ? h.slots.map((sl, j) => `<div class="slot"><input type="time" data-d="${d}" data-j="${j}" data-k="0" value="${sl[0]}"><span>→</span><input type="time" data-d="${d}" data-j="${j}" data-k="1" value="${sl[1]}">${j === 1 ? `<button class="mini-btn" data-rm="${d}" type="button">${t("rmSlot")}</button>` : ""}</div>`).join("") + (h.slots.length < 2 ? `<div><button class="mini-btn" data-add="${d}" type="button">${t("addSlot")}</button></div>` : "") : `<span class="closed-lbl">${t("closedDay")}</span>`;
+    return `<div class="hrow"><label class="dn"><input type="checkbox" data-open="${d}" ${h.open ? "checked" : ""}>${t("dayNames")[d]}</label><div class="slots">${slots}</div></div>`;
+  }).join("");
+  const box = $("hoursEditor");
+  box.querySelectorAll("[data-open]").forEach(c => c.addEventListener("change", () => { HOURS_EDIT[+c.dataset.open].open = c.checked; renderHours(); }));
+  box.querySelectorAll("input[type=time]").forEach(i => i.addEventListener("change", () => { HOURS_EDIT[+i.dataset.d].slots[+i.dataset.j][+i.dataset.k] = i.value; }));
+  box.querySelectorAll("[data-add]").forEach(b => b.addEventListener("click", () => { HOURS_EDIT[+b.dataset.add].slots.push(["18:00", "23:00"]); renderHours(); }));
+  box.querySelectorAll("[data-rm]").forEach(b => b.addEventListener("click", () => { HOURS_EDIT[+b.dataset.rm].slots.pop(); renderHours(); }));
+}
+$("copyMonBtn").addEventListener("click", () => {
+  if (!HOURS_EDIT) return;
+  const m = HOURS_EDIT[1];
+  HOURS_EDIT = HOURS_EDIT.map(() => ({ open: m.open, slots: m.slots.map(s => [s[0], s[1]]) }));
+  renderHours();
+});
+$("saveHoursBtn").addEventListener("click", async () => {
+  if (!HOURS_EDIT) return;
+  hideError($("errorBox")); hideSuccess($("successBox"));
+  const payload = HOURS_EDIT.map(h => ({ slots: h.open ? h.slots.filter(s => s[0] && s[1]) : [] }));
+  if (!payload.some(h => h.slots.length)) { showError($("errorBox"), t("hoursNeedDay")); return; }
+  const btn = $("saveHoursBtn"); btn.disabled = true;
+  try {
+    const d = await apiGet({ action: "partnerSetHours", hours: JSON.stringify(payload) });
+    if (d && d.success) { showSuccess($("successBox"), t("hoursSaved")); loadShop(); } else showError($("errorBox"), (d && d.error) || t("settingsFail"));
+  } catch (e) { showError($("errorBox"), t("settingsFail")); }
+  finally { btn.disabled = false; }
+});
+$("savePrepBtn").addEventListener("click", async () => {
+  hideError($("errorBox")); hideSuccess($("successBox"));
+  const btn = $("savePrepBtn"); btn.disabled = true;
+  try {
+    const d = await apiGet({ action: "partnerSetPrep", minutes: Number($("prepInput").value) });
+    if (d && d.success) showSuccess($("successBox"), t("prepSaved")); else showError($("errorBox"), (d && d.error) || t("settingsFail"));
+  } catch (e) { showError($("errorBox"), t("settingsFail")); }
+  finally { btn.disabled = false; }
+});
+$("savePhoneBtn").addEventListener("click", async () => {
+  hideError($("errorBox")); hideSuccess($("successBox"));
+  const btn = $("savePhoneBtn"); btn.disabled = true;
+  try {
+    const d = await apiGet({ action: "partnerSetPhone", newPhone: $("newPhone").value, pin: $("pinConfirm").value });
+    if (d && d.success) {
+      stopLivePolling(); SESSION = null; localStorage.removeItem(SESSION_KEY);
+      $("appScreen").classList.add("hidden"); $("loginScreen").classList.remove("hidden");
+      $("fPhone").value = ""; $("fPin").value = "";
+      showError($("loginError"), t("phoneChanged"));
+    } else showError($("errorBox"), (d && d.error) || t("settingsFail"));
+  } catch (e) { showError($("errorBox"), t("settingsFail")); }
+  finally { btn.disabled = false; $("pinConfirm").value = ""; }
+});
+
 async function loadSales() {
   hideError($("errorBox"));
   try {
@@ -992,6 +1115,7 @@ $("tabOrders").addEventListener("click", () => switchTab("orders"));
 $("tabPropose").addEventListener("click", () => switchTab("propose"));
 $("tabBoost").addEventListener("click", () => switchTab("boost"));
 $("tabSales").addEventListener("click", () => switchTab("sales"));
+$("tabSettings").addEventListener("click", () => switchTab("settings"));
 
 function switchTab(tab) {
   CURRENT_TAB = tab;
@@ -1007,6 +1131,9 @@ function switchTab(tab) {
   const act = document.querySelector(".tabs .tab-btn.active"); if (act && act.scrollIntoView) { try { act.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" }); } catch (e) {} }
   $("panelSales").classList.toggle("hidden", tab !== "sales");
   if (tab === "sales") loadSales();
+  $("tabSettings").classList.toggle("active", tab === "settings");
+  $("panelSettings").classList.toggle("hidden", tab !== "settings");
+  if (tab === "settings") loadSettings();
   $("tabBoost").classList.toggle("active", tab === "boost");
   $("panelBoost").classList.toggle("hidden", tab !== "boost");
   hideError($("errorBox"));
