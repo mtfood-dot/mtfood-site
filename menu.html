@@ -915,6 +915,7 @@ const I18N = {
     dishCount: "{n} plat(s)",
     reorderMissing: "{n} plat(s) de cette commande ne sont plus disponibles et n'ont pas été ajoutés.",
     menuSoon: "Menu bientôt disponible",
+    priceFrom: "Dès {p} DA",
     closedShort: "Fermé", closedTemp: "Fermé temporairement", closedAt: "Fermé · ouvre à {at}", closedTomorrow: "Fermé · ouvre demain à {at}", closedDay: "Fermé · ouvre {day} à {at}",
     closedOrder: "Ce restaurant est fermé pour le moment : tu peux voir le menu, mais pas commander.",
     days: { dimanche: "dimanche", lundi: "lundi", mardi: "mardi", mercredi: "mercredi", jeudi: "jeudi", vendredi: "vendredi", samedi: "samedi" },
@@ -1073,6 +1074,7 @@ const I18N = {
     dishCount: "{n} طبق",
     reorderMissing: "{n} من أطباق هذا الطلب لم تعد متوفرة ولم تتم إضافتها.",
     menuSoon: "القائمة قريبًا",
+    priceFrom: "ابتداءً من {p} دج",
     closedShort: "مغلق", closedTemp: "مغلق مؤقتًا", closedAt: "مغلق · يفتح على {at}", closedTomorrow: "مغلق · يفتح غدًا على {at}", closedDay: "مغلق · يفتح {day} على {at}",
     closedOrder: "هذا المطعم مغلق حاليًا: يمكنك رؤية القائمة لكن لا يمكنك الطلب.",
     days: { dimanche: "الأحد", lundi: "الاثنين", mardi: "الثلاثاء", mercredi: "الأربعاء", jeudi: "الخميس", vendredi: "الجمعة", samedi: "السبت" },
@@ -1722,6 +1724,15 @@ function priceTier(r) {
   const avg = p.reduce((a, b) => a + b, 0) / p.length;
   return avg < PRICE_T1 ? 1 : (avg < PRICE_T2 ? 2 : 3);
 }
+/* Prix « dès » : plat le moins cher, hors boissons, desserts, sauces et suppléments (qui donneraient un prix trompeur) */
+const SIDE_CAT = /boisson|drink|cafe|the\b|jus\b|soda|eau\b|dessert|sauce|supplement|extra|مشروب|قهوة|حلو/;
+function minPrice(r) {
+  const items = (r.items || []).filter(i => isFinite(Number(i.prix)) && Number(i.prix) > 0);
+  const main = items.filter(i => !SIDE_CAT.test(norm(i.categorie || "")));
+  const p = (main.length ? main : items).map(i => Number(i.prix));
+  return p.length ? Math.min.apply(null, p) : 0;
+}
+function fromPriceHtml(r) { const m = minPrice(r); return m ? '<span class="tier" dir="auto">' + escapeHtml(t("priceFrom").replace("{p}", m)) + "</span>" : ""; }
 function tierHtml(n) { return n ? '<span class="tier" dir="ltr">' + [1, 2, 3].map(k => k <= n ? "<b>DA</b>" : "<u>DA</u>").join(" ") + "</span>" : ""; }
 function restoVille(r) { return RESTO_VILLE[norm(r.name)] || ""; }
 function restoClosedInfo(name) { const v = RESTO_OPEN[norm(name || "")]; return v && v.open === false ? v : null; }
@@ -1815,7 +1826,7 @@ function renderRestoBar() {
     return '<button type="button" class="resto-card' + (restoClosedInfo(r.name) ? ' closed' : '') + (restoOutOfZone(r.name) ? ' far' : '') + '" data-key="' + escapeAttr(r.key) + '">' +
       '<span class="rcover">' + coverInner(r) + (restoCoverSrc(r).logo ? "" : '<span class="logo-circle rbadge">' + logoHtml(r.name) + '</span>') + '</span>' +
       '<span class="meta"><div class="rn">' + escapeHtml(r.name) + '</div>' +
-      (r.soon ? '<div class="rs">' + escapeHtml(t('menuSoon')) + '</div>' : '<div class="rc">' + escapeHtml(cuisinesText(r)) + (priceTier(r) ? " · " + tierHtml(priceTier(r)) : "") + '</div>') +
+      (r.soon ? '<div class="rs">' + escapeHtml(t('menuSoon')) + '</div>' : '<div class="rc">' + escapeHtml(cuisinesText(r)) + (minPrice(r) ? " · " + fromPriceHtml(r) : "") + '</div>') +
       (restoOutOfZone(r.name) ? '<div class="rx">' + escapeHtml(t("outZoneCard")) + "</div>" : etaCardHtml(r.name)) + hint + '</span></button>';
   }).join("");
   bindLogoFallback(box); bindCoverFallback(box);
