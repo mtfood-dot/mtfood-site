@@ -113,6 +113,24 @@
     background:linear-gradient(135deg,var(--blue-900),var(--blue-700));color:#fff;border-radius:var(--radius-lg);
     padding:16px 18px;margin-bottom:16px;box-shadow:var(--shadow-md);}
   .session-bar .who{font-size:14px;font-weight:800;}
+  .tabs{scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab-btn{flex:0 0 auto;scroll-snap-align:center;}
+  .mode-switch{display:flex;gap:8px;margin-bottom:12px;}
+  .mode-switch button{flex:1;border:1.5px solid var(--border);background:#fff;border-radius:999px;padding:9px 6px;font-weight:800;font-size:13px;color:var(--muted);cursor:pointer;font-family:inherit;}
+  .mode-switch button.active{background:var(--blue-900);border-color:var(--blue-900);color:#fff;}
+  .cat-chips{display:flex;flex-wrap:wrap;gap:7px;}
+  .cat-chip{border:1.5px solid var(--border);background:#fff;border-radius:999px;padding:7px 12px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;color:var(--text);}
+  .cat-chip.on{background:var(--gold-500);border-color:var(--gold-500);color:var(--blue-900);}
+  .field-hint{font-size:12px;color:var(--muted);margin:5px 0 0;}
+  .multi-row{display:grid;grid-template-columns:1fr 96px 34px;gap:6px;margin-bottom:8px;align-items:center;}
+  .multi-row .m-nom{grid-column:1 / 3;}
+  .multi-row .m-cat{grid-column:1 / 3;}
+  .multi-row input,.multi-row select{width:100%;min-width:0;}
+  .multi-row .m-del{grid-row:1 / 3;grid-column:3;border:0;background:#eef0f4;border-radius:50%;width:30px;height:30px;cursor:pointer;color:#555;}
+  .multi-row.bad input,.multi-row.bad select{border-color:var(--danger);}
+  .multi-row .m-err{grid-column:1 / 3;font-size:11.5px;color:var(--danger);}
+  .multi-sep{border:0;border-top:1px dashed var(--border);margin:6px 0 10px;}
   .btn-refresh.active{background:var(--blue-900);color:#fff;border-color:var(--blue-900);}
   .shop-row{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12.5px;font-weight:700;color:#fff;cursor:pointer;}
   .shop-row .switch input:checked + .slider{background:#2fbf71;}
@@ -340,6 +358,17 @@ if ("serviceWorker" in navigator) {
 
     <!-- Onglet : Proposer un plat -->
     <div id="panelPropose" class="hidden">
+      <div class="mode-switch">
+        <button type="button" id="modeOne" class="active"></button>
+        <button type="button" id="modeMany"></button>
+      </div>
+      <section class="card hidden" id="proposeMulti">
+        <p class="field-hint" id="multiHint" style="margin:0 0 10px;"></p>
+        <div id="multiRows"></div>
+        <button type="button" class="btn-refresh" id="multiAdd" style="width:100%;margin-bottom:12px;"></button>
+        <button class="btn-primary" id="multiSend" type="button"></button>
+        <p id="multiNote" style="margin:12px 0 0;font-size:12px;color:var(--muted);line-height:1.6;"></p>
+      </section>
       <section class="card" id="proposeForm" data-mtform data-note-before="#proposeBtn">
         <div class="field">
           <label id="lblNom" for="pNom">Nom du plat</label>
@@ -347,11 +376,13 @@ if ("serviceWorker" in navigator) {
         </div>
         <div class="field">
           <label id="lblCategorie" for="pCategorie">Catégorie</label>
-          <select id="pCategorie" data-required></select>
+          <div class="cat-chips" id="catChips" role="group" aria-labelledby="lblCategorie"></div>
+          <select id="pCategorie" hidden></select>
         </div>
         <div class="field">
           <label id="lblPrix" for="pPrix">Prix (DA)</label>
           <input type="number" id="pPrix" min="1" data-required data-rule="positive" placeholder="Ex: 450" inputmode="numeric">
+          <p class="field-hint" id="priceHint"></p>
         </div>
         <div class="field">
           <label id="lblDescription" for="pDescription">Description (optionnel)</label>
@@ -567,7 +598,11 @@ const I18N = {
     nomRequired: "Merci d'indiquer le nom du plat.",
     prixRequired: "Merci d'indiquer un prix valide.",
     proposeFailedGeneric: "Impossible d'envoyer la proposition. Réessaie.",
-    proposeSuccess: "Proposition envoyée ! Elle apparaîtra dans « Mon menu » avec le statut « En attente ».",
+    proposeSuccess: "Plat envoyé ! Il est en attente de validation par MT Delivery : tu le vois dans « Mon menu » avec le statut « En attente ».",
+    modeOne: "Un plat", modeMany: "Plusieurs plats", priceHint: "Prix en DA, sans la livraison.", multiHint: "Un plat par ligne : nom, catégorie et prix. Tous seront validés par MT Delivery.",
+    multiAdd: "+ Ajouter une ligne", multiSend: "Envoyer {n} plat(s)", multiNote: "Maximum 30 plats par envoi. Les plats envoyés passent en « En attente » dans « Mon menu ».",
+    multiNamePh: "Nom du plat", multiPricePh: "Prix", multiErrNom: "Nom manquant", multiErrCat: "Choisis une catégorie", multiErrPrix: "Prix invalide",
+    multiDone: "{n} plat(s) envoyé(s) : en attente de validation par MT Delivery.", multiPartial: "{n} plat(s) envoyé(s), {m} à corriger ou à renvoyer.", multiNone: "Remplis au moins un plat.", multiMax: "30 plats maximum par envoi.",
     toggleFailedGeneric: "Impossible de mettre à jour la disponibilité. Réessaie.",
   },
   ar: {
@@ -681,7 +716,11 @@ const I18N = {
     nomRequired: "الرجاء إدخال اسم الطبق.",
     prixRequired: "الرجاء إدخال سعر صحيح.",
     proposeFailedGeneric: "تعذر إرسال الاقتراح. أعد المحاولة.",
-    proposeSuccess: "تم إرسال الاقتراح! سيظهر في «قائمتي» بحالة «بانتظار الموافقة».",
+    proposeSuccess: "تم إرسال الطبق! هو بانتظار موافقة إم تي دليفري، وستجده في «قائمتي» بحالة «بانتظار الموافقة».",
+    modeOne: "طبق واحد", modeMany: "عدة أطباق", priceHint: "السعر بالدينار، دون التوصيل.", multiHint: "طبق في كل سطر: الاسم والفئة والسعر. ستتم مراجعتها كلها من طرف إم تي دليفري.",
+    multiAdd: "+ إضافة سطر", multiSend: "إرسال {n} طبق", multiNote: "30 طبقا كحد أقصى في كل إرسال. تظهر الأطباق المرسلة بحالة «بانتظار الموافقة» في «قائمتي».",
+    multiNamePh: "اسم الطبق", multiPricePh: "السعر", multiErrNom: "الاسم ناقص", multiErrCat: "اختر فئة", multiErrPrix: "سعر غير صالح",
+    multiDone: "تم إرسال {n} طبق: بانتظار موافقة إم تي دليفري.", multiPartial: "تم إرسال {n} طبق، و{m} يحتاج تصحيحا أو إعادة إرسال.", multiNone: "املأ طبقا واحدا على الأقل.", multiMax: "30 طبقا كحد أقصى في كل إرسال.",
     toggleFailedGeneric: "تعذر تحديث التوفر. أعد المحاولة.",
   }
 };
@@ -755,6 +794,9 @@ function applyLanguage() {
   refreshPhotoUi();
   $("proposeBtn").textContent = t("proposeBtn");
   $("proposeNote").textContent = t("proposeNote");
+  $("modeOne").textContent = t("modeOne"); $("modeMany").textContent = t("modeMany"); $("priceHint").textContent = t("priceHint");
+  $("multiHint").textContent = t("multiHint"); $("multiAdd").textContent = t("multiAdd"); $("multiNote").textContent = t("multiNote");
+  renderCatChips(); renderMultiRows(true); updateMultiBtn();
   applyBoostLabels();
   if (SESSION) updateSessionBar();
   renderMenu();
@@ -962,6 +1004,7 @@ function switchTab(tab) {
   $("panelOrders").classList.toggle("hidden", tab !== "orders");
   $("panelPropose").classList.toggle("hidden", tab !== "propose");
   $("tabSales").classList.toggle("active", tab === "sales");
+  const act = document.querySelector(".tabs .tab-btn.active"); if (act && act.scrollIntoView) { try { act.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" }); } catch (e) {} }
   $("panelSales").classList.toggle("hidden", tab !== "sales");
   if (tab === "sales") loadSales();
   $("tabBoost").classList.toggle("active", tab === "boost");
@@ -1374,6 +1417,88 @@ $("pPhoto").addEventListener("change", async () => {
   }
 });
 
+/* ---- Catégories en boutons ---- */
+function renderCatChips() {
+  const cur = $("pCategorie").value;
+  $("catChips").innerHTML = MENU_CATEGORIES.map(c => '<button type="button" class="cat-chip' + (c.fr === cur ? " on" : "") + '" data-cat="' + escapeAttr(c.fr) + '">' + escapeHtml(LANG === "ar" ? c.ar : c.fr) + "</button>").join("");
+}
+$("catChips").addEventListener("click", (ev) => {
+  const b = ev.target.closest("[data-cat]"); if (!b) return;
+  $("pCategorie").value = b.dataset.cat; renderCatChips();
+});
+
+/* ---- Plusieurs plats d'un coup (un envoi par ligne, validés comme les autres) ---- */
+const MULTI_MAX = 30;
+let MULTI = [];   // [{ nom, categorie, prix, err }]
+function newMultiRow(prev) { return { nom: "", categorie: prev ? prev.categorie : "", prix: "", err: "" }; }
+function setMode(many) {
+  $("modeOne").classList.toggle("active", !many); $("modeMany").classList.toggle("active", many);
+  $("proposeForm").classList.toggle("hidden", many); $("proposeMulti").classList.toggle("hidden", !many);
+  if (many && !MULTI.length) { MULTI = [newMultiRow(), newMultiRow(), newMultiRow()]; renderMultiRows(true); }
+}
+$("modeOne").addEventListener("click", () => setMode(false));
+$("modeMany").addEventListener("click", () => setMode(true));
+function catOptionsHtml(sel) {
+  return '<option value="">' + escapeHtml(t("chooseCategory")) + "</option>" + MENU_CATEGORIES.map(c => '<option value="' + escapeAttr(c.fr) + '"' + (c.fr === sel ? " selected" : "") + ">" + escapeHtml(LANG === "ar" ? c.ar : c.fr) + "</option>").join("");
+}
+function renderMultiRows(force) {
+  if (!force && document.activeElement && $("multiRows").contains(document.activeElement)) return;
+  $("multiRows").innerHTML = MULTI.map((r, i) =>
+    '<div class="multi-row' + (r.err ? " bad" : "") + '" data-i="' + i + '">' +
+    '<input class="m-nom" type="text" maxlength="80" data-f="nom" placeholder="' + escapeAttr(t("multiNamePh")) + '" value="' + escapeAttr(r.nom) + '">' +
+    '<select class="m-cat" data-f="categorie">' + catOptionsHtml(r.categorie) + "</select>" +
+    '<input class="m-prix" type="number" min="1" inputmode="numeric" data-f="prix" placeholder="' + escapeAttr(t("multiPricePh")) + '" value="' + escapeAttr(r.prix) + '">' +
+    '<button type="button" class="m-del" data-del="' + i + '" aria-label="×">✕</button>' +
+    (r.err ? '<div class="m-err">' + escapeHtml(r.err) + "</div>" : "") + "</div>" + '<hr class="multi-sep">').join("");
+  $("multiAdd").hidden = MULTI.length >= MULTI_MAX;
+  updateMultiBtn();
+}
+function filledRows() { return MULTI.filter(r => r.nom.trim() || r.prix !== "" ); }
+function updateMultiBtn() { const n = filledRows().length; $("multiSend").textContent = t("multiSend").replace("{n}", n); $("multiSend").disabled = !n; }
+$("multiRows").addEventListener("input", (ev) => {
+  const el = ev.target.closest("[data-f]"); if (!el) return;
+  const row = el.closest("[data-i]"), r = MULTI[Number(row.dataset.i)];
+  r[el.dataset.f] = el.value; r.err = ""; row.classList.remove("bad"); const e = row.querySelector(".m-err"); if (e) e.remove();
+  updateMultiBtn();
+});
+$("multiRows").addEventListener("click", (ev) => {
+  const d = ev.target.closest("[data-del]"); if (!d) return;
+  MULTI.splice(Number(d.dataset.del), 1); if (!MULTI.length) MULTI = [newMultiRow()]; renderMultiRows(true);
+});
+$("multiAdd").addEventListener("click", () => {
+  if (MULTI.length >= MULTI_MAX) { showError($("errorBox"), t("multiMax")); return; }
+  MULTI.push(newMultiRow(MULTI[MULTI.length - 1])); renderMultiRows(true);
+  const inputs = $("multiRows").querySelectorAll(".m-nom"); if (inputs.length) inputs[inputs.length - 1].focus();
+});
+$("multiSend").addEventListener("click", async () => {
+  hideError($("errorBox")); hideSuccess($("successBox"));
+  const rows = MULTI.filter(r => r.nom.trim() || r.prix !== "");
+  if (!rows.length) { showError($("errorBox"), t("multiNone")); return; }
+  let bad = 0;
+  rows.forEach(r => {
+    const p = Number(r.prix);
+    r.err = r.nom.trim().length < 2 ? t("multiErrNom") : (!r.categorie ? t("multiErrCat") : (!(p >= 1 && isFinite(p)) ? t("multiErrPrix") : ""));
+    if (r.err) bad++;
+  });
+  if (bad) { renderMultiRows(true); return; }
+  const btn = $("multiSend"); btn.disabled = true;
+  let sent = 0;
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i]; btn.textContent = "… " + (i + 1) + "/" + rows.length;
+    const cat = MENU_CATEGORIES.find(c => c.fr === r.categorie);
+    try {
+      const payload = JSON.stringify({ nom: r.nom.trim(), categorie: r.categorie, categorie_ar: cat ? cat.ar : "", prix: Number(r.prix), description: "", photoData: "" });
+      const d = await apiGet({ action: "proposeMenuItem", telephone: SESSION.telephone, payload });
+      if (d && d.success) { sent++; r.done = true; } else r.err = (d && d.error) || t("proposeFailedGeneric");
+    } catch (e) { r.err = t("proposeFailedGeneric"); }
+  }
+  MULTI = MULTI.filter(r => !r.done); if (!MULTI.length) MULTI = [newMultiRow(), newMultiRow(), newMultiRow()];
+  const left = MULTI.filter(r => r.err).length;
+  renderMultiRows(true);
+  if (sent) { showSuccess($("successBox"), left ? t("multiPartial").replace("{n}", sent).replace("{m}", left) : t("multiDone").replace("{n}", sent)); await loadMenu(); }
+  if (left) showError($("errorBox"), t("proposeFailedGeneric"));
+});
+
 async function onPropose() {
   hideError($("errorBox"));
   hideSuccess($("successBox"));
@@ -1383,6 +1508,7 @@ async function onPropose() {
   const description = $("pDescription").value.trim();
 
   if (!MTForm.validate($("proposeForm"))) return;
+  if (!categorie) { showError($("errorBox"), t("chooseCategory")); return; }
 
   $("proposeBtn").disabled = true;
   $("proposeBtn").textContent = "...";
@@ -1395,7 +1521,7 @@ async function onPropose() {
       $("pNom").value = "";
       $("pPrix").value = "";
       $("pDescription").value = "";
-      $("pCategorie").value = "";
+      $("pCategorie").value = ""; renderCatChips();
       clearPhoto();
       await loadMenu();
     } else {
