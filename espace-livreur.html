@@ -118,6 +118,27 @@
   .new-banner{background:#e5f6ea;border:1.5px solid #8fd1a4;color:#14602c;border-radius:12px;padding:12px 14px;font-size:14px;font-weight:800;margin-bottom:12px;text-align:center;cursor:pointer;}
   .btn-route{flex:1;background:#fff;border:1.5px solid var(--border);border-radius:11px;padding:10px 6px;font-weight:800;font-size:12.5px;color:var(--blue-700);text-decoration:none;display:flex;align-items:center;justify-content:center;text-align:center;}
   .routes{display:flex;gap:8px;margin-top:10px;}
+  .progress{display:flex;align-items:flex-start;margin:10px 0 4px;}
+  .progress .st{flex:1;text-align:center;font-size:10.5px;font-weight:800;color:#98a2b3;position:relative;line-height:1.3;}
+  .progress .st .dot{width:20px;height:20px;border-radius:50%;background:#e4e7ec;color:#fff;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;font-size:11px;position:relative;z-index:1;}
+  .progress .st::before{content:"";position:absolute;top:9px;inset-inline-end:50%;width:100%;height:3px;background:#e4e7ec;}
+  .progress .st:first-child::before{display:none;}
+  .progress .st.done{color:#1a7d3a;}
+  .progress .st.done .dot,.progress .st.done::before{background:#25a04a;}
+  .progress .st.cur .dot{background:var(--gold-500);box-shadow:0 0 0 4px rgba(232,168,24,.25);}
+  .collect{background:#fff8e1;border:1.5px solid #f0d27a;border-radius:12px;padding:10px 12px;margin:8px 0;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .collect .lbl{font-size:12.5px;font-weight:800;color:#7a5a00;}
+  .collect .sub{font-size:11.5px;color:#7a5a00;font-weight:600;margin-top:2px;}
+  .collect .amt{font-size:26px;font-weight:900;color:var(--blue-900);white-space:nowrap;}
+  .cnote{background:#eef4ff;border:1.5px solid #c6d8f7;color:#1d3a73;border-radius:12px;padding:9px 12px;font-size:13px;font-weight:700;margin:6px 0;line-height:1.5;}
+  .addr{font-size:14.5px;font-weight:800;color:var(--text);margin-bottom:4px;line-height:1.5;}
+  .btn-step{flex:1;background:linear-gradient(135deg,var(--blue-900),var(--blue-700));color:#fff;border:none;border-radius:11px;padding:12px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;}
+  .hist-day{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);margin-bottom:10px;overflow:hidden;}
+  .hist-day .hd{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;background:var(--bg);font-weight:800;font-size:13px;}
+  .hist-day .hd span{color:#1a7d3a;}
+  .hist-line{display:flex;justify-content:space-between;gap:8px;padding:9px 14px;border-top:1px solid var(--border);font-size:12.5px;}
+  .hist-line .c{color:var(--muted);font-weight:600;}
+  .hist-line .x{color:#b3261e;font-weight:800;}
   .earn-chips{display:flex;gap:8px;margin-bottom:12px;}
   .earn-chip{flex:1;background:#fff;border:1.5px solid var(--border);border-radius:999px;padding:8px 6px;font-weight:800;font-size:12.5px;color:var(--muted);cursor:pointer;font-family:inherit;}
   .earn-chip.active{background:var(--blue-900);color:#fff;border-color:var(--blue-900);}
@@ -333,6 +354,7 @@ let CURRENT_TAB = "available";
 let AVAILABLE_ORDERS = [];
 let MY_ORDERS = [];
 let ONLINE = true;
+let HIST = [];
 let EARN = null, EARN_PERIOD = "jour";
 let KNOWN_AVAIL = null;
 let AUDIO_CTX = null;
@@ -408,6 +430,11 @@ const I18N = {
     earnDeliveries: "{n} livraison(s)", earnGain: "Gains (frais de livraison)",
     cashTitle: "Espèces à reverser à MT", cashCollected: "Encaissé sur tes livraisons", cashPaid: "Déjà versé", cashDue: "Reste à verser",
     cashLimit: "⚠️ Tu dépasses le plafond de {n} DA : passe verser tes espèces.", earnNote: "Les gains = les frais de livraison que tu gardes. Les plats encaissés reviennent à MT.", earnLoadFail: "Impossible de charger tes gains.",
+    stAccepted: "Acceptée", stResto: "Au restaurant", stPicked: "Récupérée", stDelivered: "Livrée",
+    stepArrived: "📍 Je suis arrivé au restaurant", stepPicked: "🛍️ Commande récupérée", stepFail: "Impossible d'enregistrer l'étape. Réessaie.",
+    toCollect: "💵 À encaisser", collectSub: "Plats {p} DA + livraison {f} DA", clientNote: "📝 Note du client :",
+    histTitle: "Historique par jour", histNone: "Aucune livraison sur cette période.", histCancelled: "annulée",
+    histDay: "{n} livrée(s)",
   },
   ar: {
     tagline: "مساحة الموصل",
@@ -476,6 +503,11 @@ const I18N = {
     earnDeliveries: "{n} توصيلة", earnGain: "الأرباح (رسوم التوصيل)",
     cashTitle: "المبلغ المستحق لـ MT", cashCollected: "المحصَّل من توصيلاتك", cashPaid: "تم دفعه", cashDue: "المتبقي للدفع",
     cashLimit: "⚠️ تجاوزت السقف {n} دج: مرّ لتسليم المبلغ.", earnNote: "الأرباح = رسوم التوصيل التي تحتفظ بها. ثمن الأطباق يعود إلى MT.", earnLoadFail: "تعذر تحميل أرباحك.",
+    stAccepted: "مقبول", stResto: "في المطعم", stPicked: "تم الاستلام", stDelivered: "تم التسليم",
+    stepArrived: "📍 وصلت إلى المطعم", stepPicked: "🛍️ تم استلام الطلب", stepFail: "تعذر حفظ المرحلة. أعد المحاولة.",
+    toCollect: "💵 المبلغ المطلوب تحصيله", collectSub: "الأطباق {p} دج + التوصيل {f} دج", clientNote: "📝 ملاحظة الزبون:",
+    histTitle: "السجل حسب اليوم", histNone: "لا توجد توصيلات في هذه الفترة.", histCancelled: "ملغاة",
+    histDay: "{n} موصّلة",
   }
 };
 
@@ -778,10 +810,17 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden && SE
    ============================================================ */
 async function loadEarn() {
   try {
-    const d = await apiGet({ action: "driverEarnings" });
+    const [d, h] = await Promise.all([apiGet({ action: "driverEarnings" }), apiGet({ action: "driverHistory", days: 14 }).catch(() => null)]);
+    if (h && h.success) HIST = h.jours;
     if (d && d.success) { EARN = d; renderEarn(); }
     else { $("listEarn").innerHTML = emptyStateHtml(t("earnLoadFail")); }
   } catch (e) { $("listEarn").innerHTML = emptyStateHtml(t("earnLoadFail")); }
+}
+function histDayHtml_(d) {
+  const p = d.jour.split("-"), dt = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2], 12));
+  const label = dt.toLocaleDateString(LANG === "ar" ? "ar-DZ" : "fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
+  const lines = d.commandes.map(c => `<div class="hist-line"><div><b>${escapeHtml(c.heure)}</b> · ${escapeHtml(c.client)}<div class="c">${escapeHtml(c.numero)} · ${escapeHtml(c.zone)}</div></div><div style="text-align:end">${c.statut === "Livrée" ? `<b>${c.total} DA</b><div class="c">+${c.gain} DA</div>` : `<div class="x">${escapeHtml(t("histCancelled"))}</div>`}</div></div>`).join("");
+  return `<div class="hist-day"><div class="hd"><div>${escapeHtml(label)}<div class="c" style="font-weight:600;color:var(--muted);font-size:11.5px">${escapeHtml(t("histDay").replace("{n}", d.livrees))}</div></div><span>+${d.gains} DA</span></div>${lines}</div>`;
 }
 function renderEarn() {
   const box = $("listEarn");
@@ -803,7 +842,9 @@ function renderEarn() {
       <div>${escapeHtml(t("cashDue"))} : <b>${c.solde || 0} DA</b></div>
       ${c.plafond && c.solde > c.plafond ? `<div class="warn">${escapeHtml(t("cashLimit").replace("{n}", c.plafond))}</div>` : ""}
     </div>
-    <div class="earn-sub" style="text-align:center">${escapeHtml(t("earnNote"))}</div>`;
+    <div class="earn-sub" style="text-align:center;margin-bottom:14px">${escapeHtml(t("earnNote"))}</div>
+    <div style="font-weight:900;margin:6px 2px 8px">📅 ${escapeHtml(t("histTitle"))}</div>
+    ${HIST.length ? HIST.map(histDayHtml_).join("") : `<div class="earn-sub" style="text-align:center">${escapeHtml(t("histNone"))}</div>`}`;
   box.querySelectorAll("[data-per]").forEach(b => b.addEventListener("click", () => { EARN_PERIOD = b.dataset.per; renderEarn(); }));
 }
 
@@ -902,6 +943,9 @@ function renderOrders() {
   document.querySelectorAll("[data-accept]").forEach(btn => {
     btn.addEventListener("click", () => onAccept(btn.dataset.accept));
   });
+  document.querySelectorAll("[data-step]").forEach(btn => {
+    btn.addEventListener("click", () => onStep(btn.dataset.num, btn.dataset.step, btn));
+  });
   document.querySelectorAll("[data-deliver]").forEach(btn => {
     btn.addEventListener("click", () => onDeliver(btn.dataset.deliver));
   });
@@ -926,11 +970,23 @@ function routesHtml_(o) {
   const cli = `<a class="btn-route" target="_blank" rel="noopener" href="${escapeAttr(mapsUrl_(o.lat, o.lng, (o.adresse || "") + " Meftah"))}">${escapeHtml(t("routeClient"))}</a>`;
   return `<div class="routes">${rest}${cli}</div>`;
 }
+function collectHtml_(o) {
+  const total = Number(o.total) || 0, fee = Number(o.fraisLivraison) || 0;
+  return `<div class="collect"><div><div class="lbl">${escapeHtml(t("toCollect"))}</div><div class="sub">${escapeHtml(t("collectSub").replace("{p}", Math.max(0, total - fee)).replace("{f}", fee))}</div></div><div class="amt">${total} DA</div></div>`;
+}
+function progressHtml_(o) {
+  const e = Number(o.etape) || 0, labels = ["stAccepted", "stResto", "stPicked", "stDelivered"];
+  return `<div class="progress">${labels.map((k, i) => `<div class="st ${i <= e ? "done" : ""} ${i === e + 1 ? "cur" : ""}"><div class="dot">${i <= e ? "✓" : ""}</div>${escapeHtml(t(k))}</div>`).join("")}</div>`;
+}
 function orderCardHtml(o, kind) {
   const telHref = "tel:" + fmtPhone(o.telephone).replace(/[^0-9+]/g, "");
   const actionBtn = kind === "available"
     ? `<button class="btn-accept" data-accept="${escapeAttr(o.numero)}">${escapeHtml(t("accept"))}</button>`
-    : `<button class="btn-delivered" data-deliver="${escapeAttr(o.numero)}">${escapeHtml(t("markDelivered"))}</button>`;
+    : ((Number(o.etape) || 0) === 0
+        ? `<button class="btn-step" data-step="arrived" data-num="${escapeAttr(o.numero)}">${escapeHtml(t("stepArrived"))}</button>`
+        : (Number(o.etape) === 1
+            ? `<button class="btn-step" data-step="picked" data-num="${escapeAttr(o.numero)}">${escapeHtml(t("stepPicked"))}</button>`
+            : `<button class="btn-delivered" data-deliver="${escapeAttr(o.numero)}">${escapeHtml(t("markDelivered"))}</button>`));
   return `
     <div class="order-card">
       <div class="zone-badge">${escapeHtml(o.zone || "")}</div>
@@ -940,8 +996,11 @@ function orderCardHtml(o, kind) {
       </div>
       ${typeof o.prete === "boolean" ? `<div class="ready-badge ${o.prete ? "yes" : "no"}">${escapeHtml(t(o.prete ? "readyYes" : "readyNo"))}</div>` : ""}
       <div class="meta"><b>${escapeHtml(o.numero || "")}</b> · ${escapeHtml(o.horodatage || "")}</div>
-      <div class="meta">📍 ${escapeHtml(o.adresse || "")}</div>
+      <div class="addr">📍 ${escapeHtml(o.adresse || "")}</div>
+      ${o.notes ? `<div class="cnote">${escapeHtml(t("clientNote"))} ${escapeHtml(o.notes)}</div>` : ""}
       <div class="articles">${escapeHtml(o.articles || "")}</div>
+      ${collectHtml_(o)}
+      ${kind === "mine" ? progressHtml_(o) : ""}
       ${routesHtml_(o)}
       <div class="actions">
         ${actionBtn}
@@ -975,6 +1034,16 @@ async function onAccept(numero) {
   } finally {
     if (btn) { btn.disabled = false; }
   }
+}
+
+async function onStep(numero, step, btn) {
+  btn.disabled = true;
+  try {
+    const d = await apiGet({ action: "driverStep", orderNumber: numero, step });
+    if (d && d.success) { await loadAll(true); }
+    else showError($("errorBox"), (d && d.error) || t("stepFail"));
+  } catch (e) { showError($("errorBox"), t("stepFail")); }
+  finally { btn.disabled = false; }
 }
 
 async function onDeliver(numero) {
