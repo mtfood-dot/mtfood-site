@@ -106,6 +106,27 @@
     border:none;border-radius:999px;padding:6px 12px;font-size:11.5px;font-weight:800;cursor:pointer;
     font-family:inherit;margin-top:6px;}
   .btn-gps-enable.hidden{display:none;}
+.online-row{display:flex;align-items:center;gap:8px;margin-top:8px;}
+  .sw{position:relative;width:46px;height:26px;border-radius:999px;background:#8892a6;border:none;cursor:pointer;padding:0;flex:none;transition:background .2s;}
+  .sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s;}
+  .sw.on{background:#25a04a;}
+  .sw.on::after{transform:translateX(20px);}
+  [dir=rtl] .sw::after{left:auto;right:3px;}
+  [dir=rtl] .sw.on::after{transform:translateX(-20px);}
+  .online-lbl{font-size:12.5px;font-weight:800;}
+  .offline-banner{background:#fff4e5;border:1.5px solid #f0c987;color:#7a4b00;border-radius:12px;padding:12px 14px;font-size:13px;font-weight:700;margin-bottom:12px;line-height:1.5;}
+  .new-banner{background:#e5f6ea;border:1.5px solid #8fd1a4;color:#14602c;border-radius:12px;padding:12px 14px;font-size:14px;font-weight:800;margin-bottom:12px;text-align:center;cursor:pointer;}
+  .btn-route{flex:1;background:#fff;border:1.5px solid var(--border);border-radius:11px;padding:10px 6px;font-weight:800;font-size:12.5px;color:var(--blue-700);text-decoration:none;display:flex;align-items:center;justify-content:center;text-align:center;}
+  .routes{display:flex;gap:8px;margin-top:10px;}
+  .earn-chips{display:flex;gap:8px;margin-bottom:12px;}
+  .earn-chip{flex:1;background:#fff;border:1.5px solid var(--border);border-radius:999px;padding:8px 6px;font-weight:800;font-size:12.5px;color:var(--muted);cursor:pointer;font-family:inherit;}
+  .earn-chip.active{background:var(--blue-900);color:#fff;border-color:var(--blue-900);}
+  .earn-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);padding:18px;margin-bottom:12px;text-align:center;}
+  .earn-big{font-size:32px;font-weight:900;color:var(--blue-900);}
+  .earn-sub{font-size:13px;color:var(--muted);font-weight:700;margin-top:4px;}
+  .earn-cash{text-align:start;font-size:13.5px;line-height:1.9;}
+  .earn-cash b{font-weight:800;}
+  .earn-cash .warn{color:#b3261e;font-weight:800;}
   @keyframes gpsPulse{0%,100%{opacity:1;}50%{opacity:.3;}}
 
   /* Onglets */
@@ -225,6 +246,7 @@ if ("serviceWorker" in navigator) {
         <div class="who" id="whoText"></div>
         <div class="zone" id="zoneText"></div>
         <div class="zone" id="ratingLine"></div>
+        <div class="online-row"><button class="sw on" id="onlineSwitch" type="button" role="switch" aria-checked="true"></button><span class="online-lbl" id="onlineLbl">En ligne</span></div>
         <div class="gps-badge hidden" id="gpsBadge"><span class="dot"></span><span id="gpsBadgeText">Position partagée</span></div>
         <button class="btn-gps-enable hidden" id="gpsEnableBtn" type="button">📍 <span id="gpsEnableBtnText">Activer le partage de position</span></button>
       </div>
@@ -238,6 +260,7 @@ if ("serviceWorker" in navigator) {
       <button class="tab-btn" id="tabMine" type="button">
         <span id="tabMineLabel">Mes livraisons</span> <span class="count" id="countMine">0</span>
       </button>
+      <button class="tab-btn" id="tabEarn" type="button"><span id="tabEarnLabel">💰 Gains</span></button>
     </div>
 
     <div class="refresh-row">
@@ -245,9 +268,12 @@ if ("serviceWorker" in navigator) {
     </div>
 
     <div id="errorBox" class="error-box"></div>
+    <div id="offlineBanner" class="offline-banner hidden"></div>
+    <div id="newBanner" class="new-banner hidden"></div>
 
     <div id="listAvailable"></div>
     <div id="listMine" class="hidden"></div>
+    <div id="listEarn" class="hidden"></div>
 
   </div>
 
@@ -306,6 +332,10 @@ try { SESSION = JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch
 let CURRENT_TAB = "available";
 let AVAILABLE_ORDERS = [];
 let MY_ORDERS = [];
+let ONLINE = true;
+let EARN = null, EARN_PERIOD = "jour";
+let KNOWN_AVAIL = null;
+let AUDIO_CTX = null;
 
 /* ============================================================
    I18N
@@ -369,6 +399,15 @@ const I18N = {
     ratingLine: "⭐ Ma note : {m} / 5 ({n} avis)", ratingNone: "⭐ Pas encore d'avis clients.",
     readyNo: "⏳ En préparation au restaurant",
     totalLabel: "Total",
+    tabEarnLabel: "💰 Gains", online: "🟢 En ligne", offline: "🔴 Hors ligne",
+    offlineMsg: "Tu es hors ligne : aucune nouvelle commande ne t'est proposée. Passe « En ligne » quand tu es prêt.",
+    onlineFail: "Impossible de changer ton statut. Réessaie.",
+    newOrder: "🔔 Nouvelle commande disponible !", newOrders: "🔔 {n} nouvelles commandes disponibles !",
+    routeResto: "🧭 Itinéraire restaurant", routeClient: "🧭 Itinéraire client",
+    earnToday: "Aujourd'hui", earnWeek: "7 jours", earnMonth: "30 jours",
+    earnDeliveries: "{n} livraison(s)", earnGain: "Gains (frais de livraison)",
+    cashTitle: "Espèces à reverser à MT", cashCollected: "Encaissé sur tes livraisons", cashPaid: "Déjà versé", cashDue: "Reste à verser",
+    cashLimit: "⚠️ Tu dépasses le plafond de {n} DA : passe verser tes espèces.", earnNote: "Les gains = les frais de livraison que tu gardes. Les plats encaissés reviennent à MT.", earnLoadFail: "Impossible de charger tes gains.",
   },
   ar: {
     tagline: "مساحة الموصل",
@@ -428,6 +467,15 @@ const I18N = {
     ratingLine: "⭐ تقييمي: {m} / 5 ({n} تقييم)", ratingNone: "⭐ لا توجد تقييمات بعد.",
     readyNo: "⏳ قيد التحضير في المطعم",
     totalLabel: "المجموع",
+    tabEarnLabel: "💰 الأرباح", online: "🟢 متصل", offline: "🔴 غير متصل",
+    offlineMsg: "أنت غير متصل: لن تصلك طلبات جديدة. اضغط « متصل » عندما تكون جاهزًا.",
+    onlineFail: "تعذر تغيير حالتك. أعد المحاولة.",
+    newOrder: "🔔 طلب جديد متاح!", newOrders: "🔔 {n} طلبات جديدة متاحة!",
+    routeResto: "🧭 الطريق إلى المطعم", routeClient: "🧭 الطريق إلى الزبون",
+    earnToday: "اليوم", earnWeek: "7 أيام", earnMonth: "30 يومًا",
+    earnDeliveries: "{n} توصيلة", earnGain: "الأرباح (رسوم التوصيل)",
+    cashTitle: "المبلغ المستحق لـ MT", cashCollected: "المحصَّل من توصيلاتك", cashPaid: "تم دفعه", cashDue: "المتبقي للدفع",
+    cashLimit: "⚠️ تجاوزت السقف {n} دج: مرّ لتسليم المبلغ.", earnNote: "الأرباح = رسوم التوصيل التي تحتفظ بها. ثمن الأطباق يعود إلى MT.", earnLoadFail: "تعذر تحميل أرباحك.",
   }
 };
 
@@ -450,6 +498,9 @@ function applyLanguage() {
   $("tabAvailableLabel").textContent = t("tabAvailableLabel");
   $("tabMineLabel").textContent = t("tabMineLabel");
   $("refreshBtn").textContent = t("refreshLabel");
+  $("tabEarnLabel").textContent = t("tabEarnLabel");
+  renderOnline();
+  renderEarn();
   $("gpsBadgeText").textContent = t("gpsBadgeText");
   $("gpsEnableBtnText").textContent = t("gpsEnableBtnText");
   $("footerNote").textContent = t("footerNote");
@@ -596,6 +647,7 @@ function enterApp() {
   $("loginScreen").classList.add("hidden");
   $("appScreen").classList.remove("hidden");
   updateSessionBar();
+  loadOnline();
   loadAll();
   loadRating();
   if (SESSION && SESSION.telephone) {
@@ -608,6 +660,7 @@ function enterApp() {
    ============================================================ */
 $("tabAvailable").addEventListener("click", () => switchTab("available"));
 $("tabMine").addEventListener("click", () => switchTab("mine"));
+$("tabEarn").addEventListener("click", () => { switchTab("earn"); loadEarn(); });
 
 function switchTab(tab) {
   CURRENT_TAB = tab;
@@ -615,6 +668,9 @@ function switchTab(tab) {
   $("tabMine").classList.toggle("active", tab === "mine");
   $("listAvailable").classList.toggle("hidden", tab !== "available");
   $("listMine").classList.toggle("hidden", tab !== "mine");
+  $("tabEarn").classList.toggle("active", tab === "earn");
+  $("listEarn").classList.toggle("hidden", tab !== "earn");
+  if (tab === "available") hideNewBanner();
 }
 
 $("refreshBtn").addEventListener("click", loadAll);
@@ -622,23 +678,133 @@ $("refreshBtn").addEventListener("click", loadAll);
 /* ============================================================
    CHARGEMENT DES COMMANDES
    ============================================================ */
-async function loadAll() {
-  hideError($("errorBox"));
+async function loadAll(silent) {
+  if (silent !== true) hideError($("errorBox"));
   try {
     const [avail, mine] = await Promise.all([
       apiGet({ action: "availableOrders", zone: SESSION.zone }),
       apiGet({ action: "myOrders", telephone: SESSION.telephone })
     ]);
-    if (avail.success) AVAILABLE_ORDERS = avail.orders;
+    if (avail.success) { AVAILABLE_ORDERS = avail.orders; ONLINE = !avail.offline; renderOnline(); checkNewOrders(avail.orders); }
     if (mine.success) MY_ORDERS = mine.orders;
-    if (!avail.success || !mine.success) {
+    if ((!avail.success || !mine.success) && silent !== true) {
       showError($("errorBox"), t("loadFailedGeneric"));
     }
     renderOrders();
     ensureLocationSharing();
   } catch (e) {
-    showError($("errorBox"), t("loadFailedGeneric"));
+    if (silent !== true) showError($("errorBox"), t("loadFailedGeneric"));
   }
+}
+
+/* ============================================================
+   EN LIGNE / HORS LIGNE
+   ============================================================ */
+function renderOnline() {
+  const sw = $("onlineSwitch");
+  if (!sw) return;
+  sw.classList.toggle("on", ONLINE);
+  sw.setAttribute("aria-checked", ONLINE ? "true" : "false");
+  $("onlineLbl").textContent = t(ONLINE ? "online" : "offline");
+  const b = $("offlineBanner");
+  b.textContent = t("offlineMsg");
+  b.classList.toggle("hidden", ONLINE);
+}
+async function loadOnline() {
+  try {
+    const d = await apiGet({ action: "driverStatus" });
+    if (d && d.success) { ONLINE = !!d.online; renderOnline(); }
+  } catch (e) { /* silencieux */ }
+}
+$("onlineSwitch").addEventListener("click", async () => {
+  unlockAudio_();
+  const want = !ONLINE, sw = $("onlineSwitch");
+  sw.disabled = true;
+  try {
+    const d = await apiGet({ action: "driverSetOnline", online: want ? "true" : "false" });
+    if (d && d.success) { ONLINE = !!d.online; KNOWN_AVAIL = null; renderOnline(); await loadAll(); }
+    else showError($("errorBox"), (d && d.error) || t("onlineFail"));
+  } catch (e) { showError($("errorBox"), t("onlineFail")); }
+  finally { sw.disabled = false; }
+});
+
+/* ============================================================
+   ALERTE SONORE : nouvelle commande disponible
+   ============================================================ */
+function unlockAudio_() {
+  try {
+    if (!AUDIO_CTX) AUDIO_CTX = new (window.AudioContext || window.webkitAudioContext)();
+    if (AUDIO_CTX.state === "suspended") AUDIO_CTX.resume();
+  } catch (e) {}
+}
+document.addEventListener("click", unlockAudio_);
+document.addEventListener("touchstart", unlockAudio_, { passive: true });
+function ringBell_() {
+  try {
+    unlockAudio_();
+    if (AUDIO_CTX) {
+      const now = AUDIO_CTX.currentTime;
+      [0, 0.35, 0.7].forEach((d, i) => {
+        const o = AUDIO_CTX.createOscillator(), g = AUDIO_CTX.createGain();
+        o.type = "sine"; o.frequency.value = i === 1 ? 1175 : 880;
+        g.gain.setValueAtTime(0.0001, now + d);
+        g.gain.exponentialRampToValueAtTime(0.5, now + d + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + d + 0.3);
+        o.connect(g); g.connect(AUDIO_CTX.destination);
+        o.start(now + d); o.stop(now + d + 0.32);
+      });
+    }
+  } catch (e) {}
+  try { if (navigator.vibrate) navigator.vibrate([300, 150, 300, 150, 300]); } catch (e) {}
+}
+function hideNewBanner() { $("newBanner").classList.add("hidden"); }
+function checkNewOrders(list) {
+  const nums = (list || []).map(o => String(o.numero));
+  if (KNOWN_AVAIL === null) { KNOWN_AVAIL = new Set(nums); return; }   // premier chargement : pas d'alerte
+  const fresh = nums.filter(n => !KNOWN_AVAIL.has(n));
+  KNOWN_AVAIL = new Set(nums);
+  if (!fresh.length || !ONLINE) return;
+  ringBell_();
+  const b = $("newBanner");
+  b.textContent = fresh.length === 1 ? t("newOrder") : t("newOrders").replace("{n}", fresh.length);
+  b.classList.remove("hidden");
+}
+$("newBanner").addEventListener("click", () => { switchTab("available"); hideNewBanner(); window.scrollTo({ top: 0, behavior: "smooth" }); });
+setInterval(() => { if (SESSION && !document.hidden && $("appScreen") && !$("appScreen").classList.contains("hidden")) loadAll(true); }, 20000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden && SESSION && !$("appScreen").classList.contains("hidden")) loadAll(true); });
+
+/* ============================================================
+   MES GAINS
+   ============================================================ */
+async function loadEarn() {
+  try {
+    const d = await apiGet({ action: "driverEarnings" });
+    if (d && d.success) { EARN = d; renderEarn(); }
+    else { $("listEarn").innerHTML = emptyStateHtml(t("earnLoadFail")); }
+  } catch (e) { $("listEarn").innerHTML = emptyStateHtml(t("earnLoadFail")); }
+}
+function renderEarn() {
+  const box = $("listEarn");
+  if (!box) return;
+  if (!EARN) { box.innerHTML = ""; return; }
+  const per = EARN[EARN_PERIOD] || { livrees: 0, gains: 0 }, c = EARN.caisse || {};
+  const chip = (k, lbl) => `<button class="earn-chip ${EARN_PERIOD === k ? "active" : ""}" data-per="${k}" type="button">${escapeHtml(t(lbl))}</button>`;
+  box.innerHTML = `
+    <div class="earn-chips">${chip("jour", "earnToday")}${chip("semaine", "earnWeek")}${chip("mois", "earnMonth")}</div>
+    <div class="earn-card">
+      <div class="earn-sub">${escapeHtml(t("earnGain"))}</div>
+      <div class="earn-big">${per.gains} DA</div>
+      <div class="earn-sub">${escapeHtml(t("earnDeliveries").replace("{n}", per.livrees))}</div>
+    </div>
+    <div class="earn-card earn-cash">
+      <div style="font-weight:900;margin-bottom:4px">💵 ${escapeHtml(t("cashTitle"))}</div>
+      <div>${escapeHtml(t("cashCollected"))} : <b>${c.aReverser || 0} DA</b></div>
+      <div>${escapeHtml(t("cashPaid"))} : <b>${c.verse || 0} DA</b></div>
+      <div>${escapeHtml(t("cashDue"))} : <b>${c.solde || 0} DA</b></div>
+      ${c.plafond && c.solde > c.plafond ? `<div class="warn">${escapeHtml(t("cashLimit").replace("{n}", c.plafond))}</div>` : ""}
+    </div>
+    <div class="earn-sub" style="text-align:center">${escapeHtml(t("earnNote"))}</div>`;
+  box.querySelectorAll("[data-per]").forEach(b => b.addEventListener("click", () => { EARN_PERIOD = b.dataset.per; renderEarn(); }));
 }
 
 /* ============================================================
@@ -751,6 +917,15 @@ function emptyStateHtml(msg) {
   return `<div class="empty-state"><span class="emoji">🛵</span>${escapeHtml(msg)}</div>`;
 }
 
+function mapsUrl_(lat, lng, query) {
+  const dest = (isFinite(lat) && isFinite(lng) && lat !== null && lng !== null && lat !== "") ? lat + "," + lng : encodeURIComponent(query || "");
+  return "https://www.google.com/maps/dir/?api=1&destination=" + dest + "&travelmode=driving";
+}
+function routesHtml_(o) {
+  const rest = o.restaurant ? `<a class="btn-route" target="_blank" rel="noopener" href="${escapeAttr(mapsUrl_(o.restoLat, o.restoLng, o.restaurant + " Meftah"))}">${escapeHtml(t("routeResto"))}</a>` : "";
+  const cli = `<a class="btn-route" target="_blank" rel="noopener" href="${escapeAttr(mapsUrl_(o.lat, o.lng, (o.adresse || "") + " Meftah"))}">${escapeHtml(t("routeClient"))}</a>`;
+  return `<div class="routes">${rest}${cli}</div>`;
+}
 function orderCardHtml(o, kind) {
   const telHref = "tel:" + fmtPhone(o.telephone).replace(/[^0-9+]/g, "");
   const actionBtn = kind === "available"
@@ -767,6 +942,7 @@ function orderCardHtml(o, kind) {
       <div class="meta"><b>${escapeHtml(o.numero || "")}</b> · ${escapeHtml(o.horodatage || "")}</div>
       <div class="meta">📍 ${escapeHtml(o.adresse || "")}</div>
       <div class="articles">${escapeHtml(o.articles || "")}</div>
+      ${routesHtml_(o)}
       <div class="actions">
         ${actionBtn}
         <a class="btn-call" href="${telHref}">${escapeHtml(t("call"))}</a>
