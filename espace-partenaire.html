@@ -105,8 +105,8 @@
   .hrow .dn{width:84px;font-weight:800;font-size:13.5px;display:flex;align-items:center;gap:6px;}
   .hrow .dn input{width:auto;margin:0;}
   .hrow .slots{display:flex;flex-direction:column;gap:6px;flex:1;min-width:150px;}
-  .hrow .slot{display:flex;align-items:center;gap:6px;}
-  .hrow .slot input[type=time]{width:auto;flex:1;padding:8px 8px;font-size:14px;}
+  .hrow .slot{display:flex;align-items:center;gap:6px;direction:ltr;}
+  .hrow .slot select{width:auto;flex:1;padding:8px 6px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:#fbfcfe;font-family:inherit;}
   .hrow .closed-lbl{color:var(--muted);font-size:13px;font-weight:700;}
   .mini-btn{background:#fff;border:1.5px solid var(--border);border-radius:999px;padding:5px 11px;font-size:12px;font-weight:800;color:var(--blue-700);cursor:pointer;font-family:inherit;}
   .set-title{font-size:15px;font-weight:900;color:var(--blue-900);margin:0 0 4px;}
@@ -216,6 +216,7 @@
     background:#fff;transition:.15s;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.25);}
   .switch input:checked + .slider{background:var(--green);}
   .switch input:checked + .slider:before{transform:translateX(19px);}
+  html[dir="rtl"] .slider:before{left:auto;right:3px;}
   html[dir="rtl"] .switch input:checked + .slider:before{transform:translateX(-19px);}
 
   .order-card{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);
@@ -1005,15 +1006,21 @@ async function loadSettings() {
     if (!d.defined) showSuccess($("successBox"), t("hoursNotSet"));
   } catch (e) { /* silencieux */ }
 }
+function timeOpts_(sel) {
+  const list = [];
+  for (let m = 0; m < 1440; m += 15) list.push(String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0"));
+  if (sel && list.indexOf(sel) < 0) { list.push(sel); list.sort(); }
+  return list.map(v => `<option value="${v}" ${v === sel ? "selected" : ""}>${v}</option>`).join("");
+}
 function renderHours() {
   $("hoursEditor").innerHTML = DAY_ORDER.map(d => {
     const h = HOURS_EDIT[d];
-    const slots = h.open ? h.slots.map((sl, j) => `<div class="slot"><input type="time" data-d="${d}" data-j="${j}" data-k="0" value="${sl[0]}"><span>→</span><input type="time" data-d="${d}" data-j="${j}" data-k="1" value="${sl[1]}">${j === 1 ? `<button class="mini-btn" data-rm="${d}" type="button">${t("rmSlot")}</button>` : ""}</div>`).join("") + (h.slots.length < 2 ? `<div><button class="mini-btn" data-add="${d}" type="button">${t("addSlot")}</button></div>` : "") : `<span class="closed-lbl">${t("closedDay")}</span>`;
+    const slots = h.open ? h.slots.map((sl, j) => `<div class="slot"><select data-d="${d}" data-j="${j}" data-k="0">${timeOpts_(sl[0])}</select><span>→</span><select data-d="${d}" data-j="${j}" data-k="1">${timeOpts_(sl[1])}</select>${j === 1 ? `<button class="mini-btn" data-rm="${d}" type="button">${t("rmSlot")}</button>` : ""}</div>`).join("") + (h.slots.length < 2 ? `<div><button class="mini-btn" data-add="${d}" type="button">${t("addSlot")}</button></div>` : "") : `<span class="closed-lbl">${t("closedDay")}</span>`;
     return `<div class="hrow"><label class="dn"><input type="checkbox" data-open="${d}" ${h.open ? "checked" : ""}>${t("dayNames")[d]}</label><div class="slots">${slots}</div></div>`;
   }).join("");
   const box = $("hoursEditor");
   box.querySelectorAll("[data-open]").forEach(c => c.addEventListener("change", () => { HOURS_EDIT[+c.dataset.open].open = c.checked; renderHours(); }));
-  box.querySelectorAll("input[type=time]").forEach(i => i.addEventListener("change", () => { HOURS_EDIT[+i.dataset.d].slots[+i.dataset.j][+i.dataset.k] = i.value; }));
+  box.querySelectorAll("select[data-d]").forEach(i => i.addEventListener("change", () => { HOURS_EDIT[+i.dataset.d].slots[+i.dataset.j][+i.dataset.k] = i.value; }));
   box.querySelectorAll("[data-add]").forEach(b => b.addEventListener("click", () => { HOURS_EDIT[+b.dataset.add].slots.push(["18:00", "23:00"]); renderHours(); }));
   box.querySelectorAll("[data-rm]").forEach(b => b.addEventListener("click", () => { HOURS_EDIT[+b.dataset.rm].slots.pop(); renderHours(); }));
 }
