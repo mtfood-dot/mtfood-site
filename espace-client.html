@@ -127,7 +127,7 @@ const I18N = {
   fr: {
     tagline:"Mon espace", logoutBtn:"Déconnexion", ctaOrder:"🛒 Commander",
     tabCurrent:"En cours", tabHistory:"Historique",
-    statusAconfirmer:"À confirmer", statusAttente:"En attente", statusLivraison:"En livraison",
+    statusPre:"Précommande", statusAconfirmer:"À confirmer", statusAttente:"En attente", statusLivraison:"En livraison",
     statusLivree:"Livrée", statusAnnulee:"Annulée",
     btnTrack:"Suivre", btnReorder:"Recommander",
     emptyCurrent:"Aucune commande en cours pour le moment.", emptyCurrentCta:"Voir le menu",
@@ -139,7 +139,7 @@ const I18N = {
   ar: {
     tagline:"مساحتي", logoutBtn:"تسجيل الخروج", ctaOrder:"🛒 الطلب",
     tabCurrent:"الحالية", tabHistory:"السابقة",
-    statusAconfirmer:"قيد التأكيد", statusAttente:"قيد الانتظار", statusLivraison:"قيد التوصيل",
+    statusPre:"طلب مسبق", statusAconfirmer:"قيد التأكيد", statusAttente:"قيد الانتظار", statusLivraison:"قيد التوصيل",
     statusLivree:"تم التوصيل", statusAnnulee:"ملغاة",
     btnTrack:"تتبع", btnReorder:"إعادة الطلب",
     emptyCurrent:"لا توجد طلبات حالية في الوقت الحالي.", emptyCurrentCta:"عرض القائمة",
@@ -171,13 +171,14 @@ $("logoutBtn").addEventListener("click", () => {
 });
 
 const STATUS_MAP = {
+  "Précommande": { cls: "status-aconfirmer", key: "statusPre" },
   "À confirmer": { cls: "status-aconfirmer", key: "statusAconfirmer" },
   "En attente": { cls: "status-attente", key: "statusAttente" },
   "En livraison": { cls: "status-livraison", key: "statusLivraison" },
   "Livrée": { cls: "status-livree", key: "statusLivree" },
   "Annulée": { cls: "status-annulee", key: "statusAnnulee" }
 };
-const ACTIVE_STATUSES = ["À confirmer", "En attente", "En livraison"];
+const ACTIVE_STATUSES = ["Précommande", "À confirmer", "En attente", "En livraison"];
 
 let ORDERS = { current: [], history: [] };
 let ACTIVE_TAB = "current";
