@@ -250,6 +250,8 @@ const I18N = {
     waitNoPosition: "En attente que le livreur partage sa position…",
     livreeMsg: "Ta commande a été livrée. Merci pour ta confiance !",
     statutAConfirmer: "En attente du restaurant",
+    statutPre: "Précommande",
+    waitPre: "Précommande enregistrée : le restaurant est fermé. Ta commande lui sera envoyée automatiquement dès son ouverture. Tu peux l'annuler d'ici là.",
     waitAConfirmer: "Le restaurant doit accepter ta commande. Elle est envoyée aux livreurs dès qu'il l'a acceptée.",
     statutAnnulee: "Annulée",
     annuleeMsg: "Cette commande a été annulée. Pour toute question, appelle-nous.",
@@ -289,6 +291,8 @@ const I18N = {
     waitNoPosition: "بانتظار أن يشارك عامل التوصيل موقعه…",
     livreeMsg: "تم توصيل طلبك. شكراً لثقتك!",
     statutAConfirmer: "بانتظار المطعم",
+    statutPre: "طلب مسبق",
+    waitPre: "تم تسجيل الطلب المسبق: المطعم مغلق. سيُرسل طلبك إليه تلقائيًا فور فتحه. يمكنك إلغاؤه قبل ذلك.",
     waitAConfirmer: "على المطعم قبول طلبك. يُرسل إلى الموصلين فور قبوله.",
     statutAnnulee: "ملغى",
     annuleeMsg: "تم إلغاء هذا الطلب. لأي استفسار، اتصل بنا.",
@@ -416,6 +420,7 @@ let CURRENT_NUMERO = null;
 
 function statusMeta(statut){
   const s = String(statut || "").trim();
+  if (s === "Précommande") return { cls: "status-attente", label: t("statutPre") };
   if (s === "À confirmer") return { cls: "status-attente", label: t("statutAConfirmer") };
   if (s === "Annulée") return { cls: "status-attente", label: t("statutAnnulee") };
   if (s === "En attente") return { cls: "status-attente", label: t("statutEnAttente") };
@@ -468,7 +473,7 @@ function updateCancelBox(statut){
   const box = $("cancelBox");
   if (!CURRENT_NUMERO || !statut || statut === "Annulée" || statut === "Livrée") { box.classList.add("hidden"); return; }
   box.classList.remove("hidden");
-  if (statut === "À confirmer") {
+  if (statut === "À confirmer" || statut === "Précommande") {
     $("cancelHint").textContent = t("cancelHintFree");
     $("cancelForm").style.display = "";
   } else {
@@ -569,10 +574,10 @@ function render(data){
   updateCancelBox(statut);
   updateRatingBox(statut, data.livreurNom || "");
 
-  if (statut === "À confirmer" || statut === "Annulée") {
+  if (statut === "À confirmer" || statut === "Précommande" || statut === "Annulée") {
     $("map").classList.remove("show");
     $("waitNote").classList.remove("hidden");
-    $("waitNoteText").textContent = t(statut === "Annulée" ? "annuleeMsg" : "waitAConfirmer");
+    $("waitNoteText").textContent = t(statut === "Annulée" ? "annuleeMsg" : (statut === "Précommande" ? "waitPre" : "waitAConfirmer"));
     if (statut === "Annulée") stopPolling();
     return;
   }

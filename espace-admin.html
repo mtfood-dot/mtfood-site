@@ -702,6 +702,7 @@ const I18N = {
     loginFailedGeneric: "Erreur de connexion. Vérifie ta connexion internet et réessaie.",
     loadFailedGeneric: "Impossible de charger les commandes. Vérifie ta connexion et réessaie.",
     noOrders: "Aucune commande à cette date.",
+    statutPre: "Précommande",
     statutAconfirmer: "À confirmer",
     statutEnattente: "En attente",
     statutEnlivraison: "En livraison",
@@ -1004,6 +1005,7 @@ const I18N = {
     loginFailedGeneric: "خطأ في الاتصال. تحقق من اتصالك بالإنترنت وأعد المحاولة.",
     loadFailedGeneric: "تعذر تحميل الطلبات. تحقق من اتصالك وأعد المحاولة.",
     noOrders: "لا توجد طلبات في هذا التاريخ.",
+    statutPre: "طلب مسبق",
     statutAconfirmer: "بانتظار التأكيد",
     statutEnattente: "قيد الانتظار",
     statutEnlivraison: "قيد التوصيل",
@@ -1826,6 +1828,7 @@ function renderOrders() {
 
 function badgeInfo(statut) {
   const s = String(statut || "").trim();
+  if (s === "Précommande") return { cls: "aconfirmer", label: t("statutPre") };
   if (s === "À confirmer") return { cls: "aconfirmer", label: t("statutAconfirmer") };
   if (s === "En attente") return { cls: "enattente", label: t("statutEnattente") };
   if (s === "En livraison") return { cls: "enlivraison", label: t("statutEnlivraison") };
@@ -1848,6 +1851,8 @@ function actionsHtml(o) {
   let buttons = "";
   if (s === "À confirmer") {
     buttons += `<button class="btn-action btn-confirm" type="button" data-action-order="${numero}" data-new-status="En attente">${escapeHtml(t("btnConfirm"))}</button>`;
+    buttons += `<button class="btn-action btn-cancel" type="button" data-action-order="${numero}" data-new-status="Annulée">${escapeHtml(t("btnCancel"))}</button>`;
+  } else if (s === "Précommande") {
     buttons += `<button class="btn-action btn-cancel" type="button" data-action-order="${numero}" data-new-status="Annulée">${escapeHtml(t("btnCancel"))}</button>`;
   } else if (s === "En attente" || s === "En livraison") {
     buttons += `<button class="btn-action btn-deliver" type="button" data-action-order="${numero}" data-new-status="Livrée">${escapeHtml(t("btnDeliver"))}</button>`;

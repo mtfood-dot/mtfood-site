@@ -286,6 +286,9 @@
   .resto-card .rx{font-size:13px;color:#b3261e;font-weight:800;margin-top:3px;}
   .closed-banner{display:none;max-width:960px;margin:10px auto 0;padding:11px 14px;background:#fdecea;color:#b3261e;border:1.5px solid #f0c4c0;border-radius:12px;font-size:14px;font-weight:800;text-align:center;box-sizing:border-box;}
   .closed-banner.show{display:block;}
+  .closed-banner.pre{background:#fff7e0;color:#6b4e00;border-color:#f1d98a;}
+  .pre-note{display:none;margin-top:10px;padding:10px 12px;border-radius:12px;background:#fff7e0;border:1px solid #f1d98a;color:#6b4e00;font-size:13.5px;line-height:1.5;font-weight:700;}
+  .pre-note.show{display:block;}
   .add-btn:disabled{background:#e4e8ee;color:#7b8798;cursor:not-allowed;box-shadow:none;}
   .resto-card .rh{font-size:12.5px;color:var(--blue-700);margin-top:4px;line-height:1.35;}
   .resto-head{max-width:960px;margin:0 auto;padding:0 0 4px;}
@@ -675,6 +678,7 @@ if ("serviceWorker" in navigator) {
       <div class="ship-hint" id="shipHintCart"></div>
       <div class="loy" id="loyCart"></div>
     </div>
+    <div class="pre-note" id="preNoteCart"></div>
     <div class="cod-note" style="margin-top:10px;">💵 <span id="codNoteCart"></span></div>
     <button class="submit-btn" id="goCheckoutBtn">Passer la commande</button>
   </div>
@@ -720,6 +724,7 @@ if ("serviceWorker" in navigator) {
       <div class="loy" id="loyChk"></div>
     </div>
 
+    <div class="pre-note" id="preNoteChk"></div>
     <div class="cod-note">💵 <span id="codNoteText">Paiement <b>à la livraison</b> (cash). Aucun paiement en ligne requis.</span></div>
 
     <div class="error-box" id="chkError"></div>
@@ -941,6 +946,11 @@ const I18N = {
     priceFrom: "Dès {p} DA",
     closedShort: "Fermé", closedTemp: "Fermé temporairement", closedAt: "Fermé · ouvre à {at}", closedTomorrow: "Fermé · ouvre demain à {at}", closedDay: "Fermé · ouvre {day} à {at}",
     closedOrder: "Ce restaurant est fermé pour le moment : tu peux voir le menu, mais pas commander.",
+    preBanner: "Précommande possible : ta commande sera envoyée au restaurant dès son ouverture ({when}).",
+    preNote: "🕒 Précommande : le restaurant est fermé. Ta commande lui sera envoyée dès son ouverture ({when}). Tu peux l'annuler d'ici là.",
+    preAt: "à {at}", preTomorrow: "demain à {at}", preDay: "{day} à {at}", preBtn: "Précommander", preSentTitle: "Précommande enregistrée !",
+    preThanksHtml: "Ton restaurant est fermé pour le moment. Ta commande lui sera envoyée dès son ouverture ({when}) et tu seras prévenu.<br>Tu peux l'annuler d'ici là depuis le suivi de commande. Paiement en espèces à la réception.",
+    preMenuTag: "Précommande",
     days: { dimanche: "dimanche", lundi: "lundi", mardi: "mardi", mercredi: "mercredi", jeudi: "jeudi", vendredi: "vendredi", samedi: "samedi" },
     menuSoonLong: "Le menu de ce restaurant sera bientôt disponible.",
     prepOnly: "Préparation ≈ {m} min",
@@ -1102,6 +1112,11 @@ const I18N = {
     priceFrom: "ابتداءً من {p} دج",
     closedShort: "مغلق", closedTemp: "مغلق مؤقتًا", closedAt: "مغلق · يفتح على {at}", closedTomorrow: "مغلق · يفتح غدًا على {at}", closedDay: "مغلق · يفتح {day} على {at}",
     closedOrder: "هذا المطعم مغلق حاليًا: يمكنك رؤية القائمة لكن لا يمكنك الطلب.",
+    preBanner: "الطلب المسبق متاح: سيُرسل طلبكم إلى المطعم فور فتحه ({when}).",
+    preNote: "🕒 طلب مسبق: المطعم مغلق حاليًا. سيُرسل طلبكم إليه فور فتحه ({when}). يمكنكم إلغاؤه قبل ذلك.",
+    preAt: "على {at}", preTomorrow: "غدًا على {at}", preDay: "{day} على {at}", preBtn: "طلب مسبق", preSentTitle: "تم تسجيل الطلب المسبق!",
+    preThanksHtml: "المطعم مغلق حاليًا. سيُرسل طلبكم إليه فور فتحه ({when}) وسنُعلمكم بذلك.<br>يمكنكم إلغاؤه قبل ذلك من صفحة تتبع الطلب. الدفع نقدًا عند الاستلام.",
+    preMenuTag: "طلب مسبق",
     days: { dimanche: "الأحد", lundi: "الاثنين", mardi: "الثلاثاء", mercredi: "الأربعاء", jeudi: "الخميس", vendredi: "الجمعة", samedi: "السبت" },
     menuSoonLong: "ستتوفر قائمة هذا المطعم قريبًا.",
     prepOnly: "التحضير ≈ {m} د",
@@ -1779,6 +1794,21 @@ function fromPriceHtml(r) { const m = minPrice(r); return m ? '<span class="tier
 function tierHtml(n) { return n ? '<span class="tier" dir="ltr">' + [1, 2, 3].map(k => k <= n ? "<b>DA</b>" : "<u>DA</u>").join(" ") + "</span>" : ""; }
 function restoVille(r) { return RESTO_VILLE[norm(r.name)] || ""; }
 function restoClosedInfo(name) { const v = RESTO_OPEN[norm(name || "")]; return v && v.open === false ? v : null; }
+function restoPre(name) { const v = restoClosedInfo(name); return v && v.pre && !v.manual ? v : null; }
+function preWhen(name) {
+  const v = restoPre(name), n = v && v.next;
+  if (!n || !n.at) return "";
+  if (n.off === 0) return t("preAt").replace("{at}", n.at);
+  if (n.off === 1) return t("preTomorrow").replace("{at}", n.at);
+  const dn = (I18N[LANG] && I18N[LANG].days && I18N[LANG].days[n.day]) || n.day;
+  return t("preDay").replace("{day}", dn).replace("{at}", n.at);
+}
+function cartPreName() { const ls = Object.values(CART); const p = ls.length ? (ls[0].item.partenaire || "") : ""; return p && restoPre(p) ? p : ""; }
+function updatePreNotes() {
+  const p = cartPreName(), txt = p ? t("preNote").replace("{when}", preWhen(p)) : "";
+  ["preNoteCart", "preNoteChk"].forEach(id => { const el = $(id); if (el) { el.textContent = txt; el.classList.toggle("show", !!txt); } });
+  const gb = $("goCheckoutBtn"); if (gb) gb.textContent = p ? t("preBtn") : t("checkoutBtn");
+}
 function closedText(name) {
   const v = restoClosedInfo(name);
   if (!v) return "";
@@ -1800,17 +1830,18 @@ function loadRestoInfo() {
     Object.keys(res.restos).forEach(k => { const v = res.restos[k]; if (v && v.prepMin > 0) m[norm(k)] = Number(v.prepMin); });
     RESTO_PREP = m;
     const o = {};
-    Object.keys(res.restos).forEach(k => { const v = res.restos[k]; if (v && typeof v.open === "boolean") o[norm(k)] = { open: v.open, hours: v.hours || "", next: v.next || null, manual: !!v.manual }; });
+    Object.keys(res.restos).forEach(k => { const v = res.restos[k]; if (v && typeof v.open === "boolean") o[norm(k)] = { open: v.open, hours: v.hours || "", next: v.next || null, manual: !!v.manual, pre: !!v.pre }; });
     RESTO_OPEN = o;
     const vv = {};
     Object.keys(res.restos).forEach(k => { const v = res.restos[k]; if (v && v.ville) vv[norm(k)] = String(v.ville); });
     RESTO_VILLE = vv;
     renderRestoBar();
     if (ACTIVE_RESTO !== null) renderGrid();
+    updatePreNotes();
   }).catch(() => {});
 }
 function etaCardHtml(name) {
-  if (restoClosedInfo(name)) return '<div class="rx"><span aria-hidden="true">🔒</span> ' + escapeHtml(closedText(name)) + "</div>";
+  if (restoClosedInfo(name)) return '<div class="rx"><span aria-hidden="true">' + (restoPre(name) ? "🕒" : "🔒") + "</span> " + escapeHtml(closedText(name)) + (restoPre(name) ? " · " + escapeHtml(t("preMenuTag")) : "") + "</div>";
   const tx = etaText(name);
   if (!tx) return "";
   const q = restoQuoteOf(name);
@@ -1849,7 +1880,8 @@ function setViewChrome() {
         $("restoHeadInfo").textContent = r.soon ? t("menuSoon") : (cuisinesText(r) + (cl ? " · " + cl : (etaText(r.name) ? " · " + etaText(r.name) + fee : ""))); }
       const bn = $("closedBanner");
       const far = !cl && restoOutOfZone(r.name);
-      if (bn) { bn.textContent = cl ? "🔒 " + t("closedOrder") : (far ? "📍 " + t("outZoneOrder") : ""); bn.classList.toggle("show", !!(cl || far)); }
+      const preOn = !!(cl && restoPre(r.name));
+      if (bn) { bn.textContent = preOn ? "🕒 " + t("preBanner").replace("{when}", preWhen(r.name)) : (cl ? "🔒 " + t("closedOrder") : (far ? "📍 " + t("outZoneOrder") : "")); bn.classList.toggle("show", !!(cl || far)); bn.classList.toggle("pre", preOn); }
     }
   }
 }
@@ -2036,7 +2068,7 @@ window.addEventListener("popstate", (e) => {
 
 function addBtnHtml(id) {
   const it = MENU.find(i => String(i.id) === String(id));
-  if (it && restoClosedInfo(it.partenaire)) return `<button class="add-btn" disabled>${t("closedShort")}</button>`;
+  if (it && restoClosedInfo(it.partenaire) && !restoPre(it.partenaire)) return `<button class="add-btn" disabled>${t("closedShort")}</button>`;
   if (it && restoOutOfZone(it.partenaire)) return `<button class="add-btn" disabled>${t("outZoneShort")}</button>`;
   return `<button class="add-btn" data-add="${id}">${t("add")}</button>`;
 }
@@ -2076,7 +2108,7 @@ function showCartNotice(msg) {
 function changeQty(id, delta) {
   const item = MENU.find(i => String(i.id) === String(id));
   if (!item) return;
-  if (delta > 0 && restoClosedInfo(item.partenaire)) { showCartNotice(t("closedOrder")); return; }
+  if (delta > 0 && restoClosedInfo(item.partenaire) && !restoPre(item.partenaire)) { showCartNotice(t("closedOrder")); return; }
   if (delta > 0 && restoOutOfZone(item.partenaire)) { showCartNotice(t("outZoneOrder")); return; }
   if (delta > 0 && !CART[id]) {
     const cp = cartPartner();
@@ -2134,6 +2166,7 @@ function renderCartLines() {
   const cp = lines.length ? (lines[0][1].item.partenaire || "") : "";
   $("cartResto").textContent = cp ? t("cartFrom").replace("{r}", cp) : "";
   $("cartResto").style.display = cp ? "" : "none";
+  updatePreNotes();
   $("sumSubtotal").textContent = subtotal + " DA";
   const dl = deliveryFor(subtotal);
   if (dl) {
@@ -2861,6 +2894,8 @@ function submitOrder() {
     promo: PROMO ? PROMO.code : "",
     clientId: session.clientId || "",
     requestId: ORDER_REQUEST_ID,
+    preorder: !!cartPreName(),
+    preWhen: cartPreName() ? preWhen(cartPreName()) : "",
     items: Object.values(CART).map(l => ({ id: (l.item.rawId !== undefined ? l.item.rawId : l.item.id), nom: l.item.nom, prix: l.item.prix, qty: l.qty, partenaire: l.item.partenaire || "" }))
   };
 
@@ -2879,6 +2914,8 @@ function submitOrder() {
       ORDER_REQUEST_ID = "";
       closeOverlay("checkoutOverlay");
       $("orderNoDisplay").textContent = res.orderNumber;
+      { const isPre = !!res.preorder; $("orderSentTitle").textContent = t(isPre ? "preSentTitle" : "orderSentTitle");
+        $("thanksText").innerHTML = isPre ? t("preThanksHtml").replace("{when}", payload.preWhen || "") : t("thanksHtml"); }
       $("trackOrderLink").href = "suivi-commande.html?cmd=" + encodeURIComponent(res.orderNumber);
       $("waConfirmBtn").href = buildWhatsAppLink(res.orderNumber, payload);
       openOverlay("successOverlay");
