@@ -60,6 +60,7 @@
   }
   header.top .brand{display:flex;flex-direction:column;align-items:center;gap:10px;position:relative;z-index:1;width:100%;}
   header.top .brand .logo-img{height:auto;width:100%;max-width:420px;display:block;margin:0 auto;}
+  @media(max-width:640px){header.top{padding:14px 0 14px;} header.top .brand{gap:4px;} header.top .brand .logo-img{max-width:200px!important;} header.top .tagline{font-size:12.5px;}}
   header.top .tagline{font-size:14px;color:var(--blue-700);font-weight:700;letter-spacing:.2px;}
   header.top .phone-link{
     margin-top:4px;display:inline-flex;align-items:center;gap:7px;position:relative;z-index:1;
@@ -332,6 +333,22 @@
     box-shadow:0 3px 8px -2px rgba(212,160,23,.5);transition:transform .12s ease;
   }
   .add-btn:active{transform:scale(.94);}
+  .add-btn{min-height:44px;min-width:88px;font-size:13.5px;}
+  .qty-stepper{padding:4px 6px;gap:6px;}
+  .qty-stepper button{width:38px;height:38px;font-size:18px;border-radius:10px;}
+  .qty-stepper span{font-size:15px;min-width:20px;}
+  .grid.list{grid-template-columns:1fr;gap:10px;}
+  .grid.list .card{flex-direction:row;align-items:center;padding:12px 14px;gap:12px;}
+  .grid.list .card .photo{display:none;}
+  .grid.list .card .body{padding:0;flex-direction:row;align-items:center;justify-content:space-between;gap:12px;}
+  .grid.list .card .info{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1;}
+  .grid.list .card .row-bottom{margin:0;padding:0;flex-direction:column;align-items:flex-end;gap:8px;}
+  .grid.list .card .name{font-size:15.5px;}
+  .cart-resto{font-size:13px;font-weight:800;color:var(--blue-700);margin:-4px 0 10px;}
+  .ship-hint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5;}
+  .fpanel{margin-bottom:8px;}
+  .fpanel[hidden]{display:none!important;}
+  .fchip.has{border-color:var(--gold-500);}
   .qty-stepper{display:flex;align-items:center;gap:10px;background:var(--blue-100);border-radius:9px;padding:5px 9px;}
   .qty-stepper span{font-weight:800;font-size:13px;color:var(--blue-800);min-width:12px;text-align:center;}
   .qty-stepper button{
@@ -649,12 +666,16 @@ if ("serviceWorker" in navigator) {
   <div class="sheet">
     <button class="close-x" data-close="cartOverlay">✕</button>
     <h2 id="cartTitle">Mon panier</h2>
+    <div class="cart-resto" id="cartResto"></div>
     <div id="cartLines"></div>
     <div class="totals">
       <div class="line"><span id="lblSubtotalCart">Sous-total</span><span id="sumSubtotal">0 DA</span></div>
+      <div class="line"><span id="lblShipCart">Livraison</span><span id="sumShipCart">—</span></div>
       <div class="line total"><span id="lblTotalCart">Total</span><span id="sumTotalCart">0 DA</span></div>
+      <div class="ship-hint" id="shipHintCart"></div>
       <div class="loy" id="loyCart"></div>
     </div>
+    <div class="cod-note" style="margin-top:10px;">💵 <span id="codNoteCart"></span></div>
     <button class="submit-btn" id="goCheckoutBtn">Passer la commande</button>
   </div>
 </div>
@@ -875,6 +896,8 @@ const I18N = {
     viewCart: "Voir mon panier",
     cartTitle: "Mon panier",
     subtotal: "Sous-total",
+    shipping: "Livraison", shipFree: "Offerte", shipTbd: "Selon ton adresse", shipHint: "Les frais de livraison sont calculés avec ton adresse et ajoutés au total.",
+    cartFrom: "Commande chez {r}", filtersBtn: "Filtres",
     total: "Total",
     checkoutBtn: "Passer la commande",
     checkoutTitle: "Vos informations",
@@ -1034,6 +1057,8 @@ const I18N = {
     viewCart: "عرض سلتي",
     cartTitle: "سلتي",
     subtotal: "المجموع الفرعي",
+    shipping: "التوصيل", shipFree: "مجاني", shipTbd: "حسب عنوانك", shipHint: "تُحسب رسوم التوصيل حسب عنوانك وتُضاف إلى المجموع.",
+    cartFrom: "طلب من {r}", filtersBtn: "تصفية",
     total: "المجموع",
     checkoutBtn: "إتمام الطلب",
     checkoutTitle: "معلوماتك",
@@ -1134,11 +1159,14 @@ function t(key) { return I18N[LANG][key]; }
 /* Nom / description / catégorie traduits si dispo, sinon on garde le français */
 function itemName(item) { return (LANG === "ar" && item.nom_ar) ? item.nom_ar : item.nom; }
 function itemDesc(item) { return (LANG === "ar" && item.description_ar) ? item.description_ar : item.description; }
+const CAT_AR = { "traditionnel": "تقليدي", "pizza": "بيتزا", "fast food": "وجبات سريعة", "poulet": "دجاج", "grillades": "مشاوي", "plats": "أطباق",
+  "salades & entrees": "سلطات ومقبلات", "desserts": "حلويات", "boissons": "مشروبات", "cafe & the": "قهوة وشاي", "sandwichs": "ساندويتشات",
+  "burgers": "برغر", "tacos": "طاكوس", "autre": "أخرى", "patisserie": "حلويات", "gateaux": "حلويات" };
 function catLabel(cat) {
   if (cat === ALL_CAT) return t("allCat");
   if (LANG !== "ar") return cat;
   const found = MENU.find(i => (i.categorie || "Autre") === cat && i.categorie_ar);
-  return found ? found.categorie_ar : cat;
+  return found ? found.categorie_ar : (CAT_AR[norm(cat)] || cat);
 }
 
 /* ============================================================
@@ -1245,6 +1273,8 @@ function applyLanguage() {
   $("cartTitle").textContent = t("cartTitle");
   $("lblSubtotalCart").textContent = t("subtotal");
   $("lblTotalCart").textContent = t("total");
+  $("lblShipCart").textContent = t("shipping");
+  $("codNoteCart").innerHTML = t("codNoteHtml");
   $("goCheckoutBtn").textContent = t("checkoutBtn");
   $("checkoutTitle").textContent = t("checkoutTitle");
   $("lblName").textContent = t("lblName");
@@ -1418,6 +1448,17 @@ document.addEventListener("DOMContentLoaded", () => {
   bindGlobalEvents();
 });
 
+/* Deux restaurants peuvent avoir le même numéro de plat dans la feuille : on garde le numéro d'origine (rawId, envoyé au serveur)
+   et on donne au site un identifiant unique pour que le bon plat soit ajouté au panier. */
+function uniquifyIds_(items) {
+  const seen = {};
+  items.forEach(i => {
+    i.rawId = i.id;
+    let k = String(i.id), n = 1, id = k;
+    while (seen[id]) { id = k + "_" + restoSlug(i.partenaire || "x") + (n > 1 ? "-" + n : ""); n++; }
+    seen[id] = 1; i.id = id;
+  });
+}
 function loadMenu() {
   $("emptyMsg").style.display = "none";
   EMPTY_MSG_KEY = null;
@@ -1425,6 +1466,7 @@ function loadMenu() {
     .then(res => {
       if (!res.success) throw new Error(res.error || t("genericError"));
       MENU = res.items || [];
+      uniquifyIds_(MENU);
       if (!MENU.length) {
         showEmpty("catalogUpdating");
         return;
@@ -1702,7 +1744,8 @@ function homeResults() {
     return true;
   });
   // Les restaurants qui ne livrent pas à l'adresse du client passent en fin de liste (ordre alphabétique conservé)
-  return f.filter(x => !restoOutOfZone(x.r.name)).concat(f.filter(x => restoOutOfZone(x.r.name)));
+  const rank = x => restoOutOfZone(x.r.name) ? 3 : (x.r.soon ? 2 : (restoClosedInfo(x.r.name) ? 1 : 0));
+  return f.map((x, i) => ({ x, i, k: rank(x) })).sort((a, b) => a.k - b.k || a.i - b.i).map(o => o.x);
 }
 
 /* Temps de préparation par restaurant (feuille Partenaires) : aucune valeur inventée, rien n'est affiché sans donnée */
@@ -1839,21 +1882,23 @@ function renderRestoBar() {
   nr.textContent = res.length ? "" : t("noRestoFound");
 }
 
+let FILTERS_OPEN = false;
 let FILTERS_BUILT = false;
 function buildFilters() {
   const box = $("filters"); if (!box) return;
   box.innerHTML =
-    '<div class="frow">' +
+    '<div class="fpanel" id="fPanel" hidden><div class="frow">' +
       '<select id="fVille" class="fsel" aria-label=""></select>' +
       '<span class="fprice"><input id="fMin" type="text" inputmode="numeric" maxlength="6" class="finp" dir="ltr"><span class="fdash">–</span><input id="fMax" type="text" inputmode="numeric" maxlength="6" class="finp" dir="ltr"><span class="fda">DA</span></span>' +
-    '</div>' +
-    '<div class="frow"><button type="button" class="fchip" id="fOpen"></button><button type="button" class="fchip" id="fReset" style="display:none;"></button></div>';
+    '</div></div>' +
+    '<div class="frow"><button type="button" class="fchip" id="fOpen"></button><button type="button" class="fchip" id="fToggle" aria-expanded="false"></button><button type="button" class="fchip" id="fReset" style="display:none;"></button></div>';
   $("fVille").addEventListener("change", () => { FILTERS.ville = $("fVille").value; renderRestoBar(); });
   const num = id => { const v = $(id).value.replace(/[^\d]/g, ""); if ($(id).value !== v) $(id).value = v; return v === "" ? null : Number(v); };
   let tm = null;
   const onPrice = () => { FILTERS.pmin = num("fMin"); FILTERS.pmax = num("fMax"); clearTimeout(tm); tm = setTimeout(renderRestoBar, 250); };
   $("fMin").addEventListener("input", onPrice); $("fMax").addEventListener("input", onPrice);
   $("fOpen").addEventListener("click", () => { FILTERS.open = !FILTERS.open; renderRestoBar(); });
+  $("fToggle").addEventListener("click", () => { FILTERS_OPEN = !FILTERS_OPEN; renderFilters(); });
   $("fReset").addEventListener("click", () => { FILTERS.ville = ""; FILTERS.pmin = null; FILTERS.pmax = null; FILTERS.open = false; $("fMin").value = ""; $("fMax").value = ""; renderRestoBar(); });
   FILTERS_BUILT = true;
 }
@@ -1866,6 +1911,10 @@ function renderFilters() {
   $("fMin").placeholder = t("fMin"); $("fMax").placeholder = t("fMax");
   $("fOpen").textContent = t("fOpen"); $("fOpen").classList.toggle("on", FILTERS.open);
   const any = !!(FILTERS.ville || FILTERS.pmin !== null || FILTERS.pmax !== null || FILTERS.open);
+  const nAdv = (FILTERS.ville ? 1 : 0) + ((FILTERS.pmin !== null || FILTERS.pmax !== null) ? 1 : 0);
+  $("fToggle").textContent = "⚙ " + t("filtersBtn") + (nAdv ? " (" + nAdv + ")" : "") + (FILTERS_OPEN ? " ▴" : " ▾");
+  $("fToggle").setAttribute("aria-expanded", FILTERS_OPEN ? "true" : "false"); $("fToggle").classList.toggle("has", nAdv > 0);
+  $("fPanel").hidden = !FILTERS_OPEN;
   $("fReset").textContent = "✕ " + t("fReset"); $("fReset").style.display = any ? "" : "none";
 }
 
@@ -1902,6 +1951,7 @@ function renderGrid() {
     (ACTIVE_CATEGORY === ALL_CAT || catId(itemCat(i)) === cid) &&
     (!q || norm(i.nom).includes(q) || norm(i.nom_ar).includes(q) || norm(i.description).includes(q)));
 
+  $("grid").classList.toggle("list", list.length > 0 && !list.some(i => i.photo));
   $("grid").innerHTML = list.map(item => {
     const qty = CART[item.id] ? CART[item.id].qty : 0;
     const photoStyle = item.photo ? `background-image:url('${escapeAttr(item.photo)}')` : "";
@@ -1909,8 +1959,10 @@ function renderGrid() {
       <div class="card">
         <div class="photo" style="${photoStyle}">${item.photo ? "" : "🍽️"}</div>
         <div class="body">
-          <div class="name">${escapeHtml(itemName(item))}</div>
-          ${itemDesc(item) ? `<div class="desc">${escapeHtml(itemDesc(item))}</div>` : ""}
+          <div class="info">
+            <div class="name">${escapeHtml(itemName(item))}</div>
+            ${itemDesc(item) ? `<div class="desc">${escapeHtml(itemDesc(item))}</div>` : ""}
+          </div>
           <div class="row-bottom">
             <div class="price"><bdi dir="ltr">${item.prix} DA</bdi></div>
             <div id="ctrl-${item.id}">${qty > 0 ? qtyStepperHtml(item.id, qty) : addBtnHtml(item.id)}</div>
@@ -2079,8 +2131,20 @@ function renderCartLines() {
     : `<p style="color:var(--muted);font-size:13.5px;">${t("cartEmpty")}</p>`;
 
   const { subtotal } = cartTotals();
+  const cp = lines.length ? (lines[0][1].item.partenaire || "") : "";
+  $("cartResto").textContent = cp ? t("cartFrom").replace("{r}", cp) : "";
+  $("cartResto").style.display = cp ? "" : "none";
   $("sumSubtotal").textContent = subtotal + " DA";
-  $("sumTotalCart").textContent = subtotal + " DA";
+  const dl = deliveryFor(subtotal);
+  if (dl) {
+    $("sumShipCart").textContent = dl.free ? t("shipFree") : dl.fee + " DA";
+    $("sumTotalCart").textContent = (subtotal + dl.fee) + " DA";
+    $("shipHintCart").textContent = "";
+  } else {
+    $("sumShipCart").textContent = t("shipTbd");
+    $("sumTotalCart").textContent = subtotal + " DA";
+    $("shipHintCart").textContent = t("shipHint");
+  }
   renderLoyalty();
 
   $("cartLines").querySelectorAll("[data-inc2]").forEach(b =>
@@ -2203,6 +2267,7 @@ function renderAll() {
   renderZoneSummary();
   updateCheckoutTotals();
   updateConfirmState();
+  if (typeof renderCartLines === "function") renderCartLines();
   if (typeof renderSavedAddrs === "function" && $("savedAddrs")) renderSavedAddrs();
 }
 
@@ -2796,7 +2861,7 @@ function submitOrder() {
     promo: PROMO ? PROMO.code : "",
     clientId: session.clientId || "",
     requestId: ORDER_REQUEST_ID,
-    items: Object.values(CART).map(l => ({ id: l.item.id, nom: l.item.nom, prix: l.item.prix, qty: l.qty }))
+    items: Object.values(CART).map(l => ({ id: (l.item.rawId !== undefined ? l.item.rawId : l.item.id), nom: l.item.nom, prix: l.item.prix, qty: l.qty, partenaire: l.item.partenaire || "" }))
   };
 
   const btn = $("confirmOrderBtn");
