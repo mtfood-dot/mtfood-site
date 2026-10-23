@@ -109,6 +109,15 @@
   .hrow .slot select{width:auto;flex:1;padding:8px 6px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:#fbfcfe;font-family:inherit;}
   .hrow .closed-lbl{color:var(--muted);font-size:13px;font-weight:700;}
   .mini-btn{background:#fff;border:1.5px solid var(--border);border-radius:999px;padding:5px 11px;font-size:12px;font-weight:800;color:var(--blue-700);cursor:pointer;font-family:inherit;}
+  .opt-g{border:1.5px solid var(--border);border-radius:14px;padding:12px;margin:12px 0;background:#fff;}
+  .opt-g input[type=text],.opt-g input[type=number]{width:100%;box-sizing:border-box;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;background:#fff;}
+  .opt-g .og-row{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;}
+  .opt-g .og-row label{font-size:12px;font-weight:800;color:var(--muted);display:flex;flex-direction:column;gap:3px;flex:1;min-width:110px;}
+  .opt-g .oo{display:flex;gap:8px;align-items:center;margin-top:8px;}
+  .opt-g .oo input.on{flex:1;min-width:0;} .opt-g .oo input.op{width:96px;flex-shrink:0;}
+  .opt-g .del{background:none;border:none;color:var(--danger);font-size:18px;cursor:pointer;padding:6px;min-width:36px;min-height:36px;}
+  .opt-apply{margin:12px 0;font-size:13px;} .opt-apply summary{cursor:pointer;font-weight:800;color:var(--blue-700);padding:6px 0;}
+  .opt-apply label{display:flex;gap:8px;align-items:center;padding:7px 0;font-size:14px;}
   .set-title{font-size:15px;font-weight:900;color:var(--blue-900);margin:0 0 4px;}
   .error-box{background:#fdeceb;border:1px solid #f3c6c1;color:var(--danger);border-radius:var(--radius-sm);
     padding:11px 14px;font-size:13px;margin-top:12px;line-height:1.5;display:none;}
@@ -329,6 +338,9 @@ if ("serviceWorker" in navigator) {
       <button class="tab-btn" id="tabSettings" type="button">
         <span id="tabSettingsLabel">⚙️ Réglages</span>
       </button>
+      <button class="tab-btn" id="tabOptions" type="button">
+        <span id="tabOptionsLabel">🍽️ Options</span>
+      </button>
       <button class="tab-btn" id="tabBoost" type="button">
         <span id="tabBoostLabel">Publicité</span> <span class="count" id="countBoost" style="display:none">0</span>
       </button>
@@ -431,6 +443,19 @@ if ("serviceWorker" in navigator) {
         </div>
       </div>
       <div id="salesBody"></div>
+    </div>
+
+    <div id="panelOptions" class="hidden">
+      <div class="card">
+        <h3 class="set-title" id="optTitle"></h3>
+        <p class="field-hint" id="optHint"></p>
+        <div class="field"><label id="optLblDish" for="optDish"></label><select id="optDish"></select></div>
+        <div id="optEditor"></div>
+        <div style="display:flex;gap:8px;margin:12px 0;flex-wrap:wrap;"><button class="mini-btn" id="optAddGroup" type="button"></button></div>
+        <details id="optApplyBox" class="opt-apply"><summary id="optApplySum"></summary><div id="optApplyList"></div></details>
+        <button class="btn-primary" id="optSave" type="button"></button>
+        <button class="mini-btn" id="optClear" type="button" style="margin-top:10px;"></button>
+      </div>
     </div>
 
     <div id="panelSettings" class="hidden">
@@ -537,6 +562,12 @@ const I18N = {
     logoutBtn: "Déconnexion",
     tabMenuLabel: "Mon menu",
     tabLiveLabel: "En cours",
+    tabOptionsLabel: "🍽️ Options",
+    optTitle: "Options des plats", optHint: "Pain, crudités, sauces, suppléments payants… Le client les choisit en commandant. Les prix en plus sont ajoutés au prix du plat.", optLblDish: "Plat",
+    optNoDish: "Aucun plat dans ton menu.", optAddGroup: "+ Ajouter un groupe de choix", optGroupTitle: "Titre du groupe (ex. Choisissez votre sauce)", optGroupTitleAr: "Titre en arabe (facultatif)",
+    optMin: "Minimum de choix (0 = facultatif)", optMax: "Maximum de choix", optChoiceName: "Nom du choix", optChoicePrice: "+ DA", optAddChoice: "+ Ajouter un choix", optRemoveGroup: "Supprimer ce groupe",
+    optApplySum: "Appliquer aussi à d'autres plats", optSave: "Enregistrer", optClear: "Supprimer toutes les options de ce plat", optSaved: "Options enregistrées.", optNone: "Pas d'options pour ce plat. Ajoute un groupe pour commencer.",
+    optNeedTitle: "Chaque groupe a besoin d'un titre et d'au moins un choix.", optClearConfirm: "Supprimer toutes les options de ce plat ?", optChoices: "Choix", optGroupN: "Groupe",
     tabSettingsLabel: "⚙️ Réglages", setHoursTitle: "🕐 Horaires d'ouverture", setHoursHint: "Les clients ne peuvent commander que pendant ces heures. Décoche un jour pour le fermer. Une fermeture après minuit est possible (ex. 18:00 → 01:00).",
     dayNames: ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"], closedDay: "Fermé", addSlot: "+ Pause", rmSlot: "✕", copyMon: "Copier lundi sur tous les jours", saveHours: "Enregistrer les horaires",
     hoursSaved: "Horaires enregistrés.", hoursNeedDay: "Choisis au moins un jour ouvert.", hoursNotSet: "Horaires pas encore définis : ton restaurant est considéré ouvert tout le temps.",
@@ -660,6 +691,12 @@ const I18N = {
     logoutBtn: "تسجيل الخروج",
     tabMenuLabel: "قائمتي",
     tabLiveLabel: "قيد التنفيذ",
+    tabOptionsLabel: "🍽️ الخيارات",
+    optTitle: "خيارات الأطباق", optHint: "الخبز، الخضر، الصلصات، الإضافات المدفوعة… يختارها الزبون عند الطلب. يُضاف سعر الإضافات إلى سعر الطبق.", optLblDish: "الطبق",
+    optNoDish: "لا توجد أطباق في قائمتك.", optAddGroup: "+ إضافة مجموعة خيارات", optGroupTitle: "عنوان المجموعة (مثال: اختر الصلصة)", optGroupTitleAr: "العنوان بالعربية (اختياري)",
+    optMin: "الحد الأدنى للاختيارات (0 = اختياري)", optMax: "الحد الأقصى للاختيارات", optChoiceName: "اسم الخيار", optChoicePrice: "+ دج", optAddChoice: "+ إضافة خيار", optRemoveGroup: "حذف هذه المجموعة",
+    optApplySum: "تطبيق على أطباق أخرى أيضًا", optSave: "حفظ", optClear: "حذف كل خيارات هذا الطبق", optSaved: "تم حفظ الخيارات.", optNone: "لا توجد خيارات لهذا الطبق. أضف مجموعة للبدء.",
+    optNeedTitle: "كل مجموعة تحتاج إلى عنوان وخيار واحد على الأقل.", optClearConfirm: "حذف كل خيارات هذا الطبق؟", optChoices: "الخيارات", optGroupN: "مجموعة",
     tabSettingsLabel: "⚙️ الإعدادات", setHoursTitle: "🕐 أوقات العمل", setHoursHint: "لا يمكن للزبائن الطلب إلا خلال هذه الأوقات. ألغِ تحديد اليوم لإغلاقه. يمكن الإغلاق بعد منتصف الليل (مثال: 18:00 ← 01:00).",
     dayNames: ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"], closedDay: "مغلق", addSlot: "+ استراحة", rmSlot: "✕", copyMon: "نسخ الاثنين إلى كل الأيام", saveHours: "حفظ الأوقات",
     hoursSaved: "تم حفظ الأوقات.", hoursNeedDay: "اختر يومًا واحدًا على الأقل.", hoursNotSet: "لم تُحدَّد الأوقات بعد: مطعمك يُعتبر مفتوحًا دائمًا.",
@@ -820,6 +857,7 @@ function applyLanguage() {
   $("tabLiveLabel").textContent = t("tabLiveLabel");
   $("tabSalesLabel").textContent = t("tabSalesLabel");
   applySettingsLang();
+  applyOptionsLang();
   document.querySelectorAll("[data-sales]").forEach(b => { b.textContent = t({ "1": "salesToday", "7": "sales7", "30": "sales30", "0": "salesAll" }[b.dataset.sales]); });
   if (typeof SALES_DATA !== "undefined" && SALES_DATA) renderSales();
   if (typeof renderShop === "function") renderShop();
@@ -982,6 +1020,73 @@ $("shopToggle").addEventListener("change", async () => {
   tg.disabled = false; renderShop();
 });
 
+/* ============================================================
+   OPTIONS DES PLATS (pain, crudités, sauces, suppléments)
+   ============================================================ */
+let OPT_DISHES = [], OPT_CUR = [], OPT_ID = null;
+function applyOptionsLang() {
+  const m = { tabOptionsLabel: "tabOptionsLabel", optTitle: "optTitle", optHint: "optHint", optLblDish: "optLblDish", optAddGroup: "optAddGroup", optApplySum: "optApplySum", optSave: "optSave", optClear: "optClear" };
+  Object.keys(m).forEach(id => { const el = $(id); if (el) el.textContent = t(m[id]); });
+  if (OPT_DISHES.length) renderOptEditor();
+}
+async function loadOptions() {
+  try {
+    const d = await apiGet({ action: "partnerOptions" });
+    if (!d || !d.success) return;
+    OPT_DISHES = d.dishes || [];
+    $("optDish").innerHTML = OPT_DISHES.length ? OPT_DISHES.map(x => `<option value="${escapeAttr(x.id)}">${escapeHtml(x.nom)} — ${escapeHtml(String(x.prix))} DA${x.groups.length ? " ✓" : ""}</option>`).join("") : `<option value="">${escapeHtml(t("optNoDish"))}</option>`;
+    if (OPT_DISHES.length) { if (!OPT_DISHES.some(x => x.id === OPT_ID)) OPT_ID = OPT_DISHES[0].id; $("optDish").value = OPT_ID; pickOptDish(); }
+  } catch (e) { /* silencieux */ }
+}
+function pickOptDish() {
+  OPT_ID = $("optDish").value;
+  const d = OPT_DISHES.find(x => x.id === OPT_ID);
+  OPT_CUR = d ? d.groups.map(g => ({ titre: g.titre, titreAr: g.titreAr || "", min: g.min, max: g.max, options: g.options.map(o => ({ nom: o.nom, prix: o.prix })) })) : [];
+  renderOptEditor();
+}
+function renderOptEditor() {
+  const box = $("optEditor");
+  box.innerHTML = OPT_CUR.length ? OPT_CUR.map((g, gi) => `<div class="opt-g" data-g="${gi}">
+      <div style="display:flex;justify-content:space-between;align-items:center;"><strong>${escapeHtml(t("optGroupN"))} ${gi + 1}</strong><button class="del" type="button" data-delg="${gi}" aria-label="${escapeAttr(t("optRemoveGroup"))}" title="${escapeAttr(t("optRemoveGroup"))}">🗑</button></div>
+      <input type="text" data-f="titre" maxlength="60" placeholder="${escapeAttr(t("optGroupTitle"))}" value="${escapeAttr(g.titre)}">
+      <input type="text" data-f="titreAr" maxlength="60" dir="rtl" style="margin-top:8px;" placeholder="${escapeAttr(t("optGroupTitleAr"))}" value="${escapeAttr(g.titreAr)}">
+      <div class="og-row"><label>${escapeHtml(t("optMin"))}<input type="number" min="0" max="30" data-f="min" value="${g.min}"></label><label>${escapeHtml(t("optMax"))}<input type="number" min="1" max="30" data-f="max" value="${g.max}"></label></div>
+      <div style="margin-top:10px;font-weight:800;font-size:13px;">${escapeHtml(t("optChoices"))}</div>
+      ${g.options.map((o, oi) => `<div class="oo"><input class="on" type="text" maxlength="50" data-o="${oi}" data-f="nom" placeholder="${escapeAttr(t("optChoiceName"))}" value="${escapeAttr(o.nom)}"><input class="op" type="number" min="0" max="5000" inputmode="numeric" data-o="${oi}" data-f="prix" placeholder="${escapeAttr(t("optChoicePrice"))}" value="${o.prix || ""}"><button class="del" type="button" data-delo="${gi}:${oi}" aria-label="×">✕</button></div>`).join("")}
+      <div style="margin-top:8px;"><button class="mini-btn" type="button" data-addo="${gi}">${escapeHtml(t("optAddChoice"))}</button></div>
+    </div>`).join("") : `<p class="field-hint">${escapeHtml(t("optNone"))}</p>`;
+  $("optAddGroup").style.display = OPT_CUR.length >= 8 ? "none" : "";
+  $("optApplyList").innerHTML = OPT_DISHES.filter(x => x.id !== OPT_ID).map(x => `<label><input type="checkbox" data-apply="${escapeAttr(x.id)}"> ${escapeHtml(x.nom)}</label>`).join("");
+  $("optApplyBox").style.display = OPT_DISHES.length > 1 ? "" : "none";
+  box.querySelectorAll("input[data-f]").forEach(inp => inp.addEventListener("input", () => {
+    const gi = +inp.closest("[data-g]").dataset.g, g = OPT_CUR[gi], f = inp.dataset.f;
+    if (inp.dataset.o !== undefined) { const o = g.options[+inp.dataset.o]; o[f] = f === "prix" ? Math.max(0, Math.round(Number(inp.value) || 0)) : inp.value; }
+    else g[f] = (f === "min" || f === "max") ? Math.max(0, Math.floor(Number(inp.value) || 0)) : inp.value;
+  }));
+  box.querySelectorAll("[data-delg]").forEach(b => b.addEventListener("click", () => { OPT_CUR.splice(+b.dataset.delg, 1); renderOptEditor(); }));
+  box.querySelectorAll("[data-delo]").forEach(b => b.addEventListener("click", () => { const [gi, oi] = b.dataset.delo.split(":").map(Number); OPT_CUR[gi].options.splice(oi, 1); renderOptEditor(); }));
+  box.querySelectorAll("[data-addo]").forEach(b => b.addEventListener("click", () => { const g = OPT_CUR[+b.dataset.addo]; if (g.options.length < 30) { g.options.push({ nom: "", prix: 0 }); renderOptEditor(); } }));
+}
+$("optDish").addEventListener("change", pickOptDish);
+$("optAddGroup").addEventListener("click", () => { if (OPT_CUR.length < 8) { OPT_CUR.push({ titre: "", titreAr: "", min: 1, max: 1, options: [{ nom: "", prix: 0 }, { nom: "", prix: 0 }] }); renderOptEditor(); } });
+async function saveOptions(groups) {
+  hideError($("errorBox")); hideSuccess($("successBox"));
+  const ids = [OPT_ID].concat([...document.querySelectorAll("#optApplyList [data-apply]:checked")].map(c => c.dataset.apply));
+  const btn = $("optSave"); btn.disabled = true;
+  try {
+    const d = await apiGet({ action: "partnerSaveOptions", ids: JSON.stringify(ids), groups: JSON.stringify(groups) });
+    if (d && d.success) { OPT_DISHES = d.dishes || OPT_DISHES; const keep = OPT_ID; await loadOptions(); OPT_ID = keep; showSuccess($("successBox"), t("optSaved")); }
+    else showError($("errorBox"), (d && d.error) || t("shopError"));
+  } catch (e) { showError($("errorBox"), t("shopError")); }
+  finally { btn.disabled = false; }
+}
+$("optSave").addEventListener("click", () => {
+  const groups = OPT_CUR.map(g => ({ titre: String(g.titre || "").trim(), titreAr: String(g.titreAr || "").trim(), min: g.min, max: g.max, options: g.options.filter(o => String(o.nom || "").trim()).map(o => ({ nom: String(o.nom).trim(), prix: o.prix || 0 })) }));
+  if (groups.some(g => !g.titre || !g.options.length)) { showError($("errorBox"), t("optNeedTitle")); return; }
+  saveOptions(groups);
+});
+$("optClear").addEventListener("click", () => { if (confirm(t("optClearConfirm"))) saveOptions([]); });
+
 /* ---- Mes ventes ---- */
 let SALES_DAYS = 7, SALES_DATA = null;
 /* ============================================================
@@ -1123,6 +1228,7 @@ $("tabPropose").addEventListener("click", () => switchTab("propose"));
 $("tabBoost").addEventListener("click", () => switchTab("boost"));
 $("tabSales").addEventListener("click", () => switchTab("sales"));
 $("tabSettings").addEventListener("click", () => switchTab("settings"));
+$("tabOptions").addEventListener("click", () => switchTab("options"));
 
 function switchTab(tab) {
   CURRENT_TAB = tab;
@@ -1140,6 +1246,9 @@ function switchTab(tab) {
   $("tabSettings").classList.toggle("active", tab === "settings");
   $("panelSettings").classList.toggle("hidden", tab !== "settings");
   if (tab === "settings") loadSettings();
+  $("tabOptions").classList.toggle("active", tab === "options");
+  $("panelOptions").classList.toggle("hidden", tab !== "options");
+  if (tab === "options") loadOptions();
   $("tabBoost").classList.toggle("active", tab === "boost");
   $("panelBoost").classList.toggle("hidden", tab !== "boost");
   hideError($("errorBox"));
