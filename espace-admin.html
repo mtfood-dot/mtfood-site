@@ -1406,8 +1406,15 @@ async function apiGet(params) {
     body: JSON.stringify(params)
   });
   const txt = await res.text();
-  try { return JSON.parse(txt); }
+  let out;
+  try { out = JSON.parse(txt); }
   catch (e) { throw new Error("Réponse invalide du serveur"); }
+  // Jeton de session expiré (12 h) ou compte désactivé : retour à l'écran de connexion
+  if (out && out.success === false && SESSION_PASSWORD && params && params.password === SESSION_PASSWORD && out.code !== "locked" && /mot de passe/i.test(String(out.error || "")) && params.action !== "adminLogin") {
+    $("logoutBtn").click();
+    showError($("loginError"), "Session expirée : reconnecte-toi.");
+  }
+  return out;
 }
 
 /* ============================================================
@@ -1442,9 +1449,10 @@ async function doLogin() {
   try {
     const data = await apiGet({ action: "adminLogin", password: password });
     if (data.success) {
-      SESSION_PASSWORD = password;
+      // On ne garde plus le mot de passe : seulement un jeton de 12 h (ancien serveur sans jeton : on garde le comportement précédent)
+      SESSION_PASSWORD = data.token || password;
       SESSION_NAME = data.nom || null;
-      localStorage.setItem(SESSION_KEY, password);
+      localStorage.setItem(SESSION_KEY, SESSION_PASSWORD);
       if (SESSION_NAME) { localStorage.setItem(SESSION_NAME_KEY, SESSION_NAME); } else { localStorage.removeItem(SESSION_NAME_KEY); }
       enterApp();
     } else {
@@ -3960,7 +3968,18 @@ function escapeAttr(s) { return escapeHtml(s); }
    ============================================================ */
 applyLanguage();
 if (SESSION_PASSWORD) {
-  enterApp();
+  // Session mémorisée : on la vérifie, et un ancien mot de passe mémorisé est remplacé par un jeton
+  apiGet({ action: "adminLogin", password: SESSION_PASSWORD }).then(d => {
+    if (d && d.success) {
+      if (d.token) { SESSION_PASSWORD = d.token; try { localStorage.setItem(SESSION_KEY, d.token); } catch (e) {} }
+      enterApp();
+    } else if (d && d.code === "locked") {
+      enterApp();
+    } else {
+      SESSION_PASSWORD = null; try { localStorage.removeItem(SESSION_KEY); localStorage.removeItem(SESSION_NAME_KEY); } catch (e) {}
+      showError($("loginError"), "Session expirée : reconnecte-toi.");
+    }
+  }).catch(() => enterApp());
 }
 </script>
 
