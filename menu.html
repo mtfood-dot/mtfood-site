@@ -397,6 +397,33 @@
     display:flex;align-items:center;justify-content:center;
   }
   html[dir="rtl"] .sheet .close-x{right:auto;left:18px;}
+  .dish-sheet{padding:0;display:flex;flex-direction:column;max-height:92vh;overflow:hidden;}
+  .dish-sheet .ds-scroll{overflow-y:auto;padding:0 20px 14px;flex:1;}
+  .dish-sheet .ds-hero{height:200px;background-size:cover;background-position:center;background-color:var(--bg);margin:0 -20px 14px;}
+  .dish-sheet .ds-top{height:56px;}
+  .dish-sheet .close-x{z-index:2;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+  .dish-sheet .ds-name{font-size:20px;font-weight:800;color:var(--blue-900);margin:0;}
+  .dish-sheet .ds-price{font-size:18px;font-weight:800;color:var(--blue-700);margin:4px 0 6px;}
+  .dish-sheet .ds-desc{font-size:14px;color:var(--text);line-height:1.5;margin:0 0 10px;}
+  .opt-group{margin-top:18px;}
+  .opt-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+  .opt-title{font-size:16px;font-weight:800;color:var(--blue-900);}
+  .opt-sub{font-size:13px;color:var(--muted);margin-top:2px;}
+  .opt-badge{flex-shrink:0;font-size:12px;font-weight:800;border-radius:999px;padding:4px 10px;background:var(--bg);color:var(--muted);}
+  .opt-badge.req{background:#b3261e;color:#fff;}
+  .opt-badge.ok{background:#1b7f3b;color:#fff;}
+  .opt-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;min-height:44px;}
+  .opt-row input{width:22px;height:22px;flex-shrink:0;accent-color:var(--blue-700);}
+  .opt-row .on{flex:1;font-size:15px;}
+  .opt-row .op{font-weight:800;font-size:14px;white-space:nowrap;}
+  .opt-row.dis{opacity:.45;cursor:not-allowed;}
+  .ds-foot{display:flex;gap:10px;align-items:center;padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);background:#fff;}
+  .ds-foot .qty-stepper{flex-shrink:0;}
+  .ds-add{flex:1;min-height:50px;border:none;border-radius:14px;font-weight:800;font-size:15px;cursor:pointer;background:linear-gradient(135deg,var(--gold-400),var(--gold-500));color:var(--blue-900);display:flex;justify-content:space-between;align-items:center;padding:0 16px;font-family:inherit;}
+  .ds-add:disabled{background:var(--bg);color:var(--muted);cursor:not-allowed;justify-content:center;}
+  .cart-line .cl-opts{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.4;}
+  .card .opt-count{display:inline-block;margin-inline-end:6px;font-weight:800;font-size:12px;background:var(--blue-700);color:#fff;border-radius:999px;padding:2px 8px;}
+  .card.has-opts{cursor:pointer;}
   .cart-line{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--border);}
   .cart-line .cl-name{flex:1;font-size:13.5px;font-weight:700;}
   .cart-line .cl-price{font-size:12.5px;color:var(--muted);margin-top:2px;}
@@ -663,6 +690,9 @@ if ("serviceWorker" in navigator) {
   <div class="info"><bdi dir="ltr"><b id="cartCount">0</b></bdi> <span id="cartBarUnit">article(s)</span> · <bdi dir="ltr"><b id="cartTotal">0</b> DA</bdi></div>
   <button id="openCartBtn">Voir mon panier</button>
 </div>
+
+<!-- Fiche d'un plat avec options -->
+<div class="overlay" id="dishOverlay"><div class="sheet dish-sheet" id="dishSheet" role="dialog" aria-modal="true"></div></div>
 
 <!-- Overlay + panier -->
 <div class="overlay" id="cartOverlay">
@@ -951,6 +981,8 @@ const I18N = {
     preAt: "à {at}", preTomorrow: "demain à {at}", preDay: "{day} à {at}", preBtn: "Précommander", preSentTitle: "Précommande enregistrée !",
     preThanksHtml: "Ton restaurant est fermé pour le moment. Ta commande lui sera envoyée dès son ouverture ({when}) et tu seras prévenu.<br>Tu peux l'annuler d'ici là depuis le suivi de commande. Paiement en espèces à la réception.",
     preMenuTag: "Précommande",
+    optRequired: "Obligatoire", optOptional: "Facultatif", optPickOne: "Choisis 1 option", optPickN: "Choisis {n} option(s)", optPickRange: "Choisis entre {a} et {b} options", optUpTo: "Jusqu'à {n} option(s)",
+    dishAddTotal: "Ajouter", dishComplete: "Complète les choix obligatoires", dishClose: "Fermer", dishChoose: "Choisir",
     days: { dimanche: "dimanche", lundi: "lundi", mardi: "mardi", mercredi: "mercredi", jeudi: "jeudi", vendredi: "vendredi", samedi: "samedi" },
     menuSoonLong: "Le menu de ce restaurant sera bientôt disponible.",
     prepOnly: "Préparation ≈ {m} min",
@@ -1117,6 +1149,8 @@ const I18N = {
     preAt: "على {at}", preTomorrow: "غدًا على {at}", preDay: "{day} على {at}", preBtn: "طلب مسبق", preSentTitle: "تم تسجيل الطلب المسبق!",
     preThanksHtml: "المطعم مغلق حاليًا. سيُرسل طلبكم إليه فور فتحه ({when}) وسنُعلمكم بذلك.<br>يمكنكم إلغاؤه قبل ذلك من صفحة تتبع الطلب. الدفع نقدًا عند الاستلام.",
     preMenuTag: "طلب مسبق",
+    optRequired: "إجباري", optOptional: "اختياري", optPickOne: "اختر خيارًا واحدًا", optPickN: "اختر {n} من الخيارات", optPickRange: "اختر من {a} إلى {b} خيارات", optUpTo: "حتى {n} من الخيارات",
+    dishAddTotal: "إضافة", dishComplete: "أكمل الخيارات الإجبارية", dishClose: "إغلاق", dishChoose: "اختيار",
     days: { dimanche: "الأحد", lundi: "الاثنين", mardi: "الثلاثاء", mercredi: "الأربعاء", jeudi: "الخميس", vendredi: "الجمعة", samedi: "السبت" },
     menuSoonLong: "ستتوفر قائمة هذا المطعم قريبًا.",
     prepOnly: "التحضير ≈ {m} د",
@@ -1239,7 +1273,7 @@ function updateAccountLink() {
 }
 
 function saveCartForAfterLogin() {
-  const panier = Object.values(CART).map(l => ({ id: l.item.id, nom: l.item.nom, qty: l.qty }));
+  const panier = Object.values(CART).map(l => ({ id: l.baseId || l.item.id, nom: l.item.nom, qty: l.qty, opts: l.opts || undefined }));
   try { localStorage.setItem("mtd_reorder_cart", JSON.stringify(panier)); } catch(e) {}
 }
 function prefillCheckoutFromSession() {
@@ -1518,7 +1552,8 @@ function applyFeaturedItem() {
   renderRestoBar();
   renderTabs();
   renderGrid();
-  if (!CART[item.id]) changeQty(item.id, 1);
+  if (hasGroups(item)) openDish(item.id);
+  else if (!CART[item.id]) changeQty(item.id, 1);
   const ctrl = $("ctrl-" + item.id);
   const card = ctrl && ctrl.closest(".card");
   if (card) {
@@ -1539,6 +1574,10 @@ function applyReorderIfAny() {
     const pk = String(item.partenaire || "").trim().toLowerCase();
     if (partner === null) partner = pk;
     if (pk !== partner) { missing++; return; }
+    if (hasGroups(item)) {
+      if (!(line.opts && putOptLine(item, line.opts, line.qty || 1))) missing++;
+      return;
+    }
     CART[item.id] = { item, qty: (CART[item.id] ? CART[item.id].qty : 0) + (line.qty || 1) };
   });
   updateCartBar();
@@ -1986,9 +2025,10 @@ function renderGrid() {
   $("grid").classList.toggle("list", list.length > 0 && !list.some(i => i.photo));
   $("grid").innerHTML = list.map(item => {
     const qty = CART[item.id] ? CART[item.id].qty : 0;
+    const hasO = hasGroups(item);
     const photoStyle = item.photo ? `background-image:url('${escapeAttr(item.photo)}')` : "";
     return `
-      <div class="card">
+      <div class="card${hasO ? " has-opts" : ""}"${hasO ? ` data-optcard="${item.id}"` : ""}>
         <div class="photo" style="${photoStyle}">${item.photo ? "" : "🍽️"}</div>
         <div class="body">
           <div class="info">
@@ -1997,7 +2037,7 @@ function renderGrid() {
           </div>
           <div class="row-bottom">
             <div class="price"><bdi dir="ltr">${item.prix} DA</bdi></div>
-            <div id="ctrl-${item.id}">${qty > 0 ? qtyStepperHtml(item.id, qty) : addBtnHtml(item.id)}</div>
+            <div id="ctrl-${item.id}">${hasO ? optCtrlHtml(item) : (qty > 0 ? qtyStepperHtml(item.id, qty) : addBtnHtml(item.id))}</div>
           </div>
         </div>
       </div>`;
@@ -2079,6 +2119,10 @@ function qtyStepperHtml(id, qty) {
 }
 
 function bindCardEvents() {
+  $("grid").querySelectorAll("[data-opt]").forEach(b =>
+    b.addEventListener("click", (e) => { e.stopPropagation(); openDish(b.dataset.opt); }));
+  $("grid").querySelectorAll("[data-optcard]").forEach(c =>
+    c.addEventListener("click", () => openDish(c.dataset.optcard)));
   $("grid").querySelectorAll("[data-add]").forEach(b =>
     b.addEventListener("click", () => changeQty(b.dataset.add, 1)));
   $("grid").querySelectorAll("[data-inc]").forEach(b =>
@@ -2106,6 +2150,7 @@ function showCartNotice(msg) {
 }
 
 function changeQty(id, delta) {
+  if (String(id).indexOf("#") >= 0) return changeLine(id, delta);
   const item = MENU.find(i => String(i.id) === String(id));
   if (!item) return;
   if (delta > 0 && restoClosedInfo(item.partenaire) && !restoPre(item.partenaire)) { showCartNotice(t("closedOrder")); return; }
@@ -2132,6 +2177,148 @@ function changeQty(id, delta) {
 }
 
 /* ============================================================
+   FICHE D'UN PLAT AVEC OPTIONS (pain, crudités, sauces, suppléments)
+   Le prix final est recalculé et vérifié par le serveur à la commande.
+   ============================================================ */
+function hasGroups(item) { return !!(item && item.groups && item.groups.length); }
+function optQtyInCart(baseId) {
+  let n = 0; Object.values(CART).forEach(l => { if (l.baseId === baseId) n += l.qty; });
+  return n;
+}
+function optCtrlHtml(item) {
+  const n = optQtyInCart(item.id);
+  const closed = restoClosedInfo(item.partenaire) && !restoPre(item.partenaire);
+  if (closed) return `<button class="add-btn" disabled>${t("closedShort")}</button>`;
+  if (restoOutOfZone(item.partenaire)) return `<button class="add-btn" disabled>${t("outZoneShort")}</button>`;
+  return `${n > 0 ? `<span class="opt-count">${n}</span>` : ""}<button class="add-btn" data-opt="${item.id}">${t(n > 0 ? "add" : "dishChoose")}</button>`;
+}
+function refreshOptCtrl(baseId) {
+  const item = MENU.find(i => String(i.id) === String(baseId));
+  const ctrl = $("ctrl-" + baseId);
+  if (item && ctrl) { ctrl.innerHTML = optCtrlHtml(item); bindCardEvents(); }
+}
+function hashSig_(str) { let h = 5381; for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0; return (h >>> 0).toString(36); }
+function groupTitle(g) { return (LANG === "ar" && g.titreAr) ? g.titreAr : g.titre; }
+function groupHint(g) {
+  const n = g.options.length;
+  if (g.min === g.max) return g.min === 1 ? t("optPickOne") : t("optPickN").replace("{n}", g.min);
+  if (g.min === 0) return t("optUpTo").replace("{n}", g.max);
+  return t("optPickRange").replace("{a}", g.min).replace("{b}", g.max);
+}
+/* Peut-on ajouter ce plat au panier ? (restaurant ouvert, dans la zone, un seul restaurant) */
+function canAddItem(item) {
+  if (restoClosedInfo(item.partenaire) && !restoPre(item.partenaire)) { showCartNotice(t("closedOrder")); return false; }
+  if (restoOutOfZone(item.partenaire)) { showCartNotice(t("outZoneOrder")); return false; }
+  const cp = cartPartner();
+  if (cp !== null && cp !== String(item.partenaire || "").trim().toLowerCase()) {
+    showCartNotice(t("cartOneRestaurant").replace("{r}", Object.values(CART)[0].item.partenaire || "")); return false;
+  }
+  return true;
+}
+let DISH = null;   // { item, sel: { groupIndex: [noms] }, qty }
+function openDish(id) {
+  const item = MENU.find(i => String(i.id) === String(id));
+  if (!item || !hasGroups(item)) return;
+  if (!canAddItem(item)) return;
+  DISH = { item, sel: {}, qty: 1 };
+  renderDish();
+  openOverlay("dishOverlay");
+  const sc = $("dishSheet").querySelector(".ds-scroll"); if (sc) sc.scrollTop = 0;
+}
+function closeDish() { closeOverlay("dishOverlay"); DISH = null; }
+function dishExtra() {
+  let x = 0;
+  DISH.item.groups.forEach(g => (DISH.sel[g.i] || []).forEach(nm => { const o = g.options.find(z => z.nom === nm); if (o) x += o.prix; }));
+  return x;
+}
+function dishValid() { return DISH.item.groups.every(g => { const c = (DISH.sel[g.i] || []).length; return c >= g.min && c <= g.max; }); }
+function renderDish() {
+  const it = DISH.item, ar = LANG === "ar";
+  const unit = it.prix + dishExtra();
+  const groups = it.groups.map(g => {
+    const chosen = DISH.sel[g.i] || [], full = chosen.length >= g.max && g.max > 1;
+    const ok = chosen.length >= g.min;
+    const badge = g.min >= 1 ? `<span class="opt-badge ${ok ? "ok" : "req"}">${ok ? "✓" : escapeHtml(t("optRequired"))}</span>` : `<span class="opt-badge">${escapeHtml(t("optOptional"))}</span>`;
+    return `<div class="opt-group"><div class="opt-head"><div><div class="opt-title">${escapeHtml(groupTitle(g))}</div><div class="opt-sub">${escapeHtml(groupHint(g))}</div></div>${badge}</div>
+      ${g.options.map((o, oi) => {
+        const on = chosen.indexOf(o.nom) >= 0, dis = !on && full;
+        return `<label class="opt-row${dis ? " dis" : ""}"><input type="checkbox" data-og="${g.i}" data-oi="${oi}" ${on ? "checked" : ""} ${dis ? "disabled" : ""}><span class="on">${escapeHtml(o.nom)}</span>${o.prix > 0 ? `<span class="op"><bdi dir="ltr">+${o.prix} DA</bdi></span>` : ""}</label>`;
+      }).join("")}</div>`;
+  }).join("");
+  const valid = dishValid();
+  $("dishSheet").innerHTML = `
+    <button class="close-x" id="dishCloseBtn" type="button" aria-label="${escapeAttr(t("dishClose"))}">✕</button>
+    <div class="ds-scroll">
+      ${it.photo ? `<div class="ds-hero" style="background-image:url('${escapeAttr(it.photo)}')"></div>` : `<div class="ds-top"></div>`}
+      <h3 class="ds-name">${escapeHtml(itemName(it))}</h3>
+      <div class="ds-price"><bdi dir="ltr">${it.prix} DA</bdi></div>
+      ${itemDesc(it) ? `<p class="ds-desc">${escapeHtml(itemDesc(it))}</p>` : ""}
+      ${groups}
+    </div>
+    <div class="ds-foot">
+      <div class="qty-stepper"><button type="button" id="dsMinus" ${DISH.qty <= 1 ? "disabled" : ""}>−</button><span>${DISH.qty}</span><button type="button" id="dsPlus">+</button></div>
+      <button type="button" class="ds-add" id="dsAdd" ${valid ? "" : "disabled"}>${valid ? `<span>${escapeHtml(t("dishAddTotal"))}</span><span><bdi dir="ltr">${unit * DISH.qty} DA</bdi></span>` : escapeHtml(t("dishComplete"))}</button>
+    </div>`;
+  const sheet = $("dishSheet");
+  const keepTop = sheet.querySelector(".ds-scroll");
+  $("dishCloseBtn").addEventListener("click", closeDish);
+  $("dsMinus").addEventListener("click", () => { if (DISH.qty > 1) { DISH.qty--; rerenderDish(); } });
+  $("dsPlus").addEventListener("click", () => { if (DISH.qty < 20) { DISH.qty++; rerenderDish(); } });
+  $("dsAdd").addEventListener("click", addDishToCart);
+  sheet.querySelectorAll("input[data-og]").forEach(inp => inp.addEventListener("change", () => {
+    const g = it.groups.find(z => String(z.i) === inp.dataset.og), nm = g.options[Number(inp.dataset.oi)].nom;
+    let cur = (DISH.sel[g.i] || []).slice();
+    if (inp.checked) { if (g.max === 1) cur = [nm]; else if (cur.length < g.max) cur.push(nm); }
+    else cur = cur.filter(x => x !== nm);
+    DISH.sel[g.i] = cur; rerenderDish();
+  }));
+}
+function rerenderDish() {
+  const sc = $("dishSheet").querySelector(".ds-scroll"), top = sc ? sc.scrollTop : 0;
+  renderDish();
+  const sc2 = $("dishSheet").querySelector(".ds-scroll"); if (sc2) sc2.scrollTop = top;
+}
+function addDishToCart() {
+  if (!DISH || !dishValid()) return;
+  const it = DISH.item;
+  if (!canAddItem(it)) return;
+  const sel = it.groups.map(g => ({ g: g.i, o: (DISH.sel[g.i] || []).slice() })).filter(x => x.o.length);
+  putOptLine(it, sel, DISH.qty);
+  const base = it.id;
+  closeDish();
+  refreshOptCtrl(base);
+  updateCartBar();
+  ensureQuoteForCart();
+}
+/* Ajoute (ou cumule) une ligne « plat + options » au panier ; renvoie false si les choix ne correspondent plus au menu */
+function putOptLine(it, sel, qty) {
+  let extra = 0;
+  for (const x of sel) {
+    const g = it.groups.find(z => z.i === x.g);
+    if (!g) return false;
+    for (const nm of x.o) { const o = g.options.find(z => z.nom === nm); if (!o) return false; extra += o.prix; }
+  }
+  const sig = sel.map(x => x.g + ":" + x.o.join(",")).join(";");
+  const key = it.id + "#" + hashSig_(sig);
+  const prev = CART[key];
+  CART[key] = { item: Object.assign({}, it, { prix: it.prix + extra }), qty: Math.min(50, (prev ? prev.qty : 0) + qty), opts: sel, optLabel: sel.map(x => x.o.join(", ")).join(" · "), baseId: it.id };
+  return true;
+}
+/* Changer la quantité d'une ligne avec options depuis le panier */
+function changeLine(key, delta) {
+  const l = CART[key];
+  if (!l) return;
+  if (delta > 0 && restoClosedInfo(l.item.partenaire) && !restoPre(l.item.partenaire)) { showCartNotice(t("closedOrder")); return; }
+  const next = Math.max(0, Math.min(50, l.qty + delta));
+  if (next === 0) delete CART[key]; else l.qty = next;
+  refreshOptCtrl(l.baseId);
+  updateCartBar();
+  ensureQuoteForCart();
+}
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && DISH) closeDish(); });
+document.addEventListener("click", (e) => { if (DISH && e.target === $("dishOverlay")) closeDish(); });
+
+/* ============================================================
    PANIER
    ============================================================ */
 function cartTotals() {
@@ -2154,10 +2341,11 @@ function renderCartLines() {
         <div class="cart-line">
           <div style="flex:1">
             <div class="cl-name">${escapeHtml(itemName(l.item))}</div>
+            ${l.optLabel ? `<div class="cl-opts">${escapeHtml(l.optLabel)}</div>` : ""}
             <div class="cl-price"><bdi dir="ltr">${l.qty} × ${l.item.prix} DA</bdi></div>
           </div>
           <div class="qty-stepper">
-            <button data-dec2="${id}">−</button><span>${l.qty}</span><button data-inc2="${id}">+</button>
+            <button data-dec2="${escapeAttr(id)}">−</button><span>${l.qty}</span><button data-inc2="${escapeAttr(id)}">+</button>
           </div>
         </div>`).join("")
     : `<p style="color:var(--muted);font-size:13.5px;">${t("cartEmpty")}</p>`;
@@ -2896,7 +3084,7 @@ function submitOrder() {
     requestId: ORDER_REQUEST_ID,
     preorder: !!cartPreName(),
     preWhen: cartPreName() ? preWhen(cartPreName()) : "",
-    items: Object.values(CART).map(l => ({ id: (l.item.rawId !== undefined ? l.item.rawId : l.item.id), nom: l.item.nom, prix: l.item.prix, qty: l.qty, partenaire: l.item.partenaire || "" }))
+    items: Object.values(CART).map(l => ({ id: (l.item.rawId !== undefined ? l.item.rawId : l.item.id), nom: l.item.nom, prix: l.item.prix, qty: l.qty, partenaire: l.item.partenaire || "", opts: l.opts || undefined }))
   };
 
   const btn = $("confirmOrderBtn");
