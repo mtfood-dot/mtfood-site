@@ -14,6 +14,7 @@
 <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
 <title>MT Delivery — Suivi de commande</title>
+<link rel="preconnect" href="https://ubabekqbkapjulnwftqe.supabase.co">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -614,9 +615,31 @@ function escapeHtml(s){
   });
 }
 
+/* Lecture rapide dans Supabase (≈ 0,1 s) ; repli sur Apps Script si la copie manque, est ancienne ou si Supabase ne répond pas */
+const SB_URL = "https://ubabekqbkapjulnwftqe.supabase.co";
+const SB_KEY = "sb_publishable_pRewYmoAUWLdXoXvs0CguQ_bDHCfVem";   // clé publique : ne peut que lire un suivi par son numéro
+const SB_MAX_AGE_MS = 8 * 60 * 1000, SB_KEEP_MS = 14 * 24 * 3600 * 1000;
+let LAST_SRC = "";
+async function sbTrack(numero){
+  const ctl = typeof AbortController === "function" ? new AbortController() : null;
+  const timer = ctl ? setTimeout(function(){ ctl.abort(); }, 4000) : null;
+  try {
+    const r = await fetch(SB_URL + "/rest/v1/rpc/track_order", { method: "POST", signal: ctl ? ctl.signal : undefined,
+      headers: { apikey: SB_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ p_numero: numero }) });
+    if (!r.ok) throw new Error("sb " + r.status);
+    const row = await r.json();
+    if (!row || !row.value || row.value.success !== true) throw new Error("sb vide");
+    const age = Date.now() - Date.parse(row.updated_at);
+    const done = row.statut === "Livrée" || row.statut === "Annulée";
+    if (age > (done ? SB_KEEP_MS : SB_MAX_AGE_MS)) throw new Error("sb ancien");
+    return row.value;
+  } finally { if (timer) clearTimeout(timer); }
+}
 async function fetchOnce(){
   try {
-    const data = await apiGet({ action: "getOrderLocation", numero: CURRENT_NUMERO });
+    let data = null;
+    try { data = await sbTrack(CURRENT_NUMERO); LAST_SRC = "sb"; } catch (e) { data = null; }
+    if (!data) { LAST_SRC = "gas"; data = await apiGet({ action: "getOrderLocation", numero: CURRENT_NUMERO }); }
     if (!data.success) {
       showError(data.error || t("notFound"));
       stopPolling();
@@ -631,18 +654,23 @@ async function fetchOnce(){
 
 function stopPolling(){
   if (POLL_INTERVAL_ID) {
-    clearInterval(POLL_INTERVAL_ID);
+    clearTimeout(POLL_INTERVAL_ID);
     POLL_INTERVAL_ID = null;
   }
 }
 
+async function pollLoop(){
+  if (POLL_INTERVAL_ID === null) return;
+  await fetchOnce();
+  if (POLL_INTERVAL_ID !== null) POLL_INTERVAL_ID = setTimeout(pollLoop, LAST_SRC === "sb" ? 5000 : 12000);   // 5 s depuis Supabase, 12 s depuis Apps Script
+}
 async function startTracking(numero){
   CURRENT_NUMERO = numero;
   stopPolling();
   $("searchBtn").disabled = true;
   await fetchOnce();
   $("searchBtn").disabled = false;
-  POLL_INTERVAL_ID = setInterval(fetchOnce, 12000);
+  POLL_INTERVAL_ID = setTimeout(pollLoop, LAST_SRC === "sb" ? 5000 : 12000);
   registerPushToken_("client", "", numero);
 }
 
