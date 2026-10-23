@@ -14,6 +14,8 @@
 <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
 <title>MT Delivery — Menu</title>
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -1508,27 +1510,42 @@ function uniquifyIds_(items) {
     seen[id] = 1; i.id = id;
   });
 }
+/* Petit cache sur le téléphone : la page s'affiche tout de suite avec les dernières données,
+   puis se met à jour dès que le serveur répond (les prix sont de toute façon revérifiés à la commande). */
+const CACHE_PREFIX = "mtd_c_", CACHE_MAX_AGE = 12 * 3600 * 1000;
+function cacheGet(key, maxAge) {
+  try { const o = JSON.parse(localStorage.getItem(CACHE_PREFIX + key) || "null"); if (o && o.v && Date.now() - o.t < (maxAge || CACHE_MAX_AGE)) return o.v; } catch (e) {}
+  return null;
+}
+function cacheSet(key, v) { try { localStorage.setItem(CACHE_PREFIX + key, JSON.stringify({ t: Date.now(), v })); } catch (e) {} }
+let FIRST_RENDER_DONE = false;
+function applyMenuData(items, fromCache) {
+  MENU = items || [];
+  uniquifyIds_(MENU);
+  if (!MENU.length) { showEmpty("catalogUpdating"); return false; }
+  $("emptyMsg").style.display = "none";
+  applyRouteFromUrl(history.state);
+  renderRestoBar();
+  renderTabs();
+  renderGrid();
+  if (!FIRST_RENDER_DONE) { FIRST_RENDER_DONE = true; applyReorderIfAny(); applyFeaturedItem(); }
+  return true;
+}
 function loadMenu() {
   $("emptyMsg").style.display = "none";
   EMPTY_MSG_KEY = null;
+  loadRestoInfo();   // en même temps que le menu (avant : l'un après l'autre)
+  let shown = false;
+  if (!MENU.length) { const c = cacheGet("menu"); if (c && c.length) shown = applyMenuData(c, true); }
   jsonpRequest({ action: "menu" })
     .then(res => {
       if (!res.success) throw new Error(res.error || t("genericError"));
-      MENU = res.items || [];
-      uniquifyIds_(MENU);
-      if (!MENU.length) {
-        showEmpty("catalogUpdating");
-        return;
-      }
-      applyRouteFromUrl(history.state);
-      renderRestoBar();
-      renderTabs();
-      renderGrid();
-      applyReorderIfAny();
-      applyFeaturedItem();
-      loadRestoInfo();
+      if (shown && JSON.stringify(res.items || []) === JSON.stringify(cacheGet("menu"))) return;   // rien n'a changé
+      cacheSet("menu", res.items || []);
+      applyMenuData(res.items || [], false);
     })
     .catch(err => {
+      if (shown) { console.error(err); return; }   // on garde l'affichage venant du cache
       showEmpty("loadError");
       console.error(err);
     });
@@ -1860,23 +1877,32 @@ function closedText(name) {
   return t("closedDay").replace("{day}", dn).replace("{at}", n.at);
 }
 setInterval(() => { if (document.visibilityState === "visible") loadRestoInfo(); }, 300000);
-function loadRestoInfo() {
-  jsonpRequest({ action: "restoInfo" }, 15000).then(res => {
-    if (!res || !res.success || !res.restos) return;
-    const m = {}, p = {};
-    Object.keys(res.restos).forEach(k => { if (String(k).trim()) p[String(k).trim()] = 1; });
-    PARTNERS = p;
-    Object.keys(res.restos).forEach(k => { const v = res.restos[k]; if (v && v.prepMin > 0) m[norm(k)] = Number(v.prepMin); });
-    RESTO_PREP = m;
-    const o = {};
-    Object.keys(res.restos).forEach(k => { const v = res.restos[k]; if (v && typeof v.open === "boolean") o[norm(k)] = { open: v.open, hours: v.hours || "", next: v.next || null, manual: !!v.manual, pre: !!v.pre }; });
-    RESTO_OPEN = o;
-    const vv = {};
-    Object.keys(res.restos).forEach(k => { const v = res.restos[k]; if (v && v.ville) vv[norm(k)] = String(v.ville); });
-    RESTO_VILLE = vv;
+function applyRestoInfo(res) {
+  if (!res || !res.success || !res.restos) return;
+  const m = {}, p = {};
+  Object.keys(res.restos).forEach(k => { if (String(k).trim()) p[String(k).trim()] = 1; });
+  PARTNERS = p;
+  Object.keys(res.restos).forEach(k => { const v = res.restos[k]; if (v && v.prepMin > 0) m[norm(k)] = Number(v.prepMin); });
+  RESTO_PREP = m;
+  const o = {};
+  Object.keys(res.restos).forEach(k => { const v = res.restos[k]; if (v && typeof v.open === "boolean") o[norm(k)] = { open: v.open, hours: v.hours || "", next: v.next || null, manual: !!v.manual, pre: !!v.pre }; });
+  RESTO_OPEN = o;
+  const vv = {};
+  Object.keys(res.restos).forEach(k => { const v = res.restos[k]; if (v && v.ville) vv[norm(k)] = String(v.ville); });
+  RESTO_VILLE = vv;
+  if (MENU && MENU.length) {
     renderRestoBar();
     if (ACTIVE_RESTO !== null) renderGrid();
-    updatePreNotes();
+  }
+  updatePreNotes();
+}
+function loadRestoInfo() {
+  const c = cacheGet("restoInfo", 20 * 60 * 1000);
+  if (c && !Object.keys(RESTO_OPEN).length) applyRestoInfo(c);
+  jsonpRequest({ action: "restoInfo" }, 15000).then(res => {
+    if (!res || !res.success || !res.restos) return;
+    cacheSet("restoInfo", res);
+    applyRestoInfo(res);
   }).catch(() => {});
 }
 function etaCardHtml(name) {
