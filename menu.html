@@ -1534,15 +1534,31 @@ function applyMenuData(items, fromCache) {
 function loadMenu() {
   $("emptyMsg").style.display = "none";
   EMPTY_MSG_KEY = null;
-  loadRestoInfo();   // en même temps que le menu (avant : l'un après l'autre)
   let shown = false;
-  if (!MENU.length) { const c = cacheGet("menu"); if (c && c.length) shown = applyMenuData(c, true); }
+  if (!MENU.length) {
+    const ri = cacheGet("restoInfo", 20 * 60 * 1000); if (ri && !Object.keys(RESTO_OPEN).length) applyRestoInfo(ri);
+    const c = cacheGet("menu"); if (c && c.length) shown = applyMenuData(c, true);
+  }
+  // Une seule requête « boot » (menu + restaurants) ; si le serveur ne la connaît pas encore, on retombe sur les deux requêtes séparées
+  jsonpRequest({ action: "boot" })
+    .then(res => {
+      if (!res || !res.success || !res.items) throw new Error((res && res.error) || "boot");
+      if (res.restos) { const ri = { success: true, restos: res.restos }; cacheSet("restoInfo", ri); applyRestoInfo(ri); }
+      finishMenu(res.items, shown);
+    })
+    .catch(() => loadMenuSeparate(shown));
+}
+function finishMenu(items, shown) {
+  if (shown && JSON.stringify(items || []) === JSON.stringify(cacheGet("menu"))) return;   // rien n'a changé
+  cacheSet("menu", items || []);
+  applyMenuData(items || [], false);
+}
+function loadMenuSeparate(shown) {
+  loadRestoInfo();   // en même temps que le menu
   jsonpRequest({ action: "menu" })
     .then(res => {
       if (!res.success) throw new Error(res.error || t("genericError"));
-      if (shown && JSON.stringify(res.items || []) === JSON.stringify(cacheGet("menu"))) return;   // rien n'a changé
-      cacheSet("menu", res.items || []);
-      applyMenuData(res.items || [], false);
+      finishMenu(res.items || [], shown);
     })
     .catch(err => {
       if (shown) { console.error(err); return; }   // on garde l'affichage venant du cache
