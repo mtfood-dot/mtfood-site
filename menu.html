@@ -14,6 +14,7 @@
 <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
 <title>MT Delivery — Menu</title>
+<link rel="preconnect" href="https://ubabekqbkapjulnwftqe.supabase.co">
 <link rel="preconnect" href="https://script.google.com">
 <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1412,7 +1413,7 @@ function loadAds() {
   let attempt = 0;
   const tryLoad = () => {
     attempt++;
-    jsonpRequest({ action: "getAds" }, 20000)
+    fastRequest({ action: "getAds" }, 20000)
       .then(res => {
         if (myId !== _adsLoadId) return;
         const ads = res && res.success ? (res.ads || []) : [];
@@ -1472,7 +1473,7 @@ function loadBoost() {
   let attempt = 0;
   const tryLoad = () => {
     attempt++;
-    jsonpRequest({ action: "getFeaturedPubs" }, 20000)
+    fastRequest({ action: "getFeaturedPubs" }, 20000)
       .then(res => {
         if (myId !== _boostLoadId) return;
         const list = res && res.success ? (res.pubs || []) : [];
@@ -1540,7 +1541,7 @@ function loadMenu() {
     const c = cacheGet("menu"); if (c && c.length) shown = applyMenuData(c, true);
   }
   // Une seule requête « boot » (menu + restaurants) ; si le serveur ne la connaît pas encore, on retombe sur les deux requêtes séparées
-  jsonpRequest({ action: "boot" })
+  fastRequest({ action: "boot" })
     .then(res => {
       if (!res || !res.success || !res.items) throw new Error((res && res.error) || "boot");
       if (res.restos) { const ri = { success: true, restos: res.restos }; cacheSet("restoInfo", ri); applyRestoInfo(ri); }
@@ -1622,6 +1623,32 @@ function applyReorderIfAny() {
    APPELS À L'API (technique JSONP — évite les blocages CORS
    des navigateurs quand le site n'est pas sur script.google.com)
    ============================================================ */
+/* Lecture rapide : menu, restaurants et pubs sont copiés dans Supabase (≈ 0,1 s). Si la copie est absente, trop ancienne (> 10 min)
+   ou si Supabase ne répond pas, on retombe sur Apps Script comme avant. Les commandes et comptes ne passent jamais par ici. */
+const SB_URL = "https://ubabekqbkapjulnwftqe.supabase.co";
+const SB_KEY = "sb_publishable_pRewYmoAUWLdXoXvs0CguQ_bDHCfVem";   // clé publique : lecture seule grâce aux règles de la base
+const SB_KEYS = { boot: "boot", getAds: "ads", getFeaturedPubs: "pubs" };
+const SB_MAX_AGE_MS = 10 * 60 * 1000;
+function sbRead(key, timeoutMs = 4000) {
+  const ctl = typeof AbortController === "function" ? new AbortController() : null;
+  const timer = ctl ? setTimeout(() => ctl.abort(), timeoutMs) : null;
+  return fetch(SB_URL + "/rest/v1/public_cache?select=value,updated_at&key=eq." + encodeURIComponent(key),
+    { headers: { apikey: SB_KEY }, signal: ctl ? ctl.signal : undefined })
+    .then(r => { if (!r.ok) throw new Error("sb " + r.status); return r.json(); })
+    .then(rows => {
+      const row = rows && rows[0];
+      if (!row || !row.value || row.value.success !== true) throw new Error("sb vide");
+      if (Date.now() - Date.parse(row.updated_at) > SB_MAX_AGE_MS) throw new Error("sb ancien");
+      return row.value;
+    })
+    .finally(() => { if (timer) clearTimeout(timer); });
+}
+function fastRequest(params, timeoutMs) {
+  const key = SB_KEYS[params.action];
+  if (!key) return jsonpRequest(params, timeoutMs);
+  return sbRead(key).catch(() => jsonpRequest(params, timeoutMs));
+}
+
 let _jsonpCounter = 0;
 function jsonpRequest(params, timeoutMs = 15000) {
   return new Promise((resolve, reject) => {
