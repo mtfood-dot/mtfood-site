@@ -179,6 +179,15 @@
 
   .dish-card{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);
     border:1px solid var(--border);padding:16px;margin-bottom:12px;display:flex;gap:12px;}
+  .dish-zoom{position:relative;border:0;padding:0;background:none;cursor:zoom-in;flex-shrink:0;border-radius:10px;line-height:0;}
+  .dish-zoom .zoom-ico{position:absolute;right:3px;bottom:3px;background:rgba(10,38,71,.8);color:#fff;border-radius:8px;font-size:11px;padding:2px 4px;line-height:1.2;}
+  .dish-zoom:focus-visible{outline:3px solid var(--gold-500);outline-offset:2px;}
+  .dish-zoom-overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:14px;}
+  .dz-sheet{position:relative;background:var(--card);border-radius:16px;max-width:520px;width:100%;max-height:96vh;overflow:auto;padding:12px;}
+  .dz-img{display:block;width:100%;max-height:60vh;object-fit:contain;border-radius:12px;background:var(--bg);}
+  .dz-info{padding:10px 4px 4px;} .dz-info .nom{font-size:16px;font-weight:800;color:var(--text);} .dz-info .meta{font-size:13px;color:var(--muted);margin-top:2px;}
+  .dz-close{position:absolute;top:10px;right:10px;z-index:1;width:36px;height:36px;border-radius:50%;border:0;background:rgba(10,38,71,.85);color:#fff;font-size:16px;cursor:pointer;}
+  .dz-sheet .actions-row{display:flex;gap:8px;margin-top:10px;} .dz-sheet .actions-row .btn-action{flex:1;}
   .dish-card img{width:64px;height:64px;border-radius:10px;object-fit:cover;background:var(--bg);flex-shrink:0;}
   .dish-card .info{flex:1;min-width:0;}
   .dish-card .nom{font-size:14.5px;font-weight:800;color:var(--text);}
@@ -718,6 +727,8 @@ const I18N = {
     tabModeration: "Modération",
     noPendingItems: "Aucun plat en attente de validation.",
     byPartner: "Par",
+    viewPhoto: "Voir la photo en grand",
+    close: "Fermer",
     btnPublish: "✓ Publier",
     btnReject: "✕ Refuser",
     loadPendingFailedGeneric: "Impossible de charger les plats en attente. Réessaie.",
@@ -1021,6 +1032,8 @@ const I18N = {
     tabModeration: "المراجعة",
     noPendingItems: "لا توجد أطباق بانتظار المراجعة.",
     byPartner: "من",
+    viewPhoto: "عرض الصورة بحجم كبير",
+    close: "إغلاق",
     btnPublish: "✓ نشر",
     btnReject: "✕ رفض",
     loadPendingFailedGeneric: "تعذر تحميل الأطباق بانتظار المراجعة. أعد المحاولة.",
@@ -2003,12 +2016,42 @@ function renderModeration() {
   document.querySelectorAll("[data-mod-id]").forEach(btn => {
     btn.addEventListener("click", () => onModerate(btn.dataset.modId, btn.dataset.decision, btn));
   });
+  document.querySelectorAll("[data-zoom-id]").forEach(btn => {
+    btn.addEventListener("click", () => openDishZoom(btn.dataset.zoomId));
+  });
 }
+
+/* Photo en grand, avec Publier / Refuser sans quitter l'image */
+function openDishZoom(itemId) {
+  const item = PENDING_ITEMS.find(x => String(x.id) === String(itemId));
+  if (!item || !item.photo) return;
+  closeDishZoom();
+  const nom = (LANG === "ar" && item.nom_ar) ? item.nom_ar : item.nom;
+  const id = escapeAttr(item.id);
+  const box = document.createElement("div");
+  box.id = "dishZoom"; box.className = "dish-zoom-overlay"; box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true");
+  box.innerHTML = `<div class="dz-sheet">
+    <button type="button" class="dz-close" id="dzClose" aria-label="${escapeAttr(t("close"))}">✕</button>
+    <img class="dz-img" src="${escapeAttr(item.photo)}" alt="${escapeAttr(nom || "")}">
+    <div class="dz-info"><div class="nom">${escapeHtml(nom || "")}</div>
+      <div class="meta">${escapeHtml(t("byPartner"))} ${escapeHtml(item.partenaire || "")} · ${escapeHtml(item.categorie || "")} · <b>${escapeHtml(String(item.prix || 0))} DA</b></div></div>
+    <div class="actions-row">
+      <button class="btn-action btn-publish" type="button" data-dz-id="${id}" data-decision="publier">${escapeHtml(t("btnPublish"))}</button>
+      <button class="btn-action btn-reject" type="button" data-dz-id="${id}" data-decision="refuser">${escapeHtml(t("btnReject"))}</button>
+    </div></div>`;
+  document.body.appendChild(box);
+  box.addEventListener("click", (e) => { if (e.target === box) closeDishZoom(); });
+  $("dzClose").addEventListener("click", closeDishZoom);
+  box.querySelectorAll("[data-dz-id]").forEach(b => b.addEventListener("click", () => { closeDishZoom(); onModerate(b.dataset.dzId, b.dataset.decision, b); }));
+  $("dzClose").focus();
+}
+function closeDishZoom() { const z = document.getElementById("dishZoom"); if (z) z.remove(); }
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDishZoom(); });
 
 function dishCardHtml(item) {
   const nom = (LANG === "ar" && item.nom_ar) ? item.nom_ar : item.nom;
-  const photo = item.photo ? `<img src="${escapeAttr(item.photo)}" alt="">` : "";
   const id = escapeAttr(item.id);
+  const photo = item.photo ? `<button type="button" class="dish-zoom" data-zoom-id="${id}" aria-label="${escapeAttr(t("viewPhoto"))}"><img src="${escapeAttr(item.photo)}" alt=""><span class="zoom-ico" aria-hidden="true">🔍</span></button>` : "";
   return `
     <div class="dish-card">
       ${photo}
