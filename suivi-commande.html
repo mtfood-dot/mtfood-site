@@ -221,7 +221,6 @@ if ("serviceWorker" in navigator) {
     <div class="rmsg" id="rateMsg"></div>
   </div>
 
-  <footer id="footerNote">MT Delivery — البريد السريع · Meftah, Blida</footer>
 </main>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
@@ -326,7 +325,6 @@ function applyLanguage(){
   $("searchText").textContent = t("searchText");
   $("fNumero").placeholder = t("numeroPlaceholder");
   $("searchBtn").textContent = t("searchBtn");
-  $("footerNote").textContent = t("footerNote");
   $("cancelPhone").placeholder = t("cancelPhonePh");
   $("cancelBtn").textContent = t("cancelBtn");
   if (typeof LAST_STATUT !== "undefined") updateCancelBox(LAST_STATUT);
@@ -670,6 +668,22 @@ document.addEventListener("DOMContentLoaded", function(){
     startTracking(numeroParam);
   }
 });
+</script>
+<footer class="mt-foot" id="mtFoot">
+  <a href="https://mtdelivery.pages.dev" class="mt-foot-link" target="_blank" rel="noopener" id="mtFootLink"><img src="favicon-48.png" width="28" height="28" alt="MT Delivery"></a>
+  <span id="mtFootTxt">© 2026 MT Delivery — Tous droits réservés</span>
+</footer>
+<style>
+.mt-foot{display:flex;align-items:center;justify-content:center;gap:10px;padding:18px 16px calc(18px + env(safe-area-inset-bottom));margin-top:24px;font-size:12.5px;color:#6b7280;border-top:1px solid rgba(0,0,0,.08);}
+.mt-foot-link{display:inline-flex;line-height:0;border-radius:8px;}
+.mt-foot-link img{border-radius:8px;}
+body:has(.cart-bar.show) .mt-foot,body:has(#cartBar.show) .mt-foot{margin-bottom:76px;}
+</style>
+<script>
+(function(){var l="fr";try{l=localStorage.getItem("mtd_lang")||"fr";}catch(e){}
+var ar=l==="ar",t=document.getElementById("mtFootTxt"),a=document.getElementById("mtFootLink");
+if(t)t.textContent=ar?"© 2026 MT Delivery — جميع الحقوق محفوظة":"© 2026 MT Delivery — Tous droits réservés";
+if(a)a.title=ar?"العودة إلى موقع MT Delivery":"Retour au site MT Delivery";})();
 </script>
 </body>
 </html>
