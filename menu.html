@@ -1643,6 +1643,16 @@ function sbRead(key, timeoutMs = 4000) {
     })
     .finally(() => { if (timer) clearTimeout(timer); });
 }
+/* Calculs de livraison faits par la base Supabase (mêmes formules que le serveur Apps Script) ; renvoie null si la copie des zones est ancienne */
+function sbRpc(fn, args, timeoutMs = 4000) {
+  const ctl = typeof AbortController === "function" ? new AbortController() : null;
+  const timer = ctl ? setTimeout(() => ctl.abort(), timeoutMs) : null;
+  return fetch(SB_URL + "/rest/v1/rpc/" + fn, { method: "POST", signal: ctl ? ctl.signal : undefined,
+    headers: { apikey: SB_KEY, "Content-Type": "application/json" }, body: JSON.stringify(args) })
+    .then(r => { if (!r.ok) throw new Error("sb " + r.status); return r.json(); })
+    .then(res => { if (!res || typeof res !== "object" || Array.isArray(res)) throw new Error("sb vide"); return res; })
+    .finally(() => { if (timer) clearTimeout(timer); });
+}
 function fastRequest(params, timeoutMs) {
   const key = SB_KEYS[params.action];
   if (!key) return jsonpRequest(params, timeoutMs);
@@ -2461,7 +2471,9 @@ let QUOTE_SEQ = 0;
 function emptyDelivery() { return { line: "", repere: "", lat: null, lng: null, source: "", quote: null, quoteResto: "" }; }
 /* Frais, distance et couverture de chaque restaurant pour l'adresse du client (calculés par le serveur) */
 function refreshRestoQuotes(seq) {
-  jsonpRequest({ action: "restosPour", lat: DELIVERY.lat.toFixed(6), lng: DELIVERY.lng.toFixed(6) }, 15000).then(res => {
+  const qLat = DELIVERY.lat.toFixed(6), qLng = DELIVERY.lng.toFixed(6);
+  sbRpc("restos_pour", { p_lat: Number(qLat), p_lng: Number(qLng) })
+    .catch(() => jsonpRequest({ action: "restosPour", lat: qLat, lng: qLng }, 15000)).then(res => {
     if (seq !== QUOTE_SEQ || !res || !res.success || !res.restos) return;
     const m = {};
     Object.keys(res.restos).forEach(k => { m[norm(k)] = res.restos[k]; });
@@ -2511,7 +2523,8 @@ function quoteRestoName() { const l = Object.values(CART)[0]; return l ? String(
 function fetchQuote(lat, lng, resto) {
   const req = { action: "deliveryQuote", lat: lat.toFixed(6), lng: lng.toFixed(6) };
   if (resto) req.resto = resto;
-  return jsonpRequest(req, 15000).then(res => {
+  return sbRpc("delivery_quote", { p_lat: Number(req.lat), p_lng: Number(req.lng), p_resto: resto || null })
+    .catch(() => jsonpRequest(req, 15000)).then(res => {
     if (!res || !res.success) { const e = new Error((res && res.error) || "quote"); e.code = res && res.code; throw e; }
     return res.covered
       ? { covered: true, zoneId: res.zone.id, zoneNom: res.zone.nom, fee: Number(res.zone.frais), distanceKm: res.distanceKm, rang: res.rang }
