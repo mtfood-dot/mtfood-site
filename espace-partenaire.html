@@ -15,6 +15,7 @@
 <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
 <title>MT Delivery — Espace partenaire</title>
+<link rel="preconnect" href="https://ubabekqbkapjulnwftqe.supabase.co">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -1425,13 +1426,38 @@ $("alertSetupBtn").addEventListener("click", async () => {
   updateAlertSetup();
 });
 
-function startLivePolling() {
+/* Commandes en cours : lues dans Supabase (≈ 0,1 s, toutes les 5 s) ; si la copie manque, est ancienne ou si le jeton n'est pas reconnu,
+   on demande à Apps Script (toutes les 30 s), qui reste seul juge de la connexion. */
+const SB_URL = "https://ubabekqbkapjulnwftqe.supabase.co";
+const SB_KEY = "sb_publishable_pRewYmoAUWLdXoXvs0CguQ_bDHCfVem";   // clé publique : ne peut lire que la vue du restaurant dont le jeton est valide
+const LIVE_SB_MS = 5000;
+let LIVE_SRC = "";
+async function sbLive() {
+  const ctl = typeof AbortController === "function" ? new AbortController() : null;
+  const timer = ctl ? setTimeout(() => ctl.abort(), 4000) : null;
+  try {
+    const r = await fetch(SB_URL + "/rest/v1/rpc/partner_live", { method: "POST", signal: ctl ? ctl.signal : undefined,
+      headers: { apikey: SB_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ p_token: SESSION.token }) });
+    if (!r.ok) throw new Error("sb " + r.status);
+    const j = await r.json();
+    if (!j || j.success !== true || !Array.isArray(j.orders)) throw new Error("sb vide");
+    return j;
+  } finally { if (timer) clearTimeout(timer); }
+}
+function liveNextDelay_() { return LIVE_SRC === "sb" ? LIVE_SB_MS : LIVE_EVERY_MS; }
+async function liveLoop_() {
+  if (!LIVE_TIMER) return;
+  if (document.visibilityState === "visible") await loadLive();
+  if (LIVE_TIMER) LIVE_TIMER = setTimeout(liveLoop_, liveNextDelay_());
+}
+async function startLivePolling() {
   stopLivePolling();
-  loadLive();
-  LIVE_TIMER = setInterval(() => { if (document.visibilityState === "visible") loadLive(); }, LIVE_EVERY_MS);
+  LIVE_TIMER = setTimeout(liveLoop_, 60000);   // remplacé juste après la première lecture
+  await loadLive();
+  if (LIVE_TIMER) { clearTimeout(LIVE_TIMER); LIVE_TIMER = setTimeout(liveLoop_, liveNextDelay_()); }
 }
 function stopLivePolling() {
-  if (LIVE_TIMER) clearInterval(LIVE_TIMER);
+  if (LIVE_TIMER) clearTimeout(LIVE_TIMER);
   LIVE_TIMER = null; LIVE_KNOWN = null;
 }
 document.addEventListener("visibilitychange", () => {
@@ -1453,7 +1479,9 @@ async function loadLive(force) {
   if (!SESSION || (LIVE_BUSY && !force)) return;
   LIVE_BUSY = true;
   try {
-    const data = await apiGet({ action: "partnerLiveOrders" });
+    let data = null;
+    try { data = await sbLive(); LIVE_SRC = "sb"; } catch (e) { data = null; }
+    if (!data) { LIVE_SRC = "gas"; data = await apiGet({ action: "partnerLiveOrders" }); }
     if (!data || !data.success) return;
     LIVE_ORDERS = data.orders || [];
     const pending = LIVE_ORDERS.filter(o => o.statut === "À confirmer").map(o => String(o.numero));
