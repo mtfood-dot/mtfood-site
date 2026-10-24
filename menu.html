@@ -1787,9 +1787,17 @@ function restoInitials(n) {
 }
 /* Les plats sans restaurant renseigné sont regroupés sous le nom de la marque. */
 function restoDisplay(key) { return key || "MT Food"; }
+/* Cache les plats d'un restaurant absent de la liste des partenaires actifs (statut "En attente"…).
+   Si la liste n'est pas encore chargée, rien n'est caché. */
+function isActiveResto(i) {
+  const keys = Object.keys(PARTNERS);
+  if (!keys.length) return true;
+  const k = restoKeyOf(i).toLowerCase();
+  return keys.some(n => n.toLowerCase() === k);
+}
 function restoList() {
   const map = {}, out = [];
-  MENU.forEach(i => {
+  MENU.filter(isActiveResto).forEach(i => {
     const k = restoKeyOf(i), id = k.toLowerCase();
     if (!map[id]) { map[id] = { key: k, name: restoDisplay(k), slug: restoSlug(restoDisplay(k)), items: [], cats: [] }; out.push(map[id]); }
     map[id].items.push(i);
@@ -1812,7 +1820,7 @@ function currentResto() {
 }
 function menuForResto() {
   const r = currentResto();
-  return r ? r.items : MENU;
+  return r ? r.items : MENU.filter(isActiveResto);
 }
 function logoHtml(name) {
   return '<img src="branding/restos/' + escapeAttr(restoSlug(name)) + '.png" alt="" loading="lazy" data-ini="' + escapeAttr(restoInitials(name)) + '">';
