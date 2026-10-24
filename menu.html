@@ -598,6 +598,7 @@
   .promo-section,.join-section{max-width:960px;margin-left:auto;margin-right:auto;padding:0 16px;}
 </style>
 <script src="/form-validate.js" defer></script>
+<script src="/google-signin.js?v=3"></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
@@ -1237,6 +1238,25 @@ function refreshPendingBar() {
   const wmsg = LANG === "ar"
     ? "مرحبا MT Food، أرجو تفعيل حسابي.\nالاسم: " + nm + "\nالهاتف: " + tel
     : "Bonjour MT Food, merci de vérifier mon numéro et d'activer mon compte.\nNom : " + nm + "\nTéléphone : " + tel;
+  if (!tel) {
+    bar.innerHTML = (LANG === "ar"
+      ? "⏳ <strong>حسابك غير مفعّل بعد.</strong> أضف رقم هاتفك ليتأكد منه فريقنا قبل أول طلب."
+      : "⏳ <strong>Ton compte n'est pas encore actif.</strong> Ajoute ton numéro de téléphone : notre service client le vérifiera avant ta première commande.")
+      + '<button type="button" id="pendingAddPhone" style="display:block;width:100%;margin-top:8px;background:#1d4e9e;color:#fff;border:0;padding:10px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit">'
+      + (LANG === "ar" ? "📱 أضف رقمي" : "📱 Ajouter mon numéro") + "</button>";
+    bar.style.display = "block";
+    $("pendingAddPhone").addEventListener("click", async () => {
+      if (!window.MTGoogle) return;
+      let n = "";
+      try { n = await MTGoogle.askPhone(session.clientId, p => jsonpRequest(p)); } catch (e) {}
+      if (n) {
+        session.telephone = n;
+        try { localStorage.setItem(CLIENT_SESSION_KEY, JSON.stringify(session)); } catch (e) {}
+        refreshPendingBar();
+      }
+    });
+    return;
+  }
   const link = "https://wa.me/" + CONFIG.WHATSAPP_NUMBER + "?text=" + encodeURIComponent(wmsg);
   bar.innerHTML = (LANG === "ar"
     ? "⏳ <strong>حسابك غير مفعّل بعد.</strong> لأسباب أمنية، يجب أن تتأكد خدمة الزبائن من رقم هاتفك قبل أول طلب. أرسل لنا رسالة واتساب وسنفعّل حسابك."
