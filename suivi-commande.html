@@ -216,6 +216,7 @@ if ("serviceWorker" in navigator) {
         <div class="stars" id="starsDriver" role="radiogroup"></div>
       </div>
       <textarea id="rateComment" maxlength="300"></textarea>
+      <div class="rate-row" id="ratePhoneLbl"></div>
       <input type="tel" id="ratePhone" inputmode="tel" autocomplete="tel">
       <button type="button" class="go" id="rateBtn"></button>
     </div>
@@ -265,7 +266,7 @@ const I18N = {
     cancelHintCall: "Pour annuler ou modifier cette commande, appelle le service client : ",
     rateTitle: "Comment s'est passée ta commande ?", rateHint: "Ton avis nous aide à améliorer le service. Il ne prend que quelques secondes.",
     rateResto: "Le restaurant (qualité, préparation)", rateDriver: "Le livreur (rapidité, amabilité)",
-    rateCommentPh: "Un commentaire ? (facultatif)", ratePhonePh: "Le numéro de téléphone de la commande", rateBtn: "Envoyer mon avis",
+    rateCommentPh: "Un commentaire ? (facultatif)", ratePhonePh: "Ton numéro de téléphone", ratePhoneLbl: "Pour confirmer que c'est bien ta commande :", rateBtn: "Envoyer mon avis",
     rateNeedNote: "Choisis au moins une note avec les étoiles.", rateNeedPhone: "Entre le numéro de téléphone de la commande.",
     rateThanks: "Merci pour ton avis !", rateFail: "Impossible d'envoyer l'avis. Réessaie un peu plus tard.", starLabel: "étoiles",
     footerNote: "MT Delivery — البريد السريع · Meftah, Blida"
@@ -306,7 +307,7 @@ const I18N = {
     cancelHintCall: "لإلغاء هذا الطلب أو تعديله، اتصل بخدمة العملاء: ",
     rateTitle: "كيف كان طلبك؟", rateHint: "رأيك يساعدنا على تحسين الخدمة. يستغرق ثوان فقط.",
     rateResto: "المطعم (الجودة والتحضير)", rateDriver: "عامل التوصيل (السرعة واللطف)",
-    rateCommentPh: "تعليق؟ (اختياري)", ratePhonePh: "رقم هاتف الطلب", rateBtn: "إرسال رأيي",
+    rateCommentPh: "تعليق؟ (اختياري)", ratePhonePh: "رقم هاتفك", ratePhoneLbl: "للتأكد أن هذا طلبك :", rateBtn: "إرسال رأيي",
     rateNeedNote: "اختر تقييما واحدا على الأقل بالنجوم.", rateNeedPhone: "أدخل رقم هاتف الطلب.",
     rateThanks: "شكرا على رأيك!", rateFail: "تعذر إرسال الرأي. أعد المحاولة لاحقا.", starLabel: "نجوم",
     footerNote: "البريد السريع MT Delivery · مفتاح، البليدة"
@@ -327,6 +328,7 @@ function applyLanguage(){
   $("fNumero").placeholder = t("numeroPlaceholder");
   $("searchBtn").textContent = t("searchBtn");
   $("cancelPhone").placeholder = t("cancelPhonePh");
+  prefillPhones();
   $("cancelBtn").textContent = t("cancelBtn");
   if (typeof LAST_STATUT !== "undefined") updateCancelBox(LAST_STATUT);
   if (typeof updateRatingBox === "function") updateRatingBox(LAST_STATUT, LAST_DRIVER);
@@ -499,6 +501,13 @@ async function cancelOrder(){
 }
 $("cancelBtn").addEventListener("click", cancelOrder);
 
+/* Pré-remplit le téléphone avec celui du client connecté (modifiable) */
+function prefillPhones(){
+  let tel = "";
+  try { const s = JSON.parse(localStorage.getItem("mtd_client_session") || "null"); tel = (s && s.telephone) || ""; } catch (e) {}
+  if (!tel) return;
+  ["ratePhone", "cancelPhone"].forEach(id => { const el = $(id); if (el && !el.value) el.value = tel; });
+}
 /* ---------- Avis après livraison ---------- */
 let LAST_DRIVER = "";
 const RATE = { resto: 0, driver: 0 };
@@ -523,6 +532,8 @@ function updateRatingBox(statut, driverName){
   $("rateDriverWrap").style.display = driverName ? "" : "none";
   $("rateComment").placeholder = t("rateCommentPh");
   $("ratePhone").placeholder = t("ratePhonePh");
+  $("ratePhoneLbl").textContent = t("ratePhoneLbl");
+  prefillPhones();
   $("rateBtn").textContent = t("rateBtn");
   drawStars("starsResto", "resto"); drawStars("starsDriver", "driver");
 }
