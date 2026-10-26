@@ -185,11 +185,25 @@ let ACTIVE_TAB = "current";
 
 async function apiGet(p){ const qs = new URLSearchParams(p).toString(); const res = await fetch(CONFIG.API_URL + "?" + qs); return res.json(); }
 
+const SB_URL = "https://ubabekqbkapjulnwftqe.supabase.co", SB_KEY = "sb_publishable_pRewYmoAUWLdXoXvs0CguQ_bDHCfVem";
+async function sbClientOrders(clientId){
+  try {
+    const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 4000);
+    const res = await fetch(SB_URL + "/rest/v1/rpc/client_orders", { method: "POST", signal: ctl.signal,
+      headers: { "apikey": SB_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ p_client: clientId }) });
+    clearTimeout(tm);
+    if (!res.ok) return null;
+    const d = await res.json();
+    return d && d.success && Array.isArray(d.orders) ? d : null;
+  } catch (e) { return null; }
+}
 async function loadOrders(){
   $("listCurrent").innerHTML = '<div class="skeleton"></div><div class="skeleton"></div>';
   try {
     // Action backend à ajouter : getClientOrders (retourne toutes les commandes du client)
-    const data = await apiGet({ action: "getClientOrders", clientId: SESSION.clientId });
+    // Supabase d'abord (rapide) ; liste vide ou erreur : on redemande à Apps Script (qui fait foi)
+    let data = await sbClientOrders(SESSION.clientId);
+    if (!data || !data.orders || !data.orders.length) data = await apiGet({ action: "getClientOrders", clientId: SESSION.clientId });
     const all = (data && data.success && data.orders) ? data.orders : [];
     ORDERS.current = all.filter(o => ACTIVE_STATUSES.includes(o.statut));
     ORDERS.history = all.filter(o => !ACTIVE_STATUSES.includes(o.statut));
