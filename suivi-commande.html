@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#0a2647">
+<meta name="theme-color" content="#263238">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -21,28 +21,28 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <style>
 :root{
-  --blue-900:#0a2647;
-  --blue-800:#0f3562;
-  --blue-700:#134a8f;
-  --blue-600:#1a5cb0;
-  --blue-100:#e9f1fb;
-  --gold-600:#b8860f;
-  --gold-500:#d4a017;
-  --gold-400:#e8bb3d;
-  --gold-100:#fdf3d9;
+  --blue-900:#263238;
+  --blue-800:#263238;
+  --blue-700:#1553A4;
+  --blue-600:#1553A4;
+  --blue-100:#E8EEF6;
+  --gold-600:#F7B500;
+  --gold-500:#F7B500;
+  --gold-400:#F7B500;
+  --gold-100:#FEF3D4;
   --bg:#f3f5f9;
   --card:#ffffff;
-  --text:#131b28;
-  --muted:#69748a;
+  --text:#263238;
+  --muted:#55616B;
   --danger:#c0392b;
   --green:#1a7d3a;
   --border:#e6eaf1;
   --radius-lg:20px;
   --radius-md:14px;
   --radius-sm:10px;
-  --shadow-sm:0 1px 2px rgba(16,24,40,.06);
-  --shadow-md:0 6px 20px -6px rgba(16,36,72,.16);
-  --shadow-lg:0 20px 40px -12px rgba(10,38,71,.25);
+  --shadow-sm:0 1px 2px rgba(38,50,56,.06);
+  --shadow-md:0 6px 20px -6px rgba(38,50,56,.16);
+  --shadow-lg:0 20px 40px -12px rgba(38,50,56,.25);
 }
 *{box-sizing:border-box;}
 body{margin:0;background:var(--bg);color:var(--text);
@@ -58,7 +58,7 @@ header.top{
   border-bottom:1px solid var(--border);text-align:center;
 }
 header.top .brand{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;z-index:1;width:100%;}
-header.top .brand .logo-img{height:auto;width:100%;max-width:280px;display:block;margin:0 auto;}
+header.top .brand .logo-img{height:auto;width:100%;max-width:150px;display:block;margin:0 auto;}
 header.top .tagline{font-size:13px;color:var(--blue-700);font-weight:700;letter-spacing:.2px;padding:0 20px;}
 .lang-toggle{
   position:absolute;top:14px;inset-inline-end:16px;background:var(--blue-100);color:var(--blue-800);
@@ -73,10 +73,11 @@ main{max-width:520px;margin:0 auto;padding:20px 16px 0;}
 .search-card h1{font-size:17px;margin:0 0 4px;color:var(--blue-900);}
 .search-card p{font-size:13px;color:var(--muted);margin:0 0 16px;line-height:1.5;}
 .search-row{display:flex;gap:8px;}
+.search-row input{min-width:0;}
 .search-row input{flex:1;padding:13px 14px;border:1.5px solid var(--border);border-radius:12px;
   font-size:14.5px;font-family:inherit;background:var(--bg);color:var(--text);}
 .search-row input:focus{outline:none;border-color:var(--blue-600);background:#fff;}
-.search-row button{background:linear-gradient(135deg,var(--blue-700),var(--blue-900));color:#fff;border:none;
+.search-row button{background:var(--gold-500);color:var(--blue-900);border:none;
   border-radius:12px;padding:0 20px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;}
 .search-row button:disabled{opacity:.55;}
 .error-box{background:#fdecea;border:1px solid #f5c2be;color:var(--danger);font-size:13px;
@@ -89,7 +90,7 @@ main{max-width:520px;margin:0 auto;padding:20px 16px 0;}
 .status-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
 .status-badge{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:800;
   padding:7px 14px;border-radius:999px;}
-.status-attente{background:var(--gold-100);color:var(--gold-600);}
+.status-attente{background:var(--gold-100);color:var(--blue-900);}
 .status-livraison{background:var(--blue-100);color:var(--blue-700);}
 .status-livree{background:#e5f6ea;color:var(--green);}
 .steps{display:flex;margin:16px 0 2px;padding:0;list-style:none;}
@@ -100,7 +101,7 @@ main{max-width:520px;margin:0 auto;padding:20px 16px 0;}
 .steps li.done{color:var(--blue-900);}
 .steps li.done .b,.steps li.done::before{background:var(--green,#1f9d55);}
 .steps li.now{color:var(--blue-900);}
-.steps li.now .b{background:var(--blue-700,#1a4a9a);box-shadow:0 0 0 4px rgba(26,74,154,.18);}
+.steps li.now .b{background:var(--blue-700,#1553A4);box-shadow:0 0 0 4px rgba(26,74,154,.18);}
 .steps li.now::before{background:var(--green,#1f9d55);}
 .status-badge .dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
 .status-livraison .dot{animation:pulse 1.4s infinite;}
@@ -121,7 +122,7 @@ main{max-width:520px;margin:0 auto;padding:20px 16px 0;}
 .cancel-box button:disabled{opacity:.6;}
 .cancel-box .cmsg{font-size:13px;font-weight:700;margin-top:8px;min-height:1em;}
 .cancel-box .cmsg.err{color:#b3261e;}
-.cancel-box a{color:var(--blue-700,#1d4e9e);font-weight:800;}
+.cancel-box a{color:var(--blue-700,#1553A4);font-weight:800;}
 .rate-box{max-width:520px;margin:14px auto 0;background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:16px;}
 .rate-box.hidden{display:none;}
 .rate-box h3{margin:0 0 4px;font-size:16px;color:var(--blue-900);}
@@ -132,7 +133,7 @@ main{max-width:520px;margin:0 auto;padding:20px 16px 0;}
 .stars button.on{color:#f0a500;}
 .rate-box textarea,.rate-box input{width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:10px;padding:11px;font-family:inherit;font-size:14px;margin-top:10px;}
 .rate-box textarea{min-height:70px;resize:vertical;}
-.rate-box .go{width:100%;margin-top:10px;background:var(--blue-700,#1d4e9e);color:#fff;border:0;border-radius:10px;padding:12px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;}
+.rate-box .go{width:100%;margin-top:10px;background:var(--blue-700,#1553A4);color:#fff;border:0;border-radius:10px;padding:12px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;}
 .rate-box .go:disabled{opacity:.6;}
 .rate-box .rmsg{font-size:13px;font-weight:700;margin-top:8px;min-height:1em;}
 .rate-box .rmsg.err{color:#b3261e;}
@@ -162,7 +163,7 @@ if ("serviceWorker" in navigator) {
 
 <header class="top">
   <div class="brand">
-    <a href="index.html" aria-label="Retour à l'accueil" style="display:block;"><img class="logo-img" src="branding/mt-food-logo.svg" alt="MT Food by MT Delivery" width="316" height="85" loading="eager" style="max-width:300px;height:auto"></a>
+    <a href="index.html" aria-label="Retour à l'accueil" style="display:block;"><img class="logo-img" src="branding/mt-food-logo.svg" alt="MT Food by MT Delivery" width="150" height="96" loading="eager" style="max-width:150px;height:auto"></a>
     <div class="tagline" id="tagline">Espace livreur</div>
   </div>
   <button class="lang-toggle" id="langToggle" type="button">AR</button>
@@ -448,7 +449,7 @@ function ensureMap(lat, lng){
       radius: 10,
       color: "#fff",
       weight: 3,
-      fillColor: "#1a5cb0",
+      fillColor: "#1553A4",
       fillOpacity: 1
     }).addTo(MAP);
   } else {
@@ -713,7 +714,7 @@ document.addEventListener("DOMContentLoaded", function(){
   <span id="mtFootTxt">© 2026 MT Delivery — Tous droits réservés</span>
 </footer>
 <style>
-.mt-foot{display:flex;align-items:center;justify-content:center;gap:10px;padding:18px 16px calc(18px + env(safe-area-inset-bottom));margin-top:24px;font-size:12.5px;color:#6b7280;border-top:1px solid rgba(0,0,0,.08);}
+.mt-foot{display:flex;align-items:center;justify-content:center;gap:10px;padding:18px 16px calc(18px + env(safe-area-inset-bottom));margin-top:24px;font-size:12.5px;color:#55616B;border-top:1px solid rgba(0,0,0,.08);}
 .mt-foot-link{display:inline-flex;line-height:0;border-radius:8px;}
 .mt-foot-link img{border-radius:8px;}
 body:has(.cart-bar.show) .mt-foot,body:has(#cartBar.show) .mt-foot{margin-bottom:76px;}
