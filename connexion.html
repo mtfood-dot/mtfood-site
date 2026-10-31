@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#0a2647">
+<meta name="theme-color" content="#263238">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -20,11 +20,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --blue-900:#0a2647; --blue-800:#0f3562; --blue-700:#134a8f; --blue-600:#1a5cb0; --blue-100:#e9f1fb;
-    --gold-600:#b8860f; --gold-500:#d4a017; --gold-400:#e8bb3d; --gold-100:#fdf3d9;
-    --bg:#f3f5f9; --card:#ffffff; --text:#131b28; --muted:#69748a; --danger:#c0392b; --green:#1a7d3a;
+    --blue-900:#263238; --blue-800:#263238; --blue-700:#1553A4; --blue-600:#1553A4; --blue-100:#E8EEF6;
+    --gold-600:#F7B500; --gold-500:#F7B500; --gold-400:#F7B500; --gold-100:#FEF3D4;
+    --bg:#f3f5f9; --card:#ffffff; --text:#263238; --muted:#55616B; --danger:#c0392b; --green:#1a7d3a;
     --border:#e6eaf1; --radius-lg:20px; --radius-md:14px; --radius-sm:10px;
-    --shadow-sm:0 1px 2px rgba(16,24,40,.06); --shadow-md:0 6px 20px -6px rgba(16,36,72,.16);
+    --shadow-sm:0 1px 2px rgba(38,50,56,.06); --shadow-md:0 6px 20px -6px rgba(38,50,56,.16);
   }
   *{box-sizing:border-box;}
   body{margin:0;background:var(--bg);color:var(--text);
@@ -37,7 +37,7 @@
   header.top{background:#ffffff;padding:20px 0 22px;position:relative;overflow:hidden;
     border-bottom:1px solid var(--border);text-align:center;}
   header.top .brand{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;z-index:1;width:100%;}
-  header.top .brand .logo-img{height:auto;width:100%;max-width:280px;display:block;margin:0 auto;}
+  header.top .brand .logo-img{height:auto;width:100%;max-width:150px;display:block;margin:0 auto;}
   header.top .tagline{font-size:13px;color:var(--blue-700);font-weight:700;letter-spacing:.2px;}
   .lang-toggle{position:absolute;top:14px;right:14px;z-index:2;background:#fff;border:1.5px solid var(--gold-500);
     color:var(--blue-900);padding:6px 12px;border-radius:999px;font-weight:800;font-size:12px;cursor:pointer;font-family:inherit;}
@@ -68,7 +68,7 @@
   .row-link{display:flex;justify-content:flex-end;margin:-6px 0 16px;}
   .row-link a{font-size:12.5px;font-weight:700;color:var(--blue-700);text-decoration:none;}
 
-  .btn-primary{width:100%;background:linear-gradient(135deg,var(--blue-700),var(--blue-900));color:#fff;border:none;
+  .btn-primary{width:100%;background:var(--gold-500);color:var(--blue-900);border:none;
     border-radius:13px;padding:14px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;}
   .btn-primary:disabled{opacity:.6;cursor:default;}
 
@@ -102,7 +102,7 @@
 
 <header class="top">
   <div class="brand">
-    <a href="index.html" aria-label="Retour à l'accueil" style="display:block;"><img class="logo-img" src="branding/mt-food-logo.svg" alt="MT Food by MT Delivery" width="316" height="85" loading="eager" style="max-width:300px;height:auto"></a>
+    <a href="index.html" aria-label="Retour à l'accueil" style="display:block;"><img class="logo-img" src="branding/mt-food-logo.svg" alt="MT Food by MT Delivery" width="150" height="96" loading="eager" style="max-width:150px;height:auto"></a>
     <div class="tagline" id="tagline">Connexion</div>
   </div>
   <button class="lang-toggle" id="langToggle" type="button">AR</button>
@@ -152,7 +152,7 @@
 </main>
 
 <script src="/form-validate.js" defer></script>
-<script src="/google-signin.js?v=3"></script>
+<script src="/google-signin.js?v=4"></script>
 <script>
 /* ============================================================
    CONFIGURATION
@@ -328,7 +328,7 @@ if (CONFIG.GOOGLE_CLIENT_ID && window.MTGoogle) {
   <span id="mtFootTxt">© 2026 MT Delivery — Tous droits réservés</span>
 </footer>
 <style>
-.mt-foot{display:flex;align-items:center;justify-content:center;gap:10px;padding:18px 16px calc(18px + env(safe-area-inset-bottom));margin-top:24px;font-size:12.5px;color:#6b7280;border-top:1px solid rgba(0,0,0,.08);}
+.mt-foot{display:flex;align-items:center;justify-content:center;gap:10px;padding:18px 16px calc(18px + env(safe-area-inset-bottom));margin-top:24px;font-size:12.5px;color:#55616B;border-top:1px solid rgba(0,0,0,.08);}
 .mt-foot-link{display:inline-flex;line-height:0;border-radius:8px;}
 .mt-foot-link img{border-radius:8px;}
 body:has(.cart-bar.show) .mt-foot,body:has(#cartBar.show) .mt-foot{margin-bottom:76px;}

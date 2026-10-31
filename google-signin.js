@@ -32,12 +32,12 @@
         ? { title: "أضف رقم هاتفك", text: "نحتاج رقمك ليتصل بك عامل التوصيل وتتابع طلباتك.", ph: "مثال: 0555 xx xx xx", ok: "حفظ ومتابعة", skip: "لاحقا", bad: "أدخل رقم هاتف جزائري صحيح (05 أو 06 أو 07).", fail: "تعذر الحفظ، أعد المحاولة." }
         : { title: "Ajoute ton numéro", text: "Il nous faut ton numéro pour que le livreur puisse te joindre et pour suivre tes commandes.", ph: "Ex : 0555 xx xx xx", ok: "Enregistrer et continuer", skip: "Plus tard", bad: "Entre un mobile algérien valide (05, 06 ou 07).", fail: "Impossible d'enregistrer, réessaie." };
       var st = document.createElement("style");
-      st.textContent = ".mtg-ov{position:fixed;inset:0;background:rgba(10,25,50,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;}" +
+      st.textContent = ".mtg-ov{position:fixed;inset:0;background:rgba(38,50,56,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;}" +
         ".mtg-box{background:#fff;border-radius:16px;max-width:380px;width:100%;padding:20px;font-family:inherit;box-shadow:0 12px 40px rgba(0,0,0,.3);}" +
-        ".mtg-box h3{margin:0 0 6px;font-size:18px;color:#0d2d5a;}.mtg-box p{margin:0 0 12px;font-size:14px;line-height:1.6;color:#4a5b70;}" +
+        ".mtg-box h3{margin:0 0 6px;font-size:18px;color:#263238;}.mtg-box p{margin:0 0 12px;font-size:14px;line-height:1.6;color:#4a5b70;}" +
         ".mtg-box input{width:100%;box-sizing:border-box;border:1.5px solid #d5deea;border-radius:10px;padding:12px;font-size:16px;font-family:inherit;}" +
         ".mtg-box button{width:100%;margin-top:10px;border-radius:10px;padding:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;}" +
-        ".mtg-go{background:#1d4e9e;color:#fff;border:0;}.mtg-skip{background:#fff;color:#4a5b70;border:1.5px solid #d5deea;}.mtg-box button:disabled{opacity:.6;}" +
+        ".mtg-go{background:#F7B500;color:#263238;border:0;}.mtg-skip{background:#fff;color:#4a5b70;border:1.5px solid #d5deea;}.mtg-box button:disabled{opacity:.6;}" +
         ".mtg-err{color:#b3261e;font-size:13px;font-weight:700;margin-top:8px;min-height:1em;}";
       document.head.appendChild(st);
       var ov = document.createElement("div"); ov.className = "mtg-ov"; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true");
