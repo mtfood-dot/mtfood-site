@@ -4,12 +4,12 @@
 // JAMAIS mis en cache : toujours réseau, pour ne jamais servir des
 // commandes/statuts périmés.
 
-const CACHE_NAME = "mtdelivery-v12";
+const CACHE_NAME = "mtdelivery-v13";
 const CORE_ASSETS = [
   "/index.html",
   "/menu.html",
   "/offline.html",
-  "/logo.png",
+  "/branding/mt-food-logo-v3.png",
   "/manifest.json",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
