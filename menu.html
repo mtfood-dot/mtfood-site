@@ -304,6 +304,15 @@
   .resto-head .rn{font-size:22px;font-weight:800;color:var(--blue-900);line-height:1.2;}
   .resto-head .rc{font-size:13px;color:var(--muted);margin-top:3px;}
   .no-result{max-width:960px;margin:24px auto;padding:0 16px;text-align:center;color:var(--muted);font-size:14.5px;display:none;}
+  /* Annonce temporaire : lancement à Bougara (masquée dans la fiche d'un restaurant, retirée automatiquement après le 15 novembre 2026) */
+  .launch-notice{max-width:960px;margin:12px auto 0;padding:0 16px;}
+  .launch-notice .ln-card{background:var(--card,#fff);border-radius:18px;overflow:hidden;box-shadow:0 6px 20px -10px rgba(38,50,56,.35);border:1px solid var(--border,#e3e8ef);}
+  .launch-notice picture,.launch-notice img{display:block;width:100%;height:auto;}
+  .launch-notice .ln-text{padding:12px 16px 14px;color:#263238;}
+  .launch-notice .ln-badge{display:inline-block;background:#F7B500;color:#263238;font-weight:800;font-size:12px;letter-spacing:.3px;text-transform:uppercase;padding:3px 10px;border-radius:999px;margin-bottom:6px;}
+  .launch-notice .ln-title{margin:0;font-size:17px;line-height:1.3;font-weight:800;color:#263238;}
+  .launch-notice .ln-sub{margin:4px 0 0;font-size:14px;line-height:1.45;color:#55616B;}
+  body.in-resto .launch-notice{display:none;}
   body:not(.in-resto) .resto-head{display:none;}
   body.in-resto header.top, body.in-resto .boost-box, body.in-resto .promo-section, body.in-resto .join-section{display:none !important;}
   body:not(.in-resto) #grid{display:none;}
@@ -631,6 +640,21 @@ if ("serviceWorker" in navigator) {
   <button class="lang-toggle" id="langToggle" type="button">AR</button>
 </header>
 
+<section class="launch-notice" id="launchNotice" aria-labelledby="launchNoticeTitle" data-expire="2026-11-16T00:00:00+01:00">
+  <div class="ln-card">
+    <picture>
+      <source type="image/webp" srcset="branding/MT-Food-lancement-Bougara-15-novembre-2026-1000.webp 1000w, branding/MT-Food-lancement-Bougara-15-novembre-2026.webp 2009w" sizes="(max-width:960px) calc(100vw - 32px), 928px">
+      <img src="branding/MT-Food-lancement-Bougara-15-novembre-2026.jpg" srcset="branding/MT-Food-lancement-Bougara-15-novembre-2026-1000.jpg 1000w, branding/MT-Food-lancement-Bougara-15-novembre-2026.jpg 2009w" sizes="(max-width:960px) calc(100vw - 32px), 928px" width="2009" height="783" decoding="async" fetchpriority="high"
+           alt="MT Food by MT Delivery, lancement prochain à Bougara, Blida, le 15 novembre 2026. Livraison de burgers, pizzas, salades et frites.">
+    </picture>
+    <div class="ln-text">
+      <span class="ln-badge" id="launchBadge">Bientôt disponible</span>
+      <h2 class="ln-title" id="launchNoticeTitle">Lancement prochain à Bougara, Blida — 15 novembre 2026</h2>
+      <p class="ln-sub" id="launchSub">MT Food arrive à Bougara. Les commandes ne sont pas encore ouvertes sur place : le service sera disponible à partir du 15 novembre 2026.</p>
+    </div>
+  </div>
+</section>
+
 <div id="pendingBar" style="display:none;background:#FEF3D4;border:1px solid #F7B500;color:#263238;margin:10px 14px;padding:10px 12px;border-radius:10px;font-size:14px;line-height:1.4;"></div>
 
 <div class="resto-head" id="restoHead">
@@ -921,6 +945,9 @@ const I18N = {
     boostTitle: "À la une",
     boostTag: "Sponsorisé",
     toggleLabel: "AR",
+    launchBadge: "Bientôt disponible",
+    launchTitle: "Lancement prochain à Bougara, Blida — 15 novembre 2026",
+    launchSub: "MT Food arrive à Bougara. Les commandes ne sont pas encore ouvertes sur place : le service sera disponible à partir du 15 novembre 2026.",
     tagline: "Commandez, on vous livre",
     contactUs: "Contactez-nous",
     headJoinPartner: "Devenir partenaire",
@@ -1089,6 +1116,9 @@ const I18N = {
     boostTitle: "في الواجهة",
     boostTag: "إعلان",
     toggleLabel: "FR",
+    launchBadge: "قريبًا",
+    launchTitle: "إطلاق قريب في بوقرة، البليدة — 15 نوفمبر 2026",
+    launchSub: "ستصل خدمة MT Food إلى بوقرة. الطلبات غير مفتوحة بعد هناك: ستكون الخدمة متاحة ابتداءً من 15 نوفمبر 2026.",
     tagline: "اطلب ونوصلك",
     contactUs: "اتصل بنا",
     headJoinPartner: "كن شريكًا",
@@ -1320,6 +1350,7 @@ function normalizeForZoneSearch(s) {
 /* ============================================================
    LANGUE (FR / AR)
    ============================================================ */
+(function(){ var n = document.getElementById("launchNotice"); if (n && Date.now() >= Date.parse(n.getAttribute("data-expire"))) n.remove(); })();
 function applyLanguage() {
   const html = document.documentElement;
   html.lang = LANG;
@@ -1327,6 +1358,7 @@ function applyLanguage() {
 
   $("langToggle").textContent = t("toggleLabel");
   $("tagline").textContent = t("tagline");
+  if ($("launchNotice")) { $("launchBadge").textContent = t("launchBadge"); $("launchNoticeTitle").textContent = t("launchTitle"); $("launchSub").textContent = t("launchSub"); }
   setHeaderPhone();
   $("footerNote").textContent = t("footerNote");
   $("boostBoxTitle").textContent = t("boostTitle");
