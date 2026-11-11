@@ -325,6 +325,8 @@
   .launch-notice .ln-title{margin:0;font-size:17px;line-height:1.3;font-weight:800;color:#263238;}
   .launch-notice .ln-sub{margin:4px 0 0;font-size:14px;line-height:1.45;color:#55616B;}
   body.in-resto .launch-notice{display:none;}
+  .launch-notice .ln-notify{display:inline-flex;align-items:center;min-height:44px;box-sizing:border-box;margin-top:10px;padding:10px 18px;border-radius:999px;background:#F7B500;color:#263238;font-weight:800;font-size:14px;text-decoration:none;}
+  .launch-notice .ln-notify:active{background:#DFA300;}
   /* --- Améliorations accueil (nov. 2026) --- */
   .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
   header.top .account-link-top{min-height:44px;box-sizing:border-box;}
@@ -690,6 +692,7 @@ if ("serviceWorker" in navigator) {
       <span class="ln-badge" id="launchBadge">Bientôt disponible</span>
       <h2 class="ln-title" id="launchNoticeTitle">Lancement prochain à Bougara, Blida — 15 novembre 2026</h2>
       <p class="ln-sub" id="launchSub">MT Food arrive à Bougara. Les commandes ne sont pas encore ouvertes sur place : le service sera disponible à partir du 15 novembre 2026.</p>
+      <a class="ln-notify" id="launchNotify" target="_blank" rel="noopener" href="https://wa.me/213560788497">Préviens-moi sur WhatsApp</a>
     </div>
   </div>
 </section>
@@ -986,6 +989,7 @@ const I18N = {
     toggleLabel: "AR",
     launchBadge: "Bientôt disponible",
     launchTitle: "Lancement prochain à Bougara, Blida — 15 novembre 2026",
+    launchNotify: "Préviens-moi sur WhatsApp", launchNotifyMsg: "Bonjour MT Food, je suis à Bougara. Prévenez-moi dès l'ouverture du service le 15 novembre.",
     launchSub: "MT Food arrive à Bougara. Les commandes ne sont pas encore ouvertes sur place : le service sera disponible à partir du 15 novembre 2026.",
     tagline: "Commandez, on vous livre",
     contactUs: "Contactez-nous",
@@ -1157,6 +1161,7 @@ const I18N = {
     toggleLabel: "FR",
     launchBadge: "قريبًا",
     launchTitle: "إطلاق قريب في بوقرة، البليدة — 15 نوفمبر 2026",
+    launchNotify: "أعلمني عبر واتساب", launchNotifyMsg: "مرحبا MT Food، أنا من بوقرة. أعلموني عند انطلاق الخدمة يوم 15 نوفمبر.",
     launchSub: "ستصل خدمة MT Food إلى بوقرة. الطلبات غير مفتوحة بعد هناك: ستكون الخدمة متاحة ابتداءً من 15 نوفمبر 2026.",
     tagline: "اطلب ونوصلك",
     contactUs: "اتصل بنا",
@@ -1397,7 +1402,7 @@ function applyLanguage() {
 
   $("langToggle").textContent = t("toggleLabel");
   $("tagline").textContent = t("tagline");
-  if ($("launchNotice")) { $("launchBadge").textContent = t("launchBadge"); $("launchNoticeTitle").textContent = t("launchTitle"); $("launchSub").textContent = t("launchSub"); }
+  if ($("launchNotice")) { if ($("launchNotify")) { $("launchNotify").textContent = t("launchNotify"); $("launchNotify").href = "https://wa.me/" + CONFIG.WHATSAPP_NUMBER + "?text=" + encodeURIComponent(t("launchNotifyMsg")); } $("launchBadge").textContent = t("launchBadge"); $("launchNoticeTitle").textContent = t("launchTitle"); $("launchSub").textContent = t("launchSub"); }
   setHeaderPhone();
   $("footerNote").textContent = t("footerNote");
   $("boostBoxTitle").textContent = t("boostTitle");
@@ -3423,5 +3428,6 @@ var ar=l==="ar",t=document.getElementById("mtFootTxt"),a=document.getElementById
 if(t)t.textContent=ar?"© 2026 MT Food by MT Delivery — جميع الحقوق محفوظة":"© 2026 MT Food by MT Delivery — Tous droits réservés";
 if(a)a.title=ar?"العودة إلى موقع MT Delivery":"Retour au site MT Delivery";})();
 </script>
+<script src="/wa-float.js?v=1" defer></script>
 </body>
 </html>
