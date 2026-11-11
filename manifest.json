@@ -1,7 +1,7 @@
 {
   "name": "MT Food - by MT Delivery",
   "short_name": "MT Food",
-  "description": "Commande en ligne de repas, fast food et gâteaux à Meftah - paiement à la livraison",
+  "description": "Commande en ligne de repas, fast food et gâteaux à Blida - paiement à la livraison",
   "id": "/menu.html",
   "start_url": "/menu.html",
   "scope": "/",
