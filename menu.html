@@ -13,7 +13,19 @@
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
-<title>MT Delivery — Menu</title>
+<title>MT Food — Commandez, on vous livre | Meftah, Blida</title>
+<meta name="description" content="MT Food by MT Delivery : commandez pizzas, burgers, tacos et plats des restaurants de Meftah et de la région de Blida. Livraison rapide, paiement à la livraison.">
+<link rel="canonical" href="https://food.mtdelivery.dz/menu">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="MT Food">
+<meta property="og:locale" content="fr_DZ">
+<meta property="og:url" content="https://food.mtdelivery.dz/menu">
+<meta property="og:title" content="MT Food — Commandez, on vous livre">
+<meta property="og:description" content="Pizzas, burgers, tacos et plats des restaurants de Meftah et de la région de Blida. Livraison rapide, paiement à la livraison.">
+<meta property="og:image" content="https://food.mtdelivery.dz/branding/og-mt-food.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://ubabekqbkapjulnwftqe.supabase.co">
 <link rel="preconnect" href="https://script.google.com">
 <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
@@ -313,6 +325,32 @@
   .launch-notice .ln-title{margin:0;font-size:17px;line-height:1.3;font-weight:800;color:#263238;}
   .launch-notice .ln-sub{margin:4px 0 0;font-size:14px;line-height:1.45;color:#55616B;}
   body.in-resto .launch-notice{display:none;}
+  /* --- Améliorations accueil (nov. 2026) --- */
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+  header.top .account-link-top{min-height:44px;box-sizing:border-box;}
+  .lang-toggle{min-height:44px;min-width:48px;box-sizing:border-box;}
+  .fchip{min-height:44px;box-sizing:border-box;}
+  .footer-legal-row{line-height:1;}
+  .footer-legal-row a{display:inline-block;padding:16px 4px;font-size:12.5px;}
+  #addrBtn{min-height:44px;}
+  .mt-foot-link{min-width:44px;min-height:44px;align-items:center;justify-content:center;}
+  .resto-card .ropen{display:inline-block;font-size:11.5px;font-weight:800;color:#17663A;background:#E3F3E8;border-radius:999px;padding:2px 9px;margin-top:5px;align-self:flex-start;}
+  .resto-card .ropen i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#1E8E4E;margin-inline-end:5px;vertical-align:1px;}
+  .sk-card{display:flex;background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;min-height:112px;}
+  .sk-card .sk-cov{flex:0 0 112px;}
+  .sk-card .sk-meta{flex:1;padding:18px 14px;display:flex;flex-direction:column;gap:10px;justify-content:center;}
+  .sk-card .sk-l{height:13px;border-radius:7px;}
+  .sk-card .sk-cov,.sk-card .sk-l{background:#E8EEF6;animation:skPulse 1.2s ease-in-out infinite;}
+  @keyframes skPulse{0%,100%{opacity:1}50%{opacity:.45}}
+  @media(prefers-reduced-motion:reduce){.sk-card .sk-cov,.sk-card .sk-l{animation:none;}}
+  body.in-resto .sk-card{display:none;}
+  @media(min-width:760px){
+    .launch-notice .ln-card{display:flex;align-items:center;}
+    .launch-notice picture{flex:0 0 44%;max-width:44%;}
+    .launch-notice .ln-text{flex:1;padding:14px 22px;}
+    .launch-notice .ln-title{font-size:19px;}
+  }
+
   body:not(.in-resto) .resto-head{display:none;}
   body.in-resto header.top, body.in-resto .boost-box, body.in-resto .promo-section, body.in-resto .join-section{display:none !important;}
   body:not(.in-resto) #grid{display:none;}
@@ -631,6 +669,7 @@ if ("serviceWorker" in navigator) {
 <header class="top">
   <div class="brand">
     <a href="index.html" aria-label="Retour à l'accueil" style="display:block;"><img class="logo-img" src="branding/mt-food-logo-v3.png" alt="MT Food by MT Delivery" width="190" height="95" loading="eager" style="max-width:190px;height:auto"></a>
+    <h1 class="sr-only" id="pageH1">MT Food — livraison de repas à Meftah et Blida</h1>
     <div class="tagline" id="tagline">Commandez, on vous livre</div>
   </div>
   <div class="header-links">
@@ -673,7 +712,7 @@ if ("serviceWorker" in navigator) {
 <div class="filters" id="filters"></div>
 
 <main>
-  <div id="restoList" class="resto-list"></div>
+  <div id="restoList" class="resto-list" aria-busy="true"><div class="sk-card" aria-hidden="true"><span class="sk-cov"></span><span class="sk-meta"><span class="sk-l" style="width:55%"></span><span class="sk-l" style="width:80%"></span><span class="sk-l" style="width:40%"></span></span></div><div class="sk-card" aria-hidden="true"><span class="sk-cov"></span><span class="sk-meta"><span class="sk-l" style="width:55%"></span><span class="sk-l" style="width:80%"></span><span class="sk-l" style="width:40%"></span></span></div><div class="sk-card" aria-hidden="true"><span class="sk-cov"></span><span class="sk-meta"><span class="sk-l" style="width:55%"></span><span class="sk-l" style="width:80%"></span><span class="sk-l" style="width:40%"></span></span></div></div>
   <div id="grid" class="grid"></div>
   <div id="noResult" class="no-result"></div>
   <div id="emptyMsg" class="empty-msg" style="display:none;"></div>
@@ -708,7 +747,7 @@ if ("serviceWorker" in navigator) {
   </div>
 </div>
 
-<div class="footer-note" id="footerNote">MT Delivery · Meftah, Blida · Paiement à la livraison uniquement</div>
+<div class="footer-note" id="footerNote">MT Food by MT Delivery · Meftah, Blida · Paiement à la livraison uniquement</div>
 <div class="footer-legal-row" id="footerLegalRow">
   <a href="cgu.html" id="footerCguLink">Conditions d'utilisation</a> · <a href="confidentialite.html" id="footerPrivacyLink">Confidentialité</a> · <a href="devenir-partenaire.html" id="footerJoinLink">Devenir partenaire</a> · <a href="inscription-livreur.html" id="footerDriverLink">Devenir livreur</a>
 </div>
@@ -952,7 +991,7 @@ const I18N = {
     contactUs: "Contactez-nous",
     headJoinPartner: "Devenir partenaire",
     headJoinDriver: "Devenir livreur",
-    footerNote: "MT Delivery · Meftah, Blida · Paiement à la livraison uniquement",
+    footerNote: "MT Food by MT Delivery · Meftah, Blida · Paiement à la livraison uniquement",
     driverLinkTop: "🛵 Devenir livreur",
     driverSpaceLinkTop: "🔑 Espace livreur",
     partnerLinkTop: "🤝 Devenir partenaire",
@@ -1005,7 +1044,7 @@ const I18N = {
     reorderMissing: "{n} plat(s) de cette commande ne sont plus disponibles et n'ont pas été ajoutés.",
     menuSoon: "Menu bientôt disponible",
     priceFrom: "Dès {p} DA",
-    closedShort: "Fermé", closedTemp: "Fermé temporairement", closedAt: "Fermé · ouvre à {at}", closedTomorrow: "Fermé · ouvre demain à {at}", closedDay: "Fermé · ouvre {day} à {at}",
+    openNowTag: "Ouvert", closedShort: "Fermé", closedTemp: "Fermé temporairement", closedAt: "Fermé · ouvre à {at}", closedTomorrow: "Fermé · ouvre demain à {at}", closedDay: "Fermé · ouvre {day} à {at}",
     closedOrder: "Ce restaurant est fermé pour le moment : tu peux voir le menu, mais pas commander.",
     preBanner: "Précommande possible : ta commande sera envoyée au restaurant dès son ouverture ({when}).",
     preNote: "🕒 Précommande : le restaurant est fermé. Ta commande lui sera envoyée dès son ouverture ({when}). Tu peux l'annuler d'ici là.",
@@ -1123,7 +1162,7 @@ const I18N = {
     contactUs: "اتصل بنا",
     headJoinPartner: "كن شريكًا",
     headJoinDriver: "كن موصّلًا",
-    footerNote: "إم تي دليفري · مفتاح، البليدة · الدفع عند الاستلام فقط",
+    footerNote: "MT Food by MT Delivery · مفتاح، البليدة · الدفع عند الاستلام فقط",
     driverLinkTop: "🛵 كن موصلاً",
     driverSpaceLinkTop: "🔑 مساحة الموصل",
     partnerLinkTop: "🤝 كن شريكاً",
@@ -1176,7 +1215,7 @@ const I18N = {
     reorderMissing: "{n} من أطباق هذا الطلب لم تعد متوفرة ولم تتم إضافتها.",
     menuSoon: "القائمة قريبًا",
     priceFrom: "ابتداءً من {p} دج",
-    closedShort: "مغلق", closedTemp: "مغلق مؤقتًا", closedAt: "مغلق · يفتح على {at}", closedTomorrow: "مغلق · يفتح غدًا على {at}", closedDay: "مغلق · يفتح {day} على {at}",
+    openNowTag: "مفتوح", closedShort: "مغلق", closedTemp: "مغلق مؤقتًا", closedAt: "مغلق · يفتح على {at}", closedTomorrow: "مغلق · يفتح غدًا على {at}", closedDay: "مغلق · يفتح {day} على {at}",
     closedOrder: "هذا المطعم مغلق حاليًا: يمكنك رؤية القائمة لكن لا يمكنك الطلب.",
     preBanner: "الطلب المسبق متاح: سيُرسل طلبكم إلى المطعم فور فتحه ({when}).",
     preNote: "🕒 طلب مسبق: المطعم مغلق حاليًا. سيُرسل طلبكم إليه فور فتحه ({when}). يمكنكم إلغاؤه قبل ذلك.",
@@ -1748,6 +1787,7 @@ function jsonpRequest(params, timeoutMs = 15000) {
 function showEmpty(key) {
   $("grid").innerHTML = "";
   $("tabs").innerHTML = "";
+  $("restoList").innerHTML = ""; $("restoList").removeAttribute("aria-busy");
   EMPTY_MSG_KEY = key;
   const el = $("emptyMsg");
   el.style.display = "block";
@@ -2018,6 +2058,11 @@ function loadRestoInfo() {
     applyRestoInfo(res);
   }).catch(() => {});
 }
+function openBadgeHtml(r) {
+  const v = RESTO_OPEN[norm(r.name || "")];
+  if (r.soon || !v || v.open !== true || restoOutOfZone(r.name)) return "";
+  return '<span class="ropen"><i aria-hidden="true"></i>' + escapeHtml(t("openNowTag")) + '</span>';
+}
 function etaCardHtml(name) {
   if (restoClosedInfo(name)) return '<div class="rx"><span aria-hidden="true">' + (restoPre(name) ? "🕒" : "🔒") + "</span> " + escapeHtml(closedText(name)) + (restoPre(name) ? " · " + escapeHtml(t("preMenuTag")) : "") + "</div>";
   const tx = etaText(name);
@@ -2068,7 +2113,7 @@ function setViewChrome() {
 function renderRestoBar() {
   if (ACTIVE_RESTO !== null && !currentResto()) ACTIVE_RESTO = null;
   setViewChrome();
-  const box = $("restoList");
+  const box = $("restoList"); box.removeAttribute("aria-busy");
   if (ACTIVE_RESTO !== null) { box.innerHTML = ""; return; }
   const res = homeResults();
   renderFilters();
@@ -2080,7 +2125,7 @@ function renderRestoBar() {
       '<span class="rcover">' + coverInner(r) + (restoCoverSrc(r).logo ? "" : '<span class="logo-circle rbadge">' + logoHtml(r.name) + '</span>') + '</span>' +
       '<span class="meta"><div class="rn">' + escapeHtml(r.name) + '</div>' +
       (r.soon ? '<div class="rs">' + escapeHtml(t('menuSoon')) + '</div>' : '<div class="rc">' + escapeHtml(cuisinesText(r)) + (minPrice(r) ? " · " + fromPriceHtml(r) : "") + '</div>') +
-      (restoOutOfZone(r.name) ? '<div class="rx">' + escapeHtml(t("outZoneCard")) + "</div>" : etaCardHtml(r.name)) + hint + '</span></button>';
+      (restoOutOfZone(r.name) ? '<div class="rx">' + escapeHtml(t("outZoneCard")) + "</div>" : etaCardHtml(r.name)) + openBadgeHtml(r) + hint + '</span></button>';
   }).join("");
   bindLogoFallback(box); bindCoverFallback(box);
   box.querySelectorAll(".resto-card").forEach(btn => btn.addEventListener("click", () => {
@@ -3364,7 +3409,7 @@ function escapeAttr(s) { return escapeHtml(s); }
 </script>
 <footer class="mt-foot" id="mtFoot">
   <a href="https://mtdelivery.pages.dev" class="mt-foot-link" target="_blank" rel="noopener" id="mtFootLink"><img src="favicon-48.png" width="28" height="28" alt="MT Delivery"></a>
-  <span id="mtFootTxt">© 2026 MT Delivery — Tous droits réservés</span>
+  <span id="mtFootTxt">© 2026 MT Food by MT Delivery — Tous droits réservés</span>
 </footer>
 <style>
 .mt-foot{display:flex;align-items:center;justify-content:center;gap:10px;padding:18px 16px calc(18px + env(safe-area-inset-bottom));margin-top:24px;font-size:12.5px;color:#55616B;border-top:1px solid rgba(0,0,0,.08);}
@@ -3375,7 +3420,7 @@ body:has(.cart-bar.show) .mt-foot,body:has(#cartBar.show) .mt-foot{margin-bottom
 <script>
 (function(){var l="fr";try{l=localStorage.getItem("mtd_lang")||"fr";}catch(e){}
 var ar=l==="ar",t=document.getElementById("mtFootTxt"),a=document.getElementById("mtFootLink");
-if(t)t.textContent=ar?"© 2026 MT Delivery — جميع الحقوق محفوظة":"© 2026 MT Delivery — Tous droits réservés";
+if(t)t.textContent=ar?"© 2026 MT Food by MT Delivery — جميع الحقوق محفوظة":"© 2026 MT Food by MT Delivery — Tous droits réservés";
 if(a)a.title=ar?"العودة إلى موقع MT Delivery":"Retour au site MT Delivery";})();
 </script>
 </body>
