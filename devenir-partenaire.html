@@ -77,6 +77,7 @@ box-shadow:var(--shadow-sm);border:1px solid var(--border);text-align:center;}
 box-shadow:var(--shadow-sm);border:1px solid var(--border);}
 
 .field{margin-bottom:16px;}
+#lblPos::after{content:" *";color:#b3261e;font-weight:800;}
 .field label{display:block;font-size:12.5px;font-weight:700;color:var(--blue-800);margin-bottom:6px;}
 .field input, .field select, .field textarea{
 width:100%;padding:12px 13px;border:1.5px solid var(--border);border-radius:10px;font-size:14.5px;
@@ -173,17 +174,17 @@ if ("serviceWorker" in navigator) {
         <button type="button" id="posBtn" style="width:100%;padding:12px;border:1.5px solid var(--blue-600);background:#fff;color:var(--blue-800);border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;"></button>
         <div id="posMsg" style="font-size:12.5px;margin-top:6px;color:var(--muted,#697a96);"></div>
       </div>
-      <div class="field">
+      <div class="field" hidden>
         <label id="lblRayon" for="rayon">Rayon de livraison souhaité</label>
-        <select id="rayon"><option value="3">3 km</option><option value="5" selected>5 km</option><option value="7">7 km</option></select>
+        <select id="rayon"><option value="3">3 km</option><option value="5">5 km</option><option value="7">7 km</option><option value="15" selected>15 km</option></select>
         <div id="rayonHint" style="font-size:12px;margin-top:5px;color:var(--muted,#697a96);"></div>
       </div>
-      <div class="field">
+      <div class="field" hidden>
         <label id="lblZone" for="zone">Zone de livraison</label>
         <select id="zone" data-required>
           <option value="Meftah Centre" id="optCentre">Meftah Centre</option>
           <option value="Meftah Dehors" id="optDehors">Meftah Dehors</option>
-          <option value="Les deux" id="optLesDeux">Les deux</option>
+          <option value="Les deux" id="optLesDeux" selected>Les deux</option>
         </select>
       </div>
       <div class="field">
@@ -196,8 +197,11 @@ if ("serviceWorker" in navigator) {
         <div class="hint" id="emailHint" style="font-size:12px;color:var(--muted);margin-top:4px;">Pour recevoir vos accès par e-mail une fois la demande acceptée.</div>
       </div>
       <div class="field">
-        <label id="lblHoraires" for="horaires">Horaires d'ouverture (optionnel)</label>
-        <input type="text" id="horaires" placeholder="Ex: 10h - 22h">
+        <label id="lblHoraires" for="hOuv">Horaires d'ouverture</label>
+        <div style="display:flex;gap:10px;">
+          <div style="flex:1;min-width:0;"><div id="lblOuv" style="font-size:12px;font-weight:700;margin-bottom:4px;color:var(--muted,#55616B);">Ouverture</div><select id="hOuv" data-required></select></div>
+          <div style="flex:1;min-width:0;"><div id="lblFerm" style="font-size:12px;font-weight:700;margin-bottom:4px;color:var(--muted,#55616B);">Fermeture</div><select id="hFerm" data-required></select></div>
+        </div>
       </div>
       <div class="field">
         <label id="lblDescription" for="description">Description (optionnel)</label>
@@ -237,14 +241,14 @@ const I18N = {
     optAutre: "Autre",
     lblAdresse: "Adresse",
     lblVille: "Ville", villeChoose: "Choisis ta ville", villeOther: "Autre",
-    lblPos: "Position de l'établissement (recommandé)", posBtn: "📍 Utiliser ma position actuelle", posOk: "✓ Position enregistrée.", posWait: "Localisation…", posFail: "Position non disponible : le service client te contactera pour la confirmer.", posHint: "Appuie ici quand tu es dans ton établissement.",
+    lblPos: "Position GPS de l'établissement", posRequired: "La position GPS de l'établissement est obligatoire. Appuie sur « Utiliser ma position actuelle » quand tu es dans ton établissement et autorise la localisation.", lblOuv: "Ouverture", lblFerm: "Fermeture", hChoose: "Choisir", hoursRequired: "Choisis l'heure d'ouverture et l'heure de fermeture.", posBtn: "📍 Utiliser ma position actuelle", posOk: "✓ Position enregistrée.", posWait: "Localisation…", posFail: "Position non disponible. Active la localisation de ton téléphone, autorise-la pour ce site, puis réessaie.", posHint: "Appuie ici quand tu es dans ton établissement.",
     lblRayon: "Rayon de livraison souhaité", rayonHint: "Le service client confirme le rayon définitif.", villeRequired: "Choisis ta ville.",
     lblZone: "Zone de livraison",
     optCentre: "Meftah Centre",
     optDehors: "Meftah Dehors",
     optLesDeux: "Les deux",
     lblTelephone: "Numéro de téléphone",
-    lblHoraires: "Horaires d'ouverture (optionnel)",
+    lblHoraires: "Horaires d'ouverture",
     horairesPlaceholder: "Ex: 10h - 22h",
     lblDescription: "Description (optionnel)",
     submitBtn: "Envoyer ma demande",
@@ -273,14 +277,14 @@ const I18N = {
     optAutre: "أخرى",
     lblAdresse: "العنوان",
     lblVille: "المدينة", villeChoose: "اختر مدينتك", villeOther: "أخرى",
-    lblPos: "موقع المؤسسة (موصى به)", posBtn: "📍 استخدام موقعي الحالي", posOk: "✓ تم حفظ الموقع.", posWait: "جارٍ تحديد الموقع…", posFail: "الموقع غير متاح: سيتصل بك خدمة الزبائن لتأكيده.", posHint: "اضغط هنا وأنت داخل مؤسستك.",
+    lblPos: "موقع المؤسسة (GPS)", posRequired: "موقع المؤسسة إلزامي. اضغط على «استخدام موقعي الحالي» وأنت داخل مؤسستك واسمح بتحديد الموقع.", lblOuv: "الفتح", lblFerm: "الإغلاق", hChoose: "اختر", hoursRequired: "اختر وقت الفتح ووقت الإغلاق.", posBtn: "📍 استخدام موقعي الحالي", posOk: "✓ تم حفظ الموقع.", posWait: "جارٍ تحديد الموقع…", posFail: "الموقع غير متاح. فعّل تحديد الموقع في هاتفك واسمح به لهذا الموقع ثم أعد المحاولة.", posHint: "اضغط هنا وأنت داخل مؤسستك.",
     lblRayon: "نطاق التوصيل المطلوب", rayonHint: "خدمة الزبائن تؤكد النطاق النهائي.", villeRequired: "اختر مدينتك.",
     lblZone: "منطقة التوصيل",
     optCentre: "مفتاح المركز",
     optDehors: "مفتاح خارج المركز",
     optLesDeux: "كلاهما",
     lblTelephone: "رقم الهاتف",
-    lblHoraires: "أوقات العمل (اختياري)",
+    lblHoraires: "أوقات العمل",
     horairesPlaceholder: "مثال: 10 صباحاً - 22 مساءً",
     lblDescription: "وصف (اختياري)",
     submitBtn: "إرسال طلبي",
@@ -302,6 +306,19 @@ let LANG = localStorage.getItem("mtd_partner_lang") || "fr";
 
 function t(key){ return (I18N[LANG] && I18N[LANG][key]) || I18N.fr[key] || ""; }
 
+function fillHours(){
+  ["hOuv","hFerm"].forEach(function(id){
+    const el = document.getElementById(id); if(!el) return;
+    const cur = el.value;
+    let h = '<option value="">' + t("hChoose") + '</option>';
+    for(let m = 0; m < 24*60; m += 30){
+      const hh = Math.floor(m/60), mm = m % 60;
+      const v = hh + "h" + (mm ? "30" : "");
+      h += '<option value="' + v + '">' + (hh < 10 ? "0" : "") + hh + ":" + (mm ? "30" : "00") + '</option>';
+    }
+    el.innerHTML = h; el.value = cur;
+  });
+}
 function applyLanguage(){
   document.documentElement.lang = LANG;
   document.documentElement.dir = LANG === "ar" ? "rtl" : "ltr";
@@ -334,7 +351,7 @@ function applyLanguage(){
   document.getElementById("lblEmail").textContent = t("lblEmail");
   document.getElementById("emailHint").textContent = t("emailHint");
   document.getElementById("lblHoraires").textContent = t("lblHoraires");
-  document.getElementById("horaires").placeholder = t("horairesPlaceholder");
+  document.getElementById("lblOuv").textContent = t("lblOuv"); document.getElementById("lblFerm").textContent = t("lblFerm"); fillHours();
   document.getElementById("lblDescription").textContent = t("lblDescription");
   document.getElementById("submitBtn").textContent = t("submitBtn");
   document.getElementById("successTitle").textContent = t("successTitle");
@@ -381,6 +398,7 @@ document.addEventListener("DOMContentLoaded", function(){
   applyLanguage();
   document.getElementById("langToggle").addEventListener("click", toggleLanguage);
 
+  fillHours();
   document.getElementById("posBtn").addEventListener("click", function(){
     const msg = document.getElementById("posMsg");
     if(!navigator.geolocation){ msg.textContent = t("posFail"); return; }
@@ -388,6 +406,7 @@ document.addEventListener("DOMContentLoaded", function(){
     navigator.geolocation.getCurrentPosition(function(pos){
       POS = { lat: pos.coords.latitude, lng: pos.coords.longitude };
       document.getElementById("posBtn").textContent = t("posOk");
+      const eb = document.getElementById("errorBox"); if(eb){ eb.classList.remove("show"); eb.textContent = ""; }
       msg.textContent = "";
     }, function(){ POS = null; msg.textContent = t("posFail"); }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 });
   });
@@ -406,7 +425,10 @@ document.addEventListener("DOMContentLoaded", function(){
     const adresse = document.getElementById("adresse").value.trim();
     const zone = document.getElementById("zone").value;
     const telephone = document.getElementById("telephone").value.trim();
-    const horaires = document.getElementById("horaires").value.trim();
+    const hO = document.getElementById("hOuv").value, hF = document.getElementById("hFerm").value;
+    if(!hO || !hF){ errorBox.textContent = t("hoursRequired"); errorBox.classList.add("show"); return; }
+    if(!POS){ errorBox.textContent = t("posRequired"); errorBox.classList.add("show"); document.getElementById("posBtn").scrollIntoView({block:"center"}); return; }
+    const horaires = hO + " - " + hF;
     const description = document.getElementById("description").value.trim();
     const email = document.getElementById("email").value.trim();
     if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
@@ -440,7 +462,9 @@ document.addEventListener("DOMContentLoaded", function(){
         try{
           const g = { action: "partnerGeoSubmit", telephone: telephone, ville: ville, rayon: document.getElementById("rayon").value };
           if(POS){ g.lat = POS.lat.toFixed(6); g.lng = POS.lng.toFixed(6); }
-          await apiGet(g);
+          let gr = null;
+          try{ gr = await apiGet(g); }catch(_){}
+          if(!gr || !gr.success){ try{ await apiGet(g); }catch(_){} }
         }catch(_){}
         document.getElementById("formCard").classList.add("hidden");
         document.getElementById("successCard").classList.remove("hidden");
