@@ -777,7 +777,7 @@ const I18N = {
     evalDoneAccept: "Demande validée ✅",
     evalDoneRefuse: "Demande refusée.",
     evalPinGenerated: "Code PIN créé : ",
-    evalPinKept: "Le livreur utilise le code PIN choisi à l'inscription (il n'est pas affiché ni envoyé).",
+    evalPinKept: "Le livreur a déjà un code PIN (il n'est pas affiché ni envoyé).",
     evalEmailSent: "E-mail envoyé à ",
     evalEmailNone: "Pas d'adresse e-mail : envoie le message par WhatsApp.",
     evalEmailFailed: "L'e-mail n'a pas pu partir : envoie le message par WhatsApp.",
@@ -1088,7 +1088,7 @@ const I18N = {
     evalDoneAccept: "تم قبول الطلب ✅",
     evalDoneRefuse: "تم رفض الطلب.",
     evalPinGenerated: "تم إنشاء رمز PIN: ",
-    evalPinKept: "يستخدم السائق رمز PIN الذي اختاره عند التسجيل (لا يُعرض ولا يُرسل).",
+    evalPinKept: "لدى السائق رمز PIN مسبقًا (لا يُعرض ولا يُرسل).",
     evalEmailSent: "تم إرسال البريد الإلكتروني إلى ",
     evalEmailNone: "لا يوجد بريد إلكتروني: أرسل الرسالة عبر واتساب.",
     evalEmailFailed: "تعذر إرسال البريد الإلكتروني: أرسل الرسالة عبر واتساب.",
@@ -3043,8 +3043,9 @@ function evalAcceptMsg(kind, nom, tel, pin) {
   const isP = kind === "partner";
   const app = isP ? "MT Food Partenaire" : "MT Food Livreur";
   const appAr = isP ? "MT Food Partenaire" : "MT Food Livreur";
-  const pinFr = isP ? pin : "celui que vous avez choisi à l'inscription";
-  const pinAr = isP ? pin : "الذي اخترتموه عند التسجيل";
+  const hasPin = pin && pin !== "—";
+  const pinFr = hasPin ? pin : "celui qui vous a été communiqué";
+  const pinAr = hasPin ? pin : "الذي تم إبلاغكم به";
   const tutoFr = isP
     ? [`3. « Mon menu » : vos plats. « Proposer » : ajoutez un plat (nom, prix, photo), nous le validons avant publication.`,
        `4. « Commandes » : retrouvez les commandes reçues et mettez à jour leur statut.`]
@@ -3192,8 +3193,8 @@ function evalRender(state, extra) {
     const lines = [];
     lines.push(`<div class="${r.decision === "accept" ? "eval-ok" : "eval-note"}" style="${r.decision === "accept" ? "" : "font-weight:800;color:var(--text);"}">${escapeHtml(r.decision === "accept" ? t("evalDoneAccept") : t("evalDoneRefuse"))}</div>`);
     if (r.decision === "accept") {
-      if (EVAL.kind === "partner" && r.pin) lines.push(`<div class="eval-note">${escapeHtml(t("evalPinGenerated"))}<b>${escapeHtml(r.pin)}</b></div>`);
-      if (EVAL.kind === "driver") lines.push(`<div class="eval-note">${escapeHtml(t("evalPinKept"))}</div>`);
+      if (r.pin) lines.push(`<div class="eval-note">${escapeHtml(t("evalPinGenerated"))}<b>${escapeHtml(r.pin)}</b></div>`);
+      else if (EVAL.kind === "driver") lines.push(`<div class="eval-note">${escapeHtml(t("evalPinKept"))}</div>`);
     } else {
       lines.push(`<div class="eval-note">${escapeHtml(t("evalReasonFor"))}${escapeHtml(r.motif)}</div>`);
     }
