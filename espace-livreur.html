@@ -987,11 +987,9 @@ function orderCardHtml(o, kind) {
   const canCall = kind === "mine" && (Number(o.etape) || 0) >= 2;
   const actionBtn = kind === "available"
     ? `<button class="btn-accept" data-accept="${escapeAttr(o.numero)}">${escapeHtml(t("accept"))}</button>`
-    : ((Number(o.etape) || 0) === 0
-        ? `<button class="btn-step" data-step="arrived" data-num="${escapeAttr(o.numero)}">${escapeHtml(t("stepArrived"))}</button>`
-        : (Number(o.etape) === 1
-            ? `<button class="btn-step" data-step="picked" data-num="${escapeAttr(o.numero)}">${escapeHtml(t("stepPicked"))}</button>`
-            : `<button class="btn-delivered" data-deliver="${escapeAttr(o.numero)}">${escapeHtml(t("markDelivered"))}</button>`));
+    : ((Number(o.etape) || 0) < 2
+        ? `<button class="btn-step" data-step="picked" data-num="${escapeAttr(o.numero)}">${escapeHtml(t("stepPicked"))}</button>`
+        : `<button class="btn-delivered" data-deliver="${escapeAttr(o.numero)}">${escapeHtml(t("markDelivered"))}</button>`);
   return `
     <div class="order-card">
       <div class="zone-badge">${escapeHtml(o.zone || "")}</div>
