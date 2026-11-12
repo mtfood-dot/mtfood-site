@@ -13,7 +13,8 @@
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
-<title>MT Delivery — Devenir livreur</title>
+<title>Deviens livreur avec MT Delivery | Blida</title>
+<meta name="description" content="Rejoins MT Delivery, choisis les commandes qui te conviennent et livre selon tes disponibilités.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -115,6 +116,35 @@ text-decoration:none;border:1.5px solid var(--blue-700);border-radius:11px;paddi
 .footer-note{max-width:520px;margin:24px auto 0;padding:0 16px;text-align:center;
 color:var(--muted);font-size:11.5px;font-weight:500;}
 
+.sec{background:var(--card);border-radius:var(--radius-lg);padding:18px;margin-bottom:14px;box-shadow:var(--shadow-sm);border:1px solid var(--border);}
+.sec h2{margin:0 0 10px;font-size:16px;color:var(--blue-900);font-weight:800;}
+.ticks,.steps{list-style:none;margin:0;padding:0;}
+.ticks li{position:relative;padding:7px 0 7px 28px;font-size:13.5px;line-height:1.5;color:var(--text);}
+.ticks li::before{content:"✓";position:absolute;left:0;top:7px;width:20px;height:20px;border-radius:50%;background:var(--blue-100);color:var(--blue-700);font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;}
+html[dir="rtl"] .ticks li{padding:7px 28px 7px 0;}html[dir="rtl"] .ticks li::before{left:auto;right:0;}
+.steps{counter-reset:s;}
+.steps li{counter-increment:s;position:relative;padding:8px 0 8px 40px;font-size:13.5px;line-height:1.5;}
+.steps li::before{content:counter(s);position:absolute;left:0;top:6px;width:28px;height:28px;border-radius:50%;background:var(--gold-500);color:var(--blue-900);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;}
+html[dir="rtl"] .steps li{padding:8px 40px 8px 0;}html[dir="rtl"] .steps li::before{left:auto;right:0;}
+.cta-top{display:block;width:100%;text-align:center;background:var(--gold-500);color:var(--blue-900);font-weight:800;font-size:15px;padding:14px;border-radius:13px;text-decoration:none;margin-top:14px;}
+details.faq{border-top:1px solid var(--border);padding:2px 0;}
+details.faq:first-of-type{border-top:0;}
+details.faq summary{cursor:pointer;font-weight:700;font-size:13.5px;padding:12px 0;color:var(--blue-900);min-height:44px;display:flex;align-items:center;}
+details.faq p{margin:0 0 12px;font-size:13px;color:var(--muted);line-height:1.6;}
+.consent{display:flex;gap:10px;align-items:flex-start;margin:4px 0 14px;font-size:13px;line-height:1.5;}
+.consent input{width:22px;height:22px;flex:none;margin-top:1px;accent-color:var(--blue-700);}
+.consent a{color:var(--blue-700);font-weight:700;}
+.privacy-note{font-size:12px;color:var(--muted);text-align:center;margin:12px 0 0;line-height:1.5;}
+.req::after{content:" *";color:var(--danger);}
+.num-box{background:var(--gold-100);border:1px solid var(--gold-500);border-radius:12px;padding:12px;margin:16px 0;}
+.num-box small{display:block;color:var(--muted);font-size:12px;}
+.num-box strong{font-size:22px;letter-spacing:1px;color:var(--blue-900);direction:ltr;display:inline-block;}
+.next-steps{text-align:start;margin:16px 0 4px;}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:18px;}
+.btn-row a{display:inline-block;font-weight:700;font-size:14px;text-decoration:none;border-radius:11px;padding:12px 18px;min-height:44px;}
+.btn-gold{background:var(--gold-500);color:var(--blue-900);}
+.btn-line{border:1.5px solid var(--blue-700);color:var(--blue-700);}
+.hint{font-size:12px;color:var(--muted);margin-top:4px;}
 .hidden{display:none !important;}
 </style>
 <script src="/form-validate.js" defer></script>
@@ -140,30 +170,34 @@ if ("serviceWorker" in navigator) {
 
 <main>
   <div class="intro">
-    <h1 id="introTitle">Devenir livreur MT Delivery</h1>
-    <p id="introText">Remplis ce formulaire pour t'inscrire. Nous te contacterons rapidement.</p>
+    <h1 id="introTitle">Deviens livreur avec MT Delivery</h1>
+    <p id="introText">Rejoins MT Delivery, choisis les commandes qui te conviennent et livre selon tes disponibilités.</p>
+    <a class="cta-top" href="#formCard" id="ctaTop">Je m'inscris</a>
   </div>
+
+  <section class="sec"><h2 id="hAdv">Pourquoi nous rejoindre ?</h2>
+    <ul class="ticks" id="advList"></ul></section>
+
+  <section class="sec"><h2 id="hHow">Comment ça marche ?</h2>
+    <ol class="steps" id="howList"></ol></section>
+
+  <section class="sec"><h2 id="hDocs">Documents demandés après acceptation</h2>
+    <ul class="ticks" id="docsList"></ul></section>
+
+  <section class="sec"><h2 id="hFaq">Questions fréquentes</h2><div id="faqList"></div></section>
 
   <div class="form-card" id="formCard">
     <form id="registerForm" novalidate data-mtform data-note-before="#submitBtn">
       <div class="field">
-        <label id="lblNom" for="nom">Nom complet</label>
-        <input type="text" id="nom" data-required>
+        <label id="lblNom" for="nom" class="req">Nom complet</label>
+        <input type="text" id="nom" data-required autocomplete="name" maxlength="80">
       </div>
       <div class="field">
-        <label id="lblTelephone" for="telephone">Numéro de téléphone</label>
-        <input type="tel" id="telephone" data-required data-rule="phone" placeholder="05XX XX XX XX">
-      </div>
-      <div class="field" hidden>
-        <label id="lblZone" for="zone">Zone de livraison</label>
-        <select id="zone">
-          <option value="Les deux" id="optLesDeux" selected>Toutes les zones</option>
-          <option value="Meftah Centre" id="optCentre">Meftah Centre</option>
-          <option value="Meftah Dehors" id="optDehors">Meftah Dehors</option>
-        </select>
+        <label id="lblTelephone" for="telephone" class="req">Numéro de téléphone</label>
+        <input type="tel" id="telephone" data-required data-rule="phone" placeholder="05XX XX XX XX" inputmode="tel" autocomplete="tel" dir="ltr">
       </div>
       <div class="field">
-        <label id="lblVehicule" for="vehicule">Type de véhicule</label>
+        <label id="lblVehicule" for="vehicule" class="req">Type de véhicule</label>
         <select id="vehicule" data-required>
           <option value="Moto" id="optMoto">Moto</option>
           <option value="Voiture" id="optVoiture">Voiture</option>
@@ -171,41 +205,33 @@ if ("serviceWorker" in navigator) {
           <option value="A pied" id="optPied">À pied</option>
         </select>
       </div>
-      <div class="field" hidden>
-        <label id="lblDisponibilite" for="disponibilite">Disponibilité</label>
-        <select id="disponibilite" data-required>
-          <option value="Temps plein" id="optPlein">Temps plein</option>
-          <option value="Temps partiel" id="optPartiel">Temps partiel</option>
-        </select>
-      </div>
-      <div class="field">
-        <label id="lblPin" for="pin">Choisis un code PIN (4 chiffres)</label>
-        <input type="password" id="pin" data-required data-rule="pin4new" placeholder="••••" inputmode="numeric" maxlength="4" autocomplete="off">
-      </div>
-      <div class="field">
-        <label id="lblPinConfirm" for="pinConfirm">Confirme ton code PIN</label>
-        <input type="password" id="pinConfirm" data-required data-rule="pin4" placeholder="••••" inputmode="numeric" maxlength="4" autocomplete="off">
-      </div>
       <div class="field">
         <label id="lblEmail" for="email">E-mail (optionnel)</label>
-        <input type="email" id="email" inputmode="email" autocomplete="email" dir="ltr" placeholder="nom@email.com">
-        <div class="hint" id="emailHint" style="font-size:12px;color:var(--muted);margin-top:4px;">Pour recevoir vos accès par e-mail une fois la demande acceptée.</div>
+        <input type="email" id="email" inputmode="email" autocomplete="email" dir="ltr" placeholder="nom@email.com" maxlength="120">
       </div>
       <div class="field">
         <label id="lblNotes" for="notes">Remarques (optionnel)</label>
-        <textarea id="notes" placeholder=""></textarea>
+        <textarea id="notes" maxlength="500"></textarea>
       </div>
+      <label class="consent"><input type="checkbox" id="consent"><span><span id="consentTxt">J'accepte que MT Delivery utilise mes informations afin d'étudier ma candidature de livreur.</span> <a href="confidentialite.html" target="_blank" rel="noopener" id="privLink">Politique de confidentialité</a></span></label>
       <button type="submit" class="submit-btn" id="submitBtn">Envoyer mon inscription</button>
-      <div class="error-box" id="errorBox"></div>
+      <div class="error-box" id="errorBox" role="alert"></div>
+      <p class="privacy-note" id="privNote">Vos informations restent confidentielles et sont utilisées uniquement pour traiter votre candidature.</p>
     </form>
   </div>
 
   <div class="form-card hidden" id="successCard">
     <div class="success-view">
       <div class="check">✓</div>
-      <h2 id="successTitle">Inscription envoyée !</h2>
-      <p id="successText">Merci ! Nous allons examiner ton inscription et te contacter très bientôt par téléphone.</p>
-      <a href="index.html" class="home-link" id="homeLink">Retour à l'accueil</a>
+      <h2 id="successTitle">Inscription envoyée avec succès.</h2>
+      <div class="num-box" id="numBox"><small id="numLbl">Numéro de candidature</small><strong id="numVal"></strong></div>
+      <p id="successText">Délai estimé de réponse : sous 48 heures.</p>
+      <ol class="steps next-steps" id="nextList"></ol>
+      <div class="btn-row">
+        <a class="btn-gold" id="contactWa" target="_blank" rel="noopener" href="#">WhatsApp</a>
+        <a class="btn-line" id="contactTel" href="tel:0560788497">Appeler</a>
+        <a class="btn-line" href="index.html" id="homeLink">Retour à l'accueil</a>
+      </div>
     </div>
   </div>
 </main>
@@ -216,120 +242,131 @@ if ("serviceWorker" in navigator) {
 const I18N = {
   fr: {
     tagline: "Rejoins notre équipe de livreurs",
-    introTitle: "Devenir livreur MT Delivery",
-    introText: "Remplis ce formulaire pour t'inscrire. Nous te contacterons rapidement.",
+    introTitle: "Deviens livreur avec MT Delivery",
+    introText: "Rejoins MT Delivery, choisis les commandes qui te conviennent et livre selon tes disponibilités.",
+    ctaTop: "Je m'inscris",
+    hAdv: "Pourquoi nous rejoindre ?",
+    adv: ["Tu choisis les commandes que tu souhaites accepter.","Tu travailles selon ta disponibilité.","Tu peux utiliser une moto, une voiture, un vélo ou livrer à pied selon les zones.","Tu reçois les informations nécessaires avant d'accepter une commande.","Notre équipe t'accompagne lors de ton inscription."],
+    hHow: "Comment ça marche ?",
+    how: ["Remplis ta demande.","MT Delivery examine ton profil.","L'équipe te contacte.","Ton compte livreur est activé.","Tu peux consulter et accepter les commandes disponibles."],
+    hDocs: "Documents demandés après acceptation",
+    docs: ["Pièce d'identité.","Photo.","Permis de conduire si nécessaire selon le véhicule.","Documents du véhicule si nécessaire.","Toute autre information utile demandée par MT Delivery."],
+    hFaq: "Questions fréquentes",
+    faq: [
+      ["Puis-je choisir les commandes que je veux ?","Oui. Tu vois les commandes disponibles et tu acceptes celles qui te conviennent. Rien ne t'oblige à en prendre."],
+      ["Puis-je travailler à temps partiel ?","Oui. Tu travailles quand tu veux : tu actives ou désactives ta disponibilité dans ton espace livreur."],
+      ["Quels véhicules sont acceptés ?","Moto, voiture, vélo ou à pied, selon la distance de la livraison."],
+      ["Comment suis-je payé ?","Tu gardes la totalité des frais de livraison de chaque course (de 150 à 450 DA selon la distance). L'équipe t'explique les modalités lors de ton activation."],
+      ["Est-ce que je peux travailler dans plusieurs zones ?","Oui. Tu travailles sur toutes les zones couvertes par MT Food et tu acceptes les courses que tu veux."],
+      ["Quand vais-je être contacté après mon inscription ?","En général sous 48 heures, par téléphone."]
+    ],
     lblNom: "Nom complet",
     lblTelephone: "Numéro de téléphone",
-    lblZone: "Zone de livraison (facultatif)",
-    optCentre: "Meftah Centre",
-    optDehors: "Meftah Dehors",
-    optLesDeux: "Toutes les zones",
     lblVehicule: "Type de véhicule",
-    optMoto: "Moto",
-    optVoiture: "Voiture",
-    optVelo: "Vélo",
-    optPied: "À pied",
-    lblDisponibilite: "Disponibilité",
-    optPlein: "Temps plein",
-    optPartiel: "Temps partiel",
-    lblPin: "Choisis un code PIN (4 chiffres)",
-    pinPlaceholder: "Ex: 1234",
-    lblPinConfirm: "Confirme ton code PIN",
+    optMoto: "Moto", optVoiture: "Voiture", optVelo: "Vélo", optPied: "À pied",
     lblNotes: "Remarques (optionnel)",
+    lblEmail: "E-mail (optionnel)",
+    consentTxt: "J'accepte que MT Delivery utilise mes informations afin d'étudier ma candidature de livreur.",
+    privLink: "Politique de confidentialité",
+    consentRequired: "Merci de cocher la case d'acceptation pour envoyer ta candidature.",
+    privNote: "Vos informations restent confidentielles et sont utilisées uniquement pour traiter votre candidature.",
     submitBtn: "Envoyer mon inscription",
     sending: "Envoi en cours…",
-    successTitle: "Inscription envoyée !",
-    successText: "Merci ! Nous allons examiner ton inscription et te contacter très bientôt par téléphone.",
+    successTitle: "Inscription envoyée avec succès.",
+    numLbl: "Numéro de candidature",
+    successText: "Délai estimé de réponse : sous 48 heures.",
+    nextSteps: ["Étude de ton dossier.","Contact téléphonique.","Validation.","Activation de ton compte livreur."],
+    contactWa: "Contacter sur WhatsApp",
+    contactTel: "Appeler MT Delivery",
+    waMsg: "Bonjour MT Delivery, je suis livreur candidat. Mon numéro de candidature : ",
     homeLink: "Retour à l'accueil",
     fillRequired: "Merci de remplir tous les champs obligatoires.",
-    pinInvalid: "Le code PIN doit contenir exactement 4 chiffres.",
-    pinMismatch: "Les deux codes PIN ne correspondent pas.",
-    lblEmail: "E-mail (optionnel)",
-    emailHint: "Pour recevoir vos accès par e-mail une fois la demande acceptée.",
     emailInvalid: "Adresse e-mail invalide (ex : nom@email.com).",
+    duplicate: "Une candidature existe déjà avec ce numéro. Appelle-nous pour connaître son avancement.",
     sendError: "Erreur d'envoi. Vérifie ta connexion et réessaie, ou appelle-nous directement.",
     footerNote: "MT Delivery — البريد السريع · Blida, Algérie"
   },
   ar: {
     tagline: "انضم إلى فريق التوصيل لدينا",
-    introTitle: "كن موصلاً مع MT Delivery",
-    introText: "املأ هذه الاستمارة للتسجيل. سنتواصل معك في أقرب وقت.",
+    introTitle: "كن موصّلاً مع MT Delivery",
+    introText: "انضم إلى MT Delivery، اختر الطلبات التي تناسبك ووصّل حسب أوقات فراغك.",
+    ctaTop: "سجّل الآن",
+    hAdv: "لماذا تنضم إلينا؟",
+    adv: ["تختار الطلبات التي تريد قبولها.","تعمل حسب أوقات توفرك.","يمكنك استعمال دراجة نارية أو سيارة أو دراجة هوائية أو التوصيل سيراً حسب المنطقة.","تحصل على المعلومات اللازمة قبل قبول أي طلب.","فريقنا يرافقك أثناء التسجيل."],
+    hHow: "كيف يعمل؟",
+    how: ["املأ طلبك.","تدرس MT Delivery ملفك.","يتصل بك الفريق.","يتم تفعيل حسابك كموصّل.","يمكنك الاطلاع على الطلبات المتاحة وقبولها."],
+    hDocs: "الوثائق المطلوبة بعد القبول",
+    docs: ["بطاقة التعريف.","صورة شخصية.","رخصة السياقة عند الحاجة حسب المركبة.","وثائق المركبة عند الحاجة.","أي معلومة مفيدة أخرى تطلبها MT Delivery."],
+    hFaq: "أسئلة شائعة",
+    faq: [
+      ["هل يمكنني اختيار الطلبات التي أريدها؟","نعم. ترى الطلبات المتاحة وتقبل ما يناسبك. لا شيء يجبرك على قبول أي طلب."],
+      ["هل يمكنني العمل بدوام جزئي؟","نعم. تعمل متى شئت: تفعّل توفرك أو توقفه من فضاء الموصّل الخاص بك."],
+      ["ما هي المركبات المقبولة؟","دراجة نارية أو سيارة أو دراجة هوائية أو سيراً على الأقدام حسب مسافة التوصيل."],
+      ["كيف أتقاضى أجري؟","تحتفظ بكامل رسوم التوصيل لكل طلبية (من 150 إلى 450 دج حسب المسافة). يشرح لك الفريق التفاصيل عند التفعيل."],
+      ["هل يمكنني العمل في عدة مناطق؟","نعم. تعمل في جميع المناطق التي يغطيها MT Food وتقبل الطلبات التي تريدها."],
+      ["متى سيتم الاتصال بي بعد التسجيل؟","عادةً خلال 48 ساعة عبر الهاتف."]
+    ],
     lblNom: "الاسم الكامل",
     lblTelephone: "رقم الهاتف",
-    lblZone: "منطقة التوصيل (اختياري)",
-    optCentre: "مفتاح المركز",
-    optDehors: "مفتاح خارج المركز",
-    optLesDeux: "كل المناطق",
     lblVehicule: "نوع المركبة",
-    optMoto: "دراجة نارية",
-    optVoiture: "سيارة",
-    optVelo: "دراجة هوائية",
-    optPied: "سيراً على الأقدام",
-    lblDisponibilite: "التوفر",
-    optPlein: "دوام كامل",
-    optPartiel: "دوام جزئي",
-    lblPin: "اختر رمز PIN (4 أرقام)",
-    pinPlaceholder: "مثال: 1234",
-    lblPinConfirm: "أكد رمز PIN الخاص بك",
+    optMoto: "دراجة نارية", optVoiture: "سيارة", optVelo: "دراجة هوائية", optPied: "سيراً على الأقدام",
     lblNotes: "ملاحظات (اختياري)",
+    lblEmail: "البريد الإلكتروني (اختياري)",
+    consentTxt: "أوافق على أن تستعمل MT Delivery معلوماتي لدراسة ترشحي كموصّل.",
+    privLink: "سياسة الخصوصية",
+    consentRequired: "يرجى تحديد خانة الموافقة لإرسال ترشحك.",
+    privNote: "تبقى معلوماتك سرية وتُستعمل فقط لمعالجة ترشحك.",
     submitBtn: "إرسال التسجيل",
     sending: "جارٍ الإرسال…",
-    successTitle: "تم إرسال التسجيل!",
-    successText: "شكراً لك! سنراجع تسجيلك ونتواصل معك عبر الهاتف قريباً جداً.",
+    successTitle: "تم إرسال التسجيل بنجاح.",
+    numLbl: "رقم الترشح",
+    successText: "المدة المتوقعة للرد: خلال 48 ساعة.",
+    nextSteps: ["دراسة ملفك.","اتصال هاتفي.","التحقق والموافقة.","تفعيل حسابك كموصّل."],
+    contactWa: "تواصل عبر واتساب",
+    contactTel: "اتصل بـ MT Delivery",
+    waMsg: "مرحباً MT Delivery، أنا مترشح للتوصيل. رقم ترشحي: ",
     homeLink: "العودة إلى الصفحة الرئيسية",
     fillRequired: "يرجى تعبئة جميع الحقول المطلوبة.",
-    pinInvalid: "يجب أن يتكون رمز PIN من 4 أرقام بالضبط.",
-    pinMismatch: "رمزا PIN غير متطابقين.",
-    lblEmail: "البريد الإلكتروني (اختياري)",
-    emailHint: "لتصلكم بيانات الدخول بالبريد الإلكتروني بعد قبول الطلب.",
     emailInvalid: "عنوان بريد إلكتروني غير صالح (مثال: name@email.com).",
+    duplicate: "يوجد ترشح مسجّل بهذا الرقم. اتصل بنا لمعرفة حالته.",
     sendError: "خطأ في الإرسال. تحقق من اتصالك وحاول مرة أخرى، أو اتصل بنا مباشرة.",
     footerNote: "البريد السريع MT Delivery · البليدة، الجزائر"
   }
 };
 
-let LANG = localStorage.getItem("mtd_livreur_lang") || "fr";
-
+let LANG = "fr";
+try { LANG = localStorage.getItem("mtd_livreur_lang") || "fr"; } catch(e){}
 function t(key){ return (I18N[LANG] && I18N[LANG][key]) || I18N.fr[key] || ""; }
+function $(id){ return document.getElementById(id); }
+var LAST_NUM = "";
+function fillList(id, arr, ordered){
+  var el = $(id); el.textContent = "";
+  arr.forEach(function(x){ var li = document.createElement("li"); li.textContent = x; el.appendChild(li); });
+}
+function fillFaq(){
+  var el = $("faqList"); el.textContent = "";
+  t0("faq").forEach(function(q){
+    var d = document.createElement("details"); d.className = "faq";
+    var s = document.createElement("summary"); s.textContent = q[0];
+    var p = document.createElement("p"); p.textContent = q[1];
+    d.appendChild(s); d.appendChild(p); el.appendChild(d);
+  });
+}
+function t0(k){ return (I18N[LANG] && I18N[LANG][k]) || I18N.fr[k]; }
 
 function applyLanguage(){
   document.documentElement.lang = LANG;
   document.documentElement.dir = LANG === "ar" ? "rtl" : "ltr";
-  document.getElementById("langToggle").textContent = LANG === "ar" ? "FR" : "AR";
-  document.getElementById("tagline").textContent = t("tagline");
-  document.getElementById("introTitle").textContent = t("introTitle");
-  document.getElementById("introText").textContent = t("introText");
-  document.getElementById("lblNom").textContent = t("lblNom");
-  document.getElementById("lblTelephone").textContent = t("lblTelephone");
-  document.getElementById("lblZone").textContent = t("lblZone");
-  document.getElementById("optCentre").textContent = t("optCentre");
-  document.getElementById("optDehors").textContent = t("optDehors");
-  document.getElementById("optLesDeux").textContent = t("optLesDeux");
-  document.getElementById("lblVehicule").textContent = t("lblVehicule");
-  document.getElementById("optMoto").textContent = t("optMoto");
-  document.getElementById("optVoiture").textContent = t("optVoiture");
-  document.getElementById("optVelo").textContent = t("optVelo");
-  document.getElementById("optPied").textContent = t("optPied");
-  document.getElementById("lblDisponibilite").textContent = t("lblDisponibilite");
-  document.getElementById("optPlein").textContent = t("optPlein");
-  document.getElementById("optPartiel").textContent = t("optPartiel");
-  document.getElementById("lblPin").textContent = t("lblPin");
-  document.getElementById("pin").placeholder = "••••";
-  document.getElementById("lblPinConfirm").textContent = t("lblPinConfirm");
-  document.getElementById("pinConfirm").placeholder = "••••";
-  document.getElementById("lblNotes").textContent = t("lblNotes");
-  document.getElementById("lblEmail").textContent = t("lblEmail");
-  document.getElementById("emailHint").textContent = t("emailHint");
-  document.getElementById("submitBtn").textContent = t("submitBtn");
-  document.getElementById("successTitle").textContent = t("successTitle");
-  document.getElementById("successText").textContent = t("successText");
-  document.getElementById("homeLink").textContent = t("homeLink");
-  document.getElementById("footerNote").textContent = t("footerNote");
+  $("langToggle").textContent = LANG === "ar" ? "FR" : "AR";
+  ["tagline","introTitle","introText","ctaTop","hAdv","hHow","hDocs","hFaq","lblNom","lblTelephone","lblVehicule","optMoto","optVoiture","optVelo","optPied","lblNotes","lblEmail","consentTxt","privLink","privNote","submitBtn","successTitle","numLbl","successText","contactWa","contactTel","homeLink","footerNote"].forEach(function(k){ var e=$(k); if(e) e.textContent = t(k); });
+  fillList("advList", t0("adv")); fillList("howList", t0("how")); fillList("docsList", t0("docs")); fillList("nextList", t0("nextSteps"));
+  fillFaq();
+  $("contactWa").href = "https://wa.me/213560788497?text=" + encodeURIComponent(t("waMsg") + LAST_NUM);
 }
 
 function toggleLanguage(){
   LANG = LANG === "ar" ? "fr" : "ar";
-  localStorage.setItem("mtd_livreur_lang", LANG);
+  try { localStorage.setItem("mtd_livreur_lang", LANG); } catch(e){}
   applyLanguage();
 }
 
@@ -339,54 +376,33 @@ const CONFIG = {
 
 document.addEventListener("DOMContentLoaded", function(){
   applyLanguage();
-  document.getElementById("langToggle").addEventListener("click", toggleLanguage);
+  $("langToggle").addEventListener("click", toggleLanguage);
 
-  const form = document.getElementById("registerForm");
-  const errorBox = document.getElementById("errorBox");
-  const submitBtn = document.getElementById("submitBtn");
+  const form = $("registerForm");
+  const errorBox = $("errorBox");
+  const submitBtn = $("submitBtn");
+  var sending = false;
+
+  function showErr(msg){ errorBox.textContent = msg; errorBox.classList.add("show"); }
 
   form.addEventListener("submit", async function(e){
     e.preventDefault();
+    if(sending) return;
     errorBox.classList.remove("show");
     errorBox.textContent = "";
 
     if(!MTForm.validate(form)) return;
-    const pinC = document.getElementById("pinConfirm");
-    if(document.getElementById("pin").value.trim() !== pinC.value.trim()){ MTForm.fail(pinC, t("pinMismatch")); return; }
 
-    const nom = document.getElementById("nom").value.trim();
-    const telephone = document.getElementById("telephone").value.trim();
-    const zone = document.getElementById("zone").value || "Les deux";
-    const vehicule = document.getElementById("vehicule").value;
-    const disponibilite = document.getElementById("disponibilite").value;
-    const pin = document.getElementById("pin").value.trim();
-    const pinConfirm = document.getElementById("pinConfirm").value.trim();
-    const notes = document.getElementById("notes").value.trim();
-    const email = document.getElementById("email").value.trim();
-    if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
-      errorBox.textContent = t("emailInvalid");
-      errorBox.classList.add("show");
-      return;
-    }
+    const nom = $("nom").value.trim();
+    const telephone = $("telephone").value.trim();
+    const vehicule = $("vehicule").value;
+    const notes = $("notes").value.trim();
+    const email = $("email").value.trim();
+    if(!nom || !telephone || !vehicule){ showErr(t("fillRequired")); return; }
+    if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showErr(t("emailInvalid")); return; }
+    if(!$("consent").checked){ showErr(t("consentRequired")); $("consent").focus(); return; }
 
-    if(!nom || !telephone || !vehicule || !disponibilite || !pin || !pinConfirm){
-      errorBox.textContent = t("fillRequired");
-      errorBox.classList.add("show");
-      return;
-    }
-
-    if(!/^[0-9]{4}$/.test(pin)){
-      errorBox.textContent = t("pinInvalid");
-      errorBox.classList.add("show");
-      return;
-    }
-
-    if(pin !== pinConfirm){
-      errorBox.textContent = t("pinMismatch");
-      errorBox.classList.add("show");
-      return;
-    }
-
+    sending = true;
     submitBtn.disabled = true;
     const originalLabel = submitBtn.textContent;
     submitBtn.textContent = t("sending");
@@ -394,18 +410,25 @@ document.addEventListener("DOMContentLoaded", function(){
     try{
       const resp = await fetch(CONFIG.API_URL, {
         method: "POST",
-        body: JSON.stringify({ nom, telephone, zone, vehicule, disponibilite, pin, notes, email })
+        body: JSON.stringify({ nom, telephone, zone: "Les deux", vehicule, disponibilite: "Temps plein", notes, email, consentement: true, langue: LANG })
       });
       const data = await resp.json();
       if(data && data.ok){
-        document.getElementById("formCard").classList.add("hidden");
-        document.getElementById("successCard").classList.remove("hidden");
+        LAST_NUM = data.numero || "";
+        $("numBox").classList.toggle("hidden", !LAST_NUM);
+        $("numVal").textContent = LAST_NUM;
+        $("contactWa").href = "https://wa.me/213560788497?text=" + encodeURIComponent(t("waMsg") + LAST_NUM);
+        $("formCard").classList.add("hidden");
+        $("successCard").classList.remove("hidden");
+        window.scrollTo(0, 0);
+      } else if(data && data.code === "duplicate"){
+        throw new Error("duplicate");
       } else {
-        throw new Error((data && data.message) || "unknown");
+        throw new Error("unknown");
       }
     } catch(err){
-      errorBox.textContent = t("sendError");
-      errorBox.classList.add("show");
+      showErr(err && err.message === "duplicate" ? t("duplicate") : t("sendError"));
+      sending = false;
       submitBtn.disabled = false;
       submitBtn.textContent = originalLabel;
     }
