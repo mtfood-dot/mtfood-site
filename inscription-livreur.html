@@ -154,7 +154,7 @@ if ("serviceWorker" in navigator) {
         <label id="lblTelephone" for="telephone">Numéro de téléphone</label>
         <input type="tel" id="telephone" data-required data-rule="phone" placeholder="05XX XX XX XX">
       </div>
-      <div class="field">
+      <div class="field" hidden>
         <label id="lblZone" for="zone">Zone de livraison</label>
         <select id="zone">
           <option value="Les deux" id="optLesDeux" selected>Toutes les zones</option>
@@ -171,7 +171,7 @@ if ("serviceWorker" in navigator) {
           <option value="A pied" id="optPied">À pied</option>
         </select>
       </div>
-      <div class="field">
+      <div class="field" hidden>
         <label id="lblDisponibilite" for="disponibilite">Disponibilité</label>
         <select id="disponibilite" data-required>
           <option value="Temps plein" id="optPlein">Temps plein</option>
