@@ -1540,7 +1540,7 @@ function liveCardHtml(o, isFresh) {
       <div class="row1">
         <div><div class="numero">${escapeHtml(o.numero || "")}${isFresh ? " · 🔔" : ""}</div>
           <span class="st ${st[0]}">${escapeHtml(st[1])}</span></div>
-        <div style="text-align:end"><div class="total">${escapeHtml(String(o.total || 0))} DA</div><div class="ago">${escapeHtml(liveAgo_(o.heure))}</div></div>
+        <div style="text-align:end"><div class="total">${escapeHtml(String(platsTotal_(o)))} DA</div><div class="ago">${escapeHtml(liveAgo_(o.heure))}</div></div>
       </div>
       <div class="meta">${escapeHtml(t("liveClient"))} : ${escapeHtml(o.client || "")}</div>
       <div class="articles">${escapeHtml(String(o.articles || "").split(" | ").join("\n")).replace(/\n/g, "<br>")}</div>
@@ -1608,12 +1608,17 @@ function renderOrders() {
     : emptyStateHtml(t("noOrders"), "📦");
 }
 
+// Le restaurant voit le montant des plats seulement : les frais de livraison reviennent au livreur.
+function platsTotal_(o) {
+  const tot = Number(o.total) || 0, fee = Number(o.fraisLivraison);
+  return isFinite(fee) && fee > 0 ? Math.max(0, tot - fee) : tot;
+}
 function orderCardHtml(o) {
   return `
     <div class="order-card">
       <div class="row1">
         <div class="numero">${escapeHtml(o.numero || "")}</div>
-        <div class="total">${escapeHtml(String(o.total || 0))} DA</div>
+        <div class="total">${escapeHtml(String(platsTotal_(o)))} DA</div>
       </div>
       <div class="meta">${escapeHtml(o.horodatage || "")}</div>
       <div class="articles">${escapeHtml(o.articles || "")}</div>
