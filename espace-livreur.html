@@ -184,6 +184,7 @@
     border:none;border-radius:11px;padding:11px;font-weight:800;font-size:13.5px;cursor:pointer;font-family:inherit;}
   .btn-delivered{flex:1;background:var(--green);color:#fff;
     border:none;border-radius:11px;padding:11px;font-weight:800;font-size:13.5px;cursor:pointer;font-family:inherit;}
+  .call-locked{margin-top:8px;font-size:12px;font-weight:700;color:var(--muted);text-align:center;background:#f3f5f9;border-radius:10px;padding:9px 10px;}
   .btn-call{background:#fff;border:1.5px solid var(--border);border-radius:11px;padding:11px 16px;
     font-weight:800;font-size:13.5px;color:var(--blue-700);cursor:pointer;text-decoration:none;
     display:flex;align-items:center;justify-content:center;}
@@ -412,6 +413,7 @@ const I18N = {
     rDriver: "Problème de mon côté (panne, accident)",
     rOther: "Autre",
     call: "📞 Appeler",
+    callLocked: "🔒 Appel disponible après « Commande récupérée »",
     acceptFailedGeneric: "Impossible d'accepter cette commande. Réessaie.",
     deliveredFailedGeneric: "Impossible de mettre à jour cette commande. Réessaie.",
     confirmAccept: "Accepter cette commande ?",
@@ -485,6 +487,7 @@ const I18N = {
     rDriver: "مشكلة من جهتي (عطل، حادث)",
     rOther: "سبب آخر",
     call: "📞 اتصال",
+    callLocked: "🔒 الاتصال متاح بعد «تم استلام الطلب»",
     acceptFailedGeneric: "تعذر قبول هذا الطلب. أعد المحاولة.",
     deliveredFailedGeneric: "تعذر تحديث هذا الطلب. أعد المحاولة.",
     confirmAccept: "هل تريد قبول هذا الطلب؟",
@@ -980,6 +983,8 @@ function progressHtml_(o) {
 }
 function orderCardHtml(o, kind) {
   const telHref = "tel:" + fmtPhone(o.telephone).replace(/[^0-9+]/g, "");
+  // Le livreur ne peut appeler le client qu'après avoir confirmé la récupération de la commande (étape 2).
+  const canCall = kind === "mine" && (Number(o.etape) || 0) >= 2;
   const actionBtn = kind === "available"
     ? `<button class="btn-accept" data-accept="${escapeAttr(o.numero)}">${escapeHtml(t("accept"))}</button>`
     : ((Number(o.etape) || 0) === 0
@@ -1004,8 +1009,9 @@ function orderCardHtml(o, kind) {
       ${routesHtml_(o)}
       <div class="actions">
         ${actionBtn}
-        <a class="btn-call" href="${telHref}">${escapeHtml(t("call"))}</a>
+        ${canCall ? `<a class="btn-call" href="${telHref}">${escapeHtml(t("call"))}</a>` : ""}
       </div>
+      ${canCall ? "" : `<div class="call-locked">${escapeHtml(t("callLocked"))}</div>`}
       ${kind === "mine" ? `<button class="btn-issue" data-issue="${escapeAttr(o.numero)}">${escapeHtml(t("reportIssue"))}</button><button class="btn-cancel" data-cancel="${escapeAttr(o.numero)}">${escapeHtml(t("cancelOrder"))}</button>` : ""}
     </div>
   `;
