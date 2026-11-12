@@ -848,14 +848,14 @@ if ("serviceWorker" in navigator) {
     <div class="gps-priv" id="gpsPriv">Ta position sert uniquement à calculer la livraison.</div>
 
     <div class="addr-search">
-      <input type="search" id="addrSearch" autocomplete="off" enterkeyhint="search" placeholder="Rechercher une adresse à Meftah">
+      <input type="search" id="addrSearch" autocomplete="off" enterkeyhint="search" placeholder="Rechercher une adresse (rue, quartier, commune)">
       <button type="button" id="addrSearchBtn">Chercher</button>
     </div>
     <div class="addr-results" id="addrResults" role="listbox"></div>
 
     <div class="field" style="margin-top:18px">
       <label id="lblWilaya">Wilaya / commune</label>
-      <div class="addr-fixed" id="addrWilayaVal">Blida · Meftah</div>
+      <div class="addr-fixed" id="addrWilayaVal">Blida</div>
     </div>
     <div class="quote-box" id="addrQuote" role="status" aria-live="polite"></div>
     <div class="field">
@@ -926,14 +926,14 @@ const I18N = {
     addrGpsDenied: "Position refusée : choisis ta zone dans la liste ci-dessous.",
     addrGpsFail: "Impossible de te localiser : choisis ta zone dans la liste ci-dessous.",
     addrGpsUnsupported: "La localisation n'est pas disponible sur cet appareil : choisis ta zone ci-dessous.",
-    addrGpsOut: "Tu sembles hors de notre zone de livraison. Pour te faire livrer à Meftah, choisis ta zone ci-dessous et saisis l'adresse de livraison.",
+    addrGpsOut: "Tu sembles hors de notre zone de livraison. Pour te faire livrer, cherche ton adresse ci-dessous ou saisis-la à la main.",
     addrGpsNoZone: "Position trouvée, mais la zone n'a pas pu être déterminée : choisis-la dans la liste.",
     addrGpsOk: "Position trouvée : ",
     addrDetected: "Position détectée : ",
     addrGpsNoAddr: "Adresse introuvable : complète-la à la main.",
     addrGpsPriv: "Ta position sert uniquement à calculer la livraison ; elle n'est jamais suivie en continu.",
     lblWilaya: "Wilaya / commune",
-    addrWilayaVal: "Blida · Meftah",
+    addrWilayaVal: "Blida",
     lblAddrZone: "Quartier / zone de livraison",
     lblAddrLine: "Adresse (rue, quartier)",
     addrLinePh: "Rue, numéro, bâtiment...",
@@ -948,9 +948,9 @@ const I18N = {
     quoteError: "Impossible de calculer les frais pour le moment. Réessaie dans un instant.",
     addrNeedLocate: "Localise ton adresse pour connaître la zone et les frais de livraison.",
     addrNeedAddr: "Saisis une adresse ou utilise ta position actuelle.",
-    addrSearchPh: "Rechercher une adresse à Meftah",
+    addrSearchPh: "Rechercher une adresse (rue, quartier, commune)",
     addrSearchBtn: "Chercher",
-    addrSearchNone: "Aucun résultat à Meftah. Essaie un autre nom de rue ou de quartier, ou utilise ta position actuelle.",
+    addrSearchNone: "Aucun résultat. Essaie un autre nom de rue ou de quartier, ou utilise ta position actuelle.",
     addrSearchTip: "Choisis ton adresse dans la liste :",
     addrSearching: "Recherche…",
     cartOneRestaurant: "Ton panier contient déjà des plats de « {r} ». Une commande = un seul restaurant : termine-la ou vide ton panier pour commander ailleurs.",
@@ -1098,14 +1098,14 @@ const I18N = {
     addrGpsDenied: "تم رفض الوصول إلى الموقع: اختر منطقتك من القائمة أدناه.",
     addrGpsFail: "تعذّر تحديد موقعك: اختر منطقتك من القائمة أدناه.",
     addrGpsUnsupported: "تحديد الموقع غير متاح على هذا الجهاز: اختر منطقتك أدناه.",
-    addrGpsOut: "يبدو أنك خارج منطقة التوصيل. للتوصيل إلى المفتاح، اختر منطقتك أدناه وأدخل عنوان التوصيل.",
+    addrGpsOut: "يبدو أنك خارج منطقة التوصيل. للتوصيل، ابحث عن عنوانك أدناه أو أدخله يدويًا.",
     addrGpsNoZone: "تم تحديد موقعك لكن تعذّر تحديد المنطقة: اخترها من القائمة.",
     addrGpsOk: "تم تحديد موقعك: ",
     addrDetected: "موقعك المكتشف: ",
     addrGpsNoAddr: "تعذّر العثور على العنوان: أكمله يدويًا.",
     addrGpsPriv: "يُستخدم موقعك لحساب التوصيل فقط ولا تتم متابعته باستمرار.",
     lblWilaya: "الولاية / البلدية",
-    addrWilayaVal: "البليدة · المفتاح",
+    addrWilayaVal: "البليدة",
     lblAddrZone: "الحي / منطقة التوصيل",
     lblAddrLine: "العنوان (الشارع، الحي)",
     addrLinePh: "الشارع، الرقم، العمارة...",
@@ -1120,9 +1120,9 @@ const I18N = {
     quoteError: "تعذّر حساب الرسوم حاليًا. أعد المحاولة بعد قليل.",
     addrNeedLocate: "حدّد موقع عنوانك لمعرفة منطقة التوصيل والرسوم.",
     addrNeedAddr: "أدخل عنوانًا أو استخدم موقعك الحالي.",
-    addrSearchPh: "ابحث عن عنوان في المفتاح",
+    addrSearchPh: "ابحث عن عنوان (شارع، حي، بلدية)",
     addrSearchBtn: "بحث",
-    addrSearchNone: "لا توجد نتائج في المفتاح. جرّب اسم شارع أو حي آخر، أو استخدم موقعك الحالي.",
+    addrSearchNone: "لا توجد نتائج. جرّب اسم شارع أو حي آخر، أو استخدم موقعك الحالي.",
     addrSearchTip: "اختر عنوانك من القائمة:",
     addrSearching: "جارٍ البحث…",
     cartOneRestaurant: "سلتك تحتوي على أطباق من «{r}». الطلب الواحد من مطعم واحد: أنهِه أو أفرغ السلة للطلب من مطعم آخر.",
@@ -3038,15 +3038,15 @@ function reverseGeocode(lat, lng) {
     .finally(() => clearTimeout(timer));
 }
 
-/* Recherche d'adresse à Meftah : au clic / Entrée (pas à chaque lettre : Nominatim public l'interdit).
-   Résultats limités à la zone de Meftah ; le serveur décide ensuite de la zone et des frais. */
+/* Recherche d'adresse (région de Blida : Meftah, Bougara, Larbaa, Bouinan…) : au clic / Entrée (pas à chaque lettre : Nominatim public l'interdit).
+   Résultats limités à la région de Blida ; le serveur décide ensuite de la zone et des frais. */
 function searchAddresses(text) {
   const q = String(text || "").trim();
   if (q.length < 3) return Promise.resolve([]);
   const ctrl = ("AbortController" in window) ? new AbortController() : null;
   const timer = setTimeout(() => ctrl && ctrl.abort(), 8000);
   const url = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&addressdetails=1&countrycodes=dz&bounded=1" +
-    "&viewbox=3.13,36.69,3.31,36.55&accept-language=" + (LANG === "ar" ? "ar" : "fr") + "&q=" + encodeURIComponent(q);
+    "&viewbox=2.90,36.75,3.40,36.42&accept-language=" + (LANG === "ar" ? "ar" : "fr") + "&q=" + encodeURIComponent(q);
   return fetch(url, ctrl ? { signal: ctrl.signal } : {})
     .then(r => r.ok ? r.json() : [])
     .then(list => (Array.isArray(list) ? list : []).map(r => {
@@ -3063,15 +3063,18 @@ function searchAddresses(text) {
 }
 
 /* Suggestions pendant la frappe : Photon (komoot, données OpenStreetMap, gratuit, sans clé).
-   Zone limitée à Meftah. En cas d'échec ou de liste vide, le bouton « Chercher » retombe sur Nominatim. */
+   Zone limitée à la région de Blida. En cas d'échec ou de liste vide, le bouton « Chercher » retombe sur Nominatim. */
 function photonSearch(text, signal) {
   const q = String(text || "").trim();
   if (q.length < 3) return Promise.resolve([]);
-  const url = "https://photon.komoot.io/api/?limit=7&lat=36.620&lon=3.223&bbox=3.13,36.55,3.31,36.69" +
+  const url = "https://photon.komoot.io/api/?limit=7&lat=36.600&lon=3.150&bbox=2.90,36.42,3.40,36.75" +
     (LANG === "ar" ? "" : "&lang=fr") + "&q=" + encodeURIComponent(q);
-  return fetch(url, signal ? { signal: signal } : {})
+  const ctrl = (!signal && "AbortController" in window) ? new AbortController() : null;
+  const timer = ctrl ? setTimeout(() => ctrl.abort(), 5000) : null;   // Photon lent : on bascule vite sur Nominatim
+  return fetch(url, signal ? { signal: signal } : (ctrl ? { signal: ctrl.signal } : {}))
     .then(r => r.ok ? r.json() : null)
     .then(j => {
+      if (timer) clearTimeout(timer);
       const feats = (j && Array.isArray(j.features)) ? j.features : [];
       const seen = {};
       return feats.map(f => {
