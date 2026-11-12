@@ -164,6 +164,11 @@
   .btn-cancel{background:#fff;border-color:#f3c6c1;color:var(--danger);}
   .btn-deliver{background:var(--green);color:#fff;}
   .btn-whatsapp{background:#25D366;color:#fff;}
+  .cand-filters{display:flex;gap:6px;flex-wrap:wrap;}
+  .cand-chip{border:1.5px solid var(--border);background:#fff;border-radius:999px;padding:8px 12px;min-height:40px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;color:var(--text);}
+  .cand-chip.active{background:var(--blue-700);border-color:var(--blue-700);color:#fff;}
+  .cand-search{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:10px;font:inherit;font-size:14px;margin:0 0 12px;background:#fff;}
+  .cand-num{font-size:12px;font-weight:800;color:var(--blue-700);direction:ltr;display:inline-block;}
   .btn-action:disabled{opacity:.5;cursor:default;}
 
   .empty-state{text-align:center;color:var(--muted);font-size:13.5px;padding:40px 20px;}
@@ -400,6 +405,7 @@ if ("serviceWorker" in navigator) {
       <button class="tab-btn" id="tabLiveBtn" type="button"><span id="tabLiveLabel"></span><span id="liveBadge" class="tab-count hidden">0</span></button>
       <button class="tab-btn" id="tabModerationBtn" type="button"><span id="tabModerationLabel"></span><span id="modBadge" class="mod-badge hidden">0</span></button>
       <button class="tab-btn" id="tabPartnersBtn" type="button"><span id="tabPartnersLabel"></span></button>
+      <button class="tab-btn" id="tabCandBtn" type="button"><span id="tabCandLabel"></span><span id="candBadge" class="tab-count hidden">0</span></button>
       <button class="tab-btn" id="tabDashboardBtn" type="button"><span id="tabDashboardLabel"></span></button>
       <button class="tab-btn" id="tabComptaBtn" type="button"><span id="tabComptaLabel"></span></button>
       <button class="tab-btn" id="tabPubBtn" type="button"><span id="tabPubLabel"></span></button>
@@ -604,6 +610,15 @@ if ("serviceWorker" in navigator) {
       </div>
       <div class="live-note" id="caisseNote"></div>
       <div id="caisseBody"></div>
+    </div>
+
+    <div id="candView" class="hidden">
+      <div class="refresh-row">
+        <div class="cand-filters" id="candFilters" role="tablist"></div>
+        <button class="btn-refresh" id="refreshCandBtn" type="button"><span id="refreshCandLabel">↻ Actualiser</span></button>
+      </div>
+      <input type="search" id="candSearch" class="cand-search" autocomplete="off">
+      <div id="candBody"></div>
     </div>
 
     <div id="ratingsView" class="hidden">
@@ -907,6 +922,12 @@ const I18N = {
     deleteAdFailedGeneric: "Impossible de supprimer la publicité. Réessaie.",
     tabZones: "Zones",
     tabRatings: "Avis",
+    tabCand: "Candidatures",
+    candAll: "Toutes", candPending: "En attente", candActive: "Acceptées", candRefused: "Refusées",
+    candSearch: "Rechercher un nom, un téléphone ou un n° LIV-…",
+    candEmpty: "Aucune candidature pour ce filtre.",
+    candStudy: "Étudier le dossier", candCall: "Appeler", candWa: "WhatsApp",
+    candWaMsg: "Bonjour, ici MT Delivery. Nous avons bien reçu votre candidature de livreur.",
     geoTitle: "Zone de livraison de chaque restaurant",
     geoNote: "La position (latitude, longitude) et le rayon définissent où le restaurant livre. Sans rayon : limite par défaut de {max} km. Sans position : calcul depuis le centre de Meftah.",
     geoVille: "Ville", geoLat: "Latitude", geoLng: "Longitude", geoRayon: "Rayon (km)", geoSave: "Enregistrer", geoSaved: "Enregistré.",
@@ -1212,6 +1233,12 @@ const I18N = {
     deleteAdFailedGeneric: "تعذر حذف الإعلان. أعد المحاولة.",
     tabZones: "المناطق",
     tabRatings: "التقييمات",
+    tabCand: "الترشحات",
+    candAll: "الكل", candPending: "قيد الانتظار", candActive: "مقبولة", candRefused: "مرفوضة",
+    candSearch: "ابحث عن اسم أو هاتف أو رقم LIV-…",
+    candEmpty: "لا توجد ترشحات لهذا التصنيف.",
+    candStudy: "دراسة الملف", candCall: "اتصال", candWa: "واتساب",
+    candWaMsg: "مرحباً، هنا MT Delivery. استلمنا ترشحك كموصّل.",
     geoTitle: "منطقة التوصيل لكل مطعم",
     geoNote: "الموقع (خط العرض والطول) والنطاق يحددان أين يوصّل المطعم. بدون نطاق: الحد الافتراضي {max} كم. بدون موقع: الحساب من مركز المفتاح.",
     geoVille: "المدينة", geoLat: "خط العرض", geoLng: "خط الطول", geoRayon: "النطاق (كم)", geoSave: "حفظ", geoSaved: "تم الحفظ.",
@@ -1368,6 +1395,9 @@ function applyLanguage() {
   $("adFormTitle").textContent = $("adFormId").value ? t("adFormTitleEdit") : t("adFormTitleNew");
   $("tabZonesLabel").textContent = t("tabZones");
   $("tabRatingsLabel").textContent = t("tabRatings");
+  $("tabCandLabel").textContent = t("tabCand");
+  $("candSearch").placeholder = t("candSearch");
+  renderCandidatures();
   $("tabFraudLabel").textContent = t("tabFraud");
   $("fraudD30").textContent = t("fraudD30"); $("fraudD90").textContent = t("fraudD90");
   $("fraudNote").textContent = t("fraudNote");
@@ -1545,6 +1575,9 @@ $("tabBoostBtn").addEventListener("click", () => switchTab("boost"));
 $("tabZonesBtn").addEventListener("click", () => switchTab("zones"));
 $("refreshZonesBtn").addEventListener("click", loadZonesAdmin);
 $("tabRatingsBtn").addEventListener("click", () => switchTab("ratings"));
+$("tabCandBtn").addEventListener("click", () => switchTab("cand"));
+$("refreshCandBtn").addEventListener("click", loadDrivers);
+$("candSearch").addEventListener("input", renderCandidatures);
 $("refreshRatingsBtn").addEventListener("click", loadRatingsAdmin);
 $("tabFraudBtn").addEventListener("click", () => switchTab("fraud"));
 $("tabCaisseBtn").addEventListener("click", () => switchTab("caisse"));
@@ -1582,6 +1615,7 @@ function switchTab(tab) {
   $("tabBoostBtn").classList.toggle("active", tab === "boost");
   $("tabZonesBtn").classList.toggle("active", tab === "zones");
   $("tabRatingsBtn").classList.toggle("active", tab === "ratings");
+  $("tabCandBtn").classList.toggle("active", tab === "cand");
   $("tabFraudBtn").classList.toggle("active", tab === "fraud");
   $("tabCaisseBtn").classList.toggle("active", tab === "caisse");
   $("tabStatsBtn").classList.toggle("active", tab === "stats");
@@ -1596,6 +1630,7 @@ function switchTab(tab) {
   $("boostView").classList.toggle("hidden", tab !== "boost");
   $("zonesView").classList.toggle("hidden", tab !== "zones");
   $("ratingsView").classList.toggle("hidden", tab !== "ratings");
+  $("candView").classList.toggle("hidden", tab !== "cand");
   $("fraudView").classList.toggle("hidden", tab !== "fraud");
   $("caisseView").classList.toggle("hidden", tab !== "caisse");
   hideError($("errorBox"));
@@ -1609,6 +1644,7 @@ function switchTab(tab) {
   if (tab === "boost") loadBoostAdmin();
   if (tab === "zones") loadZonesAdmin();
   if (tab === "ratings") loadRatingsAdmin();
+  if (tab === "cand") loadDrivers();
   if (tab === "fraud") loadFraudAdmin();
   if (tab === "caisse") loadCaisseAdmin();
   if (tab === "stats") loadStatsAdmin();
@@ -2649,12 +2685,13 @@ async function loadDrivers() {
       DRIVERS = data.drivers || [];
       updateRequestsUi();
       if (CURRENT_TAB === "partners") renderDrivers();
+      if (CURRENT_TAB === "cand") renderCandidatures();
       if (CURRENT_TAB === "orders") renderOrders();
-    } else if (CURRENT_TAB === "partners") {
+    } else if (CURRENT_TAB === "partners" || CURRENT_TAB === "cand") {
       showError($("errorBox"), data.error || t("loadDriversFailedGeneric"));
     }
   } catch (e) {
-    if (CURRENT_TAB === "partners") showError($("errorBox"), t("loadDriversFailedGeneric"));
+    if (CURRENT_TAB === "partners" || CURRENT_TAB === "cand") showError($("errorBox"), t("loadDriversFailedGeneric"));
   }
 }
 
@@ -2821,6 +2858,13 @@ function updateRequestsUi() {
       btn.addEventListener("click", () => evalOpen(btn.dataset.evalKind, btn.dataset.evalTel));
     });
   }
+  const cb = $("candBadge");
+  if (cb) {
+    const n = DRIVERS.filter(d => isPendingStatus(d.statut)).length;
+    cb.textContent = String(n);
+    cb.classList.toggle("hidden", n === 0);
+  }
+  renderCandidatures();
   const label = $("tabPartnersLabel");
   if (label) {
     label.textContent = t("tabPartners");
@@ -2838,6 +2882,51 @@ function renderPartners() {
     ? PARTNERS.map(partnerCardHtml).join("")
     : emptyStateHtml(t("noPartners"), "🏪");
   wireEntityButtons("listPartners");
+}
+
+let CAND_FILTER = "pending";
+function candKind(d) {
+  const s = String(d.statut || "").trim().toLowerCase();
+  if (s === "actif") return "active";
+  if (s === "refuse" || s === "refusé") return "refused";
+  return "pending";
+}
+function candCardHtml(d) {
+  const tel = escapeAttr(d.telephone);
+  const b = driverStatusBadge(d);
+  const num = d.numeroCandidature || d.numero || "";
+  const wa = phoneToWaNumber(d.telephone);
+  const pend = candKind(d) === "pending";
+  return `
+    <div class="partner-card">
+      <div class="nom">${escapeHtml(d.nom || "")} <span class="status-badge ${b.cls}">${escapeHtml(b.label)}</span></div>
+      <div class="meta">${num ? `<span class="cand-num">${escapeHtml(num)}</span> · ` : ""}${escapeHtml(d.vehicule || "")} · <span dir="ltr">${escapeHtml(fmtPhone(d.telephone))}</span></div>
+      <div class="actions-row">
+        ${pend ? `<button class="btn-action btn-confirm" type="button" data-eval-kind="driver" data-eval-tel="${tel}">${escapeHtml(t("candStudy"))}</button>` : ""}
+        <a class="btn-action btn-call" href="tel:${escapeAttr(fmtPhone(d.telephone))}">${escapeHtml(t("candCall"))}</a>
+        ${wa ? `<a class="btn-action btn-whatsapp" href="https://wa.me/${wa}?text=${encodeURIComponent(t("candWaMsg"))}" target="_blank" rel="noopener">${escapeHtml(t("candWa"))}</a>` : ""}
+      </div>
+    </div>`;
+}
+function renderCandidatures() {
+  const body = $("candBody");
+  if (!body) return;
+  const counts = { all: DRIVERS.length, pending: 0, active: 0, refused: 0 };
+  DRIVERS.forEach(d => { counts[candKind(d)]++; });
+  const chips = [["pending","candPending"],["active","candActive"],["refused","candRefused"],["all","candAll"]];
+  $("candFilters").innerHTML = chips.map(c => `<button type="button" class="cand-chip${CAND_FILTER === c[0] ? " active" : ""}" data-cand-filter="${c[0]}">${escapeHtml(t(c[1]))} (${counts[c[0]]})</button>`).join("");
+  document.querySelectorAll("#candFilters [data-cand-filter]").forEach(b => b.addEventListener("click", () => { CAND_FILTER = b.dataset.candFilter; renderCandidatures(); }));
+  const q = ($("candSearch").value || "").trim().toLowerCase();
+  const qd = q.replace(/\D/g, "");
+  const list = DRIVERS.slice().reverse().filter(d => {
+    if (CAND_FILTER !== "all" && candKind(d) !== CAND_FILTER) return false;
+    if (!q) return true;
+    return String(d.nom || "").toLowerCase().indexOf(q) >= 0
+      || String(d.numeroCandidature || d.numero || "").toLowerCase().indexOf(q) >= 0
+      || (qd && String(d.telephone || "").replace(/\D/g, "").indexOf(qd.replace(/^0+/, "")) >= 0);
+  });
+  body.innerHTML = list.length ? list.map(candCardHtml).join("") : emptyStateHtml(t("candEmpty"), "🛵");
+  body.querySelectorAll("[data-eval-kind]").forEach(btn => btn.addEventListener("click", () => evalOpen(btn.dataset.evalKind, btn.dataset.evalTel)));
 }
 
 function renderDrivers() {
