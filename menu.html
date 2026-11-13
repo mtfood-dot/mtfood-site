@@ -1951,10 +1951,7 @@ function homeResults() {
   const q = norm(SEARCH_Q), all = ACTIVE_CATEGORY === ALL_CAT, cid = catId(ACTIVE_CATEGORY);
   const out = [];
   restoList().forEach(r => {
-    if (r.soon) {
-      if (all && (!q || norm(r.name).includes(q))) out.push({ r: r, hits: [] });
-      return;
-    }
+    if (r.soon) return;   // restaurant sans plat : on ne l'affiche pas aux clients
     const pool = all ? r.items : r.items.filter(i => catId(itemCat(i)) === cid);
     if (!pool.length) return;
     if (!q) { out.push({ r: r, hits: [] }); return; }
