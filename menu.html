@@ -1378,6 +1378,16 @@ function prefillCheckoutFromSession() {
   if (session) {
     if (session.prenom || session.nom) $("fName").value = ((session.prenom || "") + " " + (session.nom || "")).trim();
     if (session.telephone) $("fPhone").value = session.telephone;
+    else if (session.clientId && !prefillCheckoutFromSession.asked) {
+      prefillCheckoutFromSession.asked = true;
+      jsonpRequest({ action: "clientStatus", clientId: session.clientId }).then(res => {
+        if (res && res.success && res.telephone) {
+          session.telephone = res.telephone;
+          try { localStorage.setItem(CLIENT_SESSION_KEY, JSON.stringify(session)); } catch (e) {}
+          if (!$("fPhone").value) $("fPhone").value = res.telephone;
+        }
+      }).catch(() => {});
+    }
   }
 }
 

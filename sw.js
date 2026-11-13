@@ -4,7 +4,7 @@
 // JAMAIS mis en cache : toujours réseau, pour ne jamais servir des
 // commandes/statuts périmés.
 
-const CACHE_NAME = "mtdelivery-v34";
+const CACHE_NAME = "mtdelivery-v35";
 const CORE_ASSETS = [
   "/index.html",
   "/menu.html",
