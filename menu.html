@@ -1961,11 +1961,6 @@ function homeResults() {
   });
   const f = out.filter(x => {
     const r = x.r;
-    if (FILTERS.ville && cityKey(restoVille(r)) !== cityKey(FILTERS.ville)) return false;
-    if (FILTERS.pmin !== null || FILTERS.pmax !== null) {
-      const lo = FILTERS.pmin === null ? 0 : FILTERS.pmin, hi = FILTERS.pmax === null ? Infinity : FILTERS.pmax;
-      if (!(r.items || []).some(i => { const n = Number(i.prix); return isFinite(n) && n >= lo && n <= hi; })) return false;   // au moins un plat dans la fourchette
-    }
     if (FILTERS.open && restoClosedInfo(r.name)) return false;
     return true;
   });
@@ -1981,7 +1976,7 @@ let RESTO_OPEN = {};
 let RESTO_VILLE = {};          // restaurant -> ville (colonne « Ville » de la feuille Partenaires)
 let RESTO_QUOTES = {};         // restaurant -> { covered, fee, km } pour l'adresse du client (calculé par le serveur)
 const PRICE_T1 = 600, PRICE_T2 = 1100;   // prix moyen d'un plat (DA) : < T1 = niveau 1, < T2 = niveau 2, sinon niveau 3
-const FILTERS = { ville: "", pmin: null, pmax: null, open: false };
+const FILTERS = { open: false };
 const FILTER_CITIES = ["Bougara", "Larbaa", "Meftah", "Bouinan"];   // villes proposées dans la liste
 const CITY_ALIAS = { bouinane: "bouinan", bouinen: "bouinan" };
 function cityKey(v) { const k = norm(v); return CITY_ALIAS[k] || k; }
@@ -2150,36 +2145,16 @@ let FILTERS_OPEN = false;
 let FILTERS_BUILT = false;
 function buildFilters() {
   const box = $("filters"); if (!box) return;
-  box.innerHTML =
-    '<div class="fpanel" id="fPanel" hidden><div class="frow">' +
-      '<select id="fVille" class="fsel" aria-label=""></select>' +
-      '<span class="fprice"><input id="fMin" type="text" inputmode="numeric" maxlength="6" class="finp" dir="ltr"><span class="fdash">–</span><input id="fMax" type="text" inputmode="numeric" maxlength="6" class="finp" dir="ltr"><span class="fda">DA</span></span>' +
-    '</div></div>' +
-    '<div class="frow"><button type="button" class="fchip" id="fOpen"></button><button type="button" class="fchip" id="fToggle" aria-expanded="false"></button><button type="button" class="fchip" id="fReset" style="display:none;"></button></div>';
-  $("fVille").addEventListener("change", () => { FILTERS.ville = $("fVille").value; renderRestoBar(); });
-  const num = id => { const v = $(id).value.replace(/[^\d]/g, ""); if ($(id).value !== v) $(id).value = v; return v === "" ? null : Number(v); };
-  let tm = null;
-  const onPrice = () => { FILTERS.pmin = num("fMin"); FILTERS.pmax = num("fMax"); clearTimeout(tm); tm = setTimeout(renderRestoBar, 250); };
-  $("fMin").addEventListener("input", onPrice); $("fMax").addEventListener("input", onPrice);
+  box.innerHTML = '<div class="frow"><button type="button" class="fchip" id="fOpen"></button><button type="button" class="fchip" id="fReset" style="display:none;"></button></div>';
   $("fOpen").addEventListener("click", () => { FILTERS.open = !FILTERS.open; renderRestoBar(); });
-  $("fToggle").addEventListener("click", () => { FILTERS_OPEN = !FILTERS_OPEN; renderFilters(); });
-  $("fReset").addEventListener("click", () => { FILTERS.ville = ""; FILTERS.pmin = null; FILTERS.pmax = null; FILTERS.open = false; $("fMin").value = ""; $("fMax").value = ""; renderRestoBar(); });
+  $("fReset").addEventListener("click", () => { FILTERS.open = false; renderRestoBar(); });
   FILTERS_BUILT = true;
 }
 function renderFilters() {
   if (!$("filters")) return;
   if (!FILTERS_BUILT) buildFilters();
-  const sel = $("fVille");
-  sel.innerHTML = '<option value="">' + escapeHtml(t("fAll")) + "</option>" + FILTER_CITIES.map(c => '<option value="' + escapeAttr(c) + '">' + escapeHtml(c) + "</option>").join("");
-  sel.value = FILTERS.ville; sel.setAttribute("aria-label", t("fCity"));
-  $("fMin").placeholder = t("fMin"); $("fMax").placeholder = t("fMax");
   $("fOpen").textContent = t("fOpen"); $("fOpen").classList.toggle("on", FILTERS.open);
-  const any = !!(FILTERS.ville || FILTERS.pmin !== null || FILTERS.pmax !== null || FILTERS.open);
-  const nAdv = (FILTERS.ville ? 1 : 0) + ((FILTERS.pmin !== null || FILTERS.pmax !== null) ? 1 : 0);
-  $("fToggle").textContent = "⚙ " + t("filtersBtn") + (nAdv ? " (" + nAdv + ")" : "") + (FILTERS_OPEN ? " ▴" : " ▾");
-  $("fToggle").setAttribute("aria-expanded", FILTERS_OPEN ? "true" : "false"); $("fToggle").classList.toggle("has", nAdv > 0);
-  $("fPanel").hidden = !FILTERS_OPEN;
-  $("fReset").textContent = "✕ " + t("fReset"); $("fReset").style.display = any ? "" : "none";
+  $("fReset").textContent = "✕ " + t("fReset"); $("fReset").style.display = FILTERS.open ? "" : "none";
 }
 
 function renderTabs() {
