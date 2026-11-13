@@ -155,6 +155,8 @@ if ("serviceWorker" in navigator) {
         <label id="lblType" for="type">Type d'établissement</label>
         <select id="type" data-required>
           <option value="Restaurant" id="optRestaurant">Restaurant</option>
+          <option value="Pizzeria" id="optPizzeria">Pizzeria</option>
+          <option value="Fast-food" id="optFastfood">Fast-food</option>
           <option value="Cafeteria" id="optCafeteria">Cafétéria</option>
           <option value="Patisserie" id="optPatisserie">Pâtisserie</option>
           <option value="Snack" id="optSnack">Snack</option>
@@ -173,6 +175,11 @@ if ("serviceWorker" in navigator) {
         <label id="lblPos">Position de l'établissement</label>
         <button type="button" id="posBtn" style="width:100%;padding:12px;border:1.5px solid var(--blue-600);background:#fff;color:var(--blue-800);border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;"></button>
         <div id="posMsg" style="font-size:12.5px;margin-top:6px;color:var(--muted,#697a96);"></div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <input type="text" id="posQ" style="flex:1;min-width:0;" autocomplete="off">
+          <button type="button" id="posSearch" style="padding:0 16px;border:0;background:var(--blue-800);color:#fff;border-radius:12px;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;"></button>
+        </div>
+        <div id="posList" style="margin-top:6px;"></div>
       </div>
       <div class="field" hidden>
         <label id="lblRayon" for="rayon">Rayon de livraison souhaité</label>
@@ -238,10 +245,11 @@ const I18N = {
     optCafeteria: "Cafétéria",
     optPatisserie: "Pâtisserie",
     optSnack: "Snack",
+    optPizzeria: "Pizzeria", optFastfood: "Fast-food",
     optAutre: "Autre",
     lblAdresse: "Adresse",
     lblVille: "Ville", villeChoose: "Choisis ta ville", villeOther: "Autre",
-    lblPos: "Position GPS de l'établissement", posRequired: "La position GPS de l'établissement est obligatoire. Appuie sur « Utiliser ma position actuelle » quand tu es dans ton établissement et autorise la localisation.", lblOuv: "Ouverture", lblFerm: "Fermeture", hChoose: "Choisir", hoursRequired: "Choisis l'heure d'ouverture et l'heure de fermeture.", posBtn: "📍 Utiliser ma position actuelle", posOk: "✓ Position enregistrée.", posWait: "Localisation…", posFail: "Position non disponible. Active la localisation de ton téléphone, autorise-la pour ce site, puis réessaie.", posHint: "Appuie ici quand tu es dans ton établissement.",
+    lblPos: "Position GPS de l'établissement", posRequired: "La position GPS de l'établissement est obligatoire. Appuie sur « Utiliser ma position actuelle » depuis ton établissement, ou cherche et choisis ton adresse.", lblOuv: "Ouverture", lblFerm: "Fermeture", hChoose: "Choisir", hoursRequired: "Choisis l'heure d'ouverture et l'heure de fermeture.", posBtn: "📍 Utiliser ma position actuelle", posOk: "✓ Position enregistrée.", posWait: "Localisation…", posFail: "Position non disponible. Active la localisation de ton téléphone, autorise-la pour ce site, puis réessaie.", posHint: "Fais-le depuis ton établissement : la position sert à calculer les prix de livraison.", posQ: "Ou cherche l'adresse (rue, quartier, commune)", posSearch: "Chercher", posNone: "Aucun résultat. Précise l'adresse ou utilise ta position actuelle.", posPicked: "✓ Position enregistrée d'après l'adresse choisie. Notre équipe la vérifiera.",
     lblRayon: "Rayon de livraison souhaité", rayonHint: "Le service client confirme le rayon définitif.", villeRequired: "Choisis ta ville.",
     lblZone: "Zone de livraison",
     optCentre: "Meftah Centre",
@@ -274,10 +282,11 @@ const I18N = {
     optCafeteria: "كافتيريا",
     optPatisserie: "حلويات",
     optSnack: "سناك",
+    optPizzeria: "بيتزيريا", optFastfood: "وجبات سريعة",
     optAutre: "أخرى",
     lblAdresse: "العنوان",
     lblVille: "المدينة", villeChoose: "اختر مدينتك", villeOther: "أخرى",
-    lblPos: "موقع المؤسسة (GPS)", posRequired: "موقع المؤسسة إلزامي. اضغط على «استخدام موقعي الحالي» وأنت داخل مؤسستك واسمح بتحديد الموقع.", lblOuv: "الفتح", lblFerm: "الإغلاق", hChoose: "اختر", hoursRequired: "اختر وقت الفتح ووقت الإغلاق.", posBtn: "📍 استخدام موقعي الحالي", posOk: "✓ تم حفظ الموقع.", posWait: "جارٍ تحديد الموقع…", posFail: "الموقع غير متاح. فعّل تحديد الموقع في هاتفك واسمح به لهذا الموقع ثم أعد المحاولة.", posHint: "اضغط هنا وأنت داخل مؤسستك.",
+    lblPos: "موقع المؤسسة (GPS)", posRequired: "موقع المؤسسة إلزامي. اضغط على «استخدام موقعي الحالي» من داخل مؤسستك، أو ابحث عن عنوانك واخترْه.", lblOuv: "الفتح", lblFerm: "الإغلاق", hChoose: "اختر", hoursRequired: "اختر وقت الفتح ووقت الإغلاق.", posBtn: "📍 استخدام موقعي الحالي", posOk: "✓ تم حفظ الموقع.", posWait: "جارٍ تحديد الموقع…", posFail: "الموقع غير متاح. فعّل تحديد الموقع في هاتفك واسمح به لهذا الموقع ثم أعد المحاولة.", posHint: "افعل ذلك من داخل مؤسستك: الموقع يُستعمل لحساب أسعار التوصيل.", posQ: "أو ابحث عن العنوان (شارع، حي، بلدية)", posSearch: "بحث", posNone: "لا توجد نتائج. دقّق العنوان أو استخدم موقعك الحالي.", posPicked: "✓ تم حفظ الموقع حسب العنوان المختار. سيتحقق منه فريقنا.",
     lblRayon: "نطاق التوصيل المطلوب", rayonHint: "خدمة الزبائن تؤكد النطاق النهائي.", villeRequired: "اختر مدينتك.",
     lblZone: "منطقة التوصيل",
     optCentre: "مفتاح المركز",
@@ -332,6 +341,8 @@ function applyLanguage(){
   document.getElementById("optCafeteria").textContent = t("optCafeteria");
   document.getElementById("optPatisserie").textContent = t("optPatisserie");
   document.getElementById("optSnack").textContent = t("optSnack");
+  document.getElementById("optPizzeria").textContent = t("optPizzeria");
+  document.getElementById("optFastfood").textContent = t("optFastfood");
   document.getElementById("optAutre").textContent = t("optAutre");
   document.getElementById("lblAdresse").textContent = t("lblAdresse");
   document.getElementById("lblZone").textContent = t("lblZone");
@@ -341,6 +352,8 @@ function applyLanguage(){
   document.getElementById("rayonHint").textContent = t("rayonHint");
   if(!POS) document.getElementById("posBtn").textContent = t("posBtn");
   if(!POS) document.getElementById("posMsg").textContent = t("posHint");
+  document.getElementById("posQ").placeholder = t("posQ");
+  document.getElementById("posSearch").textContent = t("posSearch");
   { const sel = document.getElementById("ville"), cur = sel.value;
     sel.innerHTML = '<option value="">' + t("villeChoose") + '</option>' + CITIES.map(c => '<option value="' + c + '">' + c + '</option>').join("") + '<option value="Autre">' + t("villeOther") + '</option>';
     sel.value = cur; }
@@ -410,6 +423,42 @@ document.addEventListener("DOMContentLoaded", function(){
       msg.textContent = "";
     }, function(){ POS = null; msg.textContent = t("posFail"); }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 });
   });
+  async function geoSearch(q){
+    const withTimeout = (url, ms) => { const c = new AbortController(); const tm = setTimeout(() => c.abort(), ms); return fetch(url, { signal: c.signal }).finally(() => clearTimeout(tm)); };
+    try{
+      const r = await withTimeout("https://photon.komoot.io/api/?limit=6&lang=fr&bbox=2.90,36.42,3.40,36.75&q=" + encodeURIComponent(q), 5000);
+      const j = await r.json();
+      const f = (j.features || []).map(x => ({ lat: x.geometry.coordinates[1], lng: x.geometry.coordinates[0], label: [x.properties.name, x.properties.street, x.properties.city || x.properties.county].filter(Boolean).join(", ") })).filter(x => x.label);
+      if(f.length) return f;
+    }catch(_){}
+    try{
+      const r = await withTimeout("https://nominatim.openstreetmap.org/search?format=json&limit=6&countrycodes=dz&viewbox=2.90,36.75,3.40,36.42&bounded=1&q=" + encodeURIComponent(q), 8000);
+      const j = await r.json();
+      return j.map(x => ({ lat: Number(x.lat), lng: Number(x.lon), label: x.display_name.split(",").slice(0, 3).join(",") }));
+    }catch(_){ return []; }
+  }
+  async function doPosSearch(){
+    const q = document.getElementById("posQ").value.trim(), list = document.getElementById("posList"), msg = document.getElementById("posMsg");
+    if(q.length < 3) return;
+    msg.textContent = t("posWait"); list.innerHTML = "";
+    const res = await geoSearch(q);
+    msg.textContent = res.length ? "" : t("posNone");
+    res.forEach(function(r){
+      const b = document.createElement("button");
+      b.type = "button"; b.textContent = r.label;
+      b.style.cssText = "display:block;width:100%;text-align:start;padding:10px 12px;margin-top:6px;border:1.5px solid #dbe3f0;background:#fff;border-radius:10px;font-family:inherit;font-size:13.5px;cursor:pointer;";
+      b.addEventListener("click", function(){
+        POS = { lat: r.lat, lng: r.lng };
+        list.innerHTML = "";
+        document.getElementById("posBtn").textContent = t("posOk");
+        msg.textContent = t("posPicked");
+        const eb = document.getElementById("errorBox"); if(eb){ eb.classList.remove("show"); eb.textContent = ""; }
+      });
+      list.appendChild(b);
+    });
+  }
+  document.getElementById("posSearch").addEventListener("click", doPosSearch);
+  document.getElementById("posQ").addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); doPosSearch(); } });
   const form = document.getElementById("registerForm");
   const errorBox = document.getElementById("errorBox");
   const submitBtn = document.getElementById("submitBtn");
