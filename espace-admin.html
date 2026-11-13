@@ -3143,7 +3143,16 @@ function evalInfoHtml() {
     const isPhone = /t[ée]l[ée]?phone|هاتف/i.test(r[0]);
     return `<div class="eval-row"><div class="k">${escapeHtml(r[0])}</div><div class="v">${isPhone ? `<span dir="ltr">${escapeHtml(tel)}</span>` : escapeHtml(r[1])}</div></div>`;
   }).join("");
-  return `<div class="eval-info">${body}</div>`;
+  // Position du restaurant : lien carte pour la vérifier avant d'accepter
+  let mapRow = "";
+  const fLat = rows.find(r => /^latitude$/i.test(String(r[0]).trim())), fLng = rows.find(r => /^longitude$/i.test(String(r[0]).trim()));
+  if (fLat && fLng) {
+    const la = Number(String(fLat[1]).replace(",", ".")), ln = Number(String(fLng[1]).replace(",", "."));
+    if (isFinite(la) && isFinite(ln)) {
+      mapRow = `<div class="eval-row"><div class="k">${escapeHtml(t("geoMap"))}</div><div class="v"><a href="https://www.google.com/maps?q=${encodeURIComponent(la + "," + ln)}" target="_blank" rel="noopener">📍 ${escapeHtml(t("geoMap"))}</a></div></div>`;
+    }
+  }
+  return `<div class="eval-info">${body}${mapRow}</div>`;
 }
 
 function evalRender(state, extra) {
