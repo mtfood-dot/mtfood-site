@@ -1706,7 +1706,7 @@ function renderGeo() {
 async function loadGeoAdmin() {
   try {
     const d = await apiGet({ action: "csGeoList", password: SESSION_PASSWORD });
-    if (d.success) { GEO_DATA = d; renderGeo(); }
+    if (d.success) { GEO_DATA = d; renderGeo(); if (typeof renderPartners === "function") renderPartners(); }
   } catch (e) {}
 }
 $("geoBody").addEventListener("click", async (ev) => {
@@ -2726,7 +2726,16 @@ function entityCardHtml(kind, item, extraMeta) {
 }
 
 function partnerCardHtml(p) {
-  const meta = `${escapeHtml(p.type || "")} · ${escapeHtml(p.zone || "")} · ${escapeHtml(fmtPhone(p.telephone))}`;
+  let meta = `${escapeHtml(p.type || "")} · ${escapeHtml(p.zone || "")} · ${escapeHtml(fmtPhone(p.telephone))}`;
+  // Position GPS du restaurant : lien carte pour la vérifier, ou alerte si elle manque
+  if (GEO_DATA && GEO_DATA.partners) {
+    const g = GEO_DATA.partners.find(x => String(x.nom || "").trim().toLowerCase() === String(p.nom || "").trim().toLowerCase());
+    if (g) {
+      meta += (g.lat == null || g.lng == null)
+        ? ` · <span style="color:#b3261e;font-weight:800;">⚠ ${escapeHtml(t("geoNoPos"))}</span>`
+        : ` · <a href="https://www.google.com/maps?q=${encodeURIComponent(g.lat + "," + g.lng)}" target="_blank" rel="noopener">📍 ${escapeHtml(t("geoMap"))}</a>`;
+    }
+  }
   return entityCardHtml("partner", p, meta);
 }
 
