@@ -213,6 +213,8 @@
   .dv-row .n{flex:1;min-width:0;font-weight:700;color:var(--text);} .dv-row .p{font-weight:800;color:var(--blue-900);white-space:nowrap;}
   .dv-tag{font-size:11px;font-weight:800;background:#fff3cd;color:#7a5b00;border-radius:8px;padding:2px 7px;white-space:nowrap;}
   .dv-note{font-size:13px;color:var(--muted);padding:6px 4px;}
+  .dv-grp{padding:6px 4px;border-bottom:1px solid var(--border);} .dv-gt{font-size:13.5px;font-weight:800;color:var(--text);} .dv-rule{font-weight:600;color:var(--muted);font-size:12px;}
+  .dv-opts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;} .dv-opt{font-size:12.5px;background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:3px 10px;color:var(--text);} .dv-opt b{color:var(--blue-900);}
   .btn-reject{background:#fff;border-color:#f3c6c1;color:var(--danger);}
 
   .subheading{font-size:12.5px;font-weight:800;color:var(--blue-900);margin:16px 0 10px;
@@ -760,7 +762,7 @@ const I18N = {
     close: "Fermer",
     btnPublish: "✓ Publier",
     btnReject: "✕ Refuser",
-    btnView: "👁 Visualiser", viewMenuOf: "Menu de {name}", viewProposed: "Plat proposé", viewPendingTag: "En attente", viewCurrent: "Ce plat", viewNoDesc: "Aucune description.", viewEmptyMenu: "Aucun autre plat pour l'instant.", viewLoadingMenu: "Chargement du menu…", viewMenuFailed: "Menu publié indisponible pour le moment.", viewCount: "{n} plat(s)",
+    btnView: "👁 Visualiser", viewMenuOf: "Menu de {name}", viewProposed: "Plat proposé", viewPendingTag: "En attente", viewCurrent: "Ce plat", viewNoDesc: "Aucune description.", viewEmptyMenu: "Aucun autre plat pour l'instant.", viewLoadingMenu: "Chargement du menu…", viewMenuFailed: "Menu publié indisponible pour le moment.", viewCount: "{n} plat(s)", viewOptions: "Options du plat", viewNoOptions: "Aucune option (taille, sauce, supplément…).", viewChoices: "{min}–{max} choix", viewChoice1: "1 choix", viewOptTag: "{n} groupe(s) d'options",
     loadPendingFailedGeneric: "Impossible de charger les plats en attente. Réessaie.",
     moderateFailedGeneric: "Impossible de mettre à jour le plat. Réessaie.",
     tabPartners: "Partenaires",
@@ -1072,7 +1074,7 @@ const I18N = {
     close: "إغلاق",
     btnPublish: "✓ نشر",
     btnReject: "✕ رفض",
-    btnView: "👁 معاينة", viewMenuOf: "قائمة {name}", viewProposed: "الطبق المقترح", viewPendingTag: "قيد المراجعة", viewCurrent: "هذا الطبق", viewNoDesc: "بدون وصف.", viewEmptyMenu: "لا توجد أطباق أخرى حالياً.", viewLoadingMenu: "جارٍ تحميل القائمة…", viewMenuFailed: "القائمة المنشورة غير متاحة حالياً.", viewCount: "{n} طبق",
+    btnView: "👁 معاينة", viewMenuOf: "قائمة {name}", viewProposed: "الطبق المقترح", viewPendingTag: "قيد المراجعة", viewCurrent: "هذا الطبق", viewNoDesc: "بدون وصف.", viewEmptyMenu: "لا توجد أطباق أخرى حالياً.", viewLoadingMenu: "جارٍ تحميل القائمة…", viewMenuFailed: "القائمة المنشورة غير متاحة حالياً.", viewCount: "{n} طبق", viewOptions: "خيارات الطبق", viewNoOptions: "بدون خيارات (حجم، صلصة، إضافات…).", viewChoices: "{min}–{max} اختيارات", viewChoice1: "اختيار واحد", viewOptTag: "{n} مجموعة خيارات",
     loadPendingFailedGeneric: "تعذر تحميل الأطباق بانتظار المراجعة. أعد المحاولة.",
     moderateFailedGeneric: "تعذر تحديث الطبق. أعد المحاولة.",
     tabPartners: "الشركاء",
@@ -2100,6 +2102,16 @@ function openDishZoom(itemId) {
   box.querySelectorAll("[data-dz-id]").forEach(b => b.addEventListener("click", () => { closeDishZoom(); onModerate(b.dataset.dzId, b.dataset.decision, b); }));
   $("dzClose").focus();
 }
+function dvGroupsHtml(groups) {
+  if (!groups || !groups.length) return `<div class="dv-note">${escapeHtml(t("viewNoOptions"))}</div>`;
+  return groups.map(g => {
+    const title = (LANG === "ar" && g.titreAr) ? g.titreAr : g.titre;
+    const mn = Number(g.min) || 0, mx = Number(g.max) || (g.options || []).length;
+    const rule = (mn === 1 && mx === 1) ? t("viewChoice1") : t("viewChoices").replace("{min}", mn).replace("{max}", mx);
+    const opts = (g.options || []).map(o => `<span class="dv-opt">${escapeHtml(o.nom)}${Number(o.prix) ? ` <b>+${escapeHtml(String(o.prix))}</b>` : ""}</span>`).join("");
+    return `<div class="dv-grp"><div class="dv-gt">${escapeHtml(title || "")} <span class="dv-rule">· ${escapeHtml(rule)}</span></div><div class="dv-opts">${opts}</div></div>`;
+  }).join("");
+}
 /* Visualiser : détail du plat proposé + menu complet du restaurant, avant de publier ou refuser */
 async function openDishView(itemId) {
   const item = PENDING_ITEMS.find(x => String(x.id) === String(itemId));
@@ -2123,6 +2135,8 @@ async function openDishView(itemId) {
         <div class="desc">${escapeHtml(desc || t("viewNoDesc"))}</div>
       </div>
     </div>
+    <div class="dv-h">${escapeHtml(t("viewOptions"))}</div>
+    ${dvGroupsHtml(item.groups)}
     <div class="actions-row">
       <button class="btn-action btn-publish" type="button" data-dz-id="${id}" data-decision="publier">${escapeHtml(t("btnPublish"))}</button>
       <button class="btn-action btn-reject" type="button" data-dz-id="${id}" data-decision="refuser">${escapeHtml(t("btnReject"))}</button>
@@ -2143,8 +2157,8 @@ async function openDishView(itemId) {
   } catch (e) { failed = true; }
   if (!document.getElementById("dishZoom")) return;   // fenêtre fermée entre-temps
   const rows = [];
-  published.forEach(it => rows.push({ cat: String(it.categorie || it.categories || "Autre"), nom: LANG === "ar" && it.nom_ar ? it.nom_ar : it.nom, prix: it.prix, photo: it.photo, pending: false, cur: false }));
-  PENDING_ITEMS.filter(x => same(x.partenaire)).forEach(x => rows.push({ cat: String(x.categorie || "Autre"), nom: LANG === "ar" && x.nom_ar ? x.nom_ar : x.nom, prix: x.prix, photo: x.photo, pending: true, cur: String(x.id) === String(item.id) }));
+  published.forEach(it => rows.push({ cat: String(it.categorie || it.categories || "Autre"), nom: LANG === "ar" && it.nom_ar ? it.nom_ar : it.nom, prix: it.prix, photo: it.photo, groups: it.groups, pending: false, cur: false }));
+  PENDING_ITEMS.filter(x => same(x.partenaire)).forEach(x => rows.push({ cat: String(x.categorie || "Autre"), nom: LANG === "ar" && x.nom_ar ? x.nom_ar : x.nom, prix: x.prix, photo: x.photo, groups: x.groups, pending: true, cur: String(x.id) === String(item.id) }));
   const el = $("dvMenu"); if (!el) return;
   if (!rows.length) { el.className = "dv-note"; el.textContent = failed ? t("viewMenuFailed") : t("viewEmptyMenu"); return; }
   const cats = {}; rows.forEach(r => { (cats[r.cat] = cats[r.cat] || []).push(r); });
@@ -2154,6 +2168,7 @@ async function openDishView(itemId) {
     Object.keys(cats).map(c => `<div class="dv-cat">${escapeHtml(c)}</div>` + cats[c].map(r =>
       `<div class="dv-row${r.cur ? " cur" : ""}">${r.photo ? `<img src="${escapeAttr(r.photo)}" alt="">` : ""}<div class="n">${escapeHtml(r.nom || "")}</div>` +
       (r.cur ? `<span class="dv-tag">${escapeHtml(t("viewCurrent"))}</span>` : (r.pending ? `<span class="dv-tag">${escapeHtml(t("viewPendingTag"))}</span>` : "")) +
+      (r.groups && r.groups.length ? `<span class="dv-tag" style="background:#e3f2fd;color:#0d47a1;">${escapeHtml(t("viewOptTag").replace("{n}", r.groups.length))}</span>` : "") +
       `<div class="p">${escapeHtml(String(r.prix || 0))} DA</div></div>`).join("")).join("");
 }
 function closeDishZoom() { const z = document.getElementById("dishZoom"); if (z) z.remove(); }
