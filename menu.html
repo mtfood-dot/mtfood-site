@@ -2034,7 +2034,11 @@ function closedText(name) {
   const dn = (I18N[LANG] && I18N[LANG].days && I18N[LANG].days[n.day]) || n.day;
   return t("closedDay").replace("{day}", dn).replace("{at}", n.at);
 }
-setInterval(() => { if (document.visibilityState === "visible") loadRestoInfo(); }, 300000);
+/* État ouvert/fermé : rafraîchi toutes les 60 s (écran visible) et dès le retour sur l'app */
+setInterval(() => { if (document.visibilityState === "visible") loadRestoInfo(); }, 60000);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") loadRestoInfo(); });
+window.addEventListener("focus", () => loadRestoInfo());
+window.addEventListener("pageshow", () => loadRestoInfo());
 function applyRestoInfo(res) {
   if (!res || !res.success || !res.restos) return;
   const m = {}, p = {};
@@ -2054,10 +2058,13 @@ function applyRestoInfo(res) {
   }
   updatePreNotes();
 }
-function loadRestoInfo() {
+let RESTO_INFO_LAST = 0;
+function loadRestoInfo(force) {
   const c = cacheGet("restoInfo", 20 * 60 * 1000);
   if (c && !Object.keys(RESTO_OPEN).length) applyRestoInfo(c);
-  jsonpRequest({ action: "restoInfo" }, 15000).then(res => {
+  if (!force && Date.now() - RESTO_INFO_LAST < 10000) return Promise.resolve();
+  RESTO_INFO_LAST = Date.now();
+  return jsonpRequest({ action: "restoInfo" }, 15000).then(res => {
     if (!res || !res.success || !res.restos) return;
     cacheSet("restoInfo", res);
     applyRestoInfo(res);
@@ -3230,7 +3237,19 @@ function bindGlobalEvents() {
    ENVOI DE LA COMMANDE
    ============================================================ */
 let ORDER_REQUEST_ID = "";
+let SUBMIT_CHECKED = false;
 function submitOrder() {
+  /* Vérifie l'état du restaurant à jour juste avant d'envoyer */
+  if (!SUBMIT_CHECKED) {
+    const bt = $("confirmOrderBtn"); if (bt) bt.disabled = true;
+    loadRestoInfo(true).then(() => {
+      if (bt) bt.disabled = false;
+      const p = Object.values(CART).length ? (Object.values(CART)[0].item.partenaire || "") : "";
+      if (p && restoClosedInfo(p) && !restoPre(p)) { showCheckoutError(t("closedOrder")); return; }
+      SUBMIT_CHECKED = true; try { submitOrder(); } finally { SUBMIT_CHECKED = false; }
+    });
+    return;
+  }
   if (!getClientSession()) {
     saveCartForAfterLogin();
     window.location.href = "connexion.html?next=menu.html";
