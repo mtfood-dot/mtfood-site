@@ -3286,6 +3286,11 @@ function submitOrder() {
         throw e;
       }
       ORDER_REQUEST_ID = "";
+      // Le numéro saisi est gardé dans la session : pré-rempli à la prochaine commande (le serveur l'enregistre aussi dans la fiche client)
+      try {
+        const cs = getClientSession();
+        if (cs && cs.clientId && !cs.telephone && payload.phone) { cs.telephone = payload.phone; localStorage.setItem(CLIENT_SESSION_KEY, JSON.stringify(cs)); }
+      } catch (e) {}
       closeOverlay("checkoutOverlay");
       $("orderNoDisplay").textContent = res.orderNumber;
       { const isPre = !!res.preorder; $("orderSentTitle").textContent = t(isPre ? "preSentTitle" : "orderSentTitle");
