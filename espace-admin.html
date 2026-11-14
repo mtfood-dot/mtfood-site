@@ -615,6 +615,7 @@ if ("serviceWorker" in navigator) {
         <button class="btn-refresh" id="refreshStatsBtn" type="button"><span id="refreshStatsLabel"></span></button>
       </div>
       <div id="statsBody"></div>
+      <div id="perfBody"></div>
       <div class="partner-card" style="margin-top:14px;"><div class="meta"><b id="backupTitle"></b><br><span id="backupNote" style="color:var(--muted);font-size:12.5px;"></span></div>
         <button class="btn-refresh" id="backupBtn" type="button" style="margin-top:8px;"><span id="backupLabel"></span></button></div>
     </div>
@@ -950,6 +951,9 @@ const I18N = {
     geoVille: "Ville", geoLat: "Latitude", geoLng: "Longitude", geoRayon: "Rayon (km)", geoSave: "Enregistrer", geoSaved: "Enregistré.",
     geoProposed: "Proposé par le restaurant", geoApply: "Valider {n} km", geoMap: "Voir sur la carte", geoNoPos: "Position manquante", geoDefaultRay: "rayon par défaut",
     tabCaisse: "Caisse",
+    perfTitle: "Temps de livraison", perfN: "{n} commandes livrées analysées", perfPrep: "Préparation restaurant", perfAssign: "Recherche d'un livreur", perfWait: "Attente du livreur au restaurant", perfTrip: "Trajet vers le client", perfTotal: "Durée totale", perfMin: "min",
+    perfPerResto: "Par restaurant", perfPerDriver: "Par livreur", perfAnom: "Cas à vérifier", perfNone: "Pas assez de données.", perfNoServer: "Temps de livraison : le serveur n'est pas encore à jour.",
+    perfAnTooFast: "Trajet trop rapide ({m} min pour la zone {z})", perfAnBeforeReady: "Récupérée avant « Prête »", perfAnNoPick: "Étape « Récupérée » jamais appuyée", perfAnSlow: "Durée totale très longue ({m} min)", perfAnLongWait: "Livreur resté {m} min au restaurant",
     tabStats: "Statistiques", sdToday: "Aujourd'hui", sd7: "7 jours", sd30: "30 jours", sdAll: "Tout",
     stDelivered: "Livrées", stCancelled: "Annulées", stRate: "Taux d'annulation", stSales: "Chiffre d'affaires (plats)", stBasket: "Panier moyen",
     stCommission: "Commissions MT", stOffered: "Livraisons offertes (coût MT)", stNewClients: "Nouveaux clients", stPromo: "Remises promo (coût MT)", stInProgress: "En cours",
@@ -1262,6 +1266,9 @@ const I18N = {
     geoVille: "المدينة", geoLat: "خط العرض", geoLng: "خط الطول", geoRayon: "النطاق (كم)", geoSave: "حفظ", geoSaved: "تم الحفظ.",
     geoProposed: "اقتراح المطعم", geoApply: "اعتماد {n} كم", geoMap: "عرض على الخريطة", geoNoPos: "الموقع ناقص", geoDefaultRay: "النطاق الافتراضي",
     tabCaisse: "الصندوق",
+    perfTitle: "أوقات التوصيل", perfN: "{n} طلب مُسلَّم تم تحليله", perfPrep: "تحضير المطعم", perfAssign: "البحث عن موصّل", perfWait: "انتظار الموصّل في المطعم", perfTrip: "الطريق إلى الزبون", perfTotal: "المدة الإجمالية", perfMin: "د",
+    perfPerResto: "حسب المطعم", perfPerDriver: "حسب الموصّل", perfAnom: "حالات للتحقق", perfNone: "لا توجد بيانات كافية.", perfNoServer: "أوقات التوصيل: الخادم غير محدَّث بعد.",
+    perfAnTooFast: "طريق سريع جدا ({m} د للمنطقة {z})", perfAnBeforeReady: "تم الاستلام قبل «جاهز»", perfAnNoPick: "لم يتم الضغط على «تم الاستلام»", perfAnSlow: "مدة إجمالية طويلة جدا ({m} د)", perfAnLongWait: "بقي الموصّل {m} د في المطعم",
     tabStats: "الإحصائيات", sdToday: "اليوم", sd7: "7 أيام", sd30: "30 يوما", sdAll: "الكل",
     stDelivered: "تم التسليم", stCancelled: "ملغاة", stRate: "نسبة الإلغاء", stSales: "رقم المعاملات (الأطباق)", stBasket: "متوسط السلة",
     stCommission: "عمولات MT", stOffered: "توصيل مجاني (تكلفة MT)", stNewClients: "زبائن جدد", stPromo: "خصومات الرموز (تكلفة MT)", stInProgress: "قيد التنفيذ",
@@ -1423,7 +1430,7 @@ function applyLanguage() {
   $("tabStatsLabel").textContent = t("tabStats"); $("refreshStatsLabel").textContent = t("caisseRefresh");
   document.querySelectorAll("[data-sd]").forEach(b => { b.textContent = t({ "1": "sdToday", "7": "sd7", "30": "sd30", "0": "sdAll" }[b.dataset.sd]); });
   $("backupTitle").textContent = t("backupTitle"); $("backupNote").textContent = t("backupNote"); $("backupLabel").textContent = t("backupNow");
-  if (STATS_DATA) renderStats();
+  if (STATS_DATA) renderStats(); if (typeof PERF_DATA !== "undefined" && PERF_DATA) renderPerf();
   $("subheadingGeo").textContent = t("geoTitle");
   if (GEO_DATA) renderGeo();
   $("refreshCaisseLabel").textContent = t("caisseRefresh");
@@ -1787,8 +1794,68 @@ async function loadStatsAdmin() {
   try {
     const d = await apiGet({ action: "csStats", password: SESSION_PASSWORD, days: STATS_DAYS });
     if (!d.success) { showError($("errorBox"), d.error || t("loadFailedGeneric")); return; }
-    STATS_DATA = d; renderStats();
+    STATS_DATA = d; renderStats(); loadPerfStats();
   } catch (e) { showError($("errorBox"), t("loadFailedGeneric")); }
+}
+
+/* ---- Temps de livraison : calculé ici à partir des heures enregistrées par le serveur (lecture seule) ---- */
+let PERF_DATA = null;
+async function loadPerfStats() {
+  const box = $("perfBody");
+  try {
+    const d = await apiGet({ action: "perfStats", password: SESSION_PASSWORD, days: STATS_DAYS || 90 });
+    if (!d || !d.success) { box.innerHTML = '<div class="live-note">' + escapeHtml(t("perfNoServer")) + "</div>"; return; }
+    PERF_DATA = d; renderPerf();
+  } catch (e) { box.innerHTML = '<div class="live-note">' + escapeHtml(t("perfNoServer")) + "</div>"; }
+}
+function perfMin_(a, b) { return a && b && b >= a ? (b - a) / 60000 : null; }
+function perfAvg_(arr) { const v = arr.filter(x => x !== null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; }
+function perfFmt_(m) { return m === null ? "—" : Math.round(m) + " " + t("perfMin"); }
+function perfZoneKm_(z) {
+  const m = String(z || "").match(/(\d+(?:[.,]\d+)?)\s*(?:à|-|–|a)\s*(\d+(?:[.,]\d+)?)\s*km/i);
+  return m ? { lo: Number(m[1].replace(",", ".")), hi: Number(m[2].replace(",", ".")) } : null;
+}
+function perfAnalyse_(o) {
+  const r = {
+    numero: o.numero, resto: o.partenaire || "—", livreur: o.livreur || "—", zone: o.zone || "",
+    prep: perfMin_(o.acceptedAt, o.readyAt),
+    assign: perfMin_(o.acceptedAt, o.takenAt),
+    wait: perfMin_(o.arrivedAt, o.pickedAt),
+    trip: perfMin_(o.pickedAt, o.doneAt),
+    total: perfMin_(o.createdAt, o.doneAt),
+    flags: []
+  };
+  const zk = perfZoneKm_(o.zone);
+  if (!o.pickedAt) r.flags.push(t("perfAnNoPick"));
+  else {
+    if (r.trip !== null && zk && r.trip < Math.max(2, zk.lo * 1.5)) r.flags.push(t("perfAnTooFast").replace("{m}", Math.round(r.trip)).replace("{z}", o.zone));
+    if (o.readyAt && o.pickedAt < o.readyAt - 60000) r.flags.push(t("perfAnBeforeReady"));
+    if (r.wait !== null && r.wait > 15) r.flags.push(t("perfAnLongWait").replace("{m}", Math.round(r.wait)));
+  }
+  if (r.total !== null && r.total > 90) r.flags.push(t("perfAnSlow").replace("{m}", Math.round(r.total)));
+  return r;
+}
+function renderPerf() {
+  const d = PERF_DATA, box = $("perfBody"); if (!d) return;
+  const rows = (d.orders || []).map(perfAnalyse_);
+  if (!rows.length) { box.innerHTML = '<div class="subheading">' + escapeHtml(t("perfTitle")) + '</div><div class="live-note">' + escapeHtml(t("perfNone")) + "</div>"; return; }
+  const card = (v, l) => '<div class="stat-card"><div class="value"><bdi dir="ltr">' + escapeHtml(v) + '</bdi></div><div class="label">' + escapeHtml(l) + "</div></div>";
+  const avg = k => perfAvg_(rows.map(r => r[k]));
+  const group = (key) => {
+    const g = {};
+    rows.forEach(r => { (g[r[key]] = g[r[key]] || []).push(r); });
+    return Object.keys(g).map(k => ({ nom: k, n: g[k].length, prep: perfAvg_(g[k].map(r => r.prep)), wait: perfAvg_(g[k].map(r => r.wait)), trip: perfAvg_(g[k].map(r => r.trip)), total: perfAvg_(g[k].map(r => r.total)), anom: g[k].filter(r => r.flags.length).length }))
+      .sort((a, b) => b.n - a.n);
+  };
+  const line = (x, withPrep) => "<b>" + escapeHtml(x.nom) + "</b> · " + x.n + " · " + (withPrep ? escapeHtml(t("perfPrep")) + " " + perfFmt_(x.prep) + " · " : "") + escapeHtml(t("perfTrip")) + " " + perfFmt_(x.trip) + " · " + escapeHtml(t("perfTotal")) + " " + perfFmt_(x.total) + (x.anom ? " · ⚠ " + x.anom : "");
+  const bad = rows.filter(r => r.flags.length).slice(0, 40);
+  box.innerHTML =
+    '<div class="subheading">' + escapeHtml(t("perfTitle")) + '</div><div class="live-note">' + escapeHtml(t("perfN").replace("{n}", rows.length)) + "</div>" +
+    '<div class="stats-row">' + card(perfFmt_(avg("prep")), t("perfPrep")) + card(perfFmt_(avg("assign")), t("perfAssign")) + card(perfFmt_(avg("wait")), t("perfWait")) + "</div>" +
+    '<div class="stats-row" style="margin-top:10px;">' + card(perfFmt_(avg("trip")), t("perfTrip")) + card(perfFmt_(avg("total")), t("perfTotal")) + "</div>" +
+    '<div class="subheading">' + escapeHtml(t("perfPerResto")) + '</div><div class="partner-card"><div class="meta">' + group("resto").map(x => line(x, true)).join("<br>") + "</div></div>" +
+    '<div class="subheading">' + escapeHtml(t("perfPerDriver")) + '</div><div class="partner-card"><div class="meta">' + group("livreur").map(x => line(x, false)).join("<br>") + "</div></div>" +
+    (bad.length ? '<div class="subheading">' + escapeHtml(t("perfAnom")) + '</div><div class="partner-card"><div class="meta">' + bad.map(r => "<b>" + escapeHtml(String(r.numero)) + "</b> · " + escapeHtml(r.resto) + " · " + escapeHtml(r.livreur) + "<br>⚠ " + r.flags.map(escapeHtml).join(" · ⚠ ")).join('<hr style="border:0;border-top:1px solid #e6ebf2;margin:8px 0;">') + "</div></div>" : "");
 }
 function renderStats() {
   const d = STATS_DATA; if (!d) return;
