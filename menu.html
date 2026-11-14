@@ -922,6 +922,7 @@ const I18N = {
     addrChoose: "Choisir mon adresse",
     addrTitle: "Adresse de livraison",
     addrGps: "Utiliser ma position actuelle",
+    addrLocateMe: "Me localiser",
     addrGpsLocating: "Localisation en cours...",
     addrGpsDenied: "Position refusée : choisis ta zone dans la liste ci-dessous.",
     addrGpsFail: "Impossible de te localiser : choisis ta zone dans la liste ci-dessous.",
@@ -1094,6 +1095,7 @@ const I18N = {
     addrChoose: "اختر عنواني",
     addrTitle: "عنوان التوصيل",
     addrGps: "استخدم موقعي الحالي",
+    addrLocateMe: "حدّد موقعي",
     addrGpsLocating: "جارٍ تحديد الموقع...",
     addrGpsDenied: "تم رفض الوصول إلى الموقع: اختر منطقتك من القائمة أدناه.",
     addrGpsFail: "تعذّر تحديد موقعك: اختر منطقتك من القائمة أدناه.",
@@ -2831,7 +2833,17 @@ function quoteBox(target, withButton) {
   const line = (cls, text) => { const d = document.createElement("div"); d.className = cls; d.textContent = text; box.appendChild(d); return d; };
   if (QUOTE_BUSY) { box.classList.add("show", "busy"); line("qt", t("quoteLoading")); return; }
   if (QUOTE_FAILED) { box.classList.add("show", "ko"); line("qt", t("quoteError")); return; }
-  if (!hasCoords()) { box.classList.add("show", "warn"); line("qt", t("addrNeedLocate")); return; }
+  if (!hasCoords()) {
+    box.classList.add("show", "warn"); line("qt", t("addrNeedLocate"));
+    if (box.id === "zoneSummary") {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "gps-btn"; b.style.marginTop = "10px";
+      b.textContent = "📍 " + t("addrLocateMe");
+      b.addEventListener("click", () => { closeOverlay("checkoutOverlay"); openAddrSheet(); useMyLocation(); });
+      box.appendChild(b);
+    }
+    return;
+  }
   if (q && q.covered) {
     box.classList.add("show", "ok");
     line("qt", t("deliveryTo") + " " + q.zoneNom);
