@@ -2906,7 +2906,7 @@ function entityCardHtml(kind, item, extraMeta) {
       </div>
       <div class="pin-row">
         <input type="text" inputmode="numeric" maxlength="${kind === "partner" ? 6 : 4}" aria-label="${escapeAttr(t("btnSavePin"))}" data-error-after="closest:.pin-row" placeholder="${item.pin ? "••••" + (kind === "partner" ? "••" : "") : (kind === "partner" ? "------" : "----")}">
-        ${kind === "partner" ? '<button class="btn-action btn-genpin" type="button" title="PIN">🎲</button>' : ""}
+        ${kind === "partner" ? '<button class="btn-action btn-genpin" type="button" title="PIN">🎲</button><button class="btn-action btn-whatsapp btn-wapin" type="button" data-tel="' + tel + '" title="WhatsApp">📲</button>' : ""}
         <button class="btn-action btn-savepin" type="button" data-savepin-kind="${kind}" data-savepin-tel="${tel}">${escapeHtml(t("btnSavePin"))}</button>
       </div>
     </div>
@@ -2982,6 +2982,27 @@ function wireEntityButtons(containerId) {
       do { const a = new Uint32Array(1); crypto.getRandomValues(a); pin = String(100000 + (a[0] % 900000)); }
       while (/^(\d)\1+$/.test(pin) || "1234567890123456".indexOf(pin) >= 0 || "6543210987654321".indexOf(pin) >= 0);
       btn.closest(".pin-row").querySelector("input").value = pin;
+    });
+  });
+  document.querySelectorAll("#" + containerId + " .btn-wapin").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      /* Enregistre le PIN saisi puis ouvre WhatsApp vers le restaurant avec ce PIN */
+      const input = btn.closest(".pin-row").querySelector("input"), pin = input.value.trim();
+      hideError($("errorBox")); hideSuccess($("successBox"));
+      if (!/^[0-9]{6}$/.test(pin)) { MTForm.fail(input, t("pinInvalid6")); return; }
+      const wa = phoneToWaNumber(btn.dataset.tel);
+      const w = window.open("about:blank", "_blank");
+      btn.disabled = true;
+      try {
+        const data = await apiGet({ action: "setPartnerPin", password: SESSION_PASSWORD, telephone: btn.dataset.tel, pin: pin });
+        if (!data.success) { if (w) w.close(); showError($("errorBox"), data.error || t("savePinFailedGeneric")); return; }
+        const item = PARTNERS.find(x => String(x.telephone) === String(btn.dataset.tel)); if (item) item.pin = pin;
+        showSuccess($("successBox"), t("pinSaved"));
+        const msg = "Bonjour, voici votre nouveau code PIN MT Food : " + pin + "\nConnectez-vous avec votre numéro de téléphone et ce code. Gardez-le secret.\n\nمرحباً، رمز PIN الجديد الخاص بك في MT Food : " + pin;
+        const url = "https://wa.me/" + wa + "?text=" + encodeURIComponent(msg);
+        if (w) w.location = url; else window.location = url;
+      } catch (e) { if (w) w.close(); showError($("errorBox"), t("savePinFailedGeneric")); }
+      finally { btn.disabled = false; }
     });
   });
   document.querySelectorAll("#" + containerId + " [data-savepin-kind]").forEach(btn => {
