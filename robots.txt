@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /espace-admin.html
+Disallow: /espace-partenaire.html
+Disallow: /espace-livreur.html
+Disallow: /espace-client.html
