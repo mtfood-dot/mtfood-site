@@ -844,6 +844,7 @@ const I18N = {
     orderAssigned: "Commande assignée.",
     assignFailedGeneric: "Impossible d'assigner la commande. Réessaie.",
     pinInvalid: "Le code PIN doit contenir exactement 4 chiffres.",
+    pinInvalid6: "Le code PIN du restaurant doit contenir exactement 6 chiffres.",
     pinSaved: "Code PIN enregistré.",
     statusUpdated: "Statut mis à jour.",
     tabDashboard: "Bilan",
@@ -1159,6 +1160,7 @@ const I18N = {
     orderAssigned: "تم إسناد الطلب.",
     assignFailedGeneric: "تعذر إسناد الطلب. أعد المحاولة.",
     pinInvalid: "يجب أن يتكون رمز PIN من 4 أرقام بالضبط.",
+    pinInvalid6: "يجب أن يتكون رمز PIN الخاص بالمطعم من 6 أرقام بالضبط.",
     pinSaved: "تم حفظ رمز PIN.",
     statusUpdated: "تم تحديث الحالة.",
     tabDashboard: "ملخص",
@@ -2903,7 +2905,8 @@ function entityCardHtml(kind, item, extraMeta) {
         <button class="btn-action ${toggleClass}" type="button" data-toggle-kind="${kind}" data-toggle-tel="${tel}" data-new-status="${escapeAttr(newStatus)}">${escapeHtml(toggleLabel)}</button>
       </div>
       <div class="pin-row">
-        <input type="text" inputmode="numeric" maxlength="4" aria-label="${escapeAttr(t("btnSavePin"))}" data-error-after="closest:.pin-row" placeholder="${item.pin ? "••••" : "----"}">
+        <input type="text" inputmode="numeric" maxlength="${kind === "partner" ? 6 : 4}" aria-label="${escapeAttr(t("btnSavePin"))}" data-error-after="closest:.pin-row" placeholder="${item.pin ? "••••" + (kind === "partner" ? "••" : "") : (kind === "partner" ? "------" : "----")}">
+        ${kind === "partner" ? '<button class="btn-action btn-genpin" type="button" title="PIN">🎲</button>' : ""}
         <button class="btn-action btn-savepin" type="button" data-savepin-kind="${kind}" data-savepin-tel="${tel}">${escapeHtml(t("btnSavePin"))}</button>
       </div>
     </div>
@@ -2971,6 +2974,15 @@ function driverCardHtml(d) {
 function wireEntityButtons(containerId) {
   document.querySelectorAll("#" + containerId + " [data-toggle-kind]").forEach(btn => {
     btn.addEventListener("click", () => onToggleStatus(btn.dataset.toggleKind, btn.dataset.toggleTel, btn.dataset.newStatus, btn));
+  });
+  document.querySelectorAll("#" + containerId + " .btn-genpin").forEach(btn => {
+    btn.addEventListener("click", () => {
+      /* PIN aléatoire à 6 chiffres (sans suite ni répétition) à vérifier puis enregistrer */
+      let pin;
+      do { const a = new Uint32Array(1); crypto.getRandomValues(a); pin = String(100000 + (a[0] % 900000)); }
+      while (/^(\d)\1+$/.test(pin) || "1234567890123456".indexOf(pin) >= 0 || "6543210987654321".indexOf(pin) >= 0);
+      btn.closest(".pin-row").querySelector("input").value = pin;
+    });
   });
   document.querySelectorAll("#" + containerId + " [data-savepin-kind]").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -3502,9 +3514,10 @@ async function onSavePin(kind, telephone, inputEl, btnEl) {
   hideError($("errorBox"));
   hideSuccess($("successBox"));
   const pin = inputEl ? inputEl.value.trim() : "";
-  if (!/^[0-9]{4}$/.test(pin)) {
-    if (inputEl) MTForm.fail(inputEl, t("pinInvalid"));
-    else showError($("errorBox"), t("pinInvalid"));
+  if (!(kind === "partner" ? /^[0-9]{6}$/ : /^[0-9]{4}$/).test(pin)) {
+    const pm = kind === "partner" ? t("pinInvalid6") : t("pinInvalid");
+    if (inputEl) MTForm.fail(inputEl, pm);
+    else showError($("errorBox"), pm);
     return;
   }
   btnEl.disabled = true;
