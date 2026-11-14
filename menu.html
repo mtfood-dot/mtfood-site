@@ -719,6 +719,7 @@ if ("serviceWorker" in navigator) {
 
 <main>
   <div id="restoList" class="resto-list" aria-busy="true"><div class="sk-card" aria-hidden="true"><span class="sk-cov"></span><span class="sk-meta"><span class="sk-l" style="width:55%"></span><span class="sk-l" style="width:80%"></span><span class="sk-l" style="width:40%"></span></span></div><div class="sk-card" aria-hidden="true"><span class="sk-cov"></span><span class="sk-meta"><span class="sk-l" style="width:55%"></span><span class="sk-l" style="width:80%"></span><span class="sk-l" style="width:40%"></span></span></div><div class="sk-card" aria-hidden="true"><span class="sk-cov"></span><span class="sk-meta"><span class="sk-l" style="width:55%"></span><span class="sk-l" style="width:80%"></span><span class="sk-l" style="width:40%"></span></span></div></div>
+<script>(function(){try{var b=document.getElementById("restoList"),n=parseInt(localStorage.getItem("mtd_nresto"),10)||5;n=Math.max(1,Math.min(n,12));var f=b.firstElementChild;while(b.children.length<n)b.appendChild(f.cloneNode(true));while(b.children.length>n)b.removeChild(b.lastElementChild);}catch(e){}})();</script>
   <div id="grid" class="grid"></div>
   <div id="noResult" class="no-result"></div>
   <div id="emptyMsg" class="empty-msg" style="display:none;"></div>
@@ -2159,6 +2160,7 @@ function renderRestoBar() {
       (r.soon ? '<div class="rs">' + escapeHtml(t('menuSoon')) + '</div>' : '<div class="rc">' + escapeHtml(cuisinesText(r)) + '</div>') +
       (restoOutOfZone(r.name) ? '<div class="rx">' + escapeHtml(t("outZoneCard")) + "</div>" : etaCardHtml(r.name)) + openBadgeHtml(r) + hint + '</span></button>';
   }).join("");
+  try { if (res.length) localStorage.setItem("mtd_nresto", String(res.length)); } catch (e) {}
   bindLogoFallback(box); bindCoverFallback(box);
   box.querySelectorAll(".resto-card").forEach(btn => btn.addEventListener("click", () => {
     const x = res.find(z => z.r.key === btn.dataset.key);
