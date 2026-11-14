@@ -1940,29 +1940,51 @@ function menuForResto() {
   const r = currentResto();
   return r ? r.items : MENU.filter(isActiveResto);
 }
-function smallDrive(u, w) { return String(u || "").replace(/^(https:\/\/drive\.google\.com\/thumbnail\?[^#]*?sz=w)\d+/, "$1" + w); }
-function restoLogoSrc(name, w) { return smallDrive(RESTO_LOGO[norm(name || "")], w || 160) || ("branding/restos/" + restoSlug(name) + ".png"); }
+const DRIVE_ID_RE = /^https:\/\/drive\.google\.com\/thumbnail\?[^#]*?id=([\w-]+)/;
+const LOCAL_LOGOS = { "mc-maho": 1, "mister-maho": 1, "mr-maho": 1 };
+function driveAlt(u, w) { return String(u || "").replace(/^(https:\/\/drive\.google\.com\/thumbnail\?[^#]*?sz=w)\d+/, "$1" + w); }
+function smallDrive(u, w) { u = String(u || ""); const m = u.match(DRIVE_ID_RE); return m ? "https://lh3.googleusercontent.com/d/" + m[1] + "=w" + w : u; }
+function restoLogoRaw(name) { return RESTO_LOGO[norm(name || "")] || ""; }
+function restoLogoSrc(name, w) {
+  const raw = restoLogoRaw(name);
+  if (raw) return smallDrive(raw, w || 200);
+  const slug = restoSlug(name);
+  return LOCAL_LOGOS[slug] ? "branding/restos/" + slug + ".png" : "";
+}
 const PRELOADED = {};
-function preloadLogos() { try { Object.keys(RESTO_LOGO).forEach(k => { const u = smallDrive(RESTO_LOGO[k], 160); if (PRELOADED[u]) return; PRELOADED[u] = 1; const im = new Image(); im.decoding = "async"; im.src = u; }); } catch (e) {} }
+function preloadLogos() { try { Object.keys(RESTO_LOGO).forEach(k => { const u = smallDrive(RESTO_LOGO[k], 200); if (PRELOADED[u]) return; PRELOADED[u] = 1; const im = new Image(); im.decoding = "async"; im.src = u; }); } catch (e) {} }
+function retryDriveAlt(img, e) {
+  const ts = e ? String(e.timeStamp) : "";
+  if (img.dataset.triedAlt) return !!ts && img.dataset.altEvt === ts;
+  if (!img.dataset.alt) return false;
+  img.dataset.triedAlt = "1"; img.dataset.altEvt = ts; img.src = img.dataset.alt; return true;
+}
 function logoHtml(name) {
-  return '<img src="' + escapeAttr(restoLogoSrc(name)) + '" alt="" decoding="async" data-ini="' + escapeAttr(restoInitials(name)) + '">';
+  const src = restoLogoSrc(name);
+  if (!src) return escapeHtml(restoInitials(name));
+  const alt = restoLogoRaw(name) ? driveAlt(restoLogoRaw(name), 200) : "";
+  return '<img src="' + escapeAttr(src) + '"' + (alt ? ' data-alt="' + escapeAttr(alt) + '"' : "") + ' alt="" decoding="async" data-ini="' + escapeAttr(restoInitials(name)) + '">';
 }
 function bindLogoFallback(root) {
-  root.querySelectorAll(".logo-circle img").forEach(img => img.addEventListener("error", () => { if (img.parentNode) img.parentNode.textContent = img.dataset.ini; }));
+  root.querySelectorAll(".logo-circle img").forEach(img => img.addEventListener("error", e => { if (retryDriveAlt(img, e)) return; if (img.parentNode) img.parentNode.textContent = img.dataset.ini; }));
 }
-function restoCoverSrc(r) {
+function restoCoverSrc(r, big) {
   const it = (r.items || []).find(i => i.photo);
-  return it ? { src: smallDrive(it.photo, 240), logo: false } : { src: restoLogoSrc(r.name, 200), logo: true };
+  if (it) return { src: smallDrive(it.photo, big ? 800 : 240), alt: driveAlt(it.photo, big ? 800 : 240), logo: false };
+  const raw = restoLogoRaw(r.name);
+  return { src: restoLogoSrc(r.name, big ? 400 : 200), alt: raw ? driveAlt(raw, big ? 400 : 200) : "", logo: true };
 }
-function coverInner(r) {
-  const c = restoCoverSrc(r);
-  return '<span class="rini">' + escapeHtml(restoInitials(r.name)) + '</span><img class="' + (c.logo ? "contain" : "") + '" src="' + escapeAttr(c.src) + '" alt="" decoding="async">';
+function coverInner(r, big) {
+  const c = restoCoverSrc(r, big);
+  const ini = '<span class="rini">' + escapeHtml(restoInitials(r.name)) + '</span>';
+  if (!c.src) return ini;
+  return ini + '<img class="' + (c.logo ? "contain" : "") + '" src="' + escapeAttr(c.src) + '"' + (c.alt ? ' data-alt="' + escapeAttr(c.alt) + '"' : "") + ' alt="" decoding="async">';
 }
 function bindCoverFallback(root) {
   root.querySelectorAll(".rcover img").forEach(img => {
-    img.addEventListener("error", () => { img.remove(); });
+    img.addEventListener("error", e => { if (retryDriveAlt(img, e)) return; img.remove(); });
     img.addEventListener("load", () => { img.classList.add("ok"); });
-    if (img.complete) { if (img.naturalWidth) img.classList.add("ok"); else img.remove(); }
+    if (img.complete) { if (img.naturalWidth) img.classList.add("ok"); else if (!retryDriveAlt(img)) { const lc = img.closest(".logo-circle"); if (lc) lc.textContent = img.dataset.ini || ""; else img.remove(); } }
   });
 }
 function dishCountText(n) {
@@ -2129,7 +2151,7 @@ function setViewChrome() {
     if (r) {
       $("restoHeadLogo").className = "logo-circle";
       $("restoHeadLogo").innerHTML = logoHtml(r.name);
-      { const hero = $("restoHero"), back = $("restoBack"); hero.querySelectorAll(".rini,img").forEach(n => n.remove()); hero.insertAdjacentHTML("afterbegin", coverInner(r)); hero.appendChild(back); }
+      { const hero = $("restoHero"), back = $("restoBack"); hero.querySelectorAll(".rini,img").forEach(n => n.remove()); hero.insertAdjacentHTML("afterbegin", coverInner(r, true)); hero.appendChild(back); }
       bindLogoFallback($("restoHead")); bindCoverFallback($("restoHead"));
       $("restoHeadName").textContent = r.name;
       const cl = closedText(r.name);
