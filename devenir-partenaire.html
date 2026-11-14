@@ -272,7 +272,7 @@ const I18N = {
     lblDescription: "Description (optionnel)",
     lblLogo: "Logo de ton restaurant (optionnel)", logoChoose: "Choisir une image", logoChange: "Changer", logoRemove: "Retirer", logoErrType: "Choisis une image (PNG ou JPG).", logoErrBig: "Image trop lourde (10 Mo maximum).", logoErrRead: "Impossible de lire cette image.",
     submitBtn: "Envoyer ma demande",
-    sending: "Envoi en cours…",
+    sending: "Envoi en cours… (jusqu'à 30 secondes, ne ferme pas la page)",
     successTitle: "Demande envoyée !",
     successText: "Merci ! Nous allons examiner ta demande et te contacter très bientôt par téléphone.",
     homeLink: "Retour à l'accueil",
@@ -310,7 +310,7 @@ const I18N = {
     lblDescription: "وصف (اختياري)",
     lblLogo: "شعار مطعمك (اختياري)", logoChoose: "اختر صورة", logoChange: "تغيير", logoRemove: "إزالة", logoErrType: "اختر صورة (PNG أو JPG).", logoErrBig: "الصورة ثقيلة جدا (10 ميغا كحد أقصى).", logoErrRead: "تعذّرت قراءة هذه الصورة.",
     submitBtn: "إرسال طلبي",
-    sending: "جارٍ الإرسال…",
+    sending: "جارٍ الإرسال… (قد يستغرق حتى 30 ثانية، لا تغلق الصفحة)",
     successTitle: "تم إرسال الطلب!",
     successText: "شكراً لك! سنراجع طلبك ونتواصل معك عبر الهاتف قريباً جداً.",
     homeLink: "العودة إلى الصفحة الرئيسية",
@@ -446,10 +446,10 @@ function resizeLogo(file){
         const c = document.createElement("canvas"); c.width = w; c.height = h;
         const ctx = c.getContext("2d"); ctx.drawImage(img, 0, 0, w, h);
         let out = c.toDataURL("image/png");               // PNG : garde la transparence du logo
-        if (out.length > 450000) {                          // trop lourd : JPEG sur fond blanc
+        if (out.length > 120000) {                          // trop lourd : JPEG sur fond blanc
           const c2 = document.createElement("canvas"); c2.width = w; c2.height = h;
           const x2 = c2.getContext("2d"); x2.fillStyle = "#fff"; x2.fillRect(0, 0, w, h); x2.drawImage(img, 0, 0, w, h);
-          out = c2.toDataURL("image/jpeg", 0.85);
+          out = c2.toDataURL("image/jpeg", 0.8);
         }
         resolve(out);
       } catch (e) { reject(e); } finally { URL.revokeObjectURL(url); }
