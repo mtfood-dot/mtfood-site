@@ -2160,7 +2160,7 @@ function renderRestoBar() {
       (r.soon ? '<div class="rs">' + escapeHtml(t('menuSoon')) + '</div>' : '<div class="rc">' + escapeHtml(cuisinesText(r)) + '</div>') +
       (restoOutOfZone(r.name) ? '<div class="rx">' + escapeHtml(t("outZoneCard")) + "</div>" : etaCardHtml(r.name)) + openBadgeHtml(r) + hint + '</span></button>';
   }).join("");
-  try { if (res.length) localStorage.setItem("mtd_nresto", String(res.length)); } catch (e) {}
+  try { const nAll = restoList().filter(r => !r.soon).length; if (nAll) localStorage.setItem("mtd_nresto", String(nAll)); } catch (e) {}
   bindLogoFallback(box); bindCoverFallback(box);
   box.querySelectorAll(".resto-card").forEach(btn => btn.addEventListener("click", () => {
     const x = res.find(z => z.r.key === btn.dataset.key);
