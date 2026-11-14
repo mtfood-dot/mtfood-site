@@ -1930,15 +1930,16 @@ function menuForResto() {
   const r = currentResto();
   return r ? r.items : MENU.filter(isActiveResto);
 }
+function restoLogoSrc(name) { return RESTO_LOGO[norm(name || "")] || ("branding/restos/" + restoSlug(name) + ".png"); }
 function logoHtml(name) {
-  return '<img src="branding/restos/' + escapeAttr(restoSlug(name)) + '.png" alt="" loading="lazy" data-ini="' + escapeAttr(restoInitials(name)) + '">';
+  return '<img src="' + escapeAttr(restoLogoSrc(name)) + '" alt="" loading="lazy" data-ini="' + escapeAttr(restoInitials(name)) + '">';
 }
 function bindLogoFallback(root) {
   root.querySelectorAll(".logo-circle img").forEach(img => img.addEventListener("error", () => { if (img.parentNode) img.parentNode.textContent = img.dataset.ini; }));
 }
 function restoCoverSrc(r) {
   const it = (r.items || []).find(i => i.photo);
-  return it ? { src: it.photo, logo: false } : { src: "branding/restos/" + restoSlug(r.name) + ".png", logo: true };
+  return it ? { src: it.photo, logo: false } : { src: restoLogoSrc(r.name), logo: true };
 }
 function coverInner(r) {
   const c = restoCoverSrc(r);
@@ -1984,6 +1985,7 @@ function homeResults() {
 let RESTO_PREP = {};
 let PARTNERS = {};
 let RESTO_OPEN = {};
+let RESTO_LOGO = {};   // logos envoyés par les restaurants à l'inscription (nom normalisé -> URL)
 let RESTO_VILLE = {};          // restaurant -> ville (colonne « Ville » de la feuille Partenaires)
 let RESTO_QUOTES = {};         // restaurant -> { covered, fee, km } pour l'adresse du client (calculé par le serveur)
 const PRICE_T1 = 600, PRICE_T2 = 1100;   // prix moyen d'un plat (DA) : < T1 = niveau 1, < T2 = niveau 2, sinon niveau 3
@@ -2055,6 +2057,9 @@ function applyRestoInfo(res) {
   const vv = {};
   Object.keys(res.restos).forEach(k => { const v = res.restos[k]; if (v && v.ville) vv[norm(k)] = String(v.ville); });
   RESTO_VILLE = vv;
+  const lg = {};
+  Object.keys(res.restos).forEach(k => { const v = res.restos[k]; if (v && /^https:\/\/drive\.google\.com\/thumbnail\?/.test(v.logo || "")) lg[norm(k)] = v.logo; });
+  RESTO_LOGO = lg;
   if (MENU && MENU.length) {
     renderRestoBar();
     if (ACTIVE_RESTO !== null) renderGrid();

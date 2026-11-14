@@ -213,6 +213,17 @@ if ("serviceWorker" in navigator) {
       <div class="field">
         <label id="lblDescription" for="description">Description (optionnel)</label>
         <textarea id="description" placeholder=""></textarea>
+
+        <label id="lblLogo">Logo de ton restaurant (optionnel)</label>
+        <div id="logoBox" style="display:flex;align-items:center;gap:12px;margin:0 0 14px;">
+          <div id="logoPreview" style="width:64px;height:64px;border-radius:50%;background:#f3f4f6;border:2px dashed #cbd5e1;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none;font-size:24px;">🍽️</div>
+          <div style="flex:1;min-width:0;">
+            <button type="button" id="logoBtn" style="background:#fff;color:#1553A4;border:2px solid #1553A4;border-radius:12px;padding:10px 14px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;">Choisir une image</button>
+            <button type="button" id="logoRemove" style="display:none;background:none;border:0;color:#b3261e;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;margin-inline-start:8px;">Retirer</button>
+            <div id="logoErr" style="color:#b3261e;font-size:12.5px;margin-top:4px;"></div>
+          </div>
+          <input type="file" id="logoFile" accept="image/*" style="display:none">
+        </div>
       </div>
       <button type="submit" class="submit-btn" id="submitBtn">Envoyer ma demande</button>
       <div class="error-box" id="errorBox"></div>
@@ -259,6 +270,7 @@ const I18N = {
     lblHoraires: "Horaires d'ouverture",
     horairesPlaceholder: "Ex: 10h - 22h",
     lblDescription: "Description (optionnel)",
+    lblLogo: "Logo de ton restaurant (optionnel)", logoChoose: "Choisir une image", logoChange: "Changer", logoRemove: "Retirer", logoErrType: "Choisis une image (PNG ou JPG).", logoErrBig: "Image trop lourde (10 Mo maximum).", logoErrRead: "Impossible de lire cette image.",
     submitBtn: "Envoyer ma demande",
     sending: "Envoi en cours…",
     successTitle: "Demande envoyée !",
@@ -296,6 +308,7 @@ const I18N = {
     lblHoraires: "أوقات العمل",
     horairesPlaceholder: "مثال: 10 صباحاً - 22 مساءً",
     lblDescription: "وصف (اختياري)",
+    lblLogo: "شعار مطعمك (اختياري)", logoChoose: "اختر صورة", logoChange: "تغيير", logoRemove: "إزالة", logoErrType: "اختر صورة (PNG أو JPG).", logoErrBig: "الصورة ثقيلة جدا (10 ميغا كحد أقصى).", logoErrRead: "تعذّرت قراءة هذه الصورة.",
     submitBtn: "إرسال طلبي",
     sending: "جارٍ الإرسال…",
     successTitle: "تم إرسال الطلب!",
@@ -366,6 +379,8 @@ function applyLanguage(){
   document.getElementById("lblHoraires").textContent = t("lblHoraires");
   document.getElementById("lblOuv").textContent = t("lblOuv"); document.getElementById("lblFerm").textContent = t("lblFerm"); fillHours();
   document.getElementById("lblDescription").textContent = t("lblDescription");
+  document.getElementById("lblLogo").textContent = t("lblLogo");
+  if (typeof refreshLogoUi === "function") refreshLogoUi();
   document.getElementById("submitBtn").textContent = t("submitBtn");
   document.getElementById("successTitle").textContent = t("successTitle");
   document.getElementById("successText").textContent = t("successText");
@@ -407,6 +422,60 @@ async function apiGet(params) {
   }
 }
 
+/* ---- Logo du restaurant (optionnel) : redimensionné ici, envoyé en POST ---- */
+let LOGO_DATA = "";
+const LOGO_MAX_SIDE = 400, LOGO_MAX_INPUT = 10 * 1024 * 1024;
+function refreshLogoUi(){
+  const prev = document.getElementById("logoPreview");
+  if (!prev) return;
+  prev.innerHTML = "";
+  if (LOGO_DATA) { const im = document.createElement("img"); im.src = LOGO_DATA; im.alt = ""; im.style.cssText = "width:100%;height:100%;object-fit:contain;background:#fff;"; prev.appendChild(im); prev.style.border = "2px solid #e5e7eb"; }
+  else { prev.textContent = "🍽️"; prev.style.border = "2px dashed #cbd5e1"; }
+  document.getElementById("logoBtn").textContent = LOGO_DATA ? t("logoChange") : t("logoChoose");
+  const rm = document.getElementById("logoRemove"); rm.textContent = t("logoRemove"); rm.style.display = LOGO_DATA ? "inline" : "none";
+}
+function resizeLogo(file){
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      try {
+        let w = img.naturalWidth, h = img.naturalHeight;
+        if (!w || !h) throw new Error("size");
+        const k = Math.min(1, LOGO_MAX_SIDE / Math.max(w, h));
+        w = Math.round(w * k); h = Math.round(h * k);
+        const c = document.createElement("canvas"); c.width = w; c.height = h;
+        const ctx = c.getContext("2d"); ctx.drawImage(img, 0, 0, w, h);
+        let out = c.toDataURL("image/png");               // PNG : garde la transparence du logo
+        if (out.length > 450000) {                          // trop lourd : JPEG sur fond blanc
+          const c2 = document.createElement("canvas"); c2.width = w; c2.height = h;
+          const x2 = c2.getContext("2d"); x2.fillStyle = "#fff"; x2.fillRect(0, 0, w, h); x2.drawImage(img, 0, 0, w, h);
+          out = c2.toDataURL("image/jpeg", 0.85);
+        }
+        resolve(out);
+      } catch (e) { reject(e); } finally { URL.revokeObjectURL(url); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("read")); };
+    img.src = url;
+  });
+}
+async function postRegister(payloadObj){
+  const res = await fetch(CONFIG.API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ action: "registerPartner", payload: JSON.stringify(payloadObj) }) });
+  return JSON.parse(await res.text());
+}
+
+document.addEventListener("DOMContentLoaded", function(){
+  document.getElementById("logoBtn").addEventListener("click", () => document.getElementById("logoFile").click());
+  document.getElementById("logoRemove").addEventListener("click", () => { LOGO_DATA = ""; document.getElementById("logoFile").value = ""; document.getElementById("logoErr").textContent = ""; refreshLogoUi(); });
+  document.getElementById("logoFile").addEventListener("change", async () => {
+    const f = document.getElementById("logoFile").files && document.getElementById("logoFile").files[0], er = document.getElementById("logoErr");
+    er.textContent = ""; if (!f) return;
+    if (f.type && !/^image\//i.test(f.type)) { LOGO_DATA = ""; refreshLogoUi(); er.textContent = t("logoErrType"); return; }
+    if (f.size > LOGO_MAX_INPUT) { LOGO_DATA = ""; refreshLogoUi(); er.textContent = t("logoErrBig"); return; }
+    try { LOGO_DATA = await resizeLogo(f); refreshLogoUi(); } catch (e) { LOGO_DATA = ""; refreshLogoUi(); er.textContent = t("logoErrRead"); }
+  });
+  refreshLogoUi();
+});
 document.addEventListener("DOMContentLoaded", function(){
   applyLanguage();
   document.getElementById("langToggle").addEventListener("click", toggleLanguage);
@@ -503,10 +572,18 @@ document.addEventListener("DOMContentLoaded", function(){
     submitBtn.textContent = t("sending");
 
     try{
-      const data = await apiGet({
-        action: "registerPartner",
-        payload: JSON.stringify({ nom, type, adresse, zone, telephone, email, horaires, description })
-      });
+      let data;
+      if (LOGO_DATA) {
+        // Avec logo : envoi en POST (le logo est trop gros pour une adresse). Si ça échoue, on inscrit quand même sans logo.
+        try { data = await postRegister({ nom, type, adresse, zone, telephone, email, horaires, description, logoData: LOGO_DATA }); }
+        catch(_){ data = null; }
+        if (!data) data = await apiGet({ action: "registerPartner", payload: JSON.stringify({ nom, type, adresse, zone, telephone, email, horaires, description }) });
+      } else {
+        data = await apiGet({
+          action: "registerPartner",
+          payload: JSON.stringify({ nom, type, adresse, zone, telephone, email, horaires, description })
+        });
+      }
       if(data && data.success){
         try{
           const g = { action: "partnerGeoSubmit", telephone: telephone, ville: ville, rayon: document.getElementById("rayon").value };
