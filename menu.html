@@ -3351,7 +3351,9 @@ function submitOrder() {
         ORDER_REQUEST_ID = "";
         showCheckoutError(err.serverMsg || t("sendError") + CONFIG.PHONE_DISPLAY + ".", true);
       } else {
-        showCheckoutError(t("sendError") + CONFIG.PHONE_DISPLAY + ".", true);
+        // Message précis du serveur s'il y en a un (sinon erreur réseau : message générique)
+        if (err && err.serverMsg) ORDER_REQUEST_ID = "";
+        showCheckoutError((err && err.serverMsg) || t("sendError") + CONFIG.PHONE_DISPLAY + ".", true);
       }
       console.error(err);
     })
