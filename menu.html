@@ -1888,7 +1888,12 @@ function catId(c) { return norm(c || "Autre"); }
 function itemCat(i) { return i.categorie || "Autre"; }
 function restoKeyOf(i) { return String(i.partenaire || "").trim(); }
 function restoSlug(n) {
-  return String(n || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  const s = String(n || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  if (s) return s;
+  /* Nom sans lettres latines (ex. arabe) : identifiant stable calculé à partir du nom, pour que la page du restaurant ait une adresse */
+  let h = 5381; const str = String(n || "").trim().toLowerCase();
+  for (let i = 0; i < str.length; i++) h = ((h * 33) ^ str.charCodeAt(i)) >>> 0;
+  return str ? "r-" + h.toString(36) : "";
 }
 function restoInitials(n) {
   const w = String(n || "").trim().split(/\s+/).filter(Boolean);
