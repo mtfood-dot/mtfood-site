@@ -118,6 +118,25 @@ for (const f of pages) {
     await p.close();
   }
 
+  /* 3c. Bandeaux sur les autres pages */
+  console.log("3c. Livreur, espace client, admin (bandeaux)");
+  for (const f of ["espace-livreur.html", "espace-client.html", "espace-admin.html"]) {
+    const p = await newPage();
+    if (f === "espace-client.html") await p.addInitScript(() => { try { localStorage.setItem("mtd_client_session", JSON.stringify({ clientId: "C1", prenom: "T", telephone: "0555" })); } catch (e) {} });
+    await p.goto("file://" + path.join(ROOT, f)); await p.waitForTimeout(400);
+    const r = await p.evaluate(async (file) => {
+      const out = { has: typeof window.MTToast === "object" };
+      if (file === "espace-livreur.html") { try { actOk("okDelivered"); await new Promise((x) => setTimeout(x, 50)); out.shown = !!document.querySelector("#mtToast.show.ok"); } catch (e) { out.shown = false; out.e = String(e); } }
+      else if (file === "espace-admin.html") { try { showSuccess(document.getElementById("successBox"), "OK"); await new Promise((x) => setTimeout(x, 50)); out.shown = !!document.querySelector("#mtToast.show.ok"); } catch (e) { out.shown = false; out.e = String(e); } }
+      else out.shown = true;
+      return out;
+    }, f);
+    r.has ? ok(f + " : toast.js chargé") : ko(f + " : MTToast absent");
+    r.shown ? ok(f + " : bandeau de confirmation") : ko(f + " : pas de bandeau " + (r.e || ""));
+    p.__errs.length ? ko(f + " erreurs JS : " + p.__errs.slice(0, 2).join(" | ")) : ok(f + " sans erreur JS");
+    await p.close();
+  }
+
   /* 4. Cache hors-ligne : sw.js doit changer à chaque modification des pages */
   console.log("4. Service worker (version du cache)");
   try {
