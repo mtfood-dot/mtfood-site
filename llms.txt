@@ -1,0 +1,9 @@
+# MT Food
+
+> MT Food est le service de livraison de repas de MT Delivery (Meftah, Bougara, Blida - Algérie). Commande en ligne auprès de restaurants partenaires, paiement à la livraison.
+
+## Pages
+
+- [Menu et commande](https://food.mtdelivery.dz/menu.html): restaurants, plats et commande en ligne
+- [Devenir partenaire](https://food.mtdelivery.dz/devenir-partenaire.html): inscription des restaurants
+- [Devenir livreur](https://food.mtdelivery.dz/inscription-livreur.html): inscription des livreurs
