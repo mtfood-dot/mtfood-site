@@ -1938,8 +1938,9 @@ function menuForResto() {
   return r ? r.items : MENU.filter(isActiveResto);
 }
 function smallDrive(u, w) { return String(u || "").replace(/^(https:\/\/drive\.google\.com\/thumbnail\?[^#]*?sz=w)\d+/, "$1" + w); }
-function restoLogoSrc(name) { return smallDrive(RESTO_LOGO[norm(name || "")], 160) || ("branding/restos/" + restoSlug(name) + ".png"); }
-function preloadLogos() { try { Object.keys(RESTO_LOGO).forEach(k => { const im = new Image(); im.decoding = "async"; im.src = smallDrive(RESTO_LOGO[k], 160); }); } catch (e) {} }
+function restoLogoSrc(name, w) { return smallDrive(RESTO_LOGO[norm(name || "")], w || 160) || ("branding/restos/" + restoSlug(name) + ".png"); }
+const PRELOADED = {};
+function preloadLogos() { try { Object.keys(RESTO_LOGO).forEach(k => { const u = smallDrive(RESTO_LOGO[k], 160); if (PRELOADED[u]) return; PRELOADED[u] = 1; const im = new Image(); im.decoding = "async"; im.src = u; }); } catch (e) {} }
 function logoHtml(name) {
   return '<img src="' + escapeAttr(restoLogoSrc(name)) + '" alt="" decoding="async" data-ini="' + escapeAttr(restoInitials(name)) + '">';
 }
@@ -1948,7 +1949,7 @@ function bindLogoFallback(root) {
 }
 function restoCoverSrc(r) {
   const it = (r.items || []).find(i => i.photo);
-  return it ? { src: smallDrive(it.photo, 400), logo: false } : { src: restoLogoSrc(r.name), logo: true };
+  return it ? { src: smallDrive(it.photo, 400), logo: false } : { src: restoLogoSrc(r.name, 400), logo: true };
 }
 function coverInner(r) {
   const c = restoCoverSrc(r);
