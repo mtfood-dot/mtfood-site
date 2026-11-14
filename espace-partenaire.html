@@ -1446,6 +1446,25 @@ async function loadRating() {
     $("ratingLine").textContent = d.total ? t("ratingLine").replace("{m}", d.moyenne.toFixed(1)).replace("{n}", d.total) : t("ratingNone");
   } catch (e) { /* silencieux */ }
 }
+/* Réponse immédiate : l'action du restaurant est appliquée tout de suite à l'écran, sans attendre le serveur.
+   La copie lue (Supabase) peut avoir quelques minutes de retard : on garde l'action en mémoire jusqu'à ce que la lecture la confirme. */
+const LIVE_OVR = {};
+function applyLiveOverrides_(orders) {
+  const now = Date.now(), out = [];
+  orders.forEach(o => {
+    const k = String(o.numero), ov = LIVE_OVR[k];
+    if (!ov) { out.push(o); return; }
+    const confirmed = ov.type === "refuse" ? false
+      : ov.type === "accept" ? (o.statut !== "À confirmer")
+      : !!o.prete;
+    if (confirmed || now - ov.t > 240000) { delete LIVE_OVR[k]; out.push(o); return; }
+    if (ov.type === "refuse") return;
+    if (ov.type === "accept") out.push(Object.assign({}, o, { statut: "En attente" }));
+    else out.push(Object.assign({}, o, { prete: true }));
+  });
+  Object.keys(LIVE_OVR).forEach(k => { if (!orders.some(o => String(o.numero) === k) && now - LIVE_OVR[k].t > 240000) delete LIVE_OVR[k]; });
+  return out;
+}
 async function loadLive(force) {
   if (!SESSION || (LIVE_BUSY && !force)) return;
   LIVE_BUSY = true;
@@ -1454,7 +1473,7 @@ async function loadLive(force) {
     try { data = await sbLive(); LIVE_SRC = "sb"; } catch (e) { data = null; }
     if (!data) { LIVE_SRC = "gas"; data = await apiGet({ action: "partnerLiveOrders" }); }
     if (!data || !data.success) return;
-    LIVE_ORDERS = data.orders || [];
+    LIVE_ORDERS = applyLiveOverrides_(data.orders || []);
     const pending = LIVE_ORDERS.filter(o => o.statut === "À confirmer").map(o => String(o.numero));
     const fresh = LIVE_KNOWN ? pending.filter(n => !LIVE_KNOWN.has(n)) : [];
     LIVE_KNOWN = new Set(pending);
@@ -1528,26 +1547,34 @@ function liveCardHtml(o, isFresh) {
 
 async function markReady(numero, btn) {
   hideError($("errorBox")); hideSuccess($("successBox"));
-  btn.disabled = true;
+  const key = String(numero);
+  LIVE_OVR[key] = { type: "ready", t: Date.now() };
+  LIVE_ORDERS = applyLiveOverrides_(LIVE_ORDERS);
+  renderLive();
+  showSuccess($("successBox"), t("liveReadyDone"));
   try {
     const data = await apiGet({ action: "partnerReady", orderNumber: numero });
-    if (data && data.success) showSuccess($("successBox"), t("liveReadyDone"));
-    else showError($("errorBox"), (data && data.error) || t("loadFailedGeneric"));
+    if (!(data && data.success)) { delete LIVE_OVR[key]; showError($("errorBox"), (data && data.error) || t("loadFailedGeneric")); hideSuccess($("successBox")); await loadLive(true); }
   } catch (e) {
-    showError($("errorBox"), t("loadFailedGeneric"));
+    delete LIVE_OVR[key]; showError($("errorBox"), t("loadFailedGeneric")); hideSuccess($("successBox")); await loadLive(true);
   }
-  await loadLive(true);
 }
 
 async function decideLive(numero, accept, btn) {
   hideError($("errorBox")); hideSuccess($("successBox"));
-  btn.closest(".live-actions").querySelectorAll("button").forEach(b => b.disabled = true);
+  const key = String(numero);
+  LIVE_OVR[key] = { type: accept ? "accept" : "refuse", t: Date.now() };
+  LIVE_ORDERS = applyLiveOverrides_(LIVE_ORDERS);
+  renderLive();
+  showSuccess($("successBox"), t(accept ? "liveAccepted" : "liveRefused"));
   try {
     const data = await apiGet({ action: accept ? "partnerAccept" : "partnerRefuse", orderNumber: numero });
-    if (data && data.success) showSuccess($("successBox"), t(accept ? "liveAccepted" : "liveRefused"));
-    else if (data && data.code === "done") showError($("errorBox"), t("liveDone"));
+    if (data && data.success) return;
+    delete LIVE_OVR[key]; hideSuccess($("successBox"));
+    if (data && data.code === "done") showError($("errorBox"), t("liveDone"));
     else showError($("errorBox"), (data && data.error) || t("loadFailedGeneric"));
   } catch (e) {
+    delete LIVE_OVR[key]; hideSuccess($("successBox"));
     showError($("errorBox"), t("loadFailedGeneric"));
   }
   await loadLive(true);
