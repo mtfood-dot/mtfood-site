@@ -727,7 +727,7 @@ if ("serviceWorker" in navigator) {
 </div>
 
 
-<div class="promo-section">
+<div class="promo-section" id="promoSection" style="display:none"><!-- espace publicitaire masqué au lancement : mettre SHOW_ADS = true -->
   <div class="promo-title" id="promoTitle">Nos partenaires</div>
   <div class="promo-grid" id="promoGrid"></div>
 </div>
@@ -1508,8 +1508,11 @@ function readAdsCache() {
 function writeAdsCache(ads) {
   try { localStorage.setItem(ADS_CACHE_KEY, JSON.stringify(ads)); } catch (e) {}
 }
+const SHOW_ADS = false;   // espace publicitaire « Nos partenaires » : désactivé pour le lancement
 let _adsLoadId = 0;
 function loadAds() {
+  if (!SHOW_ADS) return;
+  $("promoSection").style.display = "";
   const myId = ++_adsLoadId;
   // Affichage immédiat des dernières pubs connues (pas de trou pendant le chargement)
   const cached = readAdsCache();
