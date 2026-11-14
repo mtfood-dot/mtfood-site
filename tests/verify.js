@@ -93,6 +93,29 @@ for (const f of pages) {
     await p.close();
   }
 
+  /* 3b. Menu client : bandeaux (erreur de commande, ajout au panier) */
+  console.log("3b. Menu client (bandeaux)");
+  {
+    const p = await newPage(); await p.goto("file://" + path.join(ROOT, "menu.html")); await p.waitForTimeout(500);
+    const r = await p.evaluate(async () => {
+      const out = { has: typeof window.MTToast === "object" };
+      try { showCheckoutError("Erreur test", false); await new Promise((x) => setTimeout(x, 50)); out.errToast = !!document.querySelector("#mtToast.show.err"); } catch (e) { out.errToast = false; out.e1 = String(e); }
+      try {
+        MENU.push({ id: "T1", nom: "Test", prix: 100, partenaire: "R", categories: "Pizza", disponible: "OUI" });
+        changeQty("T1", 1); await new Promise((x) => setTimeout(x, 50));
+        out.cartToast = !!document.querySelector("#mtToast.show.ok") || !!document.querySelector("#cartNotice.show,[role=alert].show");
+        out.inCart = !!(CART["T1"] && CART["T1"].qty === 1);
+      } catch (e) { out.cartToast = false; out.e2 = String(e); }
+      return out;
+    });
+    r.has ? ok("toast.js chargé sur menu.html") : ko("menu.html : MTToast absent");
+    r.errToast ? ok("erreur de commande : bandeau rouge") : ko("menu.html : pas de bandeau d'erreur de commande " + (r.e1 || ""));
+    r.inCart ? ok("ajout au panier fonctionne") : ko("menu.html : l'ajout au panier ne fonctionne pas " + (r.e2 || ""));
+    r.cartToast ? ok("ajout au panier : confirmation visible") : ko("menu.html : aucune confirmation à l'ajout au panier");
+    p.__errs.length ? ko("menu.html erreurs JS : " + p.__errs.slice(0, 2).join(" | ")) : ok("menu.html sans erreur JS pendant le test");
+    await p.close();
+  }
+
   /* 4. Cache hors-ligne : sw.js doit changer à chaque modification des pages */
   console.log("4. Service worker (version du cache)");
   try {

@@ -648,6 +648,7 @@
   .promo-section,.join-section{max-width:960px;margin-left:auto;margin-right:auto;padding:0 16px;}
 </style>
 <script src="/form-validate.js" defer></script>
+<script src="/toast.js"></script>
 <script src="/google-signin.js?v=4"></script>
 <script>
 if ("serviceWorker" in navigator) {
@@ -969,7 +970,7 @@ const I18N = {
     loyProgress: "Fidélité : {c}/{n} commandes cette semaine (plats d'au moins {m} DA). La commande n°{n1} a la livraison offerte. Nouvelle semaine le samedi.",
     loyFreeWord: "Offerte",
     promoLbl: "Code promo", promoApply: "Appliquer", promoLine: "Code {c}", promoOk: "Code {c} appliqué : −{r} DA", promoNeedLogin: "Connecte-toi pour utiliser un code.", promoEmpty: "Saisis un code promo.", promoErr: "Impossible de vérifier le code, réessaie.",
-    saTitle: "Mes adresses", saHome: "Maison", saWork: "Travail", saOther: "Autre", saSave: "Enregistrer cette adresse", saSaved: "Adresse enregistrée.", saDel: "Supprimer", saMax: "5 adresses maximum : supprime-en une d'abord.",
+    saTitle: "Mes adresses", saHome: "Maison", saWork: "Travail", saOther: "Autre", saSave: "Enregistrer cette adresse", saSaved: "Adresse enregistrée.", addedCart: "Ajouté au panier", orderSentToast: "Commande envoyée !", saDel: "Supprimer", saMax: "5 adresses maximum : supprime-en une d'abord.",
     changeAddr: "Modifier l'adresse",
     checkoutNeedAddr: "Localise ton adresse avant de confirmer la commande.",
     addrCheckNeedPos: "Écris une rue ou un lieu précis, ou utilise ta position (page Adresse).",
@@ -1142,7 +1143,7 @@ const I18N = {
     loyProgress: "الوفاء: {c}/{n} طلبات هذا الأسبوع (أطباق بقيمة {m} دج على الأقل). الطلب رقم {n1} توصيله مجاني. أسبوع جديد كل سبت.",
     loyFreeWord: "مجاني",
     promoLbl: "رمز الخصم", promoApply: "تطبيق", promoLine: "الرمز {c}", promoOk: "تم تطبيق الرمز {c}: −{r} دج", promoNeedLogin: "سجّل الدخول لاستعمال الرمز.", promoEmpty: "أدخل رمز الخصم.", promoErr: "تعذّر التحقق من الرمز، أعد المحاولة.",
-    saTitle: "عناويني", saHome: "المنزل", saWork: "العمل", saOther: "آخر", saSave: "احفظ هذا العنوان", saSaved: "تم حفظ العنوان.", saDel: "حذف", saMax: "5 عناوين كحد أقصى: احذف عنوانا أولا.",
+    saTitle: "عناويني", saHome: "المنزل", saWork: "العمل", saOther: "آخر", saSave: "احفظ هذا العنوان", saSaved: "تم حفظ العنوان.", addedCart: "أُضيف إلى السلة", orderSentToast: "تم إرسال الطلب!", saDel: "حذف", saMax: "5 عناوين كحد أقصى: احذف عنوانا أولا.",
     changeAddr: "تعديل العنوان",
     checkoutNeedAddr: "حدّد موقع عنوانك قبل تأكيد الطلب.",
     addrCheckNeedPos: "اكتب شارعًا أو مكانًا دقيقًا، أو استخدم موقعك (صفحة العنوان).",
@@ -2364,6 +2365,7 @@ function changeQty(id, delta) {
   bindCardEvents();
   updateCartBar();
   ensureQuoteForCart();
+  if (delta > 0 && window.MTToast) MTToast.ok(t("addedCart"), { silent: true });
 }
 
 /* ============================================================
@@ -2479,6 +2481,7 @@ function addDishToCart() {
   refreshOptCtrl(base);
   updateCartBar();
   ensureQuoteForCart();
+  if (window.MTToast) MTToast.ok(t("addedCart"), { silent: true });
 }
 /* Ajoute (ou cumule) une ligne « plat + options » au panier ; renvoie false si les choix ne correspondent plus au menu */
 function putOptLine(it, sel, qty) {
@@ -2729,8 +2732,8 @@ async function applyPromo(silent) {
   $("promoBtn").disabled = true;
   try {
     const res = await jsonpRequest({ action: "promoCheck", code: code, subtotal: subtotal, clientId: session.clientId }, 15000);
-    if (res && res.success && res.ok) { PROMO = { code: res.code, remise: Number(res.remise) || 0 }; setPromoMsg(t("promoOk").replace("{c}", res.code).replace("{r}", PROMO.remise), "ok"); }
-    else { PROMO = null; setPromoMsg((res && (res.message || res.error)) || t("promoErr"), "err"); }
+    if (res && res.success && res.ok) { PROMO = { code: res.code, remise: Number(res.remise) || 0 }; setPromoMsg(t("promoOk").replace("{c}", res.code).replace("{r}", PROMO.remise), "ok"); if (window.MTToast) MTToast.ok(t("promoOk").replace("{c}", res.code).replace("{r}", PROMO.remise)); }
+    else { PROMO = null; setPromoMsg((res && (res.message || res.error)) || t("promoErr"), "err"); if (!silent && window.MTToast) MTToast.err((res && (res.message || res.error)) || t("promoErr")); }
   } catch (e) { PROMO = null; setPromoMsg(t("promoErr"), "err"); }
   $("promoBtn").disabled = false;
   updateCheckoutTotals();
@@ -2770,7 +2773,7 @@ function saveCurrentAddr() {
   const idx = key === "saOther" ? -1 : list.findIndex(x => x.key === key);
   if (idx >= 0) list[idx] = entry;
   else { if (list.length >= 5) { showGpsMsg(t("saMax")); return; } list.push(entry); }
-  putSavedAddrs(list); renderSavedAddrs(); showGpsMsg(t("saSaved"), "ok");
+  putSavedAddrs(list); renderSavedAddrs(); showGpsMsg(t("saSaved"), "ok"); if (window.MTToast) MTToast.ok(t("saSaved"));
 }
 document.addEventListener("click", (ev) => {
   const del = ev.target.closest && ev.target.closest("[data-sadel]");
@@ -3336,6 +3339,7 @@ function submitOrder() {
         $("thanksText").innerHTML = isPre ? t("preThanksHtml").replace("{when}", payload.preWhen || "") : t("thanksHtml"); }
       $("trackOrderLink").href = "suivi-commande.html?cmd=" + encodeURIComponent(res.orderNumber);
       openOverlay("successOverlay");
+      if (window.MTToast) MTToast.ok(t("orderSentToast"));
       resetOrder();
       PROMO = null; $("fPromo").value = ""; setPromoMsg(""); updateCheckoutTotals();
       loadLoyalty();
@@ -3397,6 +3401,7 @@ function showCheckoutError(msg, sticky) {
   errBox.textContent = msg;
   errBox.dataset.sticky = sticky ? "1" : "";
   errBox.classList.add("show");
+  if (window.MTToast) MTToast.err(msg);
 }
 
 function resetOrder() {

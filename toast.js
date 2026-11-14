@@ -44,7 +44,7 @@
     void n.offsetWidth; n.classList.add("show"); clearTimeout(timer); timer = setTimeout(hide, ms);
   }
   window.MTToast = {
-    ok: function (m) { show("ok", m, 2500); tone([880, 1175]); buzz(30); },
+    ok: function (m, o) { if (o && o.silent) { show("ok", m, 1800); return; } show("ok", m, 2500); tone([880, 1175]); buzz(30); },
     err: function (m) {
       var now = Date.now(); if (m === lastErr && now - lastErrAt < 15000) return;   // pas de rafale si le réseau coupe
       lastErr = m; lastErrAt = now; show("err", m, 5000); tone([330, 247]); buzz([60, 40, 60]);
