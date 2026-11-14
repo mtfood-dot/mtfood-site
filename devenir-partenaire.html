@@ -186,14 +186,7 @@ if ("serviceWorker" in navigator) {
         <select id="rayon"><option value="3">3 km</option><option value="5">5 km</option><option value="7">7 km</option><option value="15" selected>15 km</option></select>
         <div id="rayonHint" style="font-size:12px;margin-top:5px;color:var(--muted,#697a96);"></div>
       </div>
-      <div class="field" hidden>
-        <label id="lblZone" for="zone">Zone de livraison</label>
-        <select id="zone" data-required>
-          <option value="Meftah Centre" id="optCentre">Meftah Centre</option>
-          <option value="Meftah Dehors" id="optDehors">Meftah Dehors</option>
-          <option value="Les deux" id="optLesDeux" selected>Les deux</option>
-        </select>
-      </div>
+      <input type="hidden" id="zone" value="Les deux">
       <div class="field">
         <label id="lblTelephone" for="telephone">Numéro de téléphone</label>
         <input type="tel" id="telephone" data-required data-rule="phone" placeholder="05XX XX XX XX">
@@ -262,10 +255,6 @@ const I18N = {
     lblVille: "Ville", villeChoose: "Choisis ta ville", villeOther: "Autre",
     lblPos: "Position GPS de l'établissement", posRequired: "La position GPS de l'établissement est obligatoire. Appuie sur « Utiliser ma position actuelle » depuis ton établissement, ou cherche et choisis ton adresse.", lblOuv: "Ouverture", lblFerm: "Fermeture", hChoose: "Choisir", hoursRequired: "Choisis l'heure d'ouverture et l'heure de fermeture.", posBtn: "📍 Utiliser ma position actuelle", posOk: "✓ Position enregistrée.", posWait: "Localisation…", posFail: "Position non disponible. Active la localisation de ton téléphone, autorise-la pour ce site, puis réessaie.", posHint: "Fais-le depuis ton établissement : la position sert à calculer les prix de livraison.", posQ: "Ou cherche l'adresse, ou colle un Plus Code (ex. G3RH+5RP, Bougara)", posSearch: "Chercher", posNone: "Aucun résultat. Précise l'adresse ou utilise ta position actuelle.", posPicked: "✓ Position enregistrée d'après l'adresse choisie. Notre équipe la vérifiera.",
     lblRayon: "Rayon de livraison souhaité", rayonHint: "Le service client confirme le rayon définitif.", villeRequired: "Choisis ta ville.",
-    lblZone: "Zone de livraison",
-    optCentre: "Meftah Centre",
-    optDehors: "Meftah Dehors",
-    optLesDeux: "Les deux",
     lblTelephone: "Numéro de téléphone",
     lblHoraires: "Horaires d'ouverture",
     horairesPlaceholder: "Ex: 10h - 22h",
@@ -300,10 +289,6 @@ const I18N = {
     lblVille: "المدينة", villeChoose: "اختر مدينتك", villeOther: "أخرى",
     lblPos: "موقع المؤسسة (GPS)", posRequired: "موقع المؤسسة إلزامي. اضغط على «استخدام موقعي الحالي» من داخل مؤسستك، أو ابحث عن عنوانك واخترْه.", lblOuv: "الفتح", lblFerm: "الإغلاق", hChoose: "اختر", hoursRequired: "اختر وقت الفتح ووقت الإغلاق.", posBtn: "📍 استخدام موقعي الحالي", posOk: "✓ تم حفظ الموقع.", posWait: "جارٍ تحديد الموقع…", posFail: "الموقع غير متاح. فعّل تحديد الموقع في هاتفك واسمح به لهذا الموقع ثم أعد المحاولة.", posHint: "افعل ذلك من داخل مؤسستك: الموقع يُستعمل لحساب أسعار التوصيل.", posQ: "أو ابحث عن العنوان، أو الصق Plus Code (مثال G3RH+5RP, Bougara)", posSearch: "بحث", posNone: "لا توجد نتائج. دقّق العنوان أو استخدم موقعك الحالي.", posPicked: "✓ تم حفظ الموقع حسب العنوان المختار. سيتحقق منه فريقنا.",
     lblRayon: "نطاق التوصيل المطلوب", rayonHint: "خدمة الزبائن تؤكد النطاق النهائي.", villeRequired: "اختر مدينتك.",
-    lblZone: "منطقة التوصيل",
-    optCentre: "مفتاح المركز",
-    optDehors: "مفتاح خارج المركز",
-    optLesDeux: "كلاهما",
     lblTelephone: "رقم الهاتف",
     lblHoraires: "أوقات العمل",
     horairesPlaceholder: "مثال: 10 صباحاً - 22 مساءً",
@@ -358,7 +343,6 @@ function applyLanguage(){
   document.getElementById("optFastfood").textContent = t("optFastfood");
   document.getElementById("optAutre").textContent = t("optAutre");
   document.getElementById("lblAdresse").textContent = t("lblAdresse");
-  document.getElementById("lblZone").textContent = t("lblZone");
   document.getElementById("lblVille").textContent = t("lblVille");
   document.getElementById("lblPos").textContent = t("lblPos");
   document.getElementById("lblRayon").textContent = t("lblRayon");
@@ -370,9 +354,6 @@ function applyLanguage(){
   { const sel = document.getElementById("ville"), cur = sel.value;
     sel.innerHTML = '<option value="">' + t("villeChoose") + '</option>' + CITIES.map(c => '<option value="' + c + '">' + c + '</option>').join("") + '<option value="Autre">' + t("villeOther") + '</option>';
     sel.value = cur; }
-  document.getElementById("optCentre").textContent = t("optCentre");
-  document.getElementById("optDehors").textContent = t("optDehors");
-  document.getElementById("optLesDeux").textContent = t("optLesDeux");
   document.getElementById("lblTelephone").textContent = t("lblTelephone");
   document.getElementById("lblEmail").textContent = t("lblEmail");
   document.getElementById("emailHint").textContent = t("emailHint");

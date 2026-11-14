@@ -972,8 +972,8 @@ function mapsUrl_(lat, lng, query) {
   return "https://www.google.com/maps/dir/?api=1&destination=" + dest + "&travelmode=driving";
 }
 function routesHtml_(o) {
-  const rest = o.restaurant ? `<a class="btn-route" target="_blank" rel="noopener" href="${escapeAttr(mapsUrl_(o.restoLat, o.restoLng, o.restaurant + " Meftah"))}">${escapeHtml(t("routeResto"))}</a>` : "";
-  const cli = `<a class="btn-route" target="_blank" rel="noopener" href="${escapeAttr(mapsUrl_(o.lat, o.lng, (o.adresse || "") + " Meftah"))}">${escapeHtml(t("routeClient"))}</a>`;
+  const rest = o.restaurant ? `<a class="btn-route" target="_blank" rel="noopener" href="${escapeAttr(mapsUrl_(o.restoLat, o.restoLng, o.restaurant || ""))}">${escapeHtml(t("routeResto"))}</a>` : "";
+  const cli = `<a class="btn-route" target="_blank" rel="noopener" href="${escapeAttr(mapsUrl_(o.lat, o.lng, (o.adresse || "")))}">${escapeHtml(t("routeClient"))}</a>`;
   return `<div class="routes">${rest}${cli}</div>`;
 }
 function collectHtml_(o) {
