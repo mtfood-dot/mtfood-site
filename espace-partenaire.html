@@ -448,6 +448,16 @@ if ("serviceWorker" in navigator) {
 
     <div id="panelSettings" class="hidden">
       <div class="card">
+        <h3 class="set-title" id="setLogoTitle"></h3>
+        <p class="field-hint" id="setLogoHint"></p>
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:10px 0;">
+          <img id="logoCur" alt="" style="width:84px;height:84px;border-radius:50%;object-fit:cover;background:#eef2f7;border:2px solid var(--border);display:none;">
+          <div id="logoInit" style="width:84px;height:84px;border-radius:50%;background:#eef2f7;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:800;color:var(--blue-700);">?</div>
+          <div><button class="mini-btn" id="logoPick" type="button"></button><input type="file" id="logoFile" accept="image/*" style="display:none;"><div class="field-hint" id="logoErr" style="color:#b91c1c;"></div></div>
+        </div>
+        <button class="btn-primary" id="saveLogoBtn" type="button" disabled></button>
+      </div>
+      <div class="card">
         <h3 class="set-title" id="setHoursTitle"></h3>
         <p class="field-hint" id="setHoursHint"></p>
         <div id="hoursEditor"></div>
@@ -559,6 +569,7 @@ const I18N = {
     tabSettingsLabel: "⚙️ Réglages", setHoursTitle: "🕐 Horaires d'ouverture", setHoursHint: "Les clients ne peuvent commander que pendant ces heures. Décoche un jour pour le fermer. Une fermeture après minuit est possible (ex. 18:00 → 01:00).",
     dayNames: ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"], closedDay: "Fermé", addSlot: "+ Pause", rmSlot: "✕", copyMon: "Copier lundi sur tous les jours", saveHours: "Enregistrer les horaires",
     hoursSaved: "Horaires enregistrés.", hoursNeedDay: "Choisis au moins un jour ouvert.", hoursNotSet: "Horaires pas encore définis : ton restaurant est considéré ouvert tout le temps.",
+    setLogoTitle: "🖼️ Photo de profil", setLogoHint: "Le logo de ton restaurant, affiché aux clients sur le menu.", logoPick: "Changer la photo", saveLogo: "Enregistrer la photo", logoSaved: "Photo de profil mise à jour.", logoFail: "Impossible de changer la photo. Réessaie.", logoErrRead: "Image illisible.",
     setPrepTitle: "⏱️ Temps de préparation", setPrepHint: "Affiché aux clients avant la commande (en minutes, entre 5 et 180).", savePrep: "Enregistrer", prepSaved: "Temps de préparation enregistré.",
     setPhoneTitle: "📞 Téléphone de connexion", setPhoneHint: "Ce numéro sert à te connecter. Après le changement, tu devras te reconnecter avec le nouveau numéro (même code PIN).", lblCurPhone: "Numéro actuel", lblNewPhone: "Nouveau numéro", lblPinConfirm: "Ton code PIN (pour confirmer)", savePhone: "Changer mon numéro", phoneChanged: "Numéro modifié. Reconnecte-toi avec le nouveau numéro.", settingsFail: "Impossible d'enregistrer. Réessaie.",
     tabSalesLabel: "Mes ventes", salesToday: "Aujourd'hui", sales7: "7 jours", sales30: "30 jours", salesAll: "Tout",
@@ -689,6 +700,7 @@ const I18N = {
     tabSettingsLabel: "⚙️ الإعدادات", setHoursTitle: "🕐 أوقات العمل", setHoursHint: "لا يمكن للزبائن الطلب إلا خلال هذه الأوقات. ألغِ تحديد اليوم لإغلاقه. يمكن الإغلاق بعد منتصف الليل (مثال: 18:00 ← 01:00).",
     dayNames: ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"], closedDay: "مغلق", addSlot: "+ استراحة", rmSlot: "✕", copyMon: "نسخ الاثنين إلى كل الأيام", saveHours: "حفظ الأوقات",
     hoursSaved: "تم حفظ الأوقات.", hoursNeedDay: "اختر يومًا واحدًا على الأقل.", hoursNotSet: "لم تُحدَّد الأوقات بعد: مطعمك يُعتبر مفتوحًا دائمًا.",
+    setLogoTitle: "🖼️ صورة الملف الشخصي", setLogoHint: "شعار مطعمك الذي يظهر للزبائن في القائمة.", logoPick: "تغيير الصورة", saveLogo: "حفظ الصورة", logoSaved: "تم تحديث الصورة.", logoFail: "تعذّر تغيير الصورة. حاول مرة أخرى.", logoErrRead: "تعذّرت قراءة الصورة.",
     setPrepTitle: "⏱️ وقت التحضير", setPrepHint: "يُعرض للزبائن قبل الطلب (بالدقائق، بين 5 و180).", savePrep: "حفظ", prepSaved: "تم حفظ وقت التحضير.",
     setPhoneTitle: "📞 هاتف الدخول", setPhoneHint: "هذا الرقم يُستعمل لتسجيل الدخول. بعد التغيير ستعيد الدخول بالرقم الجديد (نفس الرمز السري).", lblCurPhone: "الرقم الحالي", lblNewPhone: "الرقم الجديد", lblPinConfirm: "رمزك السري (للتأكيد)", savePhone: "تغيير رقمي", phoneChanged: "تم تغيير الرقم. أعد الدخول بالرقم الجديد.", settingsFail: "تعذر الحفظ. أعد المحاولة.",
     tabSalesLabel: "مبيعاتي", salesToday: "اليوم", sales7: "7 أيام", sales30: "30 يوما", salesAll: "الكل",
@@ -1085,10 +1097,54 @@ let SALES_DAYS = 7, SALES_DATA = null;
 const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 let SETTINGS = null, HOURS_EDIT = null;
 function applySettingsLang() {
-  const ids = { setHoursTitle: "setHoursTitle", setHoursHint: "setHoursHint", copyMonBtn: "copyMon", saveHoursBtn: "saveHours", setPrepTitle: "setPrepTitle", setPrepHint: "setPrepHint", savePrepBtn: "savePrep", setPhoneTitle: "setPhoneTitle", setPhoneHint: "setPhoneHint", lblCurPhone: "lblCurPhone", lblNewPhone: "lblNewPhone", lblPinConfirm: "lblPinConfirm", savePhoneBtn: "savePhone", tabSettingsLabel: "tabSettingsLabel" };
+  const ids = { setHoursTitle: "setHoursTitle", setHoursHint: "setHoursHint", copyMonBtn: "copyMon", saveHoursBtn: "saveHours", setLogoTitle: "setLogoTitle", setLogoHint: "setLogoHint", logoPick: "logoPick", saveLogoBtn: "saveLogo", setPrepTitle: "setPrepTitle", setPrepHint: "setPrepHint", savePrepBtn: "savePrep", setPhoneTitle: "setPhoneTitle", setPhoneHint: "setPhoneHint", lblCurPhone: "lblCurPhone", lblNewPhone: "lblNewPhone", lblPinConfirm: "lblPinConfirm", savePhoneBtn: "savePhone", tabSettingsLabel: "tabSettingsLabel" };
   Object.keys(ids).forEach(id => { const el = $(id); if (el) el.textContent = t(ids[id]); });
   if (HOURS_EDIT) renderHours();
 }
+/* ---- Photo de profil du restaurant (logo) ---- */
+let LOGO_NEW = "";
+function showLogo(url, nom) {
+  const img = $("logoCur"), ini = $("logoInit");
+  $("logoInit").textContent = (String(nom || "?").trim().charAt(0) || "?").toUpperCase();
+  if (url) { img.src = url; img.style.display = ""; ini.style.display = "none"; img.onerror = () => { img.style.display = "none"; ini.style.display = "flex"; }; }
+  else { img.style.display = "none"; ini.style.display = "flex"; }
+}
+function resizeLogoImg(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      try {
+        const side = Math.min(img.naturalWidth, img.naturalHeight), sx = (img.naturalWidth - side) / 2, sy = (img.naturalHeight - side) / 2;
+        const size = Math.min(400, side), c = document.createElement("canvas"); c.width = size; c.height = size;
+        const ctx = c.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, size, size); ctx.drawImage(img, sx, sy, side, side, 0, 0, size, size);
+        let q = 0.85, out = c.toDataURL("image/jpeg", q);
+        while (out.length > 300000 && q > 0.45) { q -= 0.1; out = c.toDataURL("image/jpeg", q); }
+        resolve(out);
+      } catch (e) { reject(e); } finally { URL.revokeObjectURL(url); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("read")); };
+    img.src = url;
+  });
+}
+$("logoPick").addEventListener("click", () => $("logoFile").click());
+$("logoFile").addEventListener("change", async () => {
+  const f = $("logoFile").files && $("logoFile").files[0]; $("logoErr").textContent = ""; if (!f) return;
+  if (f.type && !/^image\//i.test(f.type)) { $("logoErr").textContent = t("photoErrType"); return; }
+  if (f.size > PHOTO_MAX_INPUT) { $("logoErr").textContent = t("photoErrBig"); return; }
+  try { LOGO_NEW = await resizeLogoImg(f); const img = $("logoCur"); img.src = LOGO_NEW; img.style.display = ""; $("logoInit").style.display = "none"; $("saveLogoBtn").disabled = false; }
+  catch (e) { $("logoErr").textContent = t("logoErrRead"); }
+});
+$("saveLogoBtn").addEventListener("click", async () => {
+  if (!LOGO_NEW) return;
+  hideError($("errorBox")); hideSuccess($("successBox"));
+  const b = $("saveLogoBtn"); b.disabled = true;
+  try {
+    const d = await apiGet({ action: "partnerSetLogo", logoData: LOGO_NEW });
+    if (d && d.success) { LOGO_NEW = ""; $("logoFile").value = ""; showLogo(d.logo || "", d.nom || ""); showSuccess($("successBox"), t("logoSaved")); }
+    else { b.disabled = false; showError($("errorBox"), (d && d.error) || t("logoFail")); }
+  } catch (e) { b.disabled = false; showError($("errorBox"), t("logoFail")); }
+});
+
 async function loadSettings() {
   try {
     const d = await apiGet({ action: "partnerSettings" });
@@ -1097,6 +1153,7 @@ async function loadSettings() {
     HOURS_EDIT = d.days.map(x => ({ open: x.slots.length > 0, slots: x.slots.length ? x.slots.map(s => [s[0], s[1]]) : [["10:00", "23:00"]] }));
     $("prepInput").value = d.prepMin || "";
     $("curPhone").value = d.telephone || "";
+    showLogo(d.logo || "", d.nom || "");
     renderHours();
     if (!d.defined) showSuccess($("successBox"), t("hoursNotSet"));
   } catch (e) { /* silencieux */ }
