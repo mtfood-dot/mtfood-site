@@ -30,6 +30,7 @@
       email: "Adresse e-mail invalide (ex : nom@email.com).",
       identifier: "Entre un e-mail ou un numéro de téléphone valide.",
       pin4: "Le code PIN doit contenir exactement 4 chiffres.",
+      pin46: "Le code PIN doit contenir 4 à 6 chiffres.",
       pin4new: "Code trop simple. Choisis un autre code (pas 1234, 0000, 1111…).",
       code6: "Le code doit contenir 6 chiffres.",
       min8: "8 caractères minimum.",
@@ -49,6 +50,7 @@
       email: "عنوان البريد الإلكتروني غير صالح (مثال: name@email.com).",
       identifier: "أدخل بريدًا إلكترونيًا أو رقم هاتف صالحًا.",
       pin4: "يجب أن يتكون رمز PIN من 4 أرقام بالضبط.",
+      pin46: "يجب أن يتكون رمز PIN من 4 إلى 6 أرقام.",
       pin4new: "الرمز بسيط جدًا. اختر رمزًا آخر (ليس 1234 أو 0000 أو 1111…).",
       code6: "يجب أن يتكون الرمز من 6 أرقام.",
       min8: "8 أحرف على الأقل.",
@@ -117,6 +119,7 @@
     if (rule === "email" && !isEmail(v)) return "email";
     if (rule === "identifier" && !(v.indexOf("@") >= 0 ? isEmail(v) : isPhone(v))) return "identifier";
     if (rule === "pin4" && !/^\d{4}$/.test(v)) return "pin4";
+    if (rule === "pin46" && !/^\d{4,6}$/.test(v)) return "pin46";
     if (rule === "pin4new") {
       if (!/^\d{4}$/.test(v)) return "pin4";
       var d = v.split("").map(Number), same = d.every(function (x) { return x === d[0]; });

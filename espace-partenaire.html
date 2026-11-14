@@ -291,10 +291,11 @@ if ("serviceWorker" in navigator) {
     </div>
     <div class="field">
       <label id="lblPin" for="fPin">Code PIN</label>
-      <input type="password" id="fPin" data-required data-rule="pin4" placeholder="Ex: 1234" inputmode="numeric" maxlength="4" autocomplete="off">
+      <input type="password" id="fPin" data-required data-rule="pin46" placeholder="••••••" inputmode="numeric" maxlength="6" autocomplete="off">
     </div>
     <button class="btn-primary" id="loginBtn" type="button">Se connecter</button>
     <div class="error-box" id="loginError"></div>
+    <p style="text-align:center;margin-top:14px;font-size:14px;"><a id="forgotPin" href="#" target="_blank" rel="noopener"></a></p>
   </section>
 
   <!-- ================= ESPACE CONNECTÉ ================= -->
@@ -535,7 +536,7 @@ const I18N = {
     loginSubtitle: "Entre le numéro de téléphone utilisé pour ta demande de partenariat.",
     lblPhone: "Numéro de téléphone",
     phonePlaceholder: "Ex: 0555 xx xx xx",
-    lblPin: "Code PIN",
+    lblPin: "Code PIN", forgotPin: "PIN oublié ? Demander un nouveau code sur WhatsApp", forgotMsg: "Bonjour MT Food, j'ai oublié mon code PIN. Restaurant : {nom} · Téléphone : {tel}",
     pinPlaceholder: "Ex: 1234",
     loginBtn: "Se connecter",
     logoutBtn: "Déconnexion",
@@ -661,7 +662,7 @@ const I18N = {
     loginSubtitle: "أدخل رقم الهاتف الذي استعملته في طلب الشراكة.",
     lblPhone: "رقم الهاتف",
     phonePlaceholder: "مثال: 0555 xx xx xx",
-    lblPin: "رمز PIN",
+    lblPin: "رمز PIN", forgotPin: "نسيت رمز PIN؟ اطلب رمزاً جديداً عبر واتساب", forgotMsg: "مرحباً MT Food، نسيت رمز PIN. المطعم: {nom} · الهاتف: {tel}",
     pinPlaceholder: "مثال: 1234",
     loginBtn: "تسجيل الدخول",
     logoutBtn: "تسجيل الخروج",
@@ -823,6 +824,7 @@ function applyLanguage() {
   $("lblPhone").textContent = t("lblPhone");
   $("fPhone").placeholder = t("phonePlaceholder");
   $("lblPin").textContent = t("lblPin");
+  $("forgotPin").textContent = t("forgotPin");
   $("fPin").placeholder = t("pinPlaceholder");
   $("loginBtn").textContent = t("loginBtn");
   $("logoutBtn").textContent = t("logoutBtn");
@@ -1938,5 +1940,16 @@ if (SESSION && SESSION.telephone) {
 </script>
 
 <script src="/install.js" defer></script>
+<script>
+/* PIN oublié : ouvre WhatsApp vers MT Delivery avec le numéro saisi (l'admin génère puis envoie un nouveau PIN) */
+(function(){
+  var a = document.getElementById("forgotPin"); if(!a) return;
+  a.addEventListener("click", function(){
+    var tel = (document.getElementById("fTel") || document.getElementById("fPhone") || {}).value || "";
+    var msg = t("forgotMsg").replace("{nom}", "…").replace("{tel}", tel.trim() || "…");
+    a.href = "https://wa.me/213560788497?text=" + encodeURIComponent(msg);
+  });
+})();
+</script>
 </body>
 </html>
