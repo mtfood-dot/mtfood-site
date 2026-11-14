@@ -409,6 +409,8 @@
   .fchip.has{border-color:var(--gold-500);}
   .qty-stepper{display:flex;align-items:center;gap:10px;background:var(--blue-100);border-radius:9px;padding:5px 9px;}
   .qty-stepper span{font-weight:800;font-size:13px;color:var(--blue-800);min-width:12px;text-align:center;}
+  .qty-stepper button.trash{background:#C62828;display:inline-flex;align-items:center;justify-content:center;}
+  .qty-stepper button.trash svg{width:17px;height:17px;}
   .qty-stepper button{
     width:23px;height:23px;border-radius:7px;border:none;background:var(--blue-700);color:#fff;
     font-weight:700;cursor:pointer;font-size:14px;line-height:1;
@@ -966,6 +968,7 @@ const I18N = {
     zoneOutDetail: "Ton adresse est à {d} km du restaurant (livraison jusqu'à {m} km). Au-delà, appelle-nous pour convenir du prix : ",
     deliveryTo: "Livraison :",
     distFromCenter: "À {d} km du centre de Meftah", distFromResto: "À {d} km du restaurant",
+    removeLine: "Retirer du panier",
     deliveryFeeLbl: "Frais de livraison",
     loyFreeAmount: "🎁 Livraison offerte : tes plats dépassent {n} DA.",
     loyFreeLoyal: "🎁 Livraison offerte sur cette commande : merci pour ta fidélité !",
@@ -1139,6 +1142,7 @@ const I18N = {
     zoneOutDetail: "عنوانك يبعد {d} كم عن المطعم (التوصيل حتى {m} كم). للمسافات الأبعد، اتصل بنا للاتفاق على السعر: ",
     deliveryTo: "التوصيل:",
     distFromCenter: "على بعد {d} كم من وسط المفتاح", distFromResto: "على بعد {d} كم من المطعم",
+    removeLine: "إزالة من السلة",
     deliveryFeeLbl: "رسوم التوصيل",
     loyFreeAmount: "🎁 التوصيل مجاني: مشترياتك تتجاوز {n} دج.",
     loyFreeLoyal: "🎁 التوصيل مجاني لهذا الطلب: شكرًا على وفائك!",
@@ -2334,9 +2338,12 @@ function addBtnHtml(id) {
   if (it && restoOutOfZone(it.partenaire)) return `<button class="add-btn" disabled>${t("outZoneShort")}</button>`;
   return `<button class="add-btn" data-add="${id}">${t("add")}</button>`;
 }
+const TRASH_SVG = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/><path d="M10 11v6M14 11v6"/></svg>';
+function decBtnInner(qty) { return qty <= 1 ? TRASH_SVG : "−"; }
+function decBtnAttrs(qty) { return qty <= 1 ? ' class="trash" aria-label="' + escapeAttr(t("removeLine")) + '"' : ""; }
 function qtyStepperHtml(id, qty) {
   return `<div class="qty-stepper">
-    <button data-dec="${id}">−</button><span>${qty}</span><button data-inc="${id}">+</button>
+    <button data-dec="${id}"${decBtnAttrs(qty)}>${decBtnInner(qty)}</button><span>${qty}</span><button data-inc="${id}">+</button>
   </div>`;
 }
 
@@ -2569,7 +2576,7 @@ function renderCartLines() {
             <div class="cl-price"><bdi dir="ltr">${l.qty} × ${l.item.prix} DA</bdi></div>
           </div>
           <div class="qty-stepper">
-            <button data-dec2="${escapeAttr(id)}">−</button><span>${l.qty}</span><button data-inc2="${escapeAttr(id)}">+</button>
+            <button data-dec2="${escapeAttr(id)}"${decBtnAttrs(l.qty)}>${decBtnInner(l.qty)}</button><span>${l.qty}</span><button data-inc2="${escapeAttr(id)}">+</button>
           </div>
         </div>`).join("")
     : `<p style="color:var(--muted);font-size:13.5px;">${t("cartEmpty")}</p>`;
