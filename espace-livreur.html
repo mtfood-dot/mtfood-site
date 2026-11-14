@@ -218,6 +218,7 @@
     color:var(--muted);font-size:11.5px;font-weight:500;}
 </style>
 <script src="/form-validate.js" defer></script>
+<script src="/toast.js"></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
@@ -414,7 +415,7 @@ const I18N = {
     rOther: "Autre",
     call: "📞 Appeler",
     callLocked: "🔒 Appel disponible après « Commande récupérée »",
-    acceptFailedGeneric: "Impossible d'accepter cette commande. Réessaie.",
+    acceptFailedGeneric: "Impossible d'accepter cette commande. Réessaie.", okAccepted: "Commande acceptée", okStep: "Étape enregistrée", okDelivered: "Livraison confirmée", okOnline: "Tu es en ligne", okOffline: "Tu es hors ligne",
     deliveredFailedGeneric: "Impossible de mettre à jour cette commande. Réessaie.",
     confirmAccept: "Accepter cette commande ?",
     confirmDelivered: "Confirmer que cette commande a été livrée ?",
@@ -488,7 +489,7 @@ const I18N = {
     rOther: "سبب آخر",
     call: "📞 اتصال",
     callLocked: "🔒 الاتصال متاح بعد «تم استلام الطلب»",
-    acceptFailedGeneric: "تعذر قبول هذا الطلب. أعد المحاولة.",
+    acceptFailedGeneric: "تعذر قبول هذا الطلب. أعد المحاولة.", okAccepted: "تم قبول الطلب", okStep: "تم تسجيل المرحلة", okDelivered: "تم تأكيد التسليم", okOnline: "أنت متصل الآن", okOffline: "أنت غير متصل",
     deliveredFailedGeneric: "تعذر تحديث هذا الطلب. أعد المحاولة.",
     confirmAccept: "هل تريد قبول هذا الطلب؟",
     confirmDelivered: "تأكيد أن هذا الطلب تم توصيله؟",
@@ -623,6 +624,8 @@ function showError(box, msg) {
   box.textContent = msg;
   box.classList.add("show");
 }
+function actErr(msg) { showError($("errorBox"), msg); if (window.MTToast) MTToast.err(msg); }   // erreur d'une action de l'utilisateur : cadre + bandeau + son
+function actOk(key) { if (window.MTToast) MTToast.ok(t(key)); }
 function hideError(box) {
   box.classList.remove("show");
   box.textContent = "";
@@ -757,9 +760,9 @@ $("onlineSwitch").addEventListener("click", async () => {
   sw.disabled = true;
   try {
     const d = await apiGet({ action: "driverSetOnline", online: want ? "true" : "false" });
-    if (d && d.success) { ONLINE = !!d.online; KNOWN_AVAIL = null; renderOnline(); await loadAll(); }
-    else showError($("errorBox"), (d && d.error) || t("onlineFail"));
-  } catch (e) { showError($("errorBox"), t("onlineFail")); }
+    if (d && d.success) { ONLINE = !!d.online; KNOWN_AVAIL = null; renderOnline(); actOk(ONLINE ? "okOnline" : "okOffline"); await loadAll(); }
+    else actErr((d && d.error) || t("onlineFail"));
+  } catch (e) { actErr(t("onlineFail")); }
   finally { sw.disabled = false; }
 });
 
@@ -1027,14 +1030,15 @@ async function onAccept(numero) {
       telephone: SESSION.telephone
     });
     if (data.success) {
+      actOk("okAccepted");
       await loadAll();
       switchTab("mine");
     } else {
-      showError($("errorBox"), data.error || t("acceptFailedGeneric"));
+      actErr(data.error || t("acceptFailedGeneric"));
       await loadAll();
     }
   } catch (e) {
-    showError($("errorBox"), t("acceptFailedGeneric"));
+    actErr(t("acceptFailedGeneric"));
   } finally {
     if (btn) { btn.disabled = false; }
   }
@@ -1044,9 +1048,9 @@ async function onStep(numero, step, btn) {
   btn.disabled = true;
   try {
     const d = await apiGet({ action: "driverStep", orderNumber: numero, step });
-    if (d && d.success) { await loadAll(true); }
-    else showError($("errorBox"), (d && d.error) || t("stepFail"));
-  } catch (e) { showError($("errorBox"), t("stepFail")); }
+    if (d && d.success) { actOk("okStep"); await loadAll(true); }
+    else actErr((d && d.error) || t("stepFail"));
+  } catch (e) { actErr(t("stepFail")); }
   finally { btn.disabled = false; }
 }
 
@@ -1061,13 +1065,14 @@ async function onDeliver(numero) {
       telephone: SESSION.telephone
     });
     if (data.success) {
+      actOk("okDelivered");
       await loadAll();
     } else {
-      showError($("errorBox"), data.error || t("deliveredFailedGeneric"));
+      actErr(data.error || t("deliveredFailedGeneric"));
       await loadAll();
     }
   } catch (e) {
-    showError($("errorBox"), t("deliveredFailedGeneric"));
+    actErr(t("deliveredFailedGeneric"));
   } finally {
     if (btn) { btn.disabled = false; }
   }
