@@ -36,7 +36,15 @@ for (const f of pages) {
   const newPage = async () => {
     const p = await browser.newPage({ viewport: { width: 420, height: 900 } });
     p.__errs = []; p.on("pageerror", (e) => p.__errs.push(e.message));
-    await p.route("**/*", (r) => { const u = r.request().url(); return u.startsWith("file:") ? r.continue() : r.fulfill({ status: 200, body: "", contentType: "text/plain" }); });
+    await p.route("**/*", (r) => {
+      const u = r.request().url();
+      if (!u.startsWith("file:")) return r.fulfill({ status: 200, body: "", contentType: "text/plain" });
+      // « /fichier.js » (chemin absolu du site) → fichier du dépôt
+      const rel = decodeURIComponent(u.replace(/^file:\/\/\/?/, "").split("?")[0]);
+      const inRoot = path.join(ROOT, rel.replace(ROOT.replace(/^\//, ""), "").replace(/^\/+/, ""));
+      if (!u.startsWith("file://" + ROOT) && fs.existsSync(inRoot) && fs.statSync(inRoot).isFile()) return r.fulfill({ status: 200, body: fs.readFileSync(inRoot), contentType: inRoot.endsWith(".js") ? "text/javascript" : "text/plain" });
+      return r.continue();
+    });
     return p;
   };
   for (const f of pages) {
@@ -64,14 +72,23 @@ for (const f of pages) {
       out.err = document.getElementById("errorBox").textContent.trim();
       const be = document.querySelector("[data-edit-id]"); if (be) be.click(); out.editForm = !!document.querySelector("[data-e=prix]");
       const bo = document.querySelector("[data-optlink-id]"); if (bo) bo.click(); out.optTab = CURRENT_TAB === "options";
-      switchTab("settings"); await new Promise((r) => setTimeout(r, 200)); out.settingsTab = CURRENT_TAB === "settings";
+      showSuccess(document.getElementById("successBox"), "Test OK"); await new Promise((r) => setTimeout(r, 50));
+      out.toastOk = !!document.querySelector("#mtToast.show.ok") && document.getElementById("mtToast").textContent.indexOf("Test OK") >= 0;
+      showError(document.getElementById("errorBox"), "Test erreur"); await new Promise((r) => setTimeout(r, 50));
+      out.toastErr = !!document.querySelector("#mtToast.show.err");
+      await new Promise((r) => setTimeout(r, 2700)); out.toastGone = true;
+      switchTab("settings"); await new Promise((r) => setTimeout(r, 200)); out.settingsTab = CURRENT_TAB === "settings"; out.soundToggle = !!document.getElementById("soundToggle"); out.logoCard = !!document.getElementById("saveLogoBtn") && !!document.getElementById("logoPick");
       return out;
     });
     r.cards === 2 ? ok("2 plats affichés") : ko("liste des plats : " + r.cards + " carte(s) au lieu de 2");
     r.err ? ko("message d'erreur affiché : " + r.err) : ok("aucun message d'erreur");
     r.editForm ? ok("bouton Modifier ouvre le formulaire") : ko("bouton Modifier sans effet");
     r.optTab ? ok("bouton Option ouvre l'onglet Options") : ko("bouton Option sans effet");
+    r.toastOk ? ok("bandeau vert de confirmation") : ko("bandeau de confirmation absent après un succès");
+    r.toastErr ? ok("bandeau rouge d'erreur") : ko("bandeau d'erreur absent");
+    r.soundToggle ? ok("réglage du son présent") : ko("réglage du son absent");
     r.settingsTab ? ok("onglet Réglages s'ouvre") : ko("onglet Réglages sans effet");
+    r.logoCard ? ok("Réglages : carte photo de profil") : ko("Réglages : carte photo de profil absente");
     p.__errs.length ? ko("erreurs JS : " + p.__errs.slice(0, 2).join(" | ")) : ok("aucune erreur JS pendant le test");
     await p.close();
   }
