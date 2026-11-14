@@ -3299,7 +3299,14 @@ function submitOrder() {
   btn.disabled = true;
   btn.textContent = t("sending");
 
-  jsonpRequest({ action: "order", payload: JSON.stringify(payload) })
+  /* Le serveur peut mettre plus de 15 s à répondre : délai long, puis un seul nouvel essai avec le même identifiant
+     (le serveur reconnaît la commande déjà reçue et renvoie son numéro, sans doublon). */
+  const orderParams = { action: "order", payload: JSON.stringify(payload) };
+  jsonpRequest(orderParams, 40000)
+    .catch(e => {
+      if (e && !e.code && /Délai|réseau/i.test(e.message || "")) return new Promise(r => setTimeout(r, 1500)).then(() => jsonpRequest(orderParams, 40000));
+      throw e;
+    })
     .then(res => {
       if (!res.success) {
         const e = new Error(res.error || t("genericError"));
