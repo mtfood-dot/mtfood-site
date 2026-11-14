@@ -805,7 +805,7 @@ function checkNewOrders(list) {
   b.classList.remove("hidden");
 }
 $("newBanner").addEventListener("click", () => { switchTab("available"); hideNewBanner(); window.scrollTo({ top: 0, behavior: "smooth" }); });
-setInterval(() => { if (SESSION && !document.hidden && $("appScreen") && !$("appScreen").classList.contains("hidden")) loadAll(true); }, 20000);
+setInterval(() => { if (SESSION && !document.hidden && $("appScreen") && !$("appScreen").classList.contains("hidden")) loadAll(true); }, 30000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden && SESSION && !$("appScreen").classList.contains("hidden")) loadAll(true); });
 
 /* ============================================================
@@ -878,7 +878,7 @@ function startLocationSharing() {
   if (!navigator.geolocation) return;
   sendLocationOnce();
   if (!LOCATION_INTERVAL_ID) {
-    LOCATION_INTERVAL_ID = setInterval(sendLocationOnce, 20000);
+    LOCATION_INTERVAL_ID = setInterval(sendLocationOnce, 30000);
   }
 }
 
