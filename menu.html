@@ -881,8 +881,6 @@ if ("serviceWorker" in navigator) {
     <h2 id="orderSentTitle">Commande envoyée !</h2>
     <div class="order-no" id="orderNoDisplay"></div>
     <p id="thanksText">Merci ! Notre équipe va vous appeler pour confirmer votre commande avant de vous l'envoyer.<br>Paiement en espèces à la réception.</p>
-    <a href="#" class="wa-confirm-btn" id="waConfirmBtn" target="_blank" rel="noopener">✅ Confirmer ma commande sur WhatsApp</a>
-    <p class="wa-note" id="waNote">Un message déjà prêt s'ouvre : il suffit d'appuyer sur Envoyer.</p>
     <a href="suivi-commande.html" class="track-link" id="trackOrderLink">Suivre ma commande</a>
     <br>
     <button class="close-btn" id="closeSuccessBtn" data-close="successOverlay">Fermer</button>
@@ -1453,8 +1451,6 @@ function applyLanguage() {
   $("orderSentTitle").textContent = t("orderSentTitle");
   $("thanksText").innerHTML = t("thanksHtml");
   $("trackOrderLink").textContent = t("trackOrder");
-  $("waConfirmBtn").textContent = t("waConfirm");
-  $("waNote").textContent = t("waNote");
   $("closeSuccessBtn").textContent = t("close");
   $("footerCguLink").textContent = t("footerCguLink");
   $("footerPrivacyLink").textContent = t("footerPrivacyLink");
@@ -3325,7 +3321,6 @@ function submitOrder() {
       { const isPre = !!res.preorder; $("orderSentTitle").textContent = t(isPre ? "preSentTitle" : "orderSentTitle");
         $("thanksText").innerHTML = isPre ? t("preThanksHtml").replace("{when}", payload.preWhen || "") : t("thanksHtml"); }
       $("trackOrderLink").href = "suivi-commande.html?cmd=" + encodeURIComponent(res.orderNumber);
-      $("waConfirmBtn").href = buildWhatsAppLink(res.orderNumber, payload);
       openOverlay("successOverlay");
       resetOrder();
       PROMO = null; $("fPromo").value = ""; setPromoMsg(""); updateCheckoutTotals();
