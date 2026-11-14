@@ -67,6 +67,9 @@ header.top .tagline{font-size:13px;color:var(--blue-700);font-weight:700;letter-
 }
 
 main{max-width:520px;margin:0 auto;padding:20px 16px 0;}
+.nav-row{display:flex;gap:10px;margin:0 0 14px;}
+.nav-row a{flex:1;text-align:center;padding:12px 10px;border-radius:14px;font-weight:800;font-size:14px;text-decoration:none;background:#fff;color:var(--blue-700);border:2px solid var(--blue-700);}
+.nav-row a.primary{background:var(--blue-700);color:#fff;}
 
 .search-card{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);
   padding:22px 20px;margin-bottom:18px;}
@@ -171,6 +174,11 @@ if ("serviceWorker" in navigator) {
 
 <main>
 
+  <div class="nav-row">
+    <a href="menu.html" id="navMenu">← Retour au menu</a>
+    <a href="espace-client.html" id="navAccount" class="primary">👤 Mes commandes</a>
+  </div>
+
   <div class="search-card" id="searchCard" data-mtform data-note-before=".error-box">
     <h1 id="searchTitle">Suivre ma commande</h1>
     <p id="searchText">Entre le numéro de ta commande (reçu à la validation) pour voir où en est ton livreur.</p>
@@ -238,6 +246,8 @@ const I18N = {
     searchText: "Entre le numéro de ta commande (reçu à la validation) pour voir où en est ton livreur.",
     numeroPlaceholder: "Ex: MT-K7R4",
     searchBtn: "Suivre",
+    navMenu: "← Retour au menu",
+    navAccount: "👤 Mes commandes",
     numeroRequired: "Merci d'entrer un numéro de commande.",
     notFound: "Commande introuvable. Vérifie le numéro et réessaie.",
     loadError: "Erreur de connexion. Vérifie ta connexion et réessaie.",
@@ -279,6 +289,8 @@ const I18N = {
     searchText: "أدخل رقم طلبك (المُستلم عند التأكيد) لمعرفة أين وصل عامل التوصيل.",
     numeroPlaceholder: "مثال: MT-K7R4",
     searchBtn: "تتبع",
+    navMenu: "← العودة إلى القائمة",
+    navAccount: "👤 طلباتي",
     numeroRequired: "يرجى إدخال رقم الطلب.",
     notFound: "الطلب غير موجود. تحقق من الرقم وأعد المحاولة.",
     loadError: "خطأ في الاتصال. تحقق من اتصالك وأعد المحاولة.",
@@ -328,6 +340,8 @@ function applyLanguage(){
   $("searchText").textContent = t("searchText");
   $("fNumero").placeholder = t("numeroPlaceholder");
   $("searchBtn").textContent = t("searchBtn");
+  $("navMenu").textContent = t("navMenu");
+  $("navAccount").textContent = t("navAccount");
   $("cancelPhone").placeholder = t("cancelPhonePh");
   prefillPhones();
   $("cancelBtn").textContent = t("cancelBtn");
