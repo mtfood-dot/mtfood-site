@@ -206,6 +206,14 @@
   .badge.publie{background:#eaf7ee;color:var(--green);}
   .badge.attente{background:var(--gold-100);color:var(--blue-900);}
   .badge.refuse{background:#fdeceb;color:var(--danger);}
+  .item-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+  .item-actions .mini-btn{padding:8px 14px;font-size:13px;}
+  .item-panel{margin-top:10px;padding:12px;border:1.5px solid var(--border);border-radius:12px;background:#f8fafc;}
+  .item-panel label.fl{display:block;font-size:12.5px;font-weight:800;margin:8px 0 4px;}
+  .item-panel input[type=number],.item-panel textarea{width:100%;box-sizing:border-box;padding:10px;border:1.5px solid var(--border);border-radius:10px;font:inherit;}
+  .item-panel .og-pick{display:block;padding:8px 0;font-size:13.5px;border-bottom:1px solid var(--border);}
+  .item-panel .og-pick small{display:block;color:var(--muted);margin-inline-start:26px;}
+  .item-panel .pn-row{display:flex;gap:8px;margin-top:12px;}
   .toggle-row{display:flex;align-items:center;justify-content:space-between;margin-top:10px;gap:10px;}
   .toggle-label{font-size:12.5px;font-weight:700;color:var(--muted);}
   .switch{position:relative;display:inline-block;width:44px;height:25px;flex-shrink:0;}
@@ -630,6 +638,10 @@ const I18N = {
     noItems: "Tu n'as encore aucun plat sur le menu.",
     noOrders: "Aucune commande livrée à cette date.",
     dispoLabel: "Disponible",
+    editBtn: "✏️ Modifier", optBtn: "➕ Option", editPrix: "Prix (DA)", editDesc: "Composition / description", editPhoto: "Changer la photo",
+    editSave: "Enregistrer", editCancel: "Annuler", editSaved: "Plat modifié.", editFail: "Modification impossible. Réessaie.",
+    optLinkTitle: "Ajouter des options déjà configurées", optLinkNone: "Aucune option configurée pour le moment. Crée-les d'abord dans l'onglet Options.",
+    optLinkSave: "Ajouter à ce plat", optLinkSaved: "Options ajoutées au plat.", optLinkMax: "Maximum 8 groupes d'options par plat.", optLinkChoose: "Coche au moins un groupe.",
     statutPublie: "Publié",
     statutAttente: "En attente de validation",
     statutRefuse: "Refusé",
@@ -756,6 +768,10 @@ const I18N = {
     noItems: "ليس لديك أي طبق في القائمة بعد.",
     noOrders: "لا توجد طلبات موصّلة في هذا التاريخ.",
     dispoLabel: "متوفر",
+    editBtn: "✏️ تعديل", optBtn: "➕ خيارات", editPrix: "السعر (دج)", editDesc: "المكوّنات / الوصف", editPhoto: "تغيير الصورة",
+    editSave: "حفظ", editCancel: "إلغاء", editSaved: "تم تعديل الطبق.", editFail: "تعذّر التعديل. حاول مرة أخرى.",
+    optLinkTitle: "إضافة خيارات مُعدّة مسبقًا", optLinkNone: "لا توجد خيارات مُعدّة بعد. أنشئها أولًا في تبويب الخيارات.",
+    optLinkSave: "إضافة إلى هذا الطبق", optLinkSaved: "تمت إضافة الخيارات إلى الطبق.", optLinkMax: "الحد الأقصى 8 مجموعات خيارات لكل طبق.", optLinkChoose: "اختر مجموعة واحدة على الأقل.",
     statutPublie: "منشور",
     statutAttente: "بانتظار الموافقة",
     statutRefuse: "مرفوض",
@@ -1261,6 +1277,85 @@ function renderMenu() {
   document.querySelectorAll("[data-toggle-id]").forEach(input => {
     input.addEventListener("change", () => onToggle(input.dataset.toggleId, input.checked));
   });
+  document.querySelectorAll("[data-edit-id]").forEach(b => b.addEventListener("click", () => openEditPanel(b.dataset.editId)));
+  document.querySelectorAll("[data-optlink-id]").forEach(b => b.addEventListener("click", () => openOptLinkPanel(b.dataset.optlinkId)));
+}
+
+/* ---- Modifier un plat (prix, description, photo) ---- */
+function panelOf(id) { return document.querySelector('[data-panel-for="' + String(id).replace(/"/g, "") + '"]'); }
+function togglePanel(id, kind) {
+  const p = panelOf(id); if (!p) return null;
+  const same = !p.classList.contains("hidden") && p.dataset.kind === kind;
+  document.querySelectorAll(".item-panel").forEach(x => { x.classList.add("hidden"); x.innerHTML = ""; x.dataset.kind = ""; });
+  if (same) return null;
+  p.classList.remove("hidden"); p.dataset.kind = kind; return p;
+}
+function openEditPanel(id) {
+  const item = MENU_ITEMS.find(i => String(i.id) === String(id)); if (!item) return;
+  const p = togglePanel(id, "edit"); if (!p) return;
+  let photo = "";
+  p.innerHTML = `<label class="fl">${escapeHtml(t("editPrix"))}</label><input type="number" min="1" max="100000" inputmode="numeric" data-e="prix" value="${escapeAttr(item.prix || "")}">
+    <label class="fl">${escapeHtml(t("editDesc"))}</label><textarea rows="3" maxlength="300" data-e="desc">${escapeHtml(item.description || "")}</textarea>
+    <label class="fl">${escapeHtml(t("editPhoto"))}</label>
+    <input type="file" accept="image/*" data-e="file" style="font-size:13px;"><div class="field-hint" data-e="err" style="color:#b91c1c;"></div>
+    <img data-e="prev" alt="" style="display:${item.photo ? "block" : "none"};max-width:120px;border-radius:10px;margin-top:8px;" src="${escapeAttr(item.photo || "")}">
+    <div class="pn-row"><button class="mini-btn" type="button" data-e="save" style="background:var(--blue-700);color:#fff;">${escapeHtml(t("editSave"))}</button><button class="mini-btn" type="button" data-e="cancel">${escapeHtml(t("editCancel"))}</button></div>`;
+  const q = k => p.querySelector('[data-e="' + k + '"]');
+  q("cancel").addEventListener("click", () => togglePanel(id, "edit"));
+  q("file").addEventListener("change", async () => {
+    const f = q("file").files && q("file").files[0]; q("err").textContent = ""; if (!f) return;
+    if (f.type && !/^image\//i.test(f.type)) { q("err").textContent = t("photoErrType"); q("file").value = ""; return; }
+    if (f.size > PHOTO_MAX_INPUT) { q("err").textContent = t("photoErrBig"); q("file").value = ""; return; }
+    try { photo = await resizeImage(f); q("prev").src = photo; q("prev").style.display = "block"; }
+    catch (e) { q("err").textContent = t("photoErrRead"); }
+  });
+  q("save").addEventListener("click", async () => {
+    const prix = Math.round(Number(q("prix").value));
+    if (!(prix > 0)) { q("prix").focus(); return; }
+    hideError($("errorBox")); hideSuccess($("successBox"));
+    q("save").disabled = true;
+    try {
+      const payload = JSON.stringify({ itemId: id, prix, description: q("desc").value.trim(), photoData: photo });
+      const d = await apiGet({ action: "updateMenuItem", telephone: SESSION.telephone, payload });
+      if (d && d.success) { showSuccess($("successBox"), t("editSaved")); await loadMenu(); }
+      else showError($("errorBox"), (d && d.error) || t("editFail"));
+    } catch (e) { showError($("errorBox"), t("editFail")); }
+    finally { q("save").disabled = false; }
+  });
+}
+
+/* ---- Ajouter des options déjà configurées à un plat ---- */
+function groupSig(g) { return JSON.stringify([g.titre, g.min, g.max, (g.options || []).map(o => [o.nom, o.prix])]); }
+async function openOptLinkPanel(id) {
+  const p = togglePanel(id, "opt"); if (!p) return;
+  p.innerHTML = '<div class="field-hint">...</div>';
+  let dishes = [];
+  try { const d = await apiGet({ action: "partnerOptions" }); dishes = (d && d.success && d.dishes) || []; } catch (e) { /* vide */ }
+  const cur = dishes.find(x => String(x.id) === String(id));
+  const have = new Set(((cur && cur.groups) || []).map(groupSig));
+  const seen = new Set(), avail = [];
+  dishes.forEach(dh => (dh.groups || []).forEach(g => { const s = groupSig(g); if (!seen.has(s) && !have.has(s)) { seen.add(s); avail.push(g); } }));
+  if (!avail.length) { p.innerHTML = `<div class="field-hint">${escapeHtml(t("optLinkNone"))}</div>`; return; }
+  p.innerHTML = `<strong style="font-size:13.5px;">${escapeHtml(t("optLinkTitle"))}</strong>` + avail.map((g, i) => {
+    const ch = (g.options || []).map(o => o.nom + (o.prix > 0 ? " +" + o.prix : "")).join(" · ");
+    return `<label class="og-pick"><input type="checkbox" data-og="${i}"> <b>${escapeHtml(LANG === "ar" && g.titreAr ? g.titreAr : g.titre)}</b><small>${escapeHtml(ch)}</small></label>`;
+  }).join("") + `<div class="pn-row"><button class="mini-btn" type="button" data-e="save" style="background:var(--blue-700);color:#fff;">${escapeHtml(t("optLinkSave"))}</button><button class="mini-btn" type="button" data-e="cancel">${escapeHtml(t("editCancel"))}</button></div>`;
+  p.querySelector('[data-e="cancel"]').addEventListener("click", () => togglePanel(id, "opt"));
+  p.querySelector('[data-e="save"]').addEventListener("click", async () => {
+    const picked = [...p.querySelectorAll("[data-og]:checked")].map(c => avail[+c.dataset.og]);
+    if (!picked.length) { showError($("errorBox"), t("optLinkChoose")); return; }
+    const base = ((cur && cur.groups) || []).map(g => ({ titre: g.titre, titreAr: g.titreAr || "", min: g.min, max: g.max, options: (g.options || []).map(o => ({ nom: o.nom, prix: o.prix })) }));
+    const groups = base.concat(picked.map(g => ({ titre: g.titre, titreAr: g.titreAr || "", min: g.min, max: g.max, options: (g.options || []).map(o => ({ nom: o.nom, prix: o.prix })) })));
+    if (groups.length > 8) { showError($("errorBox"), t("optLinkMax")); return; }
+    hideError($("errorBox")); hideSuccess($("successBox"));
+    const btn = p.querySelector('[data-e="save"]'); btn.disabled = true;
+    try {
+      const d = await apiGet({ action: "partnerSaveOptions", ids: JSON.stringify([id]), groups: JSON.stringify(groups) });
+      if (d && d.success) { showSuccess($("successBox"), t("optLinkSaved")); togglePanel(id, "opt"); }
+      else showError($("errorBox"), (d && d.error) || t("shopError"));
+    } catch (e) { showError($("errorBox"), t("shopError")); }
+    finally { btn.disabled = false; }
+  });
 }
 
 function badgeHtml(statut) {
@@ -1283,6 +1378,11 @@ function itemCardHtml(item) {
         <div class="prix">${escapeHtml(String(item.prix || 0))} DA</div>
       </div>
       ${badgeHtml(item.statut)}
+      <div class="item-actions">
+        <button class="mini-btn" type="button" data-edit-id="${escapeAttr(item.id)}">${escapeHtml(t("editBtn"))}</button>
+        <button class="mini-btn" type="button" data-optlink-id="${escapeAttr(item.id)}">${escapeHtml(t("optBtn"))}</button>
+      </div>
+      <div class="item-panel hidden" data-panel-for="${escapeAttr(item.id)}"></div>
       <div class="toggle-row">
         <span class="toggle-label">${escapeHtml(t("dispoLabel"))}</span>
         <label class="switch">
