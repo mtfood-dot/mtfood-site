@@ -2138,7 +2138,7 @@ function renderRestoBar() {
     return '<button type="button" class="resto-card' + (restoClosedInfo(r.name) ? ' closed' : '') + (restoOutOfZone(r.name) ? ' far' : '') + '" data-key="' + escapeAttr(r.key) + '">' +
       '<span class="rcover">' + coverInner(r) + (restoCoverSrc(r).logo ? "" : '<span class="logo-circle rbadge">' + logoHtml(r.name) + '</span>') + '</span>' +
       '<span class="meta"><div class="rn">' + escapeHtml(r.name) + '</div>' +
-      (r.soon ? '<div class="rs">' + escapeHtml(t('menuSoon')) + '</div>' : '<div class="rc">' + escapeHtml(cuisinesText(r)) + (minPrice(r) ? " · " + fromPriceHtml(r) : "") + '</div>') +
+      (r.soon ? '<div class="rs">' + escapeHtml(t('menuSoon')) + '</div>' : '<div class="rc">' + escapeHtml(cuisinesText(r)) + '</div>') +
       (restoOutOfZone(r.name) ? '<div class="rx">' + escapeHtml(t("outZoneCard")) + "</div>" : etaCardHtml(r.name)) + openBadgeHtml(r) + hint + '</span></button>';
   }).join("");
   bindLogoFallback(box); bindCoverFallback(box);
