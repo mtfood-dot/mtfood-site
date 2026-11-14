@@ -1,0 +1,93 @@
+/* Vérification systématique MT Food — à lancer après CHAQUE modification, avant tout « met ».
+   Usage : node tests/verify.js [branche-de-reference]   (défaut : cloudflare = production)
+   Sortie : code 0 = tout est bon, code 1 = au moins une erreur (ne pas mettre en ligne). */
+const fs = require("fs"), path = require("path"), cp = require("child_process");
+const { chromium } = require("playwright");
+const ROOT = path.resolve(__dirname, "..");
+const BASE = process.argv[2] || "cloudflare";
+const fails = [];
+const ok = (m) => console.log("  OK  " + m);
+const ko = (m) => { fails.push(m); console.log("  KO  " + m); };
+
+const pages = fs.readdirSync(ROOT).filter((f) => f.endsWith(".html"));
+const scriptsOf = (html) => [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map((m) => m[1]).join("\n");
+const defsOf = (js) => new Set([...js.matchAll(/\bfunction\s+([A-Za-z_$][\w$]*)/g)].map((m) => m[1]));
+const callsOf = (js) => new Set([...js.matchAll(/(?<![.\w$])([A-Za-z_$][\w$]*)\s*\(/g)].map((m) => m[1]));
+
+/* 1. Syntaxe JS de chaque script + fonctions supprimées par rapport à la production */
+console.log("1. Syntaxe et fonctions supprimées (référence : " + BASE + ")");
+for (const f of pages) {
+  const cur = fs.readFileSync(path.join(ROOT, f), "utf8"), js = scriptsOf(cur);
+  try { new Function(js); } catch (e) { ko(f + " : erreur de syntaxe JS : " + e.message); continue; }
+  let old = "";
+  try { old = cp.execSync(`git show ${BASE}:${f}`, { cwd: ROOT, stdio: ["ignore", "pipe", "ignore"] }).toString(); } catch (e) { ok(f + " (nouveau fichier)"); continue; }
+  const dOld = defsOf(scriptsOf(old)), dNew = defsOf(js);
+  const lost = [...dOld].filter((n) => !dNew.has(n));
+  const lostUsed = lost.filter((n) => new RegExp("(?<![\\w$.])" + n.replace(/\$/g, "\\$") + "(?![\\w$])").test(js));
+  if (lostUsed.length) ko(f + " : fonction(s) supprimée(s) mais encore appelée(s) : " + lostUsed.join(", "));
+  else if (lost.length) ok(f + " : fonction(s) retirée(s) (plus appelées) : " + lost.join(", "));
+  else ok(f);
+}
+
+/* 2. Chargement de chaque page sans erreur JavaScript (réseau simulé) */
+(async () => {
+  console.log("2. Chargement de chaque page (aucune erreur JS)");
+  const browser = await chromium.launch();
+  const newPage = async () => {
+    const p = await browser.newPage({ viewport: { width: 420, height: 900 } });
+    p.__errs = []; p.on("pageerror", (e) => p.__errs.push(e.message));
+    await p.route("**/*", (r) => { const u = r.request().url(); return u.startsWith("file:") ? r.continue() : r.fulfill({ status: 200, body: "", contentType: "text/plain" }); });
+    return p;
+  };
+  for (const f of pages) {
+    const p = await newPage();
+    await p.goto("file://" + path.join(ROOT, f)); await p.waitForTimeout(400);
+    p.__errs.length ? ko(f + " : " + p.__errs.slice(0, 2).join(" | ")) : ok(f);
+    await p.close();
+  }
+
+  /* 3. Espace partenaire : liste des plats, boutons Modifier / Option, Réglages */
+  console.log("3. Espace partenaire (liste des plats, boutons, réglages)");
+  {
+    const p = await newPage(); await p.goto("file://" + path.join(ROOT, "espace-partenaire.html"));
+    const r = await p.evaluate(async () => {
+      const out = {};
+      window.apiGet = async (q) => {
+        if (q.action === "getPartnerMenu") return { success: true, items: [{ id: 1, nom: "A", prix: 800, description: "", disponible: true, statut: "Publié" }, { id: 2, nom: "B", prix: 50, description: "x", photo: "", disponible: false, statut: "En attente" }] };
+        if (q.action === "partnerSettings") return { success: true, nom: "Zed", telephone: "0555", days: [0, 1, 2, 3, 4, 5, 6].map(() => ({ slots: [] })), defined: false, prepMin: 20, logo: "" };
+        if (q.action === "partnerOptions") return { success: true, dishes: [] };
+        return { success: true };
+      };
+      try { SESSION = { telephone: "0555", token: "x" }; } catch (e) {}
+      await loadMenu();
+      out.cards = document.querySelectorAll("#listMenu .item-card").length;
+      out.err = document.getElementById("errorBox").textContent.trim();
+      const be = document.querySelector("[data-edit-id]"); if (be) be.click(); out.editForm = !!document.querySelector("[data-e=prix]");
+      const bo = document.querySelector("[data-optlink-id]"); if (bo) bo.click(); out.optTab = CURRENT_TAB === "options";
+      switchTab("settings"); await new Promise((r) => setTimeout(r, 200)); out.settingsTab = CURRENT_TAB === "settings"; out.logoCard = !!document.getElementById("saveLogoBtn") && !!document.getElementById("logoPick");
+      return out;
+    });
+    r.cards === 2 ? ok("2 plats affichés") : ko("liste des plats : " + r.cards + " carte(s) au lieu de 2");
+    r.err ? ko("message d'erreur affiché : " + r.err) : ok("aucun message d'erreur");
+    r.editForm ? ok("bouton Modifier ouvre le formulaire") : ko("bouton Modifier sans effet");
+    r.optTab ? ok("bouton Option ouvre l'onglet Options") : ko("bouton Option sans effet");
+    r.settingsTab ? ok("onglet Réglages s'ouvre") : ko("onglet Réglages sans effet");
+    r.logoCard ? ok("Réglages : carte photo de profil") : ko("Réglages : carte photo de profil absente");
+    p.__errs.length ? ko("erreurs JS : " + p.__errs.slice(0, 2).join(" | ")) : ok("aucune erreur JS pendant le test");
+    await p.close();
+  }
+
+  /* 4. Cache hors-ligne : sw.js doit changer à chaque modification des pages */
+  console.log("4. Service worker (version du cache)");
+  try {
+    const sw = (s) => (s.match(/CACHE_NAME\s*=\s*"([^"]+)"/) || [])[1];
+    const cur = sw(fs.readFileSync(path.join(ROOT, "sw.js"), "utf8"));
+    const old = sw(cp.execSync(`git show ${BASE}:sw.js`, { cwd: ROOT, stdio: ["ignore", "pipe", "ignore"] }).toString());
+    const changed = cp.execSync(`git diff --name-only ${BASE} -- '*.html' '*.js' '*.css'`, { cwd: ROOT }).toString().split("\n").filter((x) => x && x !== "sw.js" && !x.startsWith("tests/"));
+    changed.length && cur === old ? ko("fichiers modifiés (" + changed.join(", ") + ") mais sw.js est toujours " + cur + " : incrémenter CACHE_NAME") : ok("cache " + old + " → " + cur);
+  } catch (e) { ok("sw.js non comparé"); }
+
+  await browser.close();
+  console.log(fails.length ? "\nÉCHEC : " + fails.length + " problème(s). NE PAS METTRE EN LIGNE." : "\nTOUT EST BON.");
+  process.exit(fails.length ? 1 : 0);
+})();
