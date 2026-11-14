@@ -2169,6 +2169,7 @@ function setViewChrome() {
 function renderRestoBar() {
   if (ACTIVE_RESTO !== null && !currentResto()) ACTIVE_RESTO = null;
   setViewChrome();
+  renderAddrBar();
   const box = $("restoList"); box.removeAttribute("aria-busy");
   if (ACTIVE_RESTO !== null) { box.innerHTML = ""; return; }
   const res = homeResults();
@@ -2861,7 +2862,7 @@ function renderAddrBar() {
   const q = DELIVERY.quote;
   const tag = document.createElement("span");
   if (QUOTE_BUSY) { tag.textContent = " · " + t("quoteLoading"); }
-  else if (q && q.covered) { tag.textContent = " · " + q.zoneNom + " · " + q.fee + " DA"; }
+  else if (q && q.covered) { if (ACTIVE_RESTO === null) return; tag.textContent = " · " + q.zoneNom + " · " + q.fee + " DA"; }
   else if (q && !q.covered) { tag.className = "out"; tag.textContent = " · " + t("zoneOutShort"); }
   else { tag.className = "out"; tag.textContent = " · " + t("addrToLocate"); }
   el.appendChild(tag);
