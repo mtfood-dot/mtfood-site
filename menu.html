@@ -965,7 +965,7 @@ const I18N = {
     zoneOutShort: "Zone non couverte",
     zoneOutDetail: "Ton adresse est à {d} km du restaurant (livraison jusqu'à {m} km). Au-delà, appelle-nous pour convenir du prix : ",
     deliveryTo: "Livraison :",
-    distFromCenter: "À {d} km du centre de Meftah", distFromResto: "À {d} km du restaurant",
+    distFromResto: "À {d} km du restaurant",
     addrOkNoResto: "Adresse localisée ✓ Le prix de livraison est calculé selon le restaurant que tu choisis.",
     deliveryFeeLbl: "Frais de livraison",
     loyFreeAmount: "🎁 Livraison offerte : tes plats dépassent {n} DA.",
@@ -1139,7 +1139,7 @@ const I18N = {
     zoneOutShort: "منطقة غير مغطاة",
     zoneOutDetail: "عنوانك يبعد {d} كم عن المطعم (التوصيل حتى {m} كم). للمسافات الأبعد، اتصل بنا للاتفاق على السعر: ",
     deliveryTo: "التوصيل:",
-    distFromCenter: "على بعد {d} كم من وسط المفتاح", distFromResto: "على بعد {d} كم من المطعم",
+    distFromResto: "على بعد {d} كم من المطعم",
     addrOkNoResto: "تم تحديد العنوان ✓ يُحسب سعر التوصيل حسب المطعم الذي تختاره.",
     deliveryFeeLbl: "رسوم التوصيل",
     loyFreeAmount: "🎁 التوصيل مجاني: مشترياتك تتجاوز {n} دج.",
@@ -2898,7 +2898,7 @@ function quoteBox(target, withButton) {
   if (q && q.covered) {
     box.classList.add("show", "ok");
     line("qt", t("deliveryTo") + " " + q.zoneNom);
-    line("qs", t(DELIVERY.quoteResto ? "distFromResto" : "distFromCenter").replace("{d}", kmText(q.distanceKm)));
+    if (DELIVERY.quoteResto) line("qs", t("distFromResto").replace("{d}", kmText(q.distanceKm)));
     line("qf", t("deliveryFeeLbl") + " : " + q.fee + " DA");
   } else if (q) {
     box.classList.add("show", "ko");
