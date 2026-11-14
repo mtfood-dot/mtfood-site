@@ -1324,6 +1324,42 @@ function openEditPanel(id) {
   });
 }
 
+function badgeHtml(statut) {
+  const s = String(statut || "Publié").trim();
+  if (s === "En attente") return `<span class="badge attente">${escapeHtml(t("statutAttente"))}</span>`;
+  if (s === "Refusé" || s === "Refuse") return `<span class="badge refuse">${escapeHtml(t("statutRefuse"))}</span>`;
+  return `<span class="badge publie">${escapeHtml(t("statutPublie"))}</span>`;
+}
+
+function itemCardHtml(item) {
+  const checked = item.disponible ? "checked" : "";
+  return `
+    <div class="item-card">
+      ${item.photo ? `<img class="item-thumb" src="${escapeAttr(item.photo)}" alt="" loading="lazy">` : ""}
+      <div class="row1">
+        <div>
+          <div class="nom">${escapeHtml(item.nom || "")}</div>
+          ${item.description ? `<div class="desc">${escapeHtml(item.description)}</div>` : ""}
+        </div>
+        <div class="prix">${escapeHtml(String(item.prix || 0))} DA</div>
+      </div>
+      ${badgeHtml(item.statut)}
+      <div class="item-actions">
+        <button class="mini-btn" type="button" data-edit-id="${escapeAttr(item.id)}">${escapeHtml(t("editBtn"))}</button>
+        <button class="mini-btn" type="button" data-optlink-id="${escapeAttr(item.id)}">${escapeHtml(t("optBtn"))}</button>
+      </div>
+      <div class="item-panel hidden" data-panel-for="${escapeAttr(item.id)}"></div>
+      <div class="toggle-row">
+        <span class="toggle-label">${escapeHtml(t("dispoLabel"))}</span>
+        <label class="switch">
+          <input type="checkbox" data-toggle-id="${escapeAttr(item.id)}" ${checked}>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  `;
+}
+
 async function onToggle(itemId, isChecked) {
   hideError($("errorBox"));
   try {
