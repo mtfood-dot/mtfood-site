@@ -1172,7 +1172,7 @@ async function loadSettings() {
     $("curPhone").value = d.telephone || "";
     showLogo(d.logo || "", d.nom || "");
     renderHours();
-    if (!d.defined) showSuccess($("successBox"), t("hoursNotSet"));
+    if (!d.defined) { if (window.MTToast) MTToast.info(t("hoursNotSet")); else showSuccess($("successBox"), t("hoursNotSet")); }
   } catch (e) { /* silencieux */ }
 }
 function timeOpts_(sel) {
