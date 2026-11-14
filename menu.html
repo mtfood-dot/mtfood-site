@@ -1984,7 +1984,7 @@ function bindCoverFallback(root) {
   root.querySelectorAll(".rcover img").forEach(img => {
     img.addEventListener("error", e => { if (retryDriveAlt(img, e)) return; img.remove(); });
     img.addEventListener("load", () => { img.classList.add("ok"); });
-    if (img.complete) { if (img.naturalWidth) img.classList.add("ok"); else if (!retryDriveAlt(img)) img.remove(); }
+    if (img.complete) { if (img.naturalWidth) img.classList.add("ok"); else if (!retryDriveAlt(img)) { const lc = img.closest(".logo-circle"); if (lc) lc.textContent = img.dataset.ini || ""; else img.remove(); } }
   });
 }
 function dishCountText(n) {
