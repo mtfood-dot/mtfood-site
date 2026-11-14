@@ -2732,7 +2732,7 @@ async function applyPromo(silent) {
   $("promoBtn").disabled = true;
   try {
     const res = await jsonpRequest({ action: "promoCheck", code: code, subtotal: subtotal, clientId: session.clientId }, 15000);
-    if (res && res.success && res.ok) { PROMO = { code: res.code, remise: Number(res.remise) || 0 }; setPromoMsg(t("promoOk").replace("{c}", res.code).replace("{r}", PROMO.remise), "ok"); if (window.MTToast) MTToast.ok(t("promoOk").replace("{c}", res.code).replace("{r}", PROMO.remise)); }
+    if (res && res.success && res.ok) { PROMO = { code: res.code, remise: Number(res.remise) || 0 }; setPromoMsg(t("promoOk").replace("{c}", res.code).replace("{r}", PROMO.remise), "ok"); if (window.MTToast) MTToast.ok(t("promoOk").replace("{c}", res.code).replace("{r}", PROMO.remise), { silent: !!silent }); }
     else { PROMO = null; setPromoMsg((res && (res.message || res.error)) || t("promoErr"), "err"); if (!silent && window.MTToast) MTToast.err((res && (res.message || res.error)) || t("promoErr")); }
   } catch (e) { PROMO = null; setPromoMsg(t("promoErr"), "err"); }
   $("promoBtn").disabled = false;
@@ -2882,8 +2882,8 @@ function updateConfirmState() {
   const box = $("chkError");
   if (!ok && $("checkoutOverlay").classList.contains("show") && !QUOTE_BUSY) {
     const q = DELIVERY.quote;
-    if (q && !q.covered) showCheckoutError(t("zoneOut") + ". " + CONFIG.PHONE_DISPLAY);
-    else showCheckoutError(t("checkoutNeedAddr"));
+    if (q && !q.covered) showCheckoutError(t("zoneOut") + ". " + CONFIG.PHONE_DISPLAY, false, true);
+    else showCheckoutError(t("checkoutNeedAddr"), false, true);
   } else if (ok && box.dataset.sticky !== "1") {
     box.classList.remove("show");   // une erreur d'envoi reste affichée jusqu'au prochain essai
   }
@@ -3396,12 +3396,12 @@ function buildWhatsAppLink(orderNumber, p) {
   return "https://wa.me/" + CONFIG.WHATSAPP_NUMBER + "?text=" + encodeURIComponent(lines.join("\n"));
 }
 
-function showCheckoutError(msg, sticky) {
+function showCheckoutError(msg, sticky, auto) {   // auto = message affiché par le rendu, sans action de l'utilisateur (pas de bandeau ni de son)
   const errBox = $("chkError");
   errBox.textContent = msg;
   errBox.dataset.sticky = sticky ? "1" : "";
   errBox.classList.add("show");
-  if (window.MTToast) MTToast.err(msg);
+  if (!auto && window.MTToast) MTToast.err(msg);
 }
 
 function resetOrder() {
