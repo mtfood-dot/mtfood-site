@@ -190,6 +190,7 @@
   .resto-chip.active .logo{border-color:var(--gold-500,#e0a800);box-shadow:0 0 0 2px rgba(224,168,0,.25);}
   .resto-chip.active .nm{color:var(--blue-900);}
   .tabs{
+    min-height:122px;
     display:flex;gap:4px;overflow-x:auto;padding:16px 10px 6px;max-width:960px;margin:0 auto;
     background:var(--bg);scrollbar-width:none;justify-content:safe center;
   }
@@ -290,7 +291,7 @@
   .resto-card.far{opacity:.55;}
   .resto-card .tier{font-weight:800;color:var(--blue-900);white-space:nowrap;}
   .resto-card .tier u{text-decoration:none;color:#c3ccd9;}
-  .filters{max-width:960px;margin:0 auto;padding:4px 16px 10px;box-sizing:border-box;}
+  .filters{max-width:960px;margin:0 auto;padding:4px 16px 10px;box-sizing:border-box;min-height:66px;}
   .filters .frow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;}
   .fsel{flex:1 1 160px;min-width:0;border:1.5px solid var(--border);background:var(--card);color:var(--blue-900);border-radius:999px;padding:10px 14px;font-family:inherit;font-size:14px;font-weight:700;}
   .fprice{flex:1 1 200px;display:flex;align-items:center;gap:6px;border:1.5px solid var(--border);background:var(--card);border-radius:999px;padding:4px 14px;}
@@ -678,7 +679,7 @@ if ("serviceWorker" in navigator) {
     <div class="tagline" id="tagline">Commandez, on vous livre</div>
   </div>
   <div class="header-links">
-    <a class="phone-link" id="headerPhone" href="tel:0560 78 84 97">📞 0560 78 84 97</a>
+    <a class="phone-link" id="headerPhone" href="tel:0560 78 84 97"><span class="ph-ico">📞</span><span class="ph-txt"><span class="ph-lbl">Contactez-nous</span><span class="ph-num">0560 78 84 97</span></span></a>
     <a class="account-link-top" id="accountLinkTop" href="connexion.html">👤 Mon compte</a>
   </div>
   <button class="lang-toggle" id="langToggle" type="button">AR</button>
