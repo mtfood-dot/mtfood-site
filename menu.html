@@ -31,7 +31,8 @@
 <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"></noscript>
 <style>
   /* ============================================================
      CONFIGURATION VISUELLE — bleu & or (charte MT Delivery)
@@ -648,8 +649,8 @@
   .promo-section,.join-section{max-width:960px;margin-left:auto;margin-right:auto;padding:0 16px;}
 </style>
 <script src="/form-validate.js" defer></script>
-<script src="/toast.js"></script>
-<script src="/google-signin.js?v=4"></script>
+<script src="/toast.js" defer></script>
+<script src="/google-signin.js?v=4" defer></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
@@ -672,7 +673,7 @@ if ("serviceWorker" in navigator) {
 
 <header class="top">
   <div class="brand">
-    <a href="index.html" aria-label="Retour à l'accueil" style="display:block;"><img class="logo-img" src="branding/mt-food-logo-v3.png" alt="MT Food by MT Delivery" width="190" height="95" loading="eager" style="max-width:190px;height:auto"></a>
+    <a href="index.html" aria-label="Retour à l'accueil" style="display:block;"><img class="logo-img" src="branding/mt-food-logo-v3.png" alt="MT Food by MT Delivery" width="190" height="95" loading="eager" fetchpriority="high" style="max-width:190px;height:auto"></a>
     <h1 class="sr-only" id="pageH1">MT Food — livraison de repas à Blida</h1>
     <div class="tagline" id="tagline">Commandez, on vous livre</div>
   </div>
@@ -1949,7 +1950,7 @@ function bindLogoFallback(root) {
 }
 function restoCoverSrc(r) {
   const it = (r.items || []).find(i => i.photo);
-  return it ? { src: smallDrive(it.photo, 400), logo: false } : { src: restoLogoSrc(r.name, 400), logo: true };
+  return it ? { src: smallDrive(it.photo, 240), logo: false } : { src: restoLogoSrc(r.name, 200), logo: true };
 }
 function coverInner(r) {
   const c = restoCoverSrc(r);
