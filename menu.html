@@ -2674,6 +2674,8 @@ function syncSelectedZone() {
 function hasCoords() { return DELIVERY.lat != null && DELIVERY.lng != null; }
 
 const MAX_DELIVERY_KM = 14;   // au-delà : le client appelle pour convenir du prix
+/* Adresse acceptée : zone couverte, ou aucun restaurant choisi (la distance se vérifie à la commande) */
+function addrAccepted() { const q = DELIVERY.quote; return !!q && (q.covered || !DELIVERY.quoteResto); }
 function quoteRestoName() { const l = Object.values(CART)[0]; return l ? String(l.item.partenaire || "").trim() : ""; }
 function fetchQuote(lat, lng, resto) {
   const req = { action: "deliveryQuote", lat: lat.toFixed(6), lng: lng.toFixed(6) };
@@ -2806,7 +2808,7 @@ async function useSavedAddr(i) {
   $("addrLine").value = DELIVERY.line; $("addrRepere").value = DELIVERY.repere;
   await setReference(Number(a.lat), Number(a.lng), a.source === "typed" ? "typed" : "gps");
   renderAll(); renderSavedAddrs();
-  if (DELIVERY.quote && DELIVERY.quote.covered) closeOverlay("addrOverlay");
+  if (addrAccepted()) closeOverlay("addrOverlay");
 }
 function saveCurrentAddr() {
   if (!hasCoords() || !DELIVERY.line) return;
@@ -2874,6 +2876,7 @@ function renderAddrBar() {
   const tag = document.createElement("span");
   if (QUOTE_BUSY) { tag.textContent = " · " + t("quoteLoading"); }
   else if (q && q.covered) { if (ACTIVE_RESTO === null && DELIVERY.line) return; tag.textContent = " · " + q.zoneNom + " · " + q.fee + " DA"; }
+  else if (q && !q.covered && !DELIVERY.quoteResto) { return; }   // pas de restaurant choisi : la distance se calcule à la commande
   else if (q && !q.covered) { tag.className = "out"; tag.textContent = " · " + t("zoneOutShort"); }
   else { tag.className = "out"; tag.textContent = " · " + t("addrToLocate"); }
   el.appendChild(tag);
@@ -2899,7 +2902,7 @@ function quoteBox(target, withButton) {
     }
     return;
   }
-  if (q && q.covered && box.id === "addrQuote" && !DELIVERY.quoteResto) {
+  if (q && box.id === "addrQuote" && !DELIVERY.quoteResto) {
     box.classList.add("show", "ok");
     line("qt", t("addrOkNoResto"));
     return;
@@ -2985,7 +2988,7 @@ async function saveAddrSheet() {
     await refreshQuote();
   }
   renderAll();
-  if (DELIVERY.quote && DELIVERY.quote.covered) { $("gpsMsg").className = "gps-msg"; closeOverlay("addrOverlay"); }
+  if (addrAccepted()) { $("gpsMsg").className = "gps-msg"; closeOverlay("addrOverlay"); }
 }
 
 /* Pré-remplit la zone d'adresse du formulaire de commande depuis la référence unique */
@@ -3069,7 +3072,7 @@ async function onGpsPosition(lat, lng) {
   await quotePromise;
   renderAll();
   const q = DELIVERY.quote;
-  if (q && q.covered) showGpsMsg(t("addrGpsOk") + (DELIVERY.line || ""), "ok");
+  if (q && addrAccepted()) showGpsMsg(t("addrGpsOk") + (DELIVERY.line || ""), "ok");
   else if (q) showGpsMsg(t("zoneOut"));
   else if (QUOTE_FAILED) showGpsMsg(t("quoteError"));
 }
@@ -3213,7 +3216,7 @@ async function pickSearchResult(r) {
   $("addrLine").value = DELIVERY.line;
   $("gpsMsg").className = "gps-msg";
   await setReference(r.lat, r.lng, "typed");
-  if (DELIVERY.quote && DELIVERY.quote.covered) showGpsMsg(t("addrGpsOk") + DELIVERY.line, "ok");
+  if (addrAccepted()) showGpsMsg(t("addrGpsOk") + DELIVERY.line, "ok");
 }
 
 /* Repère une adresse écrite (Nominatim, limité à la région de Blida). Un simple nom de commune
