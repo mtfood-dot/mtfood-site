@@ -963,9 +963,9 @@ const I18N = {
     addrVerifying: "Vérification de l'adresse…",
     addrNotFound: "Adresse introuvable avec certitude : utilise ta position actuelle (bouton ci-dessus).",
     addrToLocate: "à localiser",
-    zoneOut: "Zone non couverte pour le moment",
-    zoneOutShort: "Zone non couverte",
-    zoneOutDetail: "Ton adresse est à {d} km du restaurant (livraison jusqu'à {m} km). Au-delà, appelle-nous pour convenir du prix : ",
+    zoneOut: "Plus de 14 km du restaurant",
+    zoneOutShort: "Plus de 14 km",
+    zoneOutDetail: "Ton adresse est à {d} km du restaurant. Au-delà de {m} km, contacte-nous pour convenir de la livraison : ",
     deliveryTo: "Livraison :",
     distFromResto: "À {d} km du restaurant",
     addrOkNoResto: "Adresse localisée ✓ Le prix de livraison est calculé selon le restaurant que tu choisis.",
@@ -1138,9 +1138,9 @@ const I18N = {
     addrVerifying: "جارٍ التحقق من العنوان…",
     addrNotFound: "تعذّر تحديد العنوان بدقة: استخدم موقعك الحالي (الزر أعلاه).",
     addrToLocate: "يجب تحديد الموقع",
-    zoneOut: "منطقة غير مغطاة حاليًا",
-    zoneOutShort: "منطقة غير مغطاة",
-    zoneOutDetail: "عنوانك يبعد {d} كم عن المطعم (التوصيل حتى {m} كم). للمسافات الأبعد، اتصل بنا للاتفاق على السعر: ",
+    zoneOut: "أكثر من 14 كم عن المطعم",
+    zoneOutShort: "أكثر من 14 كم",
+    zoneOutDetail: "عنوانك يبعد {d} كم عن المطعم. لما فوق {m} كم، تواصل معنا للاتفاق على التوصيل: ",
     deliveryTo: "التوصيل:",
     distFromResto: "على بعد {d} كم من المطعم",
     addrOkNoResto: "تم تحديد العنوان ✓ يُحسب سعر التوصيل حسب المطعم الذي تختاره.",
@@ -2673,6 +2673,7 @@ function syncSelectedZone() {
 }
 function hasCoords() { return DELIVERY.lat != null && DELIVERY.lng != null; }
 
+const MAX_DELIVERY_KM = 14;   // au-delà : le client appelle pour convenir du prix
 function quoteRestoName() { const l = Object.values(CART)[0]; return l ? String(l.item.partenaire || "").trim() : ""; }
 function fetchQuote(lat, lng, resto) {
   const req = { action: "deliveryQuote", lat: lat.toFixed(6), lng: lng.toFixed(6) };
@@ -2680,9 +2681,10 @@ function fetchQuote(lat, lng, resto) {
   return sbRpc("delivery_quote", { p_lat: Number(req.lat), p_lng: Number(req.lng), p_resto: resto || null })
     .catch(() => jsonpRequest(req, 15000)).then(res => {
     if (!res || !res.success) { const e = new Error((res && res.error) || "quote"); e.code = res && res.code; throw e; }
-    return res.covered
+    const dKm = Number(res.distanceKm);
+    return (res.covered && !(isFinite(dKm) && dKm > MAX_DELIVERY_KM))
       ? { covered: true, zoneId: res.zone.id, zoneNom: res.zone.nom, fee: Number(res.zone.frais), distanceKm: res.distanceKm, rang: res.rang }
-      : { covered: false, distanceKm: res.distanceKm, maxKm: res.maxKm };
+      : { covered: false, distanceKm: res.distanceKm, maxKm: MAX_DELIVERY_KM };
   });
 }
 
