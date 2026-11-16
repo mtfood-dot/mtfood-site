@@ -31,7 +31,7 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Projet Android
         run: npx cap add android
-      - name: Autorisations GPS
+      - name: Autorisations GPS et configuration Firebase
         run: node scripts/patch-android.js && grep -c 'uses-permission' android/app/src/main/AndroidManifest.xml
       - name: Icône et écran de démarrage
         continue-on-error: true

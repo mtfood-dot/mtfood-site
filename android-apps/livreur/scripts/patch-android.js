@@ -28,4 +28,9 @@ if (!strings.includes("capacitor_background_geolocation_notification_channel_nam
     '    <string name="capacitor_background_geolocation_notification_channel_name">Suivi de livraison</string>\n</resources>');
   fs.writeFileSync(stringsPath, strings);
 }
+/* Notifications Firebase : le fichier de configuration doit se trouver dans android/app/ */
+const gs = path.join(__dirname, "..", "google-services.json");
+if (fs.existsSync(gs)) fs.copyFileSync(gs, path.join(__dirname, "..", "android", "app", "google-services.json"));
+else console.warn("google-services.json absent : notifications natives désactivées.");
+
 console.log("Projet Android : " + missing.length + " ligne(s) ajoutée(s) au manifeste.");

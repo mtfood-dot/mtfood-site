@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1070331334746",
+    "project_id": "mt-delivery-489fa",
+    "storage_bucket": "mt-delivery-489fa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1070331334746:android:0139bb837b654b328fc863",
+        "android_client_info": {
+          "package_name": "dz.mtdelivery.livreur"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1070331334746-vlif7ajib9s6ung9gtiqflrc6h09v16j.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyChgypYHa7duVC3M1h2MZ3ru0FH4l8rbSg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1070331334746-vlif7ajib9s6ung9gtiqflrc6h09v16j.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
