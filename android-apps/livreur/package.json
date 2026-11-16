@@ -1,0 +1,14 @@
+{
+  "name": "mt-food-livreur",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Application Android MT Food Livreur (coquille Capacitor qui charge food.mtdelivery.dz/espace-livreur)",
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/core": "^7.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^7.0.0"
+  }
+}

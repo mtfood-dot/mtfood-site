@@ -1,0 +1,15 @@
+{
+  "appId": "dz.mtdelivery.livreur",
+  "appName": "MT Livreur",
+  "webDir": "www",
+  "backgroundColor": "#ffffff",
+  "server": {
+    "url": "https://food.mtdelivery.dz/espace-livreur",
+    "androidScheme": "https",
+    "allowNavigation": ["food.mtdelivery.dz"],
+    "errorPath": "index.html"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}
