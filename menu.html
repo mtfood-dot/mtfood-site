@@ -1299,12 +1299,16 @@ function itemName(item) { return (LANG === "ar" && item.nom_ar) ? item.nom_ar : 
 function itemDesc(item) { return (LANG === "ar" && item.description_ar) ? item.description_ar : item.description; }
 const CAT_AR = { "traditionnel": "تقليدي", "pizza": "بيتزا", "fast food": "وجبات سريعة", "poulet": "دجاج", "grillades": "مشاوي", "plats": "أطباق",
   "salades & entrees": "سلطات ومقبلات", "desserts": "حلويات", "boissons": "مشروبات", "cafe & the": "قهوة وشاي", "sandwichs": "ساندويتشات",
-  "burgers": "برغر", "tacos": "طاكوس", "autre": "أخرى", "patisserie": "حلويات", "gateaux": "حلويات" };
+  "burgers": "برغر", "burger": "برغر", "tacos": "طاكوس", "autre": "أخرى", "patisserie": "حلويات", "gateaux": "حلويات",
+  "poutine": "بوتين", "poutines": "بوتين", "fajitas": "فاجيتا", "gratin": "غراتان", "gratins": "غراتان", "sandwich": "ساندويتش",
+  "boisson": "مشروبات", "dessert": "حلويات", "pates": "معكرونة", "pizzas": "بيتزا", "wraps": "راب", "crepes": "كريب", "jus": "عصائر" };
 function catLabel(cat) {
   if (cat === ALL_CAT) return t("allCat");
   if (LANG !== "ar") return cat;
+  // Nom arabe de la catégorie : la liste du site d'abord (une catégorie = un nom), sinon celui de la Sheet, sinon le français
+  if (CAT_AR[norm(cat)]) return CAT_AR[norm(cat)];
   const found = MENU.find(i => (i.categorie || "Autre") === cat && i.categorie_ar);
-  return found ? found.categorie_ar : (CAT_AR[norm(cat)] || cat);
+  return found ? found.categorie_ar : cat;
 }
 
 /* ============================================================
@@ -2003,7 +2007,7 @@ function dishCountText(n) {
   if (LANG === "ar") return n + " " + (n === 1 ? "طبق" : "أطباق");
   return n + (n === 1 ? " plat" : " plats");
 }
-function cuisinesText(r) { return r.cats.map(catLabel).join(" · "); }
+function cuisinesText(r) { return r.cats.map(catLabel).filter((x, i, a) => a.indexOf(x) === i).join(" · "); }
 
 /* Restaurants affichés sur l'accueil : catégorie + recherche (nom du restaurant, plat, catégorie) */
 function homeResults() {
