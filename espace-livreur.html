@@ -388,6 +388,7 @@ const I18N = {
     gpsBadgeText: "Position partagée",
     gpsEnableBtnText: "Activer le partage de position",
     locationDenied: "Active la localisation pour partager ta position pendant la livraison.",
+    gpsBgMessage: "Livraison en cours : le client suit ta position.",
     noAvailable: "Aucune commande disponible pour le moment.",
     noMine: "Tu n'as aucune livraison en cours.",
     accept: "Accepter",
@@ -462,6 +463,7 @@ const I18N = {
     gpsBadgeText: "الموقع قيد المشاركة",
     gpsEnableBtnText: "تفعيل مشاركة الموقع",
     locationDenied: "فعّل خدمة الموقع لمشاركة موقعك أثناء التوصيل.",
+    gpsBgMessage: "توصيل جارٍ: العميل يتابع موقعك.",
     noAvailable: "لا توجد طلبات متاحة حاليًا.",
     noMine: "ليس لديك أي توصيل قيد التنفيذ.",
     accept: "قبول",
@@ -877,7 +879,56 @@ function ensureLocationSharing() {
   }
 }
 
+/* Application Android (Capacitor) : suivi natif qui continue écran éteint ou application en arrière-plan.
+   Dans un navigateur ou une ancienne version de l'application, nativeGeo() renvoie null et rien ne change. */
+let NATIVE_WATCH = null, NATIVE_LAST_SENT = 0;
+function nativeGeo() {
+  try {
+    const c = window.Capacitor;
+    return (c && typeof c.isNativePlatform === "function" && c.isNativePlatform() && c.Plugins && c.Plugins.BackgroundGeolocation) || null;
+  } catch (e) { return null; }
+}
+function startNativeLocation(bg) {
+  if (NATIVE_WATCH) return;
+  NATIVE_LAST_SENT = 0;
+  NATIVE_WATCH = Promise.resolve(bg.addWatcher({
+    backgroundTitle: t("gpsBadgeText"),
+    backgroundMessage: t("gpsBgMessage"),
+    requestPermissions: true,
+    stale: false,
+    distanceFilter: 15
+  }, async (loc, err) => {
+    if (err || !loc) {
+      stopNativeLocation();   // le bouton « Activer » relancera la demande d'autorisation
+      $("gpsBadge").classList.add("hidden");
+      $("gpsEnableBtn").classList.remove("hidden");
+      if (!LOCATION_PERMISSION_DENIED) { LOCATION_PERMISSION_DENIED = true; showError($("errorBox"), t("locationDenied")); }
+      return;
+    }
+    const now = Date.now();
+    if (now - NATIVE_LAST_SENT < 20000 || !SESSION) return;   // une position toutes les 20 s au plus
+    NATIVE_LAST_SENT = now;
+    try {
+      await apiGet({ action: "updateLocation", telephone: SESSION.telephone, lat: loc.latitude, lng: loc.longitude });
+      $("gpsEnableBtn").classList.add("hidden");
+      $("gpsBadge").classList.remove("hidden");
+      LOCATION_PERMISSION_DENIED = false;
+    } catch (e) { NATIVE_LAST_SENT = 0; }
+  })).catch(() => null);
+}
+function stopNativeLocation() {
+  const w = NATIVE_WATCH, bg = nativeGeo();
+  NATIVE_WATCH = null;
+  if (w && bg) w.then(id => { if (id) bg.removeWatcher({ id: id }); }).catch(() => {});
+}
+
 function startLocationSharing() {
+  const bg = nativeGeo();
+  if (bg) {
+    startNativeLocation(bg);
+    if (!LOCATION_INTERVAL_ID) LOCATION_INTERVAL_ID = "native";
+    return;
+  }
   if (!navigator.geolocation) return;
   sendLocationOnce();
   if (!LOCATION_INTERVAL_ID) {
@@ -886,8 +937,9 @@ function startLocationSharing() {
 }
 
 function stopLocationSharing() {
+  stopNativeLocation();
   if (LOCATION_INTERVAL_ID) {
-    clearInterval(LOCATION_INTERVAL_ID);
+    if (LOCATION_INTERVAL_ID !== "native") clearInterval(LOCATION_INTERVAL_ID);
     LOCATION_INTERVAL_ID = null;
   }
   $("gpsBadge").classList.add("hidden");
