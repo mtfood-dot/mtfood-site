@@ -326,7 +326,7 @@ const FCM_CONFIG = {
 const FCM_VAPID_KEY = "BDZwk3KEyULhtVEn3kPDhpUc1hIEtdke835Os4u2NxqGomlRuEzLDwZXUzHMhVkal4r77N0fSCNq-bGu3lO5J_I";
 
 /* Application Android (Capacitor) : notifications natives. Renvoie false dans un navigateur. */
-let NATIVE_PUSH_READY = false;
+let NATIVE_PUSH_READY = false, NATIVE_PUSH_WHO = null;
 async function registerNativePush_(role, telephone, orderNumber) {
   let push = null;
   try {
@@ -334,12 +334,14 @@ async function registerNativePush_(role, telephone, orderNumber) {
     push = (c && typeof c.isNativePlatform === "function" && c.isNativePlatform() && c.Plugins && c.Plugins.PushNotifications) || null;
   } catch (e) { push = null; }
   if (!push) return false;
+  NATIVE_PUSH_WHO = { role: role, telephone: telephone || "", orderNumber: orderNumber || "" };   // le compte connecté au moment où le jeton arrive
   try {
     if (!NATIVE_PUSH_READY) {
       NATIVE_PUSH_READY = true;
       push.addListener("registration", (tk) => {
         const token = tk && tk.value;
-        if (token) apiGet({ action: "saveFcmToken", role: role, token: token, telephone: telephone || "", orderNumber: orderNumber || "" }).catch(() => {});
+        const w = NATIVE_PUSH_WHO;
+        if (token && w) apiGet({ action: "saveFcmToken", role: w.role, token: token, telephone: w.telephone, orderNumber: w.orderNumber }).catch(() => {});
       });
       push.addListener("registrationError", (err) => { console.warn("Notifications natives :", err); });
     }
