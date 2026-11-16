@@ -4,7 +4,7 @@
 // JAMAIS mis en cache : toujours réseau, pour ne jamais servir des
 // commandes/statuts périmés.
 
-const CACHE_NAME = "mtdelivery-v84";
+const CACHE_NAME = "mtdelivery-v85";
 const CORE_ASSETS = [
   "/index.html",
   "/menu.html",
@@ -121,6 +121,8 @@ self.addEventListener("push", (event) => {
     badge: "/icons/icon-192.png",
     data: { url: d.url || data.url || targetFromData_(d) },
   };
+  // Une seule notification par commande et par type : si le même message arrive deux fois, il remplace le premier.
+  if (d.orderNumber) options.tag = (d.type || "msg") + "-" + d.orderNumber;
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
