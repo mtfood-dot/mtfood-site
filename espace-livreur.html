@@ -341,7 +341,7 @@ async function registerNativePush_(role, telephone, orderNumber) {
       push.addListener("registration", (tk) => {
         const token = tk && tk.value;
         const w = NATIVE_PUSH_WHO;
-        if (token && w) apiGet({ action: "saveFcmToken", role: w.role, token: token, telephone: w.telephone, orderNumber: w.orderNumber }).catch(() => {});
+        if (token && w) apiGet({ action: "saveFcmToken", role: w.role, pushToken: token, telephone: w.telephone, orderNumber: w.orderNumber }).catch(() => {});
       });
       push.addListener("registrationError", (err) => { console.warn("Notifications natives :", err); });
     }
@@ -371,7 +371,8 @@ async function registerPushToken_(role, telephone, orderNumber) {
     const messaging = firebase.messaging();
     const token = await messaging.getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: reg });
     if (!token) return;
-    await apiGet({ action: "saveFcmToken", role: role, token: token, telephone: telephone || "", orderNumber: orderNumber || "" });
+    // « token » = jeton de session (ajouté par apiGet) ; le jeton push part dans « pushToken »
+    await apiGet({ action: "saveFcmToken", role: role, pushToken: token, telephone: telephone || "", orderNumber: orderNumber || "" });
   } catch (e) {
     console.warn("Notifications push non activées :", e);
   }
