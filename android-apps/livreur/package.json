@@ -5,7 +5,8 @@
   "description": "Application Android MT Food Livreur (coquille Capacitor qui charge food.mtdelivery.dz/espace-livreur)",
   "dependencies": {
     "@capacitor/android": "^7.0.0",
-    "@capacitor/core": "^7.0.0"
+    "@capacitor/core": "^7.0.0",
+    "@capacitor-community/background-geolocation": "^1.2.0"
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
