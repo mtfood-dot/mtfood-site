@@ -1284,7 +1284,7 @@ function enterApp() {
   switchTab(CURRENT_TAB);
   startLivePolling();
   updateAlertSetup();
-  if (typeof Notification !== "undefined" && Notification.permission === "granted") registerPartnerPush_();
+  if (nativePush_() || (typeof Notification !== "undefined" && Notification.permission === "granted")) registerPartnerPush_();
 }
 
 /* ============================================================
@@ -1479,8 +1479,34 @@ const FCM_VAPID_KEY = "BDZwk3KEyULhtVEn3kPDhpUc1hIEtdke835Os4u2NxqGomlRuEzLDwZXU
 let AUDIO_CTX = null;
 const BASE_TITLE = document.title;
 
+/* Application Android (Capacitor) : notifications natives. Renvoie false dans un navigateur. */
+let NATIVE_PUSH_READY = false;
+function nativePush_() {
+  try {
+    const c = window.Capacitor;
+    return (c && typeof c.isNativePlatform === "function" && c.isNativePlatform() && c.Plugins && c.Plugins.PushNotifications) || null;
+  } catch (e) { return null; }
+}
+async function registerNativePush_(sendToken, onReceived) {
+  const push = nativePush_();
+  if (!push) return false;
+  try {
+    if (!NATIVE_PUSH_READY) {
+      NATIVE_PUSH_READY = true;
+      push.addListener("registration", (tk) => { if (tk && tk.value) Promise.resolve(sendToken(tk.value)).catch(() => {}); });
+      push.addListener("registrationError", (err) => { console.warn("Notifications natives :", err); });
+      if (onReceived) push.addListener("pushNotificationReceived", () => { try { onReceived(); } catch (e) {} });
+    }
+    let perm = await push.checkPermissions();
+    if (perm.receive !== "granted") perm = await push.requestPermissions();
+    if (perm.receive === "granted") await push.register();
+  } catch (e) { console.warn("Notifications natives non activées :", e); }
+  return true;
+}
+
 async function registerPartnerPush_() {
   try {
+    if (await registerNativePush_(tk => apiGet({ action: "saveFcmToken", role: "partner", pushToken: tk }), () => loadLive(true))) return true;
     if (!("Notification" in window) || !("serviceWorker" in navigator) || typeof firebase === "undefined") return false;
     if (Notification.permission !== "granted") return false;
     const reg = await navigator.serviceWorker.ready;
@@ -1529,7 +1555,7 @@ function ringBell_() {
 function updateAlertSetup() {
   const box = $("alertSetup");
   const supported = ("Notification" in window);
-  const needed = !supported || Notification.permission !== "granted" || !AUDIO_CTX || AUDIO_CTX.state !== "running";
+  const needed = !nativePush_() && (!supported || Notification.permission !== "granted" || !AUDIO_CTX || AUDIO_CTX.state !== "running");
   box.classList.toggle("hidden", !needed);
   const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
   const standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone;
