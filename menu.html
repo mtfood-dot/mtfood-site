@@ -963,8 +963,10 @@ const I18N = {
     addrVerifying: "Vérification de l'adresse…",
     addrNotFound: "Adresse introuvable avec certitude : utilise ta position actuelle (bouton ci-dessus).",
     addrToLocate: "à localiser",
-    zoneOut: "Plus de 14 km du restaurant",
-    zoneOutShort: "Plus de 14 km",
+    zoneOutCheckout: "Zone hors livraison : le restaurant est à {d} km de vous, cela dépasse les {m} km de couverture",
+    zoneOutContact: "Pour une livraison exceptionnelle, contactez-nous : ",
+    zoneOut: "Plus de 10 km du restaurant",
+    zoneOutShort: "Plus de 10 km",
     zoneOutDetail: "Ton adresse est à {d} km du restaurant. Au-delà de {m} km, contacte-nous pour convenir de la livraison : ",
     deliveryTo: "Livraison :",
     distFromResto: "À {d} km du restaurant",
@@ -1138,8 +1140,10 @@ const I18N = {
     addrVerifying: "جارٍ التحقق من العنوان…",
     addrNotFound: "تعذّر تحديد العنوان بدقة: استخدم موقعك الحالي (الزر أعلاه).",
     addrToLocate: "يجب تحديد الموقع",
-    zoneOut: "أكثر من 14 كم عن المطعم",
-    zoneOutShort: "أكثر من 14 كم",
+    zoneOutCheckout: "خارج منطقة التوصيل: المطعم يبعد عنك {d} كم، وهذا يتجاوز {m} كم من التغطية",
+    zoneOutContact: "لتوصيل استثنائي، تواصل معنا: ",
+    zoneOut: "أكثر من 10 كم عن المطعم",
+    zoneOutShort: "أكثر من 10 كم",
     zoneOutDetail: "عنوانك يبعد {d} كم عن المطعم. لما فوق {m} كم، تواصل معنا للاتفاق على التوصيل: ",
     deliveryTo: "التوصيل:",
     distFromResto: "على بعد {d} كم من المطعم",
@@ -2045,7 +2049,8 @@ const FILTER_CITIES = ["Bougara", "Larbaa", "Meftah", "Bouinan"];   // villes pr
 const CITY_ALIAS = { bouinane: "bouinan", bouinen: "bouinan" };
 function cityKey(v) { const k = norm(v); return CITY_ALIAS[k] || k; }
 function restoQuoteOf(name) { return RESTO_QUOTES[norm(name || "")] || null; }
-function restoOutOfZone(name) { const q = restoQuoteOf(name); return !!(q && q.covered === false); }
+/* Limite de livraison : vérifiée uniquement au passage de commande (jamais sur l'accueil, les cartes ou les boutons) */
+function restoOutOfZone(name) { return false; }
 function priceTier(r) {
   const p = (r.items || []).map(i => Number(i.prix)).filter(n => isFinite(n) && n > 0);
   if (!p.length) return 0;
@@ -2683,9 +2688,9 @@ function syncSelectedZone() {
 }
 function hasCoords() { return DELIVERY.lat != null && DELIVERY.lng != null; }
 
-const MAX_DELIVERY_KM = 14;   // au-delà : le client appelle pour convenir du prix
+const MAX_DELIVERY_KM = 10;   // au-delà : le client appelle pour convenir du prix
 /* Adresse acceptée : zone couverte, ou aucun restaurant choisi (la distance se vérifie à la commande) */
-function addrAccepted() { const q = DELIVERY.quote; return !!q && (q.covered || !DELIVERY.quoteResto); }
+function addrAccepted() { return !!DELIVERY.quote; }
 function quoteRestoName() { const l = Object.values(CART)[0]; return l ? String(l.item.partenaire || "").trim() : ""; }
 function fetchQuote(lat, lng, resto) {
   const req = { action: "deliveryQuote", lat: lat.toFixed(6), lng: lng.toFixed(6) };
@@ -2887,7 +2892,7 @@ function renderAddrBar() {
   if (QUOTE_BUSY) { tag.textContent = " · " + t("quoteLoading"); }
   else if (q && q.covered) { if (ACTIVE_RESTO === null && DELIVERY.line) return; tag.textContent = " · " + q.zoneNom + " · " + q.fee + " DA"; }
   else if (q && !q.covered && !DELIVERY.quoteResto) { return; }   // pas de restaurant choisi : la distance se calcule à la commande
-  else if (q && !q.covered) { tag.className = "out"; tag.textContent = " · " + t("zoneOutShort"); }
+  else if (q && !q.covered) { return; }   // hors zone : annoncé uniquement à la commande
   else { tag.className = "out"; tag.textContent = " · " + t("addrToLocate"); }
   el.appendChild(tag);
 }
@@ -2912,7 +2917,7 @@ function quoteBox(target, withButton) {
     }
     return;
   }
-  if (q && box.id === "addrQuote" && !DELIVERY.quoteResto) {
+  if (q && box.id === "addrQuote" && (!DELIVERY.quoteResto || !q.covered)) {
     box.classList.add("show", "ok");
     line("qt", t("addrOkNoResto"));
     return;
@@ -2924,8 +2929,8 @@ function quoteBox(target, withButton) {
     line("qf", t("deliveryFeeLbl") + " : " + q.fee + " DA");
   } else if (q) {
     box.classList.add("show", "ko");
-    line("qt", t("zoneOut"));
-    line("qs", t("zoneOutDetail").replace("{d}", kmText(q.distanceKm)).replace("{m}", kmText(q.maxKm)) + CONFIG.PHONE_DISPLAY + ".");
+    line("qt", t("zoneOutCheckout").replace("{d}", kmText(q.distanceKm)).replace("{m}", kmText(q.maxKm)));
+    line("qs", t("zoneOutContact") + CONFIG.PHONE_DISPLAY + ".");
   }
 }
 function renderAddrQuote() { quoteBox($("addrQuote")); }
@@ -2942,7 +2947,7 @@ function updateConfirmState() {
   const box = $("chkError");
   if (!ok && $("checkoutOverlay").classList.contains("show") && !QUOTE_BUSY) {
     const q = DELIVERY.quote;
-    if (q && !q.covered) showCheckoutError(t("zoneOut") + ". " + CONFIG.PHONE_DISPLAY, false, true);
+    if (q && !q.covered) showCheckoutError(t("zoneOutCheckout").replace("{d}", kmText(q.distanceKm)).replace("{m}", kmText(q.maxKm)) + ". " + CONFIG.PHONE_DISPLAY, false, true);
     else showCheckoutError(t("checkoutNeedAddr"), false, true);
   } else if (ok && box.dataset.sticky !== "1") {
     box.classList.remove("show");   // une erreur d'envoi reste affichée jusqu'au prochain essai
