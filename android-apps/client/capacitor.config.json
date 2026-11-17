@@ -1,0 +1,18 @@
+{
+  "appId": "dz.mtdelivery.food",
+  "appName": "MT Food",
+  "webDir": "www",
+  "backgroundColor": "#ffffff",
+  "server": {
+    "url": "https://food.mtdelivery.dz/",
+    "androidScheme": "https",
+    "allowNavigation": [
+      "food.mtdelivery.dz"
+    ],
+    "errorPath": "index.html"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "useLegacyBridge": true
+  }
+}

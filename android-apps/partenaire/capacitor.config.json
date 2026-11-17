@@ -1,0 +1,18 @@
+{
+  "appId": "dz.mtdelivery.partenaire",
+  "appName": "MT Restaurant",
+  "webDir": "www",
+  "backgroundColor": "#ffffff",
+  "server": {
+    "url": "https://food.mtdelivery.dz/espace-partenaire",
+    "androidScheme": "https",
+    "allowNavigation": [
+      "food.mtdelivery.dz"
+    ],
+    "errorPath": "index.html"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "useLegacyBridge": true
+  }
+}
