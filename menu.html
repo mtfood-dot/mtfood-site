@@ -3313,9 +3313,9 @@ let SUBMIT_CHECKED = false;
 function submitOrder() {
   /* Vérifie l'état du restaurant à jour juste avant d'envoyer */
   if (!SUBMIT_CHECKED) {
-    const bt = $("confirmOrderBtn"); if (bt) bt.disabled = true;
-    loadRestoInfo(true).then(() => {
-      if (bt) bt.disabled = false;
+    const bt = $("confirmOrderBtn"); if (bt) { bt.disabled = true; bt.textContent = t("sending"); }   // retour immédiat au clic
+    loadRestoInfo(true).catch(() => {}).then(() => {
+      if (bt) { bt.disabled = false; bt.textContent = t("confirmOrder"); }
       const p = Object.values(CART).length ? (Object.values(CART)[0].item.partenaire || "") : "";
       if (p && restoClosedInfo(p) && !restoPre(p)) { showCheckoutError(t("closedOrder")); return; }
       SUBMIT_CHECKED = true; try { submitOrder(); } finally { SUBMIT_CHECKED = false; }
