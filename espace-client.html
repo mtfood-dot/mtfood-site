@@ -83,6 +83,11 @@
   .loy-row .d{color:var(--muted);font-size:11.5px;}
   .loy-row .p{font-weight:800;white-space:nowrap;}
   .loy-row .p.pos{color:var(--green);} .loy-row .p.neg{color:var(--danger);}
+  .stp-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;margin-bottom:10px;}
+  .stp-card .nm{font-weight:800;font-size:14px;} .stp-card .rw{font-size:12.5px;color:var(--muted);margin:2px 0 8px;}
+  .stp-dots{display:flex;flex-wrap:wrap;gap:6px;} .stp-dots i{width:22px;height:22px;border-radius:50%;border:2px solid var(--gold-500);display:inline-block;}
+  .stp-dots i.on{background:var(--gold-500);}
+  .stp-avail{margin-top:8px;font-size:12.5px;font-weight:800;color:var(--green);}
   .loy-note{font-size:12px;color:var(--muted);text-align:center;margin-top:10px;}
   .empty-state{text-align:center;color:var(--muted);font-size:13.5px;padding:40px 20px;}
   .empty-state .emoji{font-size:32px;display:block;margin-bottom:10px;}
@@ -147,6 +152,7 @@ const I18N = {
     loyEmpty:"Pas encore de points. Tu en gagnes 1 pour chaque {d} DA de plats, dès que ta commande est livrée.",
     loyOff:"Le programme de fidélité n'est pas disponible pour le moment.", loyError:"Impossible de charger ta fidélité pour le moment.",
     loyGain:"Points gagnés", loyUse:"Points utilisés", loyRegul:"Régularisation", loyAdjust:"Ajustement", loyNote:"1 point gagné pour chaque {d} DA de plats. Les frais de livraison ne comptent pas.",
+    stpTitle:"Mes cartes restaurants", stpReward:"Récompense : {r}", stpAvail:"🎁 {k} récompense(s) disponible(s) : montre ton QR au restaurant",
     statusPre:"Précommande", statusAconfirmer:"À confirmer", statusAttente:"En attente", statusLivraison:"En livraison",
     statusLivree:"Livrée", statusAnnulee:"Annulée",
     btnTrack:"Suivre", btnReorder:"Recommander",
@@ -163,6 +169,7 @@ const I18N = {
     loyEmpty:"لا توجد نقاط بعد. تكسب نقطة عن كل {d} دج من الأطباق، بعد توصيل طلبك.",
     loyOff:"برنامج الولاء غير متاح حاليًا.", loyError:"تعذر تحميل نقاطك حاليًا.",
     loyGain:"نقاط مكتسبة", loyUse:"نقاط مستخدمة", loyRegul:"تسوية", loyAdjust:"تعديل", loyNote:"نقطة واحدة لكل {d} دج من الأطباق. رسوم التوصيل لا تُحتسب.",
+    stpTitle:"بطاقات المطاعم", stpReward:"المكافأة: {r}", stpAvail:"🎁 {k} مكافأة متاحة: أظهر رمز QR للمطعم",
     statusPre:"طلب مسبق", statusAconfirmer:"قيد التأكيد", statusAttente:"قيد الانتظار", statusLivraison:"قيد التوصيل",
     statusLivree:"تم التوصيل", statusAnnulee:"ملغاة",
     btnTrack:"تتبع", btnReorder:"إعادة الطلب",
@@ -270,6 +277,17 @@ $("tabHistory").addEventListener("click", () => {
 /* MT Food Rewards : solde, QR personnel et historique (lus sur le serveur, jamais modifiables ici) */
 let LOY = null;
 function loyTypeLabel(ty){ return t({ gain:"loyGain", utilisation:"loyUse", regularisation:"loyRegul", ajustement:"loyAdjust" }[ty] || "loyGain"); }
+function stampCardsHtml(){
+  const cards = (LOY && LOY.stamps) || [];
+  if (!cards.length) return "";
+  return '<div class="loy-hist"><h3>' + t("stpTitle") + '</h3>' + cards.map(c => {
+    let dots = ""; for (let i = 0; i < c.n; i++) dots += '<i class="' + (i < c.count ? "on" : "") + '"></i>';
+    const rw = (LANG === "ar" && c.rewardAr) ? c.rewardAr : c.reward;
+    return '<div class="stp-card"><div class="nm">' + esc(c.partenaire) + ' · ' + esc(c.count) + '/' + esc(c.n) + '</div>' +
+      (rw ? '<div class="rw">' + t("stpReward").replace("{r}", esc(rw)) + '</div>' : '') + '<div class="stp-dots">' + dots + '</div>' +
+      (c.rewards > 0 ? '<div class="stp-avail">' + t("stpAvail").replace("{k}", esc(c.rewards)) + '</div>' : '') + '</div>';
+  }).join("") + '</div>';
+}
 function renderLoyalty(){
   const el = $("listLoyalty");
   if (LOY === "loading") { el.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div>'; return; }
@@ -283,6 +301,7 @@ function renderLoyalty(){
     '<div class="loy-pts">' + esc(LOY.solde) + '</div><div class="loy-sub">' + t("loyPoints") + ' · ' + t("loyWorth").replace("{v}", esc(Math.round(LOY.solde * LOY.valeurPoint))) + '</div>' +
     (qr ? '<div><div class="loy-qr">' + qr + '</div></div>' : '') +
     '<div class="loy-member">' + t("loyMember") + ' ' + esc(LOY.memberNo) + '</div></div>' +
+    stampCardsHtml() +
     '<div class="loy-hist"><h3>' + t("loyHist") + '</h3>' + (rows || '<div class="empty-state">' + t("loyEmpty").replace("{d}", esc(LOY.daParPoint)) + '</div>') + '</div>' +
     '<div class="loy-note">' + t("loyNote").replace("{d}", esc(LOY.daParPoint)) + '</div>';
 }

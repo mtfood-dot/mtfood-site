@@ -342,6 +342,9 @@ if ("serviceWorker" in navigator) {
       <button class="tab-btn" id="tabOptions" type="button">
         <span id="tabOptionsLabel">🍽️ Options</span>
       </button>
+      <button class="tab-btn" id="tabLoyalty" type="button">
+        <span id="tabLoyaltyLabel">Fidélité</span>
+      </button>
       <button class="tab-btn" id="tabBoost" type="button">
         <span id="tabBoostLabel">Publicité</span> <span class="count" id="countBoost" style="display:none">0</span>
       </button>
@@ -486,6 +489,38 @@ if ("serviceWorker" in navigator) {
       </div>
     </div>
 
+    <div id="panelLoyalty" class="hidden">
+      <div class="card">
+        <h3 class="set-title" id="loyTitle"></h3>
+        <p class="field-hint" id="loyHint"></p>
+        <label style="display:flex;align-items:center;gap:10px;font-weight:800;margin:8px 0;"><input type="checkbox" id="loyActive" style="width:20px;height:20px;"><span id="loyActiveLbl"></span></label>
+        <div class="field"><label id="loyLblN" for="loyN"></label><input id="loyN" type="number" min="2" max="50" inputmode="numeric"></div>
+        <div class="field"><label id="loyLblReward" for="loyReward"></label><input id="loyReward" type="text" maxlength="80"></div>
+        <div class="field"><label id="loyLblRewardAr" for="loyRewardAr"></label><input id="loyRewardAr" type="text" maxlength="80" dir="rtl"></div>
+        <div class="field"><label id="loyLblMin" for="loyMin"></label><input id="loyMin" type="number" min="0" inputmode="numeric"></div>
+        <button class="btn-primary" id="loySave" type="button"></button>
+      </div>
+      <div class="card">
+        <h3 class="set-title" id="loyStatsTitle"></h3>
+        <div id="loyStats" style="display:flex;gap:10px;flex-wrap:wrap;"></div>
+      </div>
+      <div class="card">
+        <h3 class="set-title" id="loyScanTitle"></h3>
+        <p class="field-hint" id="loyScanHint"></p>
+        <div class="field"><input id="loyCode" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="MT-XXXXXXXX"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn-primary" id="loyCheck" type="button" style="flex:1;"></button>
+          <button class="mini-btn" id="loyCam" type="button" style="display:none;"></button>
+        </div>
+        <video id="loyVideo" playsinline muted style="display:none;width:100%;border-radius:12px;margin-top:10px;background:#000;"></video>
+        <div id="loyResult" style="margin-top:12px;"></div>
+      </div>
+      <div class="card">
+        <h3 class="set-title" id="loyRecentTitle"></h3>
+        <div id="loyRecent"></div>
+      </div>
+    </div>
+
     <div id="panelBoost" class="hidden" data-mtform data-note-before="#boostSendBtn">
       <div class="boost-info" id="boostInfo"></div>
       <section class="card">
@@ -611,6 +646,12 @@ const I18N = {
     tabOrdersLabel: "Commandes",
     tabProposeLabel: "Proposer",
     tabBoostLabel: "Publicité",
+    tabLoyaltyLabel: "Fidélité", loyTitle: "Ma carte à tampons", loyHint: "Chaque commande livrée donne un tampon au client. Quand la carte est pleine, il gagne la récompense que tu choisis.",
+    loyActiveLbl: "Programme actif", loyLblN: "Commandes pour une récompense", loyLblReward: "Récompense (français)", loyLblRewardAr: "Récompense (arabe, optionnel)", loyLblMin: "Montant minimum des plats par commande (DA, 0 = aucun)",
+    loySave: "Enregistrer", loySaved: "Programme enregistré.", loyStatsTitle: "Statistiques", loyStClients: "Clients", loyStStamps: "Tampons donnés", loyStUsed: "Récompenses remises",
+    loyScanTitle: "Valider une récompense", loyScanHint: "Demande au client son QR code (Ma fidélité) : scanne-le ou saisis son numéro de membre.", loyCheck: "Vérifier", loyCam: "📷 Scanner",
+    loyClient: "Client", loyProgress: "Carte : {c} / {n}", loyRewards: "Récompenses disponibles : {r}", loyRedeem: "Valider la récompense", loyDone: "Récompense validée.", loyNone: "Aucune récompense disponible pour l'instant.",
+    loyRecentTitle: "Dernières récompenses remises", loyRecentEmpty: "Aucune pour le moment.", loyError: "Impossible de charger la fidélité.",
     boostInfo: "Mets l'un de tes plats « À la une » sur la page d'accueil. Le paiement se fait directement en espèces, au bureau MT Delivery ou auprès de notre commercial. Ta publicité passe en ligne après validation et paiement.",
     boostOffersTitle: "Choisis une durée",
     boostFormatHint: "Visuel carré 800×800 px (JPG, PNG ou WebP, 500 Ko max), à coller sous forme de lien https. Jusqu'à 6 annonceurs en rotation.",
@@ -745,6 +786,12 @@ const I18N = {
     tabOrdersLabel: "الطلبات",
     tabProposeLabel: "اقتراح طبق",
     tabBoostLabel: "الإعلان",
+    tabLoyaltyLabel: "الولاء", loyTitle: "بطاقة الطوابع", loyHint: "كل طلب مُوصَّل يمنح العميل طابعًا. عندما تمتلئ البطاقة يحصل على المكافأة التي تختارها.",
+    loyActiveLbl: "البرنامج مفعّل", loyLblN: "عدد الطلبات للحصول على مكافأة", loyLblReward: "المكافأة (بالفرنسية)", loyLblRewardAr: "المكافأة (بالعربية، اختياري)", loyLblMin: "الحد الأدنى لمبلغ الأطباق في الطلب (دج، 0 = بدون)",
+    loySave: "حفظ", loySaved: "تم حفظ البرنامج.", loyStatsTitle: "إحصائيات", loyStClients: "العملاء", loyStStamps: "الطوابع الممنوحة", loyStUsed: "المكافآت المسلَّمة",
+    loyScanTitle: "تأكيد مكافأة", loyScanHint: "اطلب من العميل رمز QR الخاص به (نقاطي): امسحه أو أدخل رقم العضوية.", loyCheck: "تحقق", loyCam: "📷 مسح",
+    loyClient: "العميل", loyProgress: "البطاقة: {c} / {n}", loyRewards: "المكافآت المتاحة: {r}", loyRedeem: "تأكيد المكافأة", loyDone: "تم تأكيد المكافأة.", loyNone: "لا توجد مكافأة متاحة حاليًا.",
+    loyRecentTitle: "آخر المكافآت المسلَّمة", loyRecentEmpty: "لا شيء حتى الآن.", loyError: "تعذر تحميل برنامج الولاء.",
     boostInfo: "اعرض أحد أطباقك في واجهة الصفحة الرئيسية. الدفع نقدًا مباشرة في مكتب MT Delivery أو لدى مندوبنا التجاري. يظهر إعلانك بعد المراجعة والدفع.",
     boostOffersTitle: "اختر المدة",
     boostFormatHint: "صورة مربعة 800×800 بكسل (JPG أو PNG أو WebP، 500 كيلوبايت كحد أقصى) تُلصق على شكل رابط https. حتى 6 معلنين بالتناوب.",
@@ -1295,6 +1342,7 @@ $("tabMenu").addEventListener("click", () => switchTab("menu"));
 $("tabOrders").addEventListener("click", () => switchTab("orders"));
 $("tabPropose").addEventListener("click", () => switchTab("propose"));
 $("tabBoost").addEventListener("click", () => switchTab("boost"));
+$("tabLoyalty").addEventListener("click", () => switchTab("loyalty"));
 $("tabSales").addEventListener("click", () => switchTab("sales"));
 $("tabSettings").addEventListener("click", () => switchTab("settings"));
 $("tabOptions").addEventListener("click", () => switchTab("options"));
@@ -1318,6 +1366,10 @@ function switchTab(tab) {
   $("tabOptions").classList.toggle("active", tab === "options");
   $("panelOptions").classList.toggle("hidden", tab !== "options");
   if (tab === "options") loadOptions();
+  $("tabLoyalty").classList.toggle("active", tab === "loyalty");
+  $("panelLoyalty").classList.toggle("hidden", tab !== "loyalty");
+  if (tab === "loyalty") loadLoyaltyPanel();
+  else stopLoyCam();
   $("tabBoost").classList.toggle("active", tab === "boost");
   $("panelBoost").classList.toggle("hidden", tab !== "boost");
   hideError($("errorBox"));
@@ -1915,7 +1967,77 @@ async function onPropose() {
 /* ============================================================
    PUBLICITÉ (mise à la une)
    ============================================================ */
+/* ============================================================
+   FIDÉLITÉ : carte à tampons du restaurant (le serveur ne laisse voir et modifier que son propre programme)
+   ============================================================ */
+let LOY_STREAM = null, LOY_TIMER = null, LOY_LAST = "";
+function applyLoyaltyLabels() {
+  ["tabLoyaltyLabel","loyTitle","loyHint","loyActiveLbl","loyLblN","loyLblReward","loyLblRewardAr","loyLblMin","loySave","loyStatsTitle","loyScanTitle","loyScanHint","loyCheck","loyCam","loyRecentTitle"].forEach(id => { const el = $(id); if (el) el.textContent = t(id); });
+}
+function loyEsc(x) { return String(x == null ? "" : x).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+async function loadLoyaltyPanel() {
+  applyLoyaltyLabels();
+  if (typeof BarcodeDetector !== "undefined" && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) $("loyCam").style.display = "";
+  try {
+    const d = await apiGet({ action: "partnerLoyalty", op: "get" });
+    if (!d || !d.success) { showError($("errorBox"), (d && d.error) || t("loyError")); return; }
+    const p = d.program;
+    $("loyActive").checked = !!p.actif; $("loyN").value = p.n; $("loyReward").value = p.reward || ""; $("loyRewardAr").value = p.rewardAr || ""; $("loyMin").value = p.min || 0;
+    const box = (n, l) => '<div style="flex:1;min-width:90px;background:var(--blue-100);border-radius:12px;padding:10px;text-align:center;"><div style="font-size:22px;font-weight:800;">' + loyEsc(n) + '</div><div style="font-size:11.5px;color:var(--muted);">' + loyEsc(l) + '</div></div>';
+    $("loyStats").innerHTML = box(d.stats.clients, t("loyStClients")) + box(d.stats.stamps, t("loyStStamps")) + box(d.stats.rewardsUsed, t("loyStUsed"));
+    $("loyRecent").innerHTML = (d.recent && d.recent.length) ? d.recent.map(r => '<div style="display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--border);padding:8px 0;font-size:13px;"><span>' + loyEsc(r.detail) + '</span><span style="color:var(--muted);white-space:nowrap;">' + loyEsc(r.date) + '</span></div>').join("") : '<div class="field-hint">' + t("loyRecentEmpty") + '</div>';
+  } catch (e) { showError($("errorBox"), t("loyError")); }
+}
+$("loySave").addEventListener("click", async () => {
+  $("loySave").disabled = true;
+  try {
+    const d = await apiGet({ action: "partnerLoyalty", op: "save", actif: $("loyActive").checked ? 1 : 0, n: $("loyN").value, reward: $("loyReward").value, rewardAr: $("loyRewardAr").value, min: $("loyMin").value });
+    if (d && d.success) { if (window.MTToast) MTToast.ok(t("loySaved")); else showSuccess($("successBox"), t("loySaved")); loadLoyaltyPanel(); }
+    else showError($("errorBox"), (d && d.error) || t("loyError"));
+  } catch (e) { showError($("errorBox"), t("loyError")); }
+  $("loySave").disabled = false;
+});
+function loyShowResult(d, redeemed) {
+  const el = $("loyResult");
+  if (!d || !d.success) { el.innerHTML = '<div class="error-box" style="display:block;">' + loyEsc((d && d.error) || t("loyError")) + '</div>'; return; }
+  let h = '<div style="background:var(--blue-100);border-radius:12px;padding:12px;"><div style="font-weight:800;">' + t("loyClient") + " : " + loyEsc(d.prenom || d.member) + ' · ' + loyEsc(d.member) + '</div>' +
+    '<div style="margin:6px 0;">' + t("loyProgress").replace("{c}", d.count).replace("{n}", d.n) + '</div>' +
+    '<div style="margin-bottom:8px;">' + t("loyRewards").replace("{r}", d.rewards) + (d.reward ? ' — ' + loyEsc(d.reward) : '') + '</div>';
+  if (redeemed) h += '<div style="color:var(--green);font-weight:800;">✅ ' + t("loyDone") + '</div>';
+  if (d.rewards > 0) h += '<button class="btn-primary" id="loyRedeem" type="button">' + t("loyRedeem") + '</button>';
+  else if (!redeemed) h += '<div class="field-hint">' + t("loyNone") + '</div>';
+  el.innerHTML = h + '</div>';
+  const b = $("loyRedeem"); if (b) b.addEventListener("click", () => loyCall("redeem", d.member, b));
+}
+async function loyCall(op, code, btn) {
+  if (btn) btn.disabled = true;
+  try { const d = await apiGet({ action: "partnerLoyalty", op: op, code: code }); loyShowResult(d, op === "redeem" && d && d.success); if (op === "redeem" && d && d.success) loadLoyaltyPanel(); }
+  catch (e) { loyShowResult(null); }
+}
+$("loyCheck").addEventListener("click", () => { const c = $("loyCode").value.trim(); if (c) loyCall("scan", c); });
+$("loyCode").addEventListener("keydown", ev => { if (ev.key === "Enter") $("loyCheck").click(); });
+function stopLoyCam() {
+  if (LOY_TIMER) { clearInterval(LOY_TIMER); LOY_TIMER = null; }
+  if (LOY_STREAM) { LOY_STREAM.getTracks().forEach(tr => tr.stop()); LOY_STREAM = null; }
+  const v = $("loyVideo"); if (v) { v.style.display = "none"; v.srcObject = null; }
+}
+$("loyCam").addEventListener("click", async () => {
+  if (LOY_STREAM) { stopLoyCam(); return; }
+  try {
+    const det = new BarcodeDetector({ formats: ["qr_code"] });
+    LOY_STREAM = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    const v = $("loyVideo"); v.srcObject = LOY_STREAM; v.style.display = "block"; await v.play();
+    LOY_TIMER = setInterval(async () => {
+      try {
+        const r = await det.detect(v);
+        if (r && r.length && r[0].rawValue && r[0].rawValue !== LOY_LAST) { LOY_LAST = r[0].rawValue; $("loyCode").value = r[0].rawValue.replace(/^MTR:/, ""); stopLoyCam(); loyCall("scan", r[0].rawValue); setTimeout(() => { LOY_LAST = ""; }, 3000); }
+      } catch (e) {}
+    }, 400);
+  } catch (e) { stopLoyCam(); }
+});
+
 function applyBoostLabels() {
+  applyLoyaltyLabels();
   $("tabBoostLabel").textContent = t("tabBoostLabel");
   $("boostInfo").textContent = t("boostInfo");
   $("boostOffersTitle").textContent = t("boostOffersTitle");
