@@ -505,7 +505,12 @@
   .zone-opt.selected{border-color:var(--blue-600);background:var(--blue-100);}
   .zone-opt .fee{font-weight:800;color:var(--blue-700);}
 
-  #chkPromoLine[hidden],.sa-save[hidden],.saved-addrs[hidden]{display:none!important;}
+  .pts-field{background:#FFF8E1;border:1.5px solid var(--gold-500,#F7B500);border-radius:12px;padding:10px 12px;}
+  .pts-check{display:flex;gap:10px;align-items:center;font-weight:700;font-size:13.5px;cursor:pointer;}
+  .pts-check input{width:20px;height:20px;accent-color:#1553A4;}
+  .pts-qty{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:12.5px;color:#55616B;}
+  .pts-qty input{width:90px;padding:8px;border:1.5px solid #e6eaf1;border-radius:8px;font-size:15px;font-family:inherit;}
+  #chkPromoLine[hidden],#chkPtsLine[hidden],.pts-field[hidden],.pts-qty[hidden],.sa-save[hidden],.saved-addrs[hidden]{display:none!important;}
   .promo-row{display:flex;gap:8px;}
   .promo-row input{flex:1;min-width:0;text-transform:uppercase;}
   .promo-row button{border:0;border-radius:10px;padding:0 16px;font-weight:800;background:var(--blue-700);color:#fff;cursor:pointer;}
@@ -823,9 +828,15 @@ if ("serviceWorker" in navigator) {
       <div class="promo-msg" id="promoMsg" role="status" aria-live="polite"></div>
     </div>
 
+    <div class="field pts-field" id="ptsField" hidden>
+      <label class="pts-check"><input type="checkbox" id="ptsUse"><span id="ptsLbl"></span></label>
+      <div class="pts-qty" id="ptsQty" hidden><input type="number" id="ptsAmount" min="1" step="1" inputmode="numeric"><span id="ptsUnit"></span></div>
+    </div>
+
     <div class="totals">
       <div class="line"><span id="lblSubtotalChk">Sous-total</span><span id="chkSubtotal">0 DA</span></div>
       <div class="line" id="chkPromoLine" hidden><span id="lblPromoChk">Code promo</span><b id="chkPromo"></b></div>
+      <div class="line" id="chkPtsLine" hidden><span id="lblPtsChk">Points utilisés</span><b id="chkPts"></b></div>
       <div class="line"><span id="lblDeliveryChk">Livraison</span><span id="chkFee">—</span></div>
       <div class="line total"><span id="lblTotalChk">Total à payer</span><span id="chkTotal">0 DA</span></div>
       <div class="loy" id="loyChk"></div>
@@ -978,6 +989,7 @@ const I18N = {
     loyMore: "Plus que {x} DA de plats pour avoir la livraison offerte.",
     loyProgress: "Fidélité : {c}/{n} commandes cette semaine (plats d'au moins {m} DA). La commande n°{n1} a la livraison offerte. Nouvelle semaine le samedi.",
     loyFreeWord: "Offerte",
+    ptsUse: "Utiliser mes points ({n} pts = −{d} DA)", ptsLine: "Points utilisés", ptsUnit: "points (max {m})",
     promoLbl: "Code promo", promoApply: "Appliquer", promoLine: "Code {c}", promoOk: "Code {c} appliqué : −{r} DA", promoNeedLogin: "Connecte-toi pour utiliser un code.", promoEmpty: "Saisis un code promo.", promoErr: "Impossible de vérifier le code, réessaie.",
     saTitle: "Mes adresses", saHome: "Maison", saWork: "Travail", saOther: "Autre", saSave: "Enregistrer cette adresse", saSaved: "Adresse enregistrée.", addedCart: "Ajouté au panier", orderSentToast: "Commande envoyée !", saDel: "Supprimer", saMax: "5 adresses maximum : supprime-en une d'abord.",
     changeAddr: "Modifier l'adresse",
@@ -1155,6 +1167,7 @@ const I18N = {
     loyMore: "بقي {x} دج من الأطباق للحصول على توصيل مجاني.",
     loyProgress: "الوفاء: {c}/{n} طلبات هذا الأسبوع (أطباق بقيمة {m} دج على الأقل). الطلب رقم {n1} توصيله مجاني. أسبوع جديد كل سبت.",
     loyFreeWord: "مجاني",
+    ptsUse: "استعمال نقاطي ({n} نقطة = −{d} دج)", ptsLine: "النقاط المستعملة", ptsUnit: "نقطة (الحد الأقصى {m})",
     promoLbl: "رمز الخصم", promoApply: "تطبيق", promoLine: "الرمز {c}", promoOk: "تم تطبيق الرمز {c}: −{r} دج", promoNeedLogin: "سجّل الدخول لاستعمال الرمز.", promoEmpty: "أدخل رمز الخصم.", promoErr: "تعذّر التحقق من الرمز، أعد المحاولة.",
     saTitle: "عناويني", saHome: "المنزل", saWork: "العمل", saOther: "آخر", saSave: "احفظ هذا العنوان", saSaved: "تم حفظ العنوان.", addedCart: "أُضيف إلى السلة", orderSentToast: "تم إرسال الطلب!", saDel: "حذف", saMax: "5 عناوين كحد أقصى: احذف عنوانا أولا.",
     changeAddr: "تعديل العنوان",
@@ -2760,11 +2773,14 @@ function updateCheckoutTotals() {
     const d = deliveryFor(subtotal);
     if (d.free) $("chkFee").innerHTML = '<span class="was">' + d.real + ' DA</span><b>' + escapeHtml(t("loyFreeWord")) + '</b>';
     else $("chkFee").textContent = d.fee + " DA";
-    $("chkTotal").textContent = (subtotal - promoRemise() + d.fee) + " DA";
+    $("chkTotal").textContent = (subtotal - promoRemise() - ptsDa(subtotal) + d.fee) + " DA";
   } else {
     $("chkFee").textContent = t("chooseZonePlaceholder");
-    $("chkTotal").textContent = (subtotal - promoRemise()) + " DA";
+    $("chkTotal").textContent = (subtotal - promoRemise() - ptsDa(subtotal)) + " DA";
   }
+  const ptl = $("chkPtsLine");
+  if (ptl) { const da = ptsDa(subtotal); ptl.hidden = !(da > 0); if (da > 0) $("chkPts").textContent = "−" + da + " DA"; }
+  renderPtsField();
   const pl = $("chkPromoLine");
   if (pl) { pl.hidden = !(PROMO && PROMO.remise > 0); if (!pl.hidden) $("chkPromo").textContent = "−" + PROMO.remise + " DA"; }
   renderLoyalty();
@@ -2772,6 +2788,43 @@ function updateCheckoutTotals() {
 
 /* ---- Code promo : le serveur valide et recalcule la remise à la commande ---- */
 let PROMO = null;   // { code, remise }
+/* ---- MT Food Rewards : utilisation des points (le serveur vérifie le solde et recalcule la réduction) ---- */
+let PTS = null;      // { solde, valeurPoint, minUse } ou null (programme arrêté / client non connecté)
+let PTS_USE = 0;     // points choisis par le client (0 = non utilisés)
+function ptsMax(subtotal) {
+  if (!PTS) return 0;
+  return Math.max(0, Math.min(PTS.solde, Math.floor(Math.max(0, subtotal - promoRemise()) / PTS.valeurPoint)));
+}
+function ptsApplied(subtotal) {
+  const mx = ptsMax(subtotal), u = Math.min(Math.floor(PTS_USE), mx);
+  if (!(u > 0) || (PTS.minUse > 0 && u < PTS.minUse)) return 0;
+  return u;
+}
+function ptsDa(subtotal) { return PTS ? Math.round(ptsApplied(subtotal) * PTS.valeurPoint) : 0; }
+function renderPtsField() {
+  const f = $("ptsField"); if (!f) return;
+  const { subtotal } = cartTotals(), mx = ptsMax(subtotal);
+  f.hidden = !(PTS && mx > 0 && (!PTS.minUse || mx >= PTS.minUse));
+  if (f.hidden) return;
+  $("ptsLbl").textContent = t("ptsUse").replace("{n}", mx).replace("{d}", Math.round(mx * PTS.valeurPoint));
+  $("ptsUse").checked = PTS_USE > 0;
+  $("ptsQty").hidden = !(PTS_USE > 0);
+  if (PTS_USE > 0) { $("ptsAmount").max = mx; $("ptsUnit").textContent = t("ptsUnit").replace("{m}", mx); if (document.activeElement !== $("ptsAmount")) $("ptsAmount").value = ptsApplied(subtotal) || ""; }
+}
+function loadPoints() {
+  const s = getClientSession();
+  if (!s || !s.clientId) { PTS = null; PTS_USE = 0; return; }
+  jsonpRequest({ action: "loyaltyPoints", clientId: s.clientId }, 15000)
+    .then(r => { PTS = (r && r.success && r.actif && r.solde > 0) ? { solde: Number(r.solde), valeurPoint: Number(r.valeurPoint) || 1, minUse: Number(r.minUse) || 0 } : null; })
+    .catch(() => { PTS = null; })
+    .then(() => { if (!PTS) PTS_USE = 0; renderPtsField(); if (SELECTED_ZONE) updateCheckoutTotals(); });
+}
+document.addEventListener("change", ev => {
+  if (ev.target && ev.target.id === "ptsUse") { PTS_USE = ev.target.checked ? ptsMax(cartTotals().subtotal) : 0; updateCheckoutTotals(); }
+});
+document.addEventListener("input", ev => {
+  if (ev.target && ev.target.id === "ptsAmount") { PTS_USE = Math.max(0, Math.floor(Number(ev.target.value) || 0)); updateCheckoutTotals(); }
+});
 function promoRemise() { return PROMO ? PROMO.remise : 0; }
 function applyPromoLanguage() {
   $("lblPromo").textContent = t("promoLbl"); $("promoBtn").textContent = t("promoApply"); $("lblPromoChk").textContent = t("promoLbl");
@@ -2849,7 +2902,7 @@ function loadLoyalty() {
   return jsonpRequest({ action: "loyaltyInfo", clientId: s.clientId }, 15000)
     .then(res => { LOY = res && res.success ? res : null; })
     .catch(() => { LOY = null; })
-    .then(() => { renderLoyalty(); if (SELECTED_ZONE) updateCheckoutTotals(); });
+    .then(() => { renderLoyalty(); if (SELECTED_ZONE) updateCheckoutTotals(); loadPoints(); });
 }
 function deliveryFor(subtotal) {
   if (!SELECTED_ZONE) return null;
@@ -3348,7 +3401,8 @@ function submitOrder() {
 
   const { subtotal } = cartTotals();
   const dl = deliveryFor(subtotal);
-  const total = subtotal - promoRemise() + dl.fee;
+  const ptsN = ptsApplied(subtotal);
+  const total = subtotal - promoRemise() - ptsDa(subtotal) + dl.fee;
 
   const session = getClientSession() || {};
   // Identifiant d'envoi : conservé tant que la commande n'est pas confirmée (évite les doublons si on réessaie).
@@ -3366,6 +3420,7 @@ function submitOrder() {
     notes: notes,
     total: total,
     promo: PROMO ? PROMO.code : "",
+    points: ptsN,
     clientId: session.clientId || "",
     requestId: ORDER_REQUEST_ID,
     preorder: !!cartPreName(),
@@ -3392,7 +3447,7 @@ function submitOrder() {
         e.serverMsg = res.error || "";
         throw e;
       }
-      ORDER_REQUEST_ID = "";
+      ORDER_REQUEST_ID = ""; PTS_USE = 0;
       // Le numéro saisi est gardé dans la session : pré-rempli à la prochaine commande (le serveur l'enregistre aussi dans la fiche client)
       try {
         const cs = getClientSession();
@@ -3420,7 +3475,7 @@ function submitOrder() {
       if (code === "promo") {
         ORDER_REQUEST_ID = ""; PROMO = null; setPromoMsg(err.serverMsg || t("promoErr"), "err"); updateCheckoutTotals();
         showCheckoutError(err.serverMsg || t("promoErr"), true);
-      } else if (code === "price_changed" || code === "unavailable") {
+      } else if (code === "price_changed" || code === "unavailable" || code === "points") {
         // Prix, frais ou plat modifiés : on recharge le menu et les zones, le client revérifie son panier.
         ORDER_REQUEST_ID = "";
         refreshQuote();
