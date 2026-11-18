@@ -431,6 +431,7 @@ if ("serviceWorker" in navigator) {
       <button class="tab-btn" id="tabRatingsBtn" type="button"><span id="tabRatingsLabel"></span></button>
       <button class="tab-btn" id="tabFraudBtn" type="button"><span id="tabFraudLabel"></span></button>
       <button class="tab-btn" id="tabCaisseBtn" type="button"><span id="tabCaisseLabel"></span></button>
+      <button class="tab-btn" id="tabRewardsBtn" type="button"><span id="tabRewardsLabel"></span></button>
       <button class="tab-btn" id="tabStatsBtn" type="button"><span id="tabStatsLabel"></span></button>
     </div>
 
@@ -619,6 +620,25 @@ if ("serviceWorker" in navigator) {
       <div id="perfBody"></div>
       <div class="partner-card" style="margin-top:14px;"><div class="meta"><b id="backupTitle"></b><br><span id="backupNote" style="color:var(--muted);font-size:12.5px;"></span></div>
         <button class="btn-refresh" id="backupBtn" type="button" style="margin-top:8px;"><span id="backupLabel"></span></button></div>
+    </div>
+
+    <div id="rewardsView" class="hidden">
+      <div id="rwStats" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;"></div>
+      <div class="partner-card"><div class="nom">Programme global (points)</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:8px 0;">
+          <label style="font-size:12.5px;">Actif (1) / arrêté (0)<input id="rwActif" type="number" min="0" max="1"></label>
+          <label style="font-size:12.5px;">DA de plats par point<input id="rwDa" type="number" min="1"></label>
+          <label style="font-size:12.5px;">Valeur d'un point (DA)<input id="rwVal" type="number" min="1"></label>
+          <label style="font-size:12.5px;">Minimum de points à utiliser<input id="rwMin" type="number" min="0"></label>
+        </div>
+        <button class="btn-primary" id="rwCfgSave" type="button">Enregistrer les réglages</button>
+      </div>
+      <div class="partner-card"><div class="nom">Programmes des restaurants</div><div id="rwProgs"></div></div>
+      <div class="partner-card"><div class="nom">Client</div>
+        <div style="display:flex;gap:8px;margin:8px 0;"><input id="rwQ" type="text" placeholder="Nom, téléphone, e-mail ou numéro de membre" style="flex:1;"><button class="btn-primary" id="rwSearch" type="button" style="width:auto;padding:0 16px;">Chercher</button></div>
+        <div id="rwClients"></div><div id="rwClient"></div>
+      </div>
+      <div class="partner-card"><div class="nom">Dernières transactions</div><button class="mini-btn" id="rwTxBtn" type="button">Afficher</button><div id="rwTx"></div></div>
     </div>
 
     <div id="caisseView" class="hidden">
@@ -953,6 +973,7 @@ const I18N = {
     geoVille: "Ville", geoLat: "Latitude", geoLng: "Longitude", geoRayon: "Rayon (km)", geoSave: "Enregistrer", geoSaved: "Enregistré.",
     geoProposed: "Proposé par le restaurant", geoApply: "Valider {n} km", geoMap: "Voir sur la carte", geoNoPos: "Position manquante", geoDefaultRay: "rayon par défaut",
     tabCaisse: "Caisse",
+    tabRewards: "Fidélité",
     perfTitle: "Temps de livraison", perfN: "{n} commandes livrées analysées", perfPrep: "Préparation restaurant", perfAssign: "Recherche d'un livreur", perfWait: "Attente du livreur au restaurant", perfTrip: "Trajet vers le client", perfTotal: "Durée totale", perfMin: "min",
     perfPerResto: "Par restaurant", perfPerDriver: "Par livreur", perfAnom: "Cas à vérifier", perfNone: "Pas assez de données.", perfNoServer: "Temps de livraison : le serveur n'est pas encore à jour.",
     perfAnTooFast: "Trajet trop rapide ({m} min pour la zone {z})", perfAnBeforeReady: "Récupérée avant « Prête »", perfAnNoPick: "Étape « Récupérée » jamais appuyée", perfAnSlow: "Durée totale très longue ({m} min)", perfAnLongWait: "Livreur resté {m} min au restaurant",
@@ -1269,6 +1290,7 @@ const I18N = {
     geoVille: "المدينة", geoLat: "خط العرض", geoLng: "خط الطول", geoRayon: "النطاق (كم)", geoSave: "حفظ", geoSaved: "تم الحفظ.",
     geoProposed: "اقتراح المطعم", geoApply: "اعتماد {n} كم", geoMap: "عرض على الخريطة", geoNoPos: "الموقع ناقص", geoDefaultRay: "النطاق الافتراضي",
     tabCaisse: "الصندوق",
+    tabRewards: "الولاء",
     perfTitle: "أوقات التوصيل", perfN: "{n} طلب مُسلَّم تم تحليله", perfPrep: "تحضير المطعم", perfAssign: "البحث عن موصّل", perfWait: "انتظار الموصّل في المطعم", perfTrip: "الطريق إلى الزبون", perfTotal: "المدة الإجمالية", perfMin: "د",
     perfPerResto: "حسب المطعم", perfPerDriver: "حسب الموصّل", perfAnom: "حالات للتحقق", perfNone: "لا توجد بيانات كافية.", perfNoServer: "أوقات التوصيل: الخادم غير محدَّث بعد.",
     perfAnTooFast: "طريق سريع جدا ({m} د للمنطقة {z})", perfAnBeforeReady: "تم الاستلام قبل «جاهز»", perfAnNoPick: "لم يتم الضغط على «تم الاستلام»", perfAnSlow: "مدة إجمالية طويلة جدا ({m} د)", perfAnLongWait: "بقي الموصّل {m} د في المطعم",
@@ -1430,6 +1452,7 @@ function applyLanguage() {
   $("fraudD30").textContent = t("fraudD30"); $("fraudD90").textContent = t("fraudD90");
   $("fraudNote").textContent = t("fraudNote");
   $("tabCaisseLabel").textContent = t("tabCaisse");
+  $("tabRewardsLabel").textContent = t("tabRewards");
   $("tabStatsLabel").textContent = t("tabStats"); $("refreshStatsLabel").textContent = t("caisseRefresh");
   document.querySelectorAll("[data-sd]").forEach(b => { b.textContent = t({ "1": "sdToday", "7": "sd7", "30": "sd30", "0": "sdAll" }[b.dataset.sd]); });
   $("backupTitle").textContent = t("backupTitle"); $("backupNote").textContent = t("backupNote"); $("backupLabel").textContent = t("backupNow");
@@ -1649,6 +1672,8 @@ function switchTab(tab) {
   $("tabFraudBtn").classList.toggle("active", tab === "fraud");
   $("tabCaisseBtn").classList.toggle("active", tab === "caisse");
   $("tabStatsBtn").classList.toggle("active", tab === "stats");
+  $("tabRewardsBtn").classList.toggle("active", tab === "rewards");
+  $("rewardsView").classList.toggle("hidden", tab !== "rewards");
   $("statsView").classList.toggle("hidden", tab !== "stats");
   $("ordersView").classList.toggle("hidden", tab !== "orders");
   $("liveView").classList.toggle("hidden", tab !== "live");
@@ -1678,7 +1703,70 @@ function switchTab(tab) {
   if (tab === "fraud") loadFraudAdmin();
   if (tab === "caisse") loadCaisseAdmin();
   if (tab === "stats") loadStatsAdmin();
+  if (tab === "rewards") loadRewardsAdmin();
 }
+
+/* ============================================================
+   FIDÉLITÉ (MT Food Rewards) : tableau de bord, réglages, programmes, clients, ajustements (tout est journalisé côté serveur)
+   ============================================================ */
+$("tabRewardsBtn").addEventListener("click", () => switchTab("rewards"));
+const RW_TYPES = { gain: "Points gagnés", utilisation: "Points utilisés", regularisation: "Régularisation", remboursement: "Points rendus", ajustement: "Ajustement", tampon: "Tampon", recompense: "Récompense" };
+function rwCall(p) { return apiGet(Object.assign({ action: "csLoyalty", password: SESSION_PASSWORD }, p)); }
+function rwBox(n, l) { return '<div style="flex:1;min-width:120px;background:#E8EEF6;border-radius:12px;padding:10px;text-align:center;"><div style="font-size:20px;font-weight:800;">' + escapeHtml(n) + '</div><div style="font-size:11.5px;color:#55616B;">' + escapeHtml(l) + '</div></div>'; }
+async function loadRewardsAdmin() {
+  try {
+    const d = await rwCall({ op: "dash" });
+    if (!d || !d.success) { showError($("errorBox"), (d && d.error) || "Erreur"); return; }
+    const s = d.stats;
+    $("rwStats").innerHTML = rwBox(s.clientsFideles, "Clients fidélisés") + rwBox(s.cartes, "Cartes créées") + rwBox(s.wallet.apple + " / " + s.wallet.google, "Apple / Google Wallet") +
+      rwBox(s.pointsDistribues, "Points distribués") + rwBox(s.pointsUtilises, "Points utilisés") + rwBox(s.tamponsDistribues, "Tampons distribués") +
+      rwBox(s.recompensesUtilisees, "Récompenses utilisées") + rwBox(s.restaurants, "Restaurants participants") + rwBox(d.suspended, "Comptes suspendus");
+    $("rwActif").value = d.cfg.points_actif; $("rwDa").value = d.cfg.da_par_point; $("rwVal").value = d.cfg.valeur_point_da; $("rwMin").value = d.cfg.points_min_utilisation;
+    $("rwProgs").innerHTML = d.programs.length ? d.programs.map(p => '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid #e6ebf2;padding:8px 0;font-size:13px;"><span><b>' + escapeHtml(p.nom) + '</b> · ' + p.n + ' commandes · ' + escapeHtml(p.reward || "—") + (p.min ? " · min " + p.min + " DA" : "") + '</span>' +
+      '<button class="mini-btn" data-rwprog="' + escapeHtml(p.nom) + '" data-on="' + (p.actif ? 0 : 1) + '" type="button">' + (p.actif ? "Suspendre" : "Réactiver") + '</button></div>').join("") : '<div class="muted" style="font-size:13px;">Aucun restaurant n\'a créé de programme.</div>';
+  } catch (e) { showError($("errorBox"), "Impossible de charger la fidélité."); }
+}
+$("rwCfgSave").addEventListener("click", async () => {
+  const d = await rwCall({ op: "cfgSave", points_actif: $("rwActif").value, da_par_point: $("rwDa").value, valeur_point_da: $("rwVal").value, points_min_utilisation: $("rwMin").value });
+  if (d && d.success) { showSuccess($("successBox"), "Réglages enregistrés."); loadRewardsAdmin(); } else showError($("errorBox"), (d && d.error) || "Erreur");
+});
+$("rwProgs").addEventListener("click", async ev => {
+  const b = ev.target.closest("[data-rwprog]"); if (!b) return;
+  const d = await rwCall({ op: "programSet", nom: b.dataset.rwprog, actif: b.dataset.on });
+  if (d && d.success) loadRewardsAdmin(); else showError($("errorBox"), (d && d.error) || "Erreur");
+});
+$("rwSearch").addEventListener("click", async () => {
+  const d = await rwCall({ op: "clientSearch", q: $("rwQ").value });
+  if (!d || !d.success) { $("rwClients").innerHTML = '<div style="color:#b3261e;font-size:13px;">' + escapeHtml((d && d.error) || "Erreur") + '</div>'; return; }
+  $("rwClients").innerHTML = d.clients.length ? d.clients.map(c => '<div style="display:flex;justify-content:space-between;gap:8px;border-top:1px solid #e6ebf2;padding:8px 0;font-size:13px;"><span><b>' + escapeHtml(c.nom) + '</b> · <bdi dir="ltr">' + escapeHtml(c.tel) + '</bdi> · ' + escapeHtml(c.member) + ' · ' + c.solde + ' pts</span><button class="mini-btn" data-rwclient="' + escapeHtml(c.clientId) + '" type="button">Ouvrir</button></div>').join("") : '<div style="font-size:13px;">Aucun client trouvé.</div>';
+});
+$("rwQ").addEventListener("keydown", ev => { if (ev.key === "Enter") $("rwSearch").click(); });
+async function rwOpenClient(id) {
+  const d = await rwCall({ op: "clientGet", clientId: id });
+  if (!d || !d.success) { showError($("errorBox"), (d && d.error) || "Erreur"); return; }
+  const hist = d.history.map(h => '<div style="display:flex;justify-content:space-between;gap:8px;border-top:1px solid #eef1f6;padding:5px 0;font-size:12.5px;"><span>' + escapeHtml(RW_TYPES[h.type] || h.type) + (h.commande ? ' #' + escapeHtml(h.commande) : '') + ' <span style="color:#55616B;">' + escapeHtml(h.date) + ' · ' + escapeHtml(h.detail) + '</span></span><b>' + (h.points > 0 ? "+" : "") + h.points + '</b></div>').join("");
+  const stp = (d.stamps || []).map(c => escapeHtml(c.partenaire) + " " + c.count + "/" + c.n + (c.rewards ? " 🎁" + c.rewards : "")).join(" · ");
+  $("rwClient").innerHTML = '<div style="background:#F3F5F9;border-radius:12px;padding:12px;margin-top:10px;"><div><b>' + escapeHtml(d.member) + '</b> · solde <b>' + d.solde + '</b> pts' + (d.suspendu ? ' · <span style="color:#b3261e;font-weight:800;">SUSPENDU (' + escapeHtml(d.motif) + ')</span>' : '') + '</div>' +
+    (stp ? '<div style="font-size:12.5px;margin:4px 0;">Cartes : ' + stp + '</div>' : '') +
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;"><input id="rwAdjPts" type="number" placeholder="± points" style="width:100px;"><input id="rwAdjWhy" type="text" placeholder="Justification (obligatoire)" style="flex:1;min-width:160px;"><button class="mini-btn" id="rwAdjBtn" data-id="' + escapeHtml(id) + '" type="button">Ajuster</button></div>' +
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;"><input id="rwSusWhy" type="text" placeholder="Motif de suspension" style="flex:1;min-width:160px;"><button class="mini-btn" id="rwSusBtn" data-id="' + escapeHtml(id) + '" data-on="' + (d.suspendu ? 0 : 1) + '" type="button">' + (d.suspendu ? "Rétablir le compte" : "Suspendre (fraude)") + '</button></div>' + hist + '</div>';
+}
+$("rwClients").addEventListener("click", ev => { const b = ev.target.closest("[data-rwclient]"); if (b) rwOpenClient(b.dataset.rwclient); });
+$("rwClient").addEventListener("click", async ev => {
+  const a = ev.target.closest("#rwAdjBtn"), s2 = ev.target.closest("#rwSusBtn");
+  if (a) {
+    const d = await rwCall({ op: "adjust", clientId: a.dataset.id, points: $("rwAdjPts").value, reason: $("rwAdjWhy").value });
+    if (d && d.success) { showSuccess($("successBox"), "Ajustement enregistré (solde : " + d.solde + ")."); rwOpenClient(a.dataset.id); } else showError($("errorBox"), (d && d.error) || "Erreur");
+  } else if (s2) {
+    const d = await rwCall({ op: "suspend", clientId: s2.dataset.id, on: s2.dataset.on, reason: $("rwSusWhy").value });
+    if (d && d.success) { rwOpenClient(s2.dataset.id); loadRewardsAdmin(); } else showError($("errorBox"), (d && d.error) || "Erreur");
+  }
+});
+$("rwTxBtn").addEventListener("click", async () => {
+  const d = await rwCall({ op: "tx" });
+  if (!d || !d.success) { showError($("errorBox"), (d && d.error) || "Erreur"); return; }
+  $("rwTx").innerHTML = d.rows.map(r => '<div style="display:flex;justify-content:space-between;gap:8px;border-top:1px solid #eef1f6;padding:5px 0;font-size:12.5px;"><span>' + escapeHtml(r.date) + ' · ' + escapeHtml(RW_TYPES[r.type] || r.type) + (r.resto ? ' · ' + escapeHtml(r.resto) : '') + (r.commande ? ' #' + escapeHtml(r.commande) : '') + ' · <span style="color:#55616B;">' + escapeHtml(r.client) + '</span></span><b>' + (r.valeur > 0 ? "+" : "") + r.valeur + '</b></div>').join("");
+});
 
 /* ============================================================
    FRAUDE : clients et livreurs qui annulent
