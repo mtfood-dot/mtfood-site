@@ -70,6 +70,20 @@
   .btn-reorder{flex:1;background:#fff;border:1.5px solid var(--gold-500);color:var(--blue-900);border-radius:11px;padding:10px;
     font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;}
 
+  .loy-card{background:linear-gradient(135deg,#1553A4,#263238);color:#fff;border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow-md);text-align:center;}
+  .loy-card .loy-name{font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--gold-500);}
+  .loy-card .loy-pts{font-size:44px;font-weight:800;line-height:1.1;margin:6px 0 2px;}
+  .loy-card .loy-sub{font-size:13px;opacity:.9;}
+  .loy-qr{background:#fff;border-radius:var(--radius-md);padding:10px;display:inline-block;margin:14px 0 6px;line-height:0;}
+  .loy-qr svg{width:180px;height:180px;display:block;}
+  .loy-member{font-size:13px;font-weight:700;letter-spacing:.06em;}
+  .loy-hist{margin-top:14px;}
+  .loy-hist h3{font-size:14px;margin:0 0 8px;}
+  .loy-row{display:flex;justify-content:space-between;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:8px;font-size:13px;}
+  .loy-row .d{color:var(--muted);font-size:11.5px;}
+  .loy-row .p{font-weight:800;white-space:nowrap;}
+  .loy-row .p.pos{color:var(--green);} .loy-row .p.neg{color:var(--danger);}
+  .loy-note{font-size:12px;color:var(--muted);text-align:center;margin-top:10px;}
   .empty-state{text-align:center;color:var(--muted);font-size:13.5px;padding:40px 20px;}
   .empty-state .emoji{font-size:32px;display:block;margin-bottom:10px;}
   .empty-state a{color:var(--blue-700);font-weight:700;text-decoration:none;}
@@ -102,10 +116,12 @@
   <div class="tabs">
     <button class="tab-btn active" id="tabCurrent" type="button">En cours</button>
     <button class="tab-btn" id="tabHistory" type="button">Historique</button>
+    <button class="tab-btn" id="tabLoyalty" type="button">Ma fidélité</button>
   </div>
 
   <div id="listCurrent"></div>
   <div id="listHistory" class="hidden"></div>
+  <div id="listLoyalty" class="hidden"></div>
 </main>
 
 <p class="footer-note" id="legalNote"></p>
@@ -126,7 +142,11 @@ if (!SESSION || !SESSION.clientId) {
 const I18N = {
   fr: {
     tagline:"Mon espace", logoutBtn:"Déconnexion", ctaOrder:"🛒 Commander",
-    tabCurrent:"En cours", tabHistory:"Historique",
+    tabCurrent:"En cours", tabHistory:"Historique", tabLoyalty:"Ma fidélité",
+    loyName:"MT FOOD REWARDS", loyPoints:"points", loyWorth:"= {v} DA de réduction", loyMember:"N° membre", loyHist:"Historique des points",
+    loyEmpty:"Pas encore de points. Tu en gagnes 1 pour chaque {d} DA de plats, dès que ta commande est livrée.",
+    loyOff:"Le programme de fidélité n'est pas disponible pour le moment.", loyError:"Impossible de charger ta fidélité pour le moment.",
+    loyGain:"Points gagnés", loyUse:"Points utilisés", loyRegul:"Régularisation", loyAdjust:"Ajustement", loyNote:"1 point gagné pour chaque {d} DA de plats. Les frais de livraison ne comptent pas.",
     statusPre:"Précommande", statusAconfirmer:"À confirmer", statusAttente:"En attente", statusLivraison:"En livraison",
     statusLivree:"Livrée", statusAnnulee:"Annulée",
     btnTrack:"Suivre", btnReorder:"Recommander",
@@ -138,7 +158,11 @@ const I18N = {
   },
   ar: {
     tagline:"مساحتي", logoutBtn:"تسجيل الخروج", ctaOrder:"🛒 الطلب",
-    tabCurrent:"الحالية", tabHistory:"السابقة",
+    tabCurrent:"الحالية", tabHistory:"السابقة", tabLoyalty:"نقاطي",
+    loyName:"MT FOOD REWARDS", loyPoints:"نقطة", loyWorth:"= {v} دج تخفيض", loyMember:"رقم العضوية", loyHist:"سجل النقاط",
+    loyEmpty:"لا توجد نقاط بعد. تكسب نقطة عن كل {d} دج من الأطباق، بعد توصيل طلبك.",
+    loyOff:"برنامج الولاء غير متاح حاليًا.", loyError:"تعذر تحميل نقاطك حاليًا.",
+    loyGain:"نقاط مكتسبة", loyUse:"نقاط مستخدمة", loyRegul:"تسوية", loyAdjust:"تعديل", loyNote:"نقطة واحدة لكل {d} دج من الأطباق. رسوم التوصيل لا تُحتسب.",
     statusPre:"طلب مسبق", statusAconfirmer:"قيد التأكيد", statusAttente:"قيد الانتظار", statusLivraison:"قيد التوصيل",
     statusLivree:"تم التوصيل", statusAnnulee:"ملغاة",
     btnTrack:"تتبع", btnReorder:"إعادة الطلب",
@@ -157,7 +181,7 @@ function applyLang(){
   document.documentElement.lang = LANG;
   document.documentElement.dir = LANG === "ar" ? "rtl" : "ltr";
   $("langToggle").textContent = LANG === "ar" ? "FR" : "AR";
-  ["tagline","logoutBtn","ctaOrder","tabCurrent","tabHistory"].forEach(id=>{ const el=$(id); if (el) el.textContent = t(id); });
+  ["tagline","logoutBtn","ctaOrder","tabCurrent","tabHistory","tabLoyalty"].forEach(id=>{ const el=$(id); if (el) el.textContent = t(id); });
   $("legalNote").innerHTML = t("legal1") + '<a href="cgu.html">' + t("legalLink1") + '</a>' +
     t("legalAnd") + '<a href="confidentialite.html">' + t("legalLink2") + '</a>' + t("legal2");
   if (SESSION) $("whoText").textContent = (SESSION.prenom || "") + " " + (SESSION.nom || "");
@@ -218,6 +242,7 @@ function orderCardHtml(o, isHistory){
 }
 
 function render(){
+  if (ACTIVE_TAB === "loyalty") { renderLoyalty(); return; }
   const list = ACTIVE_TAB === "current" ? ORDERS.current : ORDERS.history;
   const target = ACTIVE_TAB === "current" ? $("listCurrent") : $("listHistory");
   if (!list.length) {
@@ -232,14 +257,48 @@ function render(){
 $("tabCurrent").addEventListener("click", () => {
   ACTIVE_TAB = "current";
   $("tabCurrent").classList.add("active"); $("tabHistory").classList.remove("active");
-  $("listCurrent").classList.remove("hidden"); $("listHistory").classList.add("hidden");
+  $("listCurrent").classList.remove("hidden"); $("listHistory").classList.add("hidden"); $("listLoyalty").classList.add("hidden"); $("tabLoyalty").classList.remove("active");
   render();
 });
 $("tabHistory").addEventListener("click", () => {
   ACTIVE_TAB = "history";
   $("tabHistory").classList.add("active"); $("tabCurrent").classList.remove("active");
-  $("listHistory").classList.remove("hidden"); $("listCurrent").classList.add("hidden");
+  $("listHistory").classList.remove("hidden"); $("listCurrent").classList.add("hidden"); $("listLoyalty").classList.add("hidden"); $("tabLoyalty").classList.remove("active");
   render();
+});
+
+/* MT Food Rewards : solde, QR personnel et historique (lus sur le serveur, jamais modifiables ici) */
+let LOY = null;
+function loyTypeLabel(ty){ return t({ gain:"loyGain", utilisation:"loyUse", regularisation:"loyRegul", ajustement:"loyAdjust" }[ty] || "loyGain"); }
+function renderLoyalty(){
+  const el = $("listLoyalty");
+  if (LOY === "loading") { el.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div>'; return; }
+  if (LOY === "error") { el.innerHTML = '<div class="empty-state"><span class="emoji">⚠️</span>' + t("loyError") + '</div>'; return; }
+  if (!LOY || !LOY.actif) { el.innerHTML = '<div class="empty-state"><span class="emoji">🎁</span>' + t("loyOff") + '</div>'; return; }
+  let qr = "";
+  try { qr = window.MTQR ? MTQR.svg(LOY.qr, 6, 2) : ""; } catch (e) { qr = ""; }
+  const rows = (LOY.history || []).map(h => '<div class="loy-row"><div><div>' + esc(loyTypeLabel(h.type)) + (h.commande ? ' · #' + esc(h.commande) : '') + '</div><div class="d">' + esc(h.date) + '</div></div>' +
+    '<div class="p ' + (h.points >= 0 ? "pos" : "neg") + '">' + (h.points > 0 ? "+" : "") + esc(h.points) + '</div></div>').join("");
+  el.innerHTML = '<div class="loy-card"><div class="loy-name">' + t("loyName") + '</div>' +
+    '<div class="loy-pts">' + esc(LOY.solde) + '</div><div class="loy-sub">' + t("loyPoints") + ' · ' + t("loyWorth").replace("{v}", esc(Math.round(LOY.solde * LOY.valeurPoint))) + '</div>' +
+    (qr ? '<div><div class="loy-qr">' + qr + '</div></div>' : '') +
+    '<div class="loy-member">' + t("loyMember") + ' ' + esc(LOY.memberNo) + '</div></div>' +
+    '<div class="loy-hist"><h3>' + t("loyHist") + '</h3>' + (rows || '<div class="empty-state">' + t("loyEmpty").replace("{d}", esc(LOY.daParPoint)) + '</div>') + '</div>' +
+    '<div class="loy-note">' + t("loyNote").replace("{d}", esc(LOY.daParPoint)) + '</div>';
+}
+async function loadLoyalty(){
+  LOY = "loading"; renderLoyalty();
+  try {
+    const d = await apiGet({ action: "loyaltyPoints", clientId: SESSION.clientId });
+    LOY = (d && d.success) ? d : "error";
+  } catch (e) { LOY = "error"; }
+  renderLoyalty();
+}
+$("tabLoyalty").addEventListener("click", () => {
+  ACTIVE_TAB = "loyalty";
+  ["tabCurrent","tabHistory"].forEach(id => $(id).classList.remove("active")); $("tabLoyalty").classList.add("active");
+  $("listCurrent").classList.add("hidden"); $("listHistory").classList.add("hidden"); $("listLoyalty").classList.remove("hidden");
+  loadLoyalty();
 });
 
 function parseArticles(txt){
@@ -276,6 +335,7 @@ var ar=l==="ar",t=document.getElementById("mtFootTxt"),a=document.getElementById
 if(t)t.textContent=ar?"© 2026 MT Food by MT Delivery — جميع الحقوق محفوظة":"© 2026 MT Food by MT Delivery — Tous droits réservés";
 if(a)a.title=ar?"العودة إلى موقع MT Delivery":"Retour au site MT Delivery";})();
 </script>
+<script src="/qr-mini.js"></script>
 <script src="/toast.js"></script>
 <script src="/wa-float.js?v=1" defer></script>
 </body>
