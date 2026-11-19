@@ -372,6 +372,7 @@
     border:1px solid var(--border);transition:transform .18s ease, box-shadow .18s ease;
   }
   .card:active{transform:scale(.98);}
+  .card[data-optcard]{cursor:pointer;}
   @keyframes cardPulse{0%,100%{box-shadow:var(--shadow-sm);}50%{box-shadow:0 0 0 4px var(--gold-500);}}
   .card.pulse{animation:cardPulse 1.2s ease 3;}
   .card .photo{
@@ -2273,7 +2274,7 @@ function renderGrid() {
     const hasO = hasGroups(item);
     const photoStyle = item.photo ? `background-image:url('${escapeAttr(item.photo)}')` : "";
     return `
-      <div class="card${hasO ? " has-opts" : ""}"${hasO ? ` data-optcard="${item.id}"` : ""}>
+      <div class="card${hasO ? " has-opts" : ""}" data-optcard="${item.id}">
         <div class="photo" style="${photoStyle}">${item.photo ? "" : "🍽️"}</div>
         <div class="body">
           <div class="info">
@@ -2367,16 +2368,18 @@ function qtyStepperHtml(id, qty) {
 }
 
 function bindCardEvents() {
+  /* Chaque bouton n'est branché qu'une fois (cette fonction est rappelée après chaque ajout au panier) */
+  const once = (el, fn) => { if (el._mtb) return; el._mtb = 1; el.addEventListener("click", fn); };
   $("grid").querySelectorAll("[data-opt]").forEach(b =>
-    b.addEventListener("click", (e) => { e.stopPropagation(); openDish(b.dataset.opt); }));
+    once(b, (e) => { e.stopPropagation(); openDish(b.dataset.opt); }));
   $("grid").querySelectorAll("[data-optcard]").forEach(c =>
-    c.addEventListener("click", () => openDish(c.dataset.optcard)));
+    once(c, (e) => { if (e.target.closest("button")) return; openDish(c.dataset.optcard); }));
   $("grid").querySelectorAll("[data-add]").forEach(b =>
-    b.addEventListener("click", () => changeQty(b.dataset.add, 1)));
+    once(b, () => changeQty(b.dataset.add, 1)));
   $("grid").querySelectorAll("[data-inc]").forEach(b =>
-    b.addEventListener("click", () => changeQty(b.dataset.inc, 1)));
+    once(b, () => changeQty(b.dataset.inc, 1)));
   $("grid").querySelectorAll("[data-dec]").forEach(b =>
-    b.addEventListener("click", () => changeQty(b.dataset.dec, -1)));
+    once(b, () => changeQty(b.dataset.dec, -1)));
 }
 
 /* Une commande = un seul restaurant : on refuse d'ajouter un plat d'un autre restaurant */
@@ -2467,8 +2470,8 @@ function canAddItem(item) {
 let DISH = null;   // { item, sel: { groupIndex: [noms] }, qty }
 function openDish(id) {
   const item = MENU.find(i => String(i.id) === String(id));
-  if (!item || !hasGroups(item)) return;
-  if (!canAddItem(item)) return;
+  if (!item) return;
+  if (hasGroups(item) && !canAddItem(item)) return;
   DISH = { item, sel: {}, qty: 1 };
   renderDish();
   openOverlay("dishOverlay");
@@ -2477,14 +2480,14 @@ function openDish(id) {
 function closeDish() { closeOverlay("dishOverlay"); DISH = null; }
 function dishExtra() {
   let x = 0;
-  DISH.item.groups.forEach(g => (DISH.sel[g.i] || []).forEach(nm => { const o = g.options.find(z => z.nom === nm); if (o) x += o.prix; }));
+  (DISH.item.groups || []).forEach(g => (DISH.sel[g.i] || []).forEach(nm => { const o = g.options.find(z => z.nom === nm); if (o) x += o.prix; }));
   return x;
 }
-function dishValid() { return DISH.item.groups.every(g => { const c = (DISH.sel[g.i] || []).length; return c >= g.min && c <= g.max; }); }
+function dishValid() { return (DISH.item.groups || []).every(g => { const c = (DISH.sel[g.i] || []).length; return c >= g.min && c <= g.max; }); }
 function renderDish() {
   const it = DISH.item, ar = LANG === "ar";
   const unit = it.prix + dishExtra();
-  const groups = it.groups.map(g => {
+  const groups = (it.groups || []).map(g => {
     const chosen = DISH.sel[g.i] || [], full = chosen.length >= g.max && g.max > 1;
     const ok = chosen.length >= g.min;
     const badge = g.min >= 1 ? `<span class="opt-badge ${ok ? "ok" : "req"}">${ok ? "✓" : escapeHtml(t("optRequired"))}</span>` : `<span class="opt-badge">${escapeHtml(t("optOptional"))}</span>`;
@@ -2515,7 +2518,7 @@ function renderDish() {
   $("dsPlus").addEventListener("click", () => { if (DISH.qty < 20) { DISH.qty++; rerenderDish(); } });
   $("dsAdd").addEventListener("click", addDishToCart);
   sheet.querySelectorAll("input[data-og]").forEach(inp => inp.addEventListener("change", () => {
-    const g = it.groups.find(z => String(z.i) === inp.dataset.og), nm = g.options[Number(inp.dataset.oi)].nom;
+    const g = (it.groups || []).find(z => String(z.i) === inp.dataset.og), nm = g.options[Number(inp.dataset.oi)].nom;
     let cur = (DISH.sel[g.i] || []).slice();
     if (inp.checked) { if (g.max === 1) cur = [nm]; else if (cur.length < g.max) cur.push(nm); }
     else cur = cur.filter(x => x !== nm);
@@ -2531,6 +2534,16 @@ function addDishToCart() {
   if (!DISH || !dishValid()) return;
   const it = DISH.item;
   if (!canAddItem(it)) return;
+  if (!hasGroups(it)) {
+    const cur = CART[it.id] ? CART[it.id].qty : 0, next = Math.min(50, cur + DISH.qty);
+    CART[it.id] = { item: it, qty: next };
+    closeDish();
+    const ctrl = $("ctrl-" + it.id); if (ctrl) { ctrl.innerHTML = qtyStepperHtml(it.id, next); bindCardEvents(); }
+    updateCartBar();
+    ensureQuoteForCart();
+    if (window.MTToast) MTToast.ok(t("addedCart"), { silent: true });
+    return;
+  }
   const sel = it.groups.map(g => ({ g: g.i, o: (DISH.sel[g.i] || []).slice() })).filter(x => x.o.length);
   putOptLine(it, sel, DISH.qty);
   const base = it.id;
