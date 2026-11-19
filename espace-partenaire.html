@@ -658,7 +658,7 @@ const I18N = {
     noItems: "Tu n'as encore aucun plat sur le menu.",
     noOrders: "Aucune commande livrée à cette date.",
     dispoLabel: "Disponible",
-    editBtn: "✏️ Modifier", optBtn: "➕ Option", editPrix: "Prix (DA)", editDesc: "Composition / description", editPhoto: "Changer la photo",
+    editBtn: "✏️ Modifier", optBtn: "➕ Option", editNom: "Nom du plat", editPrix: "Prix (DA)", editDesc: "Composition / description", editPhoto: "Changer la photo",
     editSave: "Enregistrer", editCancel: "Annuler", editSaved: "Plat modifié.", editFail: "Modification impossible. Réessaie.",
     optLinkTitle: "Ajouter des options déjà configurées", optLinkNone: "Aucune option configurée pour le moment. Crée-les d'abord dans l'onglet Options.",
     optLinkSave: "Ajouter à ce plat", optLinkSaved: "Options ajoutées au plat.", optLinkMax: "Maximum 8 groupes d'options par plat.", optLinkChoose: "Coche au moins un groupe.",
@@ -792,7 +792,7 @@ const I18N = {
     noItems: "ليس لديك أي طبق في القائمة بعد.",
     noOrders: "لا توجد طلبات موصّلة في هذا التاريخ.",
     dispoLabel: "متوفر",
-    editBtn: "✏️ تعديل", optBtn: "➕ خيارات", editPrix: "السعر (دج)", editDesc: "المكوّنات / الوصف", editPhoto: "تغيير الصورة",
+    editBtn: "✏️ تعديل", optBtn: "➕ خيارات", editNom: "اسم الطبق", editPrix: "السعر (دج)", editDesc: "المكوّنات / الوصف", editPhoto: "تغيير الصورة",
     editSave: "حفظ", editCancel: "إلغاء", editSaved: "تم تعديل الطبق.", editFail: "تعذّر التعديل. حاول مرة أخرى.",
     optLinkTitle: "إضافة خيارات مُعدّة مسبقًا", optLinkNone: "لا توجد خيارات مُعدّة بعد. أنشئها أولًا في تبويب الخيارات.",
     optLinkSave: "إضافة إلى هذا الطبق", optLinkSaved: "تمت إضافة الخيارات إلى الطبق.", optLinkMax: "الحد الأقصى 8 مجموعات خيارات لكل طبق.", optLinkChoose: "اختر مجموعة واحدة على الأقل.",
@@ -1373,7 +1373,8 @@ function openEditPanel(id) {
   const item = MENU_ITEMS.find(i => String(i.id) === String(id)); if (!item) return;
   const p = togglePanel(id, "edit"); if (!p) return;
   let photo = "";
-  p.innerHTML = `<label class="fl">${escapeHtml(t("editPrix"))}</label><input type="number" min="1" max="100000" inputmode="numeric" data-e="prix" value="${escapeAttr(item.prix || "")}">
+  p.innerHTML = `<label class="fl">${escapeHtml(t("editNom"))}</label><input type="text" maxlength="80" data-e="nom" value="${escapeAttr(item.nom || "")}">
+    <label class="fl">${escapeHtml(t("editPrix"))}</label><input type="number" min="1" max="100000" inputmode="numeric" data-e="prix" value="${escapeAttr(item.prix || "")}">
     <label class="fl">${escapeHtml(t("editDesc"))}</label><textarea rows="3" maxlength="300" data-e="desc">${escapeHtml(item.description || "")}</textarea>
     <label class="fl">${escapeHtml(t("editPhoto"))}</label>
     <input type="file" accept="image/*" data-e="file" style="font-size:13px;"><div class="field-hint" data-e="err" style="color:#b91c1c;"></div>
@@ -1389,12 +1390,14 @@ function openEditPanel(id) {
     catch (e) { q("err").textContent = t("photoErrRead"); }
   });
   q("save").addEventListener("click", async () => {
+    const nom = q("nom").value.trim().replace(/\s+/g, " ");
+    if (!nom) { q("nom").focus(); return; }
     const prix = Math.round(Number(q("prix").value));
     if (!(prix > 0)) { q("prix").focus(); return; }
     hideError($("errorBox")); hideSuccess($("successBox"));
     q("save").disabled = true;
     try {
-      const payload = JSON.stringify({ itemId: id, prix, description: q("desc").value.trim(), photoData: photo });
+      const payload = JSON.stringify({ itemId: id, nom, prix, description: q("desc").value.trim(), photoData: photo });
       const d = await apiGet({ action: "updateMenuItem", telephone: SESSION.telephone, payload });
       if (d && d.success) { showSuccess($("successBox"), t("editSaved")); await loadMenu(); }
       else showError($("errorBox"), (d && d.error) || t("editFail"));
