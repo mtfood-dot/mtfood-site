@@ -1992,6 +1992,8 @@ function bindLogoFallback(root) {
   root.querySelectorAll(".logo-circle img").forEach(img => img.addEventListener("error", e => { if (retryDriveAlt(img, e)) return; if (img.parentNode) img.parentNode.textContent = img.dataset.ini; }));
 }
 function restoCoverSrc(r, big) {
+  const own = RESTO_COVER[norm(r.name || "")];
+  if (own) return { src: smallDrive(own, big ? 1000 : 400), alt: driveAlt(own, big ? 1000 : 400), logo: false };
   const it = (r.items || []).find(i => i.photo);
   if (it) return { src: smallDrive(it.photo, big ? 800 : 240), alt: driveAlt(it.photo, big ? 800 : 240), logo: false };
   const raw = restoLogoRaw(r.name);
@@ -2043,6 +2045,7 @@ function homeResults() {
 let RESTO_PREP = {};
 let PARTNERS = {};
 let RESTO_OPEN = {};
+let RESTO_COVER = {};   // photos de couverture choisies par les restaurants (nom normalisé -> URL)
 let RESTO_LOGO = {};   // logos envoyés par les restaurants à l'inscription (nom normalisé -> URL)
 let RESTO_VILLE = {};          // restaurant -> ville (colonne « Ville » de la feuille Partenaires)
 let RESTO_QUOTES = {};         // restaurant -> { covered, fee, km } pour l'adresse du client (calculé par le serveur)
@@ -2119,6 +2122,9 @@ function applyRestoInfo(res) {
   const lg = {};
   Object.keys(res.restos).forEach(k => { const v = res.restos[k]; if (v && /^https:\/\/drive\.google\.com\/thumbnail\?/.test(v.logo || "")) lg[norm(k)] = v.logo; });
   RESTO_LOGO = lg;
+  const cvm = {};
+  Object.keys(res.restos).forEach(k => { const v = res.restos[k]; if (v && /^https:\/\/drive\.google\.com\/thumbnail\?/.test(v.cover || "")) cvm[norm(k)] = v.cover; });
+  RESTO_COVER = cvm;
   preloadLogos();
   if (MENU && MENU.length) {
     renderRestoBar();
