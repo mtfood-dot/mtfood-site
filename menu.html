@@ -1849,6 +1849,7 @@ const CAT_SVG = {
   soupe: "<path d='M17 13Q14 9 17 5M24 13Q21 9 24 5M31 13Q28 9 31 5' fill='none' stroke='#9DB7DE' stroke-width='2.4' stroke-linecap='round'/><ellipse cx='24' cy='25' rx='19' ry='5' fill='#F7B500'/><path d='M5 25H43Q43 42 24 42Q5 42 5 25Z' fill='#D6402B'/><path d='M11 32H37' stroke='#EE7A66' stroke-width='2' stroke-linecap='round'/><circle cx='18' cy='25' r='1.5' fill='#5DB85C'/><circle cx='28' cy='26' r='1.5' fill='#5DB85C'/>",
   petitdej: "<path d='M4 32Q7 11 24 8Q41 11 44 32Q38 26 34 29Q30 20 24 20Q18 20 14 29Q10 26 4 32Z' fill='#E8A24A' stroke='#B8741F' stroke-width='2' stroke-linejoin='round'/><path d='M15 12 18 26M24 9V20M33 12 30 26' fill='none' stroke='#B8741F' stroke-width='1.8' stroke-linecap='round'/><path d='M5 36H43' stroke='#F7B500' stroke-width='3' stroke-linecap='round'/>",
   dessert: "<circle cx='24' cy='13' r='3.6' fill='#D6402B'/><path d='M24 10Q26 5 30 5' fill='none' stroke='#5DB85C' stroke-width='2' stroke-linecap='round'/><path d='M7 24Q9 15 16 19Q22 13 28 19Q36 14 41 24Z' fill='#F08CA8'/><rect x='7' y='24' width='34' height='5' fill='#fff'/><rect x='7' y='29' width='34' height='7' fill='#8A4B2A'/><path d='M7 36H41V38Q41 42 37 42H11Q7 42 7 38Z' fill='#F7B500'/>",
+  pack: "<g><path d='M8 18Q8 8 17 8Q26 8 26 18Z' fill='#E8A24A'/><rect x='8' y='15' width='18' height='3' fill='#5DB85C'/><path d='M29 18 35 3 41 18Z' fill='#F7B731' stroke='#C77B1A' stroke-width='1.6' stroke-linejoin='round'/><circle cx='34' cy='13' r='1.8' fill='#D6402B'/><circle cx='38' cy='15.5' r='1.5' fill='#D6402B'/></g><path d='M4 20H44L41 42Q40.6 44 38.6 44H9.4Q7.4 44 7 42Z' fill='#E0A85F' stroke='#A9611F' stroke-width='2' stroke-linejoin='round'/><rect x='20' y='20' width='8' height='22.5' fill='#1553A4'/><path d='M4 20H44' stroke='#A9611F' stroke-width='3' stroke-linecap='round'/><rect x='10' y='27' width='8' height='4' rx='2' fill='#F7B500'/>",
   boisson: "<rect x='25' y='3' width='3.4' height='13' rx='1.5' fill='#F7B500' transform='rotate(14 26 10)'/><rect x='10' y='13' width='28' height='5' rx='2.5' fill='#1553A4'/><path d='M13 18H35L32 43H16Z' fill='#D6402B'/><path d='M14 26H34L33 32H15Z' fill='#fff'/>",
   cafe: "<path d='M17 13Q14 9 17 5M24 13Q21 9 24 5M31 13Q28 9 31 5' fill='none' stroke='#9DB7DE' stroke-width='2.4' stroke-linecap='round'/><path d='M36 21H40Q45 21 45 27Q45 33 39 33H35' fill='none' stroke='#8A4B2A' stroke-width='3.2' stroke-linecap='round'/><path d='M8 19H37V30Q37 40 27 40H18Q8 40 8 30Z' fill='#F4EBDD' stroke='#8A4B2A' stroke-width='2.2' stroke-linejoin='round'/><path d='M8 19H37V23H8Z' fill='#6B3A1E'/><rect x='5' y='42' width='36' height='3' rx='1.5' fill='#1553A4'/>",
   poutine: "<g fill='#F6C945' stroke='#D99A1E' stroke-width='1'><rect x='11' y='9' width='5' height='22' rx='1.5' transform='rotate(-8 13 20)'/><rect x='18' y='5' width='5' height='25' rx='1.5'/><rect x='25' y='6' width='5' height='25' rx='1.5'/><rect x='32' y='10' width='5' height='21' rx='1.5' transform='rotate(8 34 20)'/></g><path d='M8 22Q14 17 20 22T32 22T40 22L38 30H10Z' fill='#8A4B2A'/><circle cx='17' cy='21' r='3' fill='#FFF3D6' stroke='#D9C49A' stroke-width='1'/><circle cx='27' cy='19' r='3' fill='#FFF3D6' stroke='#D9C49A' stroke-width='1'/><circle cx='34' cy='22' r='2.6' fill='#FFF3D6' stroke='#D9C49A' stroke-width='1'/><path d='M5 28H43Q43 44 24 44Q5 44 5 28Z' fill='#1553A4'/><path d='M9 32H39' stroke='#F7B500' stroke-width='2' stroke-linecap='round'/>",
@@ -1859,6 +1860,7 @@ const CAT_SVG = {
   defaut: "<circle cx='24' cy='11' r='3' fill='#1553A4'/><path d='M6 34Q6 15 24 15Q42 15 42 34Z' fill='#F7B500' stroke='#C98B00' stroke-width='2' stroke-linejoin='round'/><path d='M13 27Q15 21 21 20' fill='none' stroke='#F7B500' stroke-width='3' stroke-linecap='round'/><rect x='3' y='34' width='42' height='5' rx='2.5' fill='#1553A4'/>"
 };
 const CAT_ICONS = [
+  [/\bpacks?\b|باك|عروض|عرض/, "pack"],
   [/tradition|couscous|tajine|tagine|تقليدي|كسكس|طاجين|شعبي/, "traditionnel"],
   [/fast.?food|hot.?dog|وجبات سريعة|وجبة سريعة|سناك|snack/, "fastfood"],
   [/poutine|بوتين/, "poutine"],
@@ -1882,7 +1884,7 @@ const CAT_ICONS = [
   [/boisson|jus|soda|مشروب|عصير/, "boisson"]
 ];
 /* Ordre d'affichage fixe (comme sur les grandes applications), les catégories inconnues passent à la fin. */
-const CAT_ORDER = ["traditionnel", "pizza", "fastfood", "burger", "tacos", "poutine", "fajitas", "sandwich", "poulet", "viande", "defaut", "salade", "soupe", "pates", "gratin", "poisson", "petitdej", "dessert", "boisson", "cafe"];
+const CAT_ORDER = ["pack", "traditionnel", "pizza", "fastfood", "burger", "tacos", "poutine", "fajitas", "sandwich", "poulet", "viande", "defaut", "salade", "soupe", "pates", "gratin", "poisson", "petitdej", "dessert", "boisson", "cafe"];
 function catKey(cat) {
   const k = String(cat).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   for (const [re, name] of CAT_ICONS) { if (re.test(k)) return name; }
