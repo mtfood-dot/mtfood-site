@@ -1991,7 +1991,8 @@ function logoHtml(name) {
 function bindLogoFallback(root) {
   root.querySelectorAll(".logo-circle img").forEach(img => img.addEventListener("error", e => { if (retryDriveAlt(img, e)) return; if (img.parentNode) img.parentNode.textContent = img.dataset.ini; }));
 }
-function restoCoverSrc(r, big) {
+function restoCoverSrc(r, big, preferLogo) {
+  if (preferLogo && restoLogoRaw(r.name)) { const raw = restoLogoRaw(r.name); return { src: restoLogoSrc(r.name, 200), alt: driveAlt(raw, 200), logo: true }; }
   const own = RESTO_COVER[norm(r.name || "")];
   if (own) return { src: smallDrive(own, big ? 1000 : 400), alt: driveAlt(own, big ? 1000 : 400), logo: false };
   const it = (r.items || []).find(i => i.photo);
@@ -1999,8 +2000,8 @@ function restoCoverSrc(r, big) {
   const raw = restoLogoRaw(r.name);
   return { src: restoLogoSrc(r.name, big ? 400 : 200), alt: raw ? driveAlt(raw, big ? 400 : 200) : "", logo: true };
 }
-function coverInner(r, big) {
-  const c = restoCoverSrc(r, big);
+function coverInner(r, big, preferLogo) {
+  const c = restoCoverSrc(r, big, preferLogo);
   const ini = '<span class="rini">' + escapeHtml(restoInitials(r.name)) + '</span>';
   if (!c.src) return ini;
   return ini + '<img class="' + (c.logo ? "contain" : "") + '" src="' + escapeAttr(c.src) + '"' + (c.alt ? ' data-alt="' + escapeAttr(c.alt) + '"' : "") + ' alt="" decoding="async">';
@@ -2209,7 +2210,7 @@ function renderRestoBar() {
     const hint = x.hits && x.hits.length
       ? '<div class="rh">' + x.hits.map(i => escapeHtml(itemName(i)) + " · <bdi dir=\"ltr\">" + escapeHtml(String(i.prix)) + " DA</bdi>").join("<br>") + "</div>" : "";
     return '<button type="button" class="resto-card' + (restoClosedInfo(r.name) ? ' closed' : '') + (restoOutOfZone(r.name) ? ' far' : '') + '" data-key="' + escapeAttr(r.key) + '">' +
-      '<span class="rcover">' + coverInner(r) + (restoCoverSrc(r).logo ? "" : '<span class="logo-circle rbadge">' + logoHtml(r.name) + '</span>') + '</span>' +
+      '<span class="rcover">' + coverInner(r, false, true) + (restoCoverSrc(r, false, true).logo ? "" : '<span class="logo-circle rbadge">' + logoHtml(r.name) + '</span>') + '</span>' +
       '<span class="meta"><div class="rn">' + escapeHtml(r.name) + '</div>' +
       (r.soon ? '<div class="rs">' + escapeHtml(t('menuSoon')) + '</div>' : '<div class="rc">' + escapeHtml(cuisinesText(r)) + '</div>') +
       (restoOutOfZone(r.name) ? '<div class="rx">' + escapeHtml(t("outZoneCard")) + "</div>" : etaCardHtml(r.name)) + openBadgeHtml(r) + hint + '</span></button>';
