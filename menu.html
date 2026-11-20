@@ -2491,7 +2491,8 @@ function openDish(id) {
   const item = MENU.find(i => String(i.id) === String(id));
   if (!item) return;
   if (hasGroups(item) && !canAddItem(item)) return;
-  DISH = { item, sel: {}, qty: 1 };
+  const inCart = !hasGroups(item) && CART[item.id] ? CART[item.id].qty : 0;
+  DISH = { item, sel: {}, qty: inCart || 1, inCart };
   renderDish();
   openOverlay("dishOverlay");
   const sc = $("dishSheet").querySelector(".ds-scroll"); if (sc) sc.scrollTop = 0;
@@ -2527,13 +2528,19 @@ function renderDish() {
       ${groups}
     </div>
     <div class="ds-foot">
-      <div class="qty-stepper"><button type="button" id="dsMinus" ${DISH.qty <= 1 ? "disabled" : ""}>−</button><span>${DISH.qty}</span><button type="button" id="dsPlus">+</button></div>
+      <div class="qty-stepper"><button type="button" id="dsMinus"${decBtnAttrs(DISH.qty)}>${decBtnInner(DISH.qty)}</button><span>${DISH.qty}</span><button type="button" id="dsPlus">+</button></div>
       <button type="button" class="ds-add" id="dsAdd" ${valid ? "" : "disabled"}>${valid ? `<span>${escapeHtml(t("dishAddTotal"))}</span><span><bdi dir="ltr">${unit * DISH.qty} DA</bdi></span>` : escapeHtml(t("dishComplete"))}</button>
     </div>`;
   const sheet = $("dishSheet");
   const keepTop = sheet.querySelector(".ds-scroll");
   $("dishCloseBtn").addEventListener("click", closeDish);
-  $("dsMinus").addEventListener("click", () => { if (DISH.qty > 1) { DISH.qty--; rerenderDish(); } });
+  $("dsMinus").addEventListener("click", () => {
+    if (DISH.qty > 1) { DISH.qty--; rerenderDish(); return; }
+    /* 1 → 0 : on retire le plat du panier (s'il y était) et on revient au menu */
+    const id = DISH.item.id, was = DISH.inCart;
+    closeDish();
+    if (was) { delete CART[id]; const ctrl = $("ctrl-" + id); if (ctrl) { ctrl.innerHTML = addBtnHtml(id); bindCardEvents(); } updateCartBar(); ensureQuoteForCart(); }
+  });
   $("dsPlus").addEventListener("click", () => { if (DISH.qty < 20) { DISH.qty++; rerenderDish(); } });
   $("dsAdd").addEventListener("click", addDishToCart);
   sheet.querySelectorAll("input[data-og]").forEach(inp => inp.addEventListener("change", () => {
@@ -2554,7 +2561,7 @@ function addDishToCart() {
   const it = DISH.item;
   if (!canAddItem(it)) return;
   if (!hasGroups(it)) {
-    const cur = CART[it.id] ? CART[it.id].qty : 0, next = Math.min(50, cur + DISH.qty);
+    const next = Math.min(50, DISH.qty);
     CART[it.id] = { item: it, qty: next };
     closeDish();
     const ctrl = $("ctrl-" + it.id); if (ctrl) { ctrl.innerHTML = qtyStepperHtml(it.id, next); bindCardEvents(); }
