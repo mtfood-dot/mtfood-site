@@ -2378,6 +2378,12 @@ function bindCardEvents() {
   const once = (el, fn) => { if (el._mtb) return; el._mtb = 1; el.addEventListener("click", fn); };
   $("grid").querySelectorAll("[data-opt]").forEach(b =>
     once(b, (e) => { e.stopPropagation(); openDish(b.dataset.opt); }));
+  $("grid").querySelectorAll("[data-optdec]").forEach(b =>
+    once(b, (e) => {
+      e.stopPropagation();
+      const keys = Object.keys(CART).filter(k => String(CART[k].baseId) === String(b.dataset.optdec));
+      if (keys.length) changeLine(keys[keys.length - 1], -1);
+    }));
   $("grid").querySelectorAll("[data-optcard]").forEach(c =>
     once(c, (e) => { if (e.target.closest("button")) return; openDish(c.dataset.optcard); }));
   $("grid").querySelectorAll("[data-add]").forEach(b =>
@@ -2448,7 +2454,13 @@ function optCtrlHtml(item) {
   const closed = restoClosedInfo(item.partenaire) && !restoPre(item.partenaire);
   if (closed) return `<button class="add-btn" disabled>${t("closedShort")}</button>`;
   if (restoOutOfZone(item.partenaire)) return `<button class="add-btn" disabled>${t("outZoneShort")}</button>`;
-  return `${n > 0 ? `<span class="opt-count">${n}</span>` : ""}<button class="add-btn" data-opt="${item.id}">${t(n > 0 ? "add" : "dishChoose")}</button>`;
+  if (n > 0) {
+    const keys = Object.keys(CART).filter(k => String(CART[k].baseId) === String(item.id));
+    const last = CART[keys[keys.length - 1]];
+    const q = last ? last.qty : 2;
+    return `<div class="qty-stepper"><button data-optdec="${item.id}"${decBtnAttrs(q)}>${decBtnInner(q)}</button><span>${n}</span><button data-opt="${item.id}">+</button></div>`;
+  }
+  return `<button class="add-btn" data-opt="${item.id}">${t("dishChoose")}</button>`;
 }
 function refreshOptCtrl(baseId) {
   const item = MENU.find(i => String(i.id) === String(baseId));
