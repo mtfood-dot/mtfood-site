@@ -836,15 +836,26 @@ const I18N = {
 function t(key) { return (I18N[LANG] && I18N[LANG][key]) || I18N.fr[key] || key; }
 function $(id) { return document.getElementById(id); }
 
-/* Les 10 catégories du site (même noms que dans la barre du menu : FR enregistré dans le Sheet, AR pour l'affichage arabe). */
+/* Toutes les catégories du site (même noms que dans la barre du menu : FR enregistré dans le Sheet, AR pour l'affichage arabe). */
 const MENU_CATEGORIES = [
+  { fr: "Pack", ar: "باك" },
   { fr: "Traditionnel", ar: "أكل تقليدي" },
   { fr: "Pizza", ar: "بيتزا" },
   { fr: "Fast Food", ar: "وجبات سريعة" },
+  { fr: "Burger", ar: "برغر" },
+  { fr: "Tacos", ar: "تاكوس" },
+  { fr: "Poutine", ar: "بوتين" },
+  { fr: "Fajitas", ar: "فاجيتا" },
+  { fr: "Sandwich", ar: "ساندويتش" },
   { fr: "Poulet", ar: "دجاج" },
   { fr: "Grillades", ar: "مشاوي" },
   { fr: "Plats", ar: "أطباق" },
   { fr: "Salades & Entrées", ar: "سلطات ومقبلات" },
+  { fr: "Soupes", ar: "شوربة" },
+  { fr: "Pâtes", ar: "معكرونة" },
+  { fr: "Gratins", ar: "غراتان" },
+  { fr: "Poissons", ar: "سمك" },
+  { fr: "Petit-déjeuner", ar: "فطور" },
   { fr: "Desserts", ar: "حلويات" },
   { fr: "Boissons", ar: "مشروبات" },
   { fr: "Café & Thé", ar: "قهوة وشاي" }
