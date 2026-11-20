@@ -310,9 +310,24 @@ async function loadLoyalty(){
   try {
     const d = await apiGet({ action: "loyaltyPoints", clientId: SESSION.clientId });
     LOY = (d && d.success) ? d : "error";
+    if (LOY !== "error") { try { localStorage.setItem("mtd_pts_seen_" + SESSION.clientId, String(LOY.solde || 0)); } catch (e2) {} }
   } catch (e) { LOY = "error"; }
   renderLoyalty();
 }
+/* Bandeau « points gagnés » : à l'ouverture, on compare le solde au dernier solde vu sur cet appareil. */
+async function checkNewPoints(){
+  try {
+    const key = "mtd_pts_seen_" + SESSION.clientId;
+    const d = await apiGet({ action: "loyaltyPoints", clientId: SESSION.clientId });
+    if (!d || !d.success || !d.actif) return;
+    const now = Number(d.solde) || 0, raw = localStorage.getItem(key);
+    localStorage.setItem(key, String(now));
+    if (raw === null) return;
+    const gain = now - Number(raw);
+    if (gain > 0 && window.MTToast) MTToast.ok(LANG_AR() ? ("+" + gain + " نقطة · رصيدك " + now) : ("+" + gain + " point" + (gain > 1 ? "s" : "") + " ajouté" + (gain > 1 ? "s" : "") + " · solde : " + now));
+  } catch (e) {}
+}
+function LANG_AR(){ try { return localStorage.getItem("mtd_lang") === "ar"; } catch (e) { return false; } }
 $("tabLoyalty").addEventListener("click", () => {
   ACTIVE_TAB = "loyalty";
   ["tabCurrent","tabHistory"].forEach(id => $(id).classList.remove("active")); $("tabLoyalty").classList.add("active");
@@ -336,7 +351,10 @@ async function reorder(numero){
 }
 window.reorder = reorder;
 
-if (SESSION) { applyLang(); loadOrders(); }
+if (SESSION) {
+  applyLang(); loadOrders();
+  if (location.hash === "#fidelite") $("tabLoyalty").click(); else checkNewPoints();
+}
 </script>
 <footer class="mt-foot" id="mtFoot">
   <a href="https://mtdelivery.pages.dev" class="mt-foot-link" target="_blank" rel="noopener" id="mtFootLink"><img src="favicon-48.png" width="28" height="28" alt="MT Delivery"></a>
