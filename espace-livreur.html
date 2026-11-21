@@ -793,7 +793,7 @@ $("onlineSwitch").addEventListener("click", async () => {
   sw.disabled = true;
   try {
     const d = await apiGet({ action: "driverSetOnline", online: want ? "true" : "false" });
-    if (d && d.success) { ONLINE = !!d.online; KNOWN_AVAIL = null; renderOnline(); actOk(ONLINE ? "okOnline" : "okOffline"); await loadAll(); }
+    if (d && d.success) { ONLINE = !!d.online; KNOWN_AVAIL = null; renderOnline(); actOk(ONLINE ? "okOnline" : "okOffline"); sendPresence_(); await loadAll(); }
     else actErr((d && d.error) || t("onlineFail"));
   } catch (e) { actErr(t("onlineFail")); }
   finally { sw.disabled = false; }
@@ -842,6 +842,23 @@ function checkNewOrders(list) {
 }
 $("newBanner").addEventListener("click", () => { switchTab("available"); hideNewBanner(); window.scrollTo({ top: 0, behavior: "smooth" }); });
 setInterval(() => { if (SESSION && !document.hidden && $("appScreen") && !$("appScreen").classList.contains("hidden")) loadAll(true); }, 30000);
+
+/* ============================================================
+   PRÉSENCE : l'admin voit qui est en ligne et où (carte « Livreurs en direct »)
+   Envoyée toutes les 30 s tant que la page est ouverte (en ligne ou hors ligne).
+   ============================================================ */
+function sendPresence_() {
+  if (!SESSION || document.hidden || !$("appScreen") || $("appScreen").classList.contains("hidden")) return;
+  const send = (lat, lng) => apiGet({ action: "driverPing", telephone: SESSION.telephone, online: ONLINE ? "true" : "false", lat: lat, lng: lng }).catch(() => {});
+  if (!ONLINE || !navigator.geolocation) { send("", ""); return; }
+  navigator.geolocation.getCurrentPosition(
+    (pos) => send(pos.coords.latitude, pos.coords.longitude),
+    () => send("", ""),
+    { enableHighAccuracy: false, timeout: 10000, maximumAge: 30000 }
+  );
+}
+setInterval(sendPresence_, 30000);
+setTimeout(sendPresence_, 4000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden && SESSION && !$("appScreen").classList.contains("hidden")) loadAll(true); });
 
 /* ============================================================

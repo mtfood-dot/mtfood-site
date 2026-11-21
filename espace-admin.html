@@ -370,6 +370,7 @@
   </div>
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
@@ -379,6 +380,7 @@ if ("serviceWorker" in navigator) {
   });
 }
 </script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 </head>
 <body>
 
@@ -429,6 +431,7 @@ if ("serviceWorker" in navigator) {
       <button class="tab-btn" id="tabBoostBtn" type="button"><span id="tabBoostLabel"></span><span id="boostBadge" class="tab-count hidden">0</span></button>
       <button class="tab-btn" id="tabZonesBtn" type="button"><span id="tabZonesLabel"></span></button>
       <button class="tab-btn" id="tabRatingsBtn" type="button"><span id="tabRatingsLabel"></span></button>
+      <button class="tab-btn" id="tabMapBtn" type="button"><span id="tabMapLabel"></span></button>
       <button class="tab-btn" id="tabFraudBtn" type="button"><span id="tabFraudLabel"></span></button>
       <button class="tab-btn" id="tabCaisseBtn" type="button"><span id="tabCaisseLabel"></span></button>
       <button class="tab-btn" id="tabStatsBtn" type="button"><span id="tabStatsLabel"></span></button>
@@ -591,6 +594,16 @@ if ("serviceWorker" in navigator) {
       </div>
       <div class="boost-sum" id="boostSummary"></div>
       <div id="listBoostAdmin"></div>
+    </div>
+
+    <div id="mapView" class="hidden">
+      <div class="refresh-row">
+        <div class="live-note" id="mapNote" style="margin:0;flex:1;"></div>
+        <button class="btn-refresh" id="refreshMapBtn" type="button"><span id="refreshMapLabel">↻ Actualiser</span></button>
+      </div>
+      <div id="driversMapSummary" style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;"></div>
+      <div id="driversMap" style="height:340px;border-radius:14px;overflow:hidden;border:1px solid #d0d5dd;margin-bottom:10px;"></div>
+      <div id="driversMapList"></div>
     </div>
 
     <div id="fraudView" class="hidden">
@@ -974,6 +987,7 @@ const I18N = {
     caisseAmount: "Montant (DA)", caisseNoteIn: "Note (facultatif)", caisseAddDriver: "Enregistrer le versement", caisseAddResto: "Enregistrer le paiement",
     caisseBadAmount: "Montant invalide.", caisseSaved: "Enregistré.",
     tabFraud: "Fraude",
+    tabMap: "Livreurs en direct", mapNote: "Position et état des livreurs, mis à jour toutes les 30 s. « En ligne » = page ouverte il y a moins de 2 min.", mapAvail: "Disponibles", mapBusy: "En livraison", mapOff: "Hors ligne", mapInactive: "Compte inactif", mapNoPos: "Position inconnue", mapSeen: "Vu il y a {m} min", mapSeenNow: "Vu à l'instant", mapNever: "Jamais vu", mapNoDrivers: "Aucun livreur.", mapCall: "📞 Appeler", mapLoadFail: "Impossible de charger les livreurs en direct. Le serveur doit être mis à jour (action getDriversLive).",
     fraudD30: "30 jours", fraudD90: "90 jours",
     fraudNote: "Rouge : 2 annulations suspectes ou plus, ou 4 annulations. Orange : 1 annulation suspecte ou 2 annulations. « Suspecte » = annulée après l'acceptation du restaurant ET la prise en charge par un livreur.",
     fraudClients: "Clients qui annulent", fraudDrivers: "Livreurs qui annulent", fraudNone: "Aucun cas sur la période.",
@@ -1290,6 +1304,7 @@ const I18N = {
     caisseAmount: "المبلغ (دج)", caisseNoteIn: "ملاحظة (اختياري)", caisseAddDriver: "تسجيل الدفعة", caisseAddResto: "تسجيل الدفع",
     caisseBadAmount: "مبلغ غير صالح.", caisseSaved: "تم التسجيل.",
     tabFraud: "الاحتيال",
+    tabMap: "السائقون مباشرة", mapNote: "موقع وحالة السائقين، يُحدَّث كل 30 ثانية. «متصل» = الصفحة مفتوحة منذ أقل من دقيقتين.", mapAvail: "متاحون", mapBusy: "في توصيل", mapOff: "غير متصل", mapInactive: "حساب غير مفعّل", mapNoPos: "الموقع غير معروف", mapSeen: "منذ {m} د", mapSeenNow: "الآن", mapNever: "لم يظهر قط", mapNoDrivers: "لا يوجد سائقون.", mapCall: "📞 اتصال", mapLoadFail: "تعذر تحميل السائقين مباشرة. يجب تحديث الخادم (getDriversLive).",
     fraudD30: "30 يوما", fraudD90: "90 يوما",
     fraudNote: "أحمر: إلغاءان مشبوهان أو أكثر، أو 4 إلغاءات. برتقالي: إلغاء مشبوه واحد أو إلغاءان. «مشبوه» = أُلغي بعد قبول المطعم وتكفل عامل التوصيل.",
     fraudClients: "الزبائن الذين يلغون", fraudDrivers: "عمال التوصيل الذين يلغون", fraudNone: "لا توجد حالات في هذه الفترة.",
@@ -1427,6 +1442,7 @@ function applyLanguage() {
   $("candSearch").placeholder = t("candSearch");
   renderCandidatures();
   $("tabFraudLabel").textContent = t("tabFraud");
+  $("tabMapLabel").textContent = t("tabMap"); $("mapNote").textContent = t("mapNote");
   $("fraudD30").textContent = t("fraudD30"); $("fraudD90").textContent = t("fraudD90");
   $("fraudNote").textContent = t("fraudNote");
   $("tabCaisseLabel").textContent = t("tabCaisse");
@@ -1610,6 +1626,8 @@ $("refreshCandBtn").addEventListener("click", loadDrivers);
 $("candSearch").addEventListener("input", renderCandidatures);
 $("refreshRatingsBtn").addEventListener("click", loadRatingsAdmin);
 $("tabFraudBtn").addEventListener("click", () => switchTab("fraud"));
+$("tabMapBtn").addEventListener("click", () => switchTab("map"));
+$("refreshMapBtn").addEventListener("click", () => loadDriversMap());
 $("tabCaisseBtn").addEventListener("click", () => switchTab("caisse"));
 $("tabStatsBtn").addEventListener("click", () => switchTab("stats"));
 $("refreshStatsBtn").addEventListener("click", () => loadStatsAdmin());
@@ -1647,6 +1665,7 @@ function switchTab(tab) {
   $("tabRatingsBtn").classList.toggle("active", tab === "ratings");
   $("tabCandBtn").classList.toggle("active", tab === "cand");
   $("tabFraudBtn").classList.toggle("active", tab === "fraud");
+  $("tabMapBtn").classList.toggle("active", tab === "map");
   $("tabCaisseBtn").classList.toggle("active", tab === "caisse");
   $("tabStatsBtn").classList.toggle("active", tab === "stats");
   $("statsView").classList.toggle("hidden", tab !== "stats");
@@ -1662,6 +1681,7 @@ function switchTab(tab) {
   $("ratingsView").classList.toggle("hidden", tab !== "ratings");
   $("candView").classList.toggle("hidden", tab !== "cand");
   $("fraudView").classList.toggle("hidden", tab !== "fraud");
+  $("mapView").classList.toggle("hidden", tab !== "map");
   $("caisseView").classList.toggle("hidden", tab !== "caisse");
   hideError($("errorBox"));
   hideSuccess($("successBox"));
@@ -1676,8 +1696,84 @@ function switchTab(tab) {
   if (tab === "ratings") loadRatingsAdmin();
   if (tab === "cand") loadDrivers();
   if (tab === "fraud") loadFraudAdmin();
+  if (tab === "map") mapStart(); else mapStop();
   if (tab === "caisse") loadCaisseAdmin();
   if (tab === "stats") loadStatsAdmin();
+}
+
+/* ============================================================
+   LIVREURS EN DIRECT : état + position sur la carte
+   ============================================================ */
+let DMAP = null, DMAP_LAYER = null, DMAP_TIMER = null, DMAP_FIT = false, DMAP_MARKERS = {};
+const DMAP_COL = { busy: "#e8820c", avail: "#25a04a", off: "#8892a6", inactive: "#b3261e" };
+function driverLiveState(d) {
+  if (String(d.statut || "").trim().toLowerCase() !== "actif") return "inactive";
+  const online = d.online === true || String(d.online) === "true";
+  const fresh = d.vuSec != null && d.vuSec <= 120;
+  if (!(online && fresh)) return "off";
+  return d.enLivraison ? "busy" : "avail";
+}
+function driverSeenText(d) {
+  if (d.vuSec == null) return t("mapNever");
+  if (d.vuSec < 90) return t("mapSeenNow");
+  return t("mapSeen").replace("{m}", Math.round(d.vuSec / 60));
+}
+function mapStart() {
+  loadDriversMap();
+  if (!DMAP_TIMER) DMAP_TIMER = setInterval(() => { if (CURRENT_TAB === "map" && !document.hidden) loadDriversMap(); }, 30000);
+}
+function mapStop() { if (DMAP_TIMER) { clearInterval(DMAP_TIMER); DMAP_TIMER = null; } }
+async function loadDriversMap() {
+  hideError($("errorBox"));
+  try {
+    const d = await apiGet({ action: "getDriversLive", password: SESSION_PASSWORD });
+    if (!d || !d.success) { showError($("errorBox"), (d && d.error) || t("mapLoadFail")); return; }
+    renderDriversMap(d.drivers || []);
+  } catch (e) { showError($("errorBox"), t("mapLoadFail")); }
+}
+function renderDriversMap(list) {
+  const order = { busy: 0, avail: 1, off: 2, inactive: 3 };
+  list = list.map(d => Object.assign({}, d, { st: driverLiveState(d) })).sort((a, b) => order[a.st] - order[b.st] || String(a.nom).localeCompare(String(b.nom)));
+  const cnt = { busy: 0, avail: 0, off: 0, inactive: 0 };
+  list.forEach(d => cnt[d.st]++);
+  const lbl = { busy: t("mapBusy"), avail: t("mapAvail"), off: t("mapOff"), inactive: t("mapInactive") };
+  $("driversMapSummary").innerHTML = ["avail", "busy", "off"].map(k =>
+    '<span style="background:#fff;border:1px solid #d0d5dd;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:800;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + DMAP_COL[k] + ';margin-inline-end:6px;"></span>' + escapeHtml(lbl[k]) + " : " + cnt[k] + "</span>").join("");
+  // Carte
+  if (!DMAP && window.L) {
+    DMAP = L.map("driversMap", { attributionControl: false, preferCanvas: true }).setView([36.55, 3.09], 12);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(DMAP);
+    DMAP_LAYER = L.layerGroup().addTo(DMAP);
+  }
+  const pts = [];
+  if (DMAP) {
+    DMAP_LAYER.clearLayers(); DMAP_MARKERS = {};
+    list.forEach(d => {
+      const lat = parseFloat(String(d.lat).replace(",", ".")), lng = parseFloat(String(d.lng).replace(",", "."));
+      if (!isFinite(lat) || !isFinite(lng) || d.st === "inactive") return;
+      const col = DMAP_COL[d.st];
+      const ic = L.divIcon({ className: "", iconSize: [34, 34], iconAnchor: [17, 17],
+        html: '<div style="width:34px;height:34px;border-radius:50%;background:' + col + ';border:3px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,.4);color:#fff;font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center;opacity:' + (d.st === "off" ? ".6" : "1") + ';">' + escapeHtml(String(d.nom || "?").trim().charAt(0).toUpperCase()) + "</div>" });
+      const m = L.marker([lat, lng], { icon: ic }).addTo(DMAP_LAYER)
+        .bindPopup("<b>" + escapeHtml(d.nom) + "</b><br>" + escapeHtml(lbl[d.st]) + " · " + escapeHtml(driverSeenText(d)));
+      DMAP_MARKERS[d.telephone] = m;
+      pts.push([lat, lng]);
+    });
+    setTimeout(() => DMAP.invalidateSize(), 50);
+    if (pts.length && !DMAP_FIT) { DMAP.fitBounds(pts, { padding: [40, 40], maxZoom: 15 }); DMAP_FIT = true; }
+  }
+  // Liste
+  $("driversMapList").innerHTML = list.length ? list.map(d => {
+    const hasPos = d.st !== "inactive" && isFinite(parseFloat(String(d.lat).replace(",", "."))) && isFinite(parseFloat(String(d.lng).replace(",", ".")));
+    return '<div class="partner-card" ' + (hasPos ? 'data-focus="' + escapeAttr(d.telephone) + '" style="cursor:pointer;"' : "") + '><div class="name"><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:' + DMAP_COL[d.st] + ';margin-inline-end:7px;"></span>' + escapeHtml(d.nom) +
+      '</div><div class="meta">' + escapeHtml(lbl[d.st]) + " · " + escapeHtml(driverSeenText(d)) + (d.zone ? " · " + escapeHtml(d.zone) : "") + (d.vehicule ? " · " + escapeHtml(d.vehicule) : "") +
+      (hasPos ? "" : ' · <span style="color:#b3261e;font-weight:800;">' + escapeHtml(t("mapNoPos")) + "</span>") +
+      (d.telephone ? ' · <a href="tel:' + escapeAttr(d.telephone) + '" onclick="event.stopPropagation()">' + escapeHtml(t("mapCall")) + "</a>" : "") + "</div></div>";
+  }).join("") : '<div class="partner-card"><div class="meta">' + escapeHtml(t("mapNoDrivers")) + "</div></div>";
+  $("driversMapList").querySelectorAll("[data-focus]").forEach(el => el.addEventListener("click", () => {
+    const m = DMAP_MARKERS[el.dataset.focus];
+    if (m && DMAP) { DMAP.setView(m.getLatLng(), 16); m.openPopup(); $("driversMap").scrollIntoView({ behavior: "smooth", block: "center" }); }
+  }));
 }
 
 /* ============================================================
