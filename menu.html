@@ -1048,6 +1048,8 @@ const I18N = {
     waMsgTotal: "Total",
     close: "Fermer",
     add: "Ajouter",
+    noPrice: "Prix à confirmer",
+    noPriceShort: "Bientôt",
     allCat: "Tous",
     allRestos: "Tous",
     searchPlaceholder: "Restaurant, plat, pizza, tacos…",
@@ -1225,6 +1227,8 @@ const I18N = {
     waMsgTotal: "المجموع",
     close: "إغلاق",
     add: "أضف",
+    noPrice: "السعر قريباً",
+    noPriceShort: "قريباً",
     allCat: "الكل",
     allRestos: "الكل",
     searchPlaceholder: "مطعم، طبق، بيتزا، تاكوس…",
@@ -2209,7 +2213,7 @@ function renderRestoBar() {
   box.innerHTML = res.map(x => {
     const r = x.r;
     const hint = x.hits && x.hits.length
-      ? '<div class="rh">' + x.hits.map(i => escapeHtml(itemName(i)) + " · <bdi dir=\"ltr\">" + escapeHtml(String(i.prix)) + " DA</bdi>").join("<br>") + "</div>" : "";
+      ? '<div class="rh">' + x.hits.map(i => escapeHtml(itemName(i)) + (noPrice(i) ? "" : " · <bdi dir=\"ltr\">" + escapeHtml(String(i.prix)) + " DA</bdi>")).join("<br>") + "</div>" : "";
     return '<button type="button" class="resto-card' + (restoClosedInfo(r.name) ? ' closed' : '') + (restoOutOfZone(r.name) ? ' far' : '') + '" data-key="' + escapeAttr(r.key) + '">' +
       '<span class="rcover">' + coverInner(r, false, true) + (restoCoverSrc(r, false, true).logo ? "" : '<span class="logo-circle rbadge">' + logoHtml(r.name) + '</span>') + '</span>' +
       '<span class="meta"><div class="rn">' + escapeHtml(r.name) + '</div>' +
@@ -2290,7 +2294,7 @@ function renderGrid() {
             ${itemDesc(item) ? `<div class="desc">${escapeHtml(itemDesc(item))}</div>` : ""}
           </div>
           <div class="row-bottom">
-            <div class="price"><bdi dir="ltr">${item.prix} DA</bdi></div>
+            <div class="price">${noPrice(item) ? escapeHtml(t("noPrice")) : `<bdi dir="ltr">${item.prix} DA</bdi>`}</div>
             <div id="ctrl-${item.id}">${hasO ? optCtrlHtml(item) : (qty > 0 ? qtyStepperHtml(item.id, qty) : addBtnHtml(item.id))}</div>
           </div>
         </div>
@@ -2360,8 +2364,10 @@ window.addEventListener("popstate", (e) => {
   renderRestoBar(); renderTabs(); renderGrid();
 });
 
+function noPrice(it) { return !it || !(Number(it.prix) > 0); }
 function addBtnHtml(id) {
   const it = MENU.find(i => String(i.id) === String(id));
+  if (it && noPrice(it)) return `<button class="add-btn" disabled>${t("noPriceShort")}</button>`;
   if (it && restoClosedInfo(it.partenaire) && !restoPre(it.partenaire)) return `<button class="add-btn" disabled>${t("closedShort")}</button>`;
   if (it && restoOutOfZone(it.partenaire)) return `<button class="add-btn" disabled>${t("outZoneShort")}</button>`;
   return `<button class="add-btn" data-add="${id}">${t("add")}</button>`;
@@ -2418,6 +2424,7 @@ function changeQty(id, delta) {
   if (String(id).indexOf("#") >= 0) return changeLine(id, delta);
   const item = MENU.find(i => String(i.id) === String(id));
   if (!item) return;
+  if (delta > 0 && noPrice(item)) return;
   if (delta > 0 && restoClosedInfo(item.partenaire) && !restoPre(item.partenaire)) { showCartNotice(t("closedOrder")); return; }
   if (delta > 0 && restoOutOfZone(item.partenaire)) { showCartNotice(t("outZoneOrder")); return; }
   if (delta > 0 && !CART[id]) {
