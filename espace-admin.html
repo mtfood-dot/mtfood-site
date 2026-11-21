@@ -987,7 +987,7 @@ const I18N = {
     caisseAmount: "Montant (DA)", caisseNoteIn: "Note (facultatif)", caisseAddDriver: "Enregistrer le versement", caisseAddResto: "Enregistrer le paiement",
     caisseBadAmount: "Montant invalide.", caisseSaved: "Enregistré.",
     tabFraud: "Fraude",
-    tabMap: "Livreurs en direct", mapNote: "Position et état des livreurs, mis à jour toutes les 30 s. « En ligne » = page ouverte il y a moins de 2 min.", mapAvail: "Disponibles", mapBusy: "En livraison", mapOff: "Hors ligne", mapInactive: "Compte inactif", mapNoPos: "Position inconnue", mapSeen: "Vu il y a {m} min", mapSeenNow: "Vu à l'instant", mapNever: "Jamais vu", mapNoDrivers: "Aucun livreur.", mapCall: "📞 Appeler", mapLoadFail: "Impossible de charger les livreurs en direct. Le serveur doit être mis à jour (action getDriversLive).",
+    tabMap: "Livreurs en direct", mapNote: "Position et état des livreurs, mis à jour toutes les 30 s. « En ligne » = page ouverte il y a moins de 2 min.", mapAvail: "Disponibles", mapBusy: "En livraison", mapOff: "Hors ligne", mapInactive: "Compte inactif", mapNoPos: "Position inconnue", mapSeen: "Vu il y a {m} min", mapSeenNow: "Vu à l'instant", mapNever: "Jamais vu", mapNoDrivers: "Aucun livreur.", mapCall: "📞 Appeler", mapMsg: "Message", mapLoadFail: "Impossible de charger les livreurs en direct. Le serveur doit être mis à jour (action getDriversLive).",
     fraudD30: "30 jours", fraudD90: "90 jours",
     fraudNote: "Rouge : 2 annulations suspectes ou plus, ou 4 annulations. Orange : 1 annulation suspecte ou 2 annulations. « Suspecte » = annulée après l'acceptation du restaurant ET la prise en charge par un livreur.",
     fraudClients: "Clients qui annulent", fraudDrivers: "Livreurs qui annulent", fraudNone: "Aucun cas sur la période.",
@@ -1304,7 +1304,7 @@ const I18N = {
     caisseAmount: "المبلغ (دج)", caisseNoteIn: "ملاحظة (اختياري)", caisseAddDriver: "تسجيل الدفعة", caisseAddResto: "تسجيل الدفع",
     caisseBadAmount: "مبلغ غير صالح.", caisseSaved: "تم التسجيل.",
     tabFraud: "الاحتيال",
-    tabMap: "السائقون مباشرة", mapNote: "موقع وحالة السائقين، يُحدَّث كل 30 ثانية. «متصل» = الصفحة مفتوحة منذ أقل من دقيقتين.", mapAvail: "متاحون", mapBusy: "في توصيل", mapOff: "غير متصل", mapInactive: "حساب غير مفعّل", mapNoPos: "الموقع غير معروف", mapSeen: "منذ {m} د", mapSeenNow: "الآن", mapNever: "لم يظهر قط", mapNoDrivers: "لا يوجد سائقون.", mapCall: "📞 اتصال", mapLoadFail: "تعذر تحميل السائقين مباشرة. يجب تحديث الخادم (getDriversLive).",
+    tabMap: "السائقون مباشرة", mapNote: "موقع وحالة السائقين، يُحدَّث كل 30 ثانية. «متصل» = الصفحة مفتوحة منذ أقل من دقيقتين.", mapAvail: "متاحون", mapBusy: "في توصيل", mapOff: "غير متصل", mapInactive: "حساب غير مفعّل", mapNoPos: "الموقع غير معروف", mapSeen: "منذ {m} د", mapSeenNow: "الآن", mapNever: "لم يظهر قط", mapNoDrivers: "لا يوجد سائقون.", mapCall: "📞 اتصال", mapMsg: "رسالة", mapLoadFail: "تعذر تحميل السائقين مباشرة. يجب تحديث الخادم (getDriversLive).",
     fraudD30: "30 يوما", fraudD90: "90 يوما",
     fraudNote: "أحمر: إلغاءان مشبوهان أو أكثر، أو 4 إلغاءات. برتقالي: إلغاء مشبوه واحد أو إلغاءان. «مشبوه» = أُلغي بعد قبول المطعم وتكفل عامل التوصيل.",
     fraudClients: "الزبائن الذين يلغون", fraudDrivers: "عمال التوصيل الذين يلغون", fraudNone: "لا توجد حالات في هذه الفترة.",
@@ -1718,6 +1718,13 @@ function driverSeenText(d) {
   if (d.vuSec < 90) return t("mapSeenNow");
   return t("mapSeen").replace("{m}", Math.round(d.vuSec / 60));
 }
+function driverContactHtml(d) {
+  if (!d.telephone) return "";
+  const wa = phoneToWaNumber(d.telephone);
+  const st = "display:inline-block;margin-top:8px;margin-inline-end:6px;padding:6px 12px;border-radius:999px;font-weight:800;font-size:12.5px;text-decoration:none;color:#fff;";
+  return '<div>' + '<a href="tel:' + escapeAttr(d.telephone) + '" style="' + st + 'background:#1f5fbf;">' + escapeHtml(t("mapCall")) + "</a>" +
+    (wa ? '<a href="https://wa.me/' + escapeAttr(wa) + '" target="_blank" rel="noopener" style="' + st + 'background:#25a04a;">💬 ' + escapeHtml(t("mapMsg")) + "</a>" : "") + "</div>";
+}
 function mapStart() {
   loadDriversMap();
   if (!DMAP_TIMER) DMAP_TIMER = setInterval(() => { if (CURRENT_TAB === "map" && !document.hidden) loadDriversMap(); }, 30000);
@@ -1755,7 +1762,8 @@ function renderDriversMap(list) {
       const ic = L.divIcon({ className: "", iconSize: [34, 34], iconAnchor: [17, 17],
         html: '<div style="width:34px;height:34px;border-radius:50%;background:' + col + ';border:3px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,.4);color:#fff;font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center;opacity:' + (d.st === "off" ? ".6" : "1") + ';">' + escapeHtml(String(d.nom || "?").trim().charAt(0).toUpperCase()) + "</div>" });
       const m = L.marker([lat, lng], { icon: ic }).addTo(DMAP_LAYER)
-        .bindPopup("<b>" + escapeHtml(d.nom) + "</b><br>" + escapeHtml(lbl[d.st]) + " · " + escapeHtml(driverSeenText(d)));
+        .bindPopup("<b>" + escapeHtml(d.nom) + "</b><br>" + escapeHtml(lbl[d.st]) + " · " + escapeHtml(driverSeenText(d)) + driverContactHtml(d));
+      m.on("mouseover", function () { this.openPopup(); });
       DMAP_MARKERS[d.telephone] = m;
       pts.push([lat, lng]);
     });
@@ -1768,7 +1776,7 @@ function renderDriversMap(list) {
     return '<div class="partner-card" ' + (hasPos ? 'data-focus="' + escapeAttr(d.telephone) + '" style="cursor:pointer;"' : "") + '><div class="name"><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:' + DMAP_COL[d.st] + ';margin-inline-end:7px;"></span>' + escapeHtml(d.nom) +
       '</div><div class="meta">' + escapeHtml(lbl[d.st]) + " · " + escapeHtml(driverSeenText(d)) + (d.zone ? " · " + escapeHtml(d.zone) : "") + (d.vehicule ? " · " + escapeHtml(d.vehicule) : "") +
       (hasPos ? "" : ' · <span style="color:#b3261e;font-weight:800;">' + escapeHtml(t("mapNoPos")) + "</span>") +
-      (d.telephone ? ' · <a href="tel:' + escapeAttr(d.telephone) + '" onclick="event.stopPropagation()">' + escapeHtml(t("mapCall")) + "</a>" : "") + "</div></div>";
+      (d.telephone ? ' · <a href="tel:' + escapeAttr(d.telephone) + '" onclick="event.stopPropagation()">' + escapeHtml(t("mapCall")) + "</a>" + (phoneToWaNumber(d.telephone) ? ' · <a href="https://wa.me/' + escapeAttr(phoneToWaNumber(d.telephone)) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">💬 ' + escapeHtml(t("mapMsg")) + "</a>" : "") : "") + "</div></div>";
   }).join("") : '<div class="partner-card"><div class="meta">' + escapeHtml(t("mapNoDrivers")) + "</div></div>";
   $("driversMapList").querySelectorAll("[data-focus]").forEach(el => el.addEventListener("click", () => {
     const m = DMAP_MARKERS[el.dataset.focus];
