@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<script src="/contact.js?v=1"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <link rel="manifest" href="/manifest.json">
@@ -682,7 +683,7 @@ if ("serviceWorker" in navigator) {
     <div class="tagline" id="tagline">Commandez, on vous livre</div>
   </div>
   <div class="header-links">
-    <a class="phone-link" id="headerPhone" href="tel:0560 78 84 97"><span class="ph-ico">📞</span><span class="ph-txt"><span class="ph-lbl">Contactez-nous</span><span class="ph-num">0560 78 84 97</span></span></a>
+    <a class="phone-link" id="headerPhone" href="tel:+213550155579"><span class="ph-ico">📞</span><span class="ph-txt"><span class="ph-lbl">Contactez-nous</span><span class="ph-num">05 50 15 55 79</span></span></a>
     <a class="account-link-top" id="accountLinkTop" href="connexion.html">👤 Mon compte</a>
   </div>
   <button class="lang-toggle" id="langToggle" type="button">AR</button>
@@ -699,7 +700,7 @@ if ("serviceWorker" in navigator) {
       <span class="ln-badge" id="launchBadge">Bientôt disponible</span>
       <h2 class="ln-title" id="launchNoticeTitle">Lancement prochain à Bougara, Blida — 15 novembre 2026</h2>
       <p class="ln-sub" id="launchSub">MT Food arrive à Bougara. Les commandes ne sont pas encore ouvertes sur place : le service sera disponible à partir du 15 novembre 2026.</p>
-      <a class="ln-notify" id="launchNotify" target="_blank" rel="noopener" href="https://wa.me/213560788497">Préviens-moi sur WhatsApp</a>
+      <a class="ln-notify" id="launchNotify" target="_blank" rel="noopener" href="https://wa.me/213550155579">Préviens-moi sur WhatsApp</a>
     </div>
   </div>
 </section>
@@ -904,12 +905,12 @@ const CONFIG = {
   API_URL: "https://script.google.com/macros/s/AKfycbwgXOyXERonv0Yk7X-uhoHuE1Fj26RiYHPR4Tnr7Z_1Ly8wWjsvlE5sp3JJRukRR4ZF/exec",
 
   // Numéro affiché pour commander par téléphone / en cas de souci
-  PHONE_DISPLAY: "0560 78 84 97",
-  PHONE_TEL: "0560 78 84 97",
+  PHONE_DISPLAY: MT_CONTACT.phoneDisplay,
+  PHONE_TEL: MT_CONTACT.phoneTel,
 
   // Numéro WhatsApp qui reçoit les confirmations de commande
   // (format international sans + ni espaces : 213 + numéro sans le 0)
-  WHATSAPP_NUMBER: "213560788497",
+  WHATSAPP_NUMBER: MT_CONTACT.whatsapp,
 
   // Estimation du délai affiché au client : préparation (par restaurant) + trajet + marge
   ETA_MIN_PER_KM: 3, ETA_BUFFER_MIN: 5, ETA_RANGE_MIN: 10,

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<script src="/contact.js?v=1"></script>
 <meta charset="UTF-8">
 <meta name="robots" content="noindex,nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -2192,7 +2193,7 @@ if (SESSION && SESSION.telephone) {
   a.addEventListener("click", function(){
     var tel = (document.getElementById("fTel") || document.getElementById("fPhone") || {}).value || "";
     var msg = t("forgotMsg").replace("{nom}", "…").replace("{tel}", tel.trim() || "…");
-    a.href = "https://wa.me/213560788497?text=" + encodeURIComponent(msg);
+    a.href = "https://wa.me/" + MT_CONTACT.whatsapp + "?text=" + encodeURIComponent(msg);
   });
 })();
 </script>

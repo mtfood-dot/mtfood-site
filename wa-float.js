@@ -1,6 +1,6 @@
 /* Bouton WhatsApp flottant — MT Food. Ouvre WhatsApp avec un message déjà écrit (et le numéro de commande s'il est connu). */
 (function () {
-  var NUM = "213560788497";
+  var NUM = (window.MT_CONTACT && window.MT_CONTACT.whatsapp) || "";
   function lang() { try { return localStorage.getItem("mtd_lang") || localStorage.getItem("mtd_suivi_lang") || "fr"; } catch (e) { return "fr"; } }
   function orderNo() {
     try { if (typeof CURRENT_NUMERO !== "undefined" && CURRENT_NUMERO) return String(CURRENT_NUMERO); } catch (e) {}

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<script src="/contact.js?v=1"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <link rel="manifest" href="/manifest.json">
@@ -293,7 +294,7 @@ async function doSignup(){
       const msg = LANG === "ar"
         ? "مرحبا MT Food، أنشأت حسابًا للتو.\nالاسم: " + (data.prenom || prenom) + " " + (data.nom || nom) + "\nالهاتف: " + tel + "\nيرجى التأكد من رقمي وتفعيل حسابي."
         : "Bonjour MT Food, je viens de créer mon compte.\nNom : " + (data.prenom || prenom) + " " + (data.nom || nom) + "\nTéléphone : " + tel + "\nMerci de vérifier mon numéro et d'activer mon compte.";
-      $("waBtn").href = "https://wa.me/213560788497?text=" + encodeURIComponent(msg);
+      $("waBtn").href = "https://wa.me/" + MT_CONTACT.whatsapp + "?text=" + encodeURIComponent(msg);
       $("waBtn").textContent = t("waBtn");
       $("menuBtn").textContent = t("menuBtn");
       $("pendingBox").style.display = "block";

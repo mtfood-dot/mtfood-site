@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<script src="/contact.js?v=1"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <link rel="manifest" href="/manifest-livreur.json">
@@ -229,7 +230,7 @@ if ("serviceWorker" in navigator) {
       <ol class="steps next-steps" id="nextList"></ol>
       <div class="btn-row">
         <a class="btn-gold" id="contactWa" target="_blank" rel="noopener" href="#">WhatsApp</a>
-        <a class="btn-line" id="contactTel" href="tel:0560788497">Appeler</a>
+        <a class="btn-line" id="contactTel" href="tel:+213550155579">Appeler</a>
         <a class="btn-line" href="index.html" id="homeLink">Retour à l'accueil</a>
       </div>
     </div>
@@ -361,7 +362,7 @@ function applyLanguage(){
   ["tagline","introTitle","introText","ctaTop","hAdv","hHow","hDocs","hFaq","lblNom","lblTelephone","lblVehicule","optMoto","optVoiture","optVelo","optPied","lblNotes","lblEmail","consentTxt","privLink","privNote","submitBtn","successTitle","numLbl","successText","contactWa","contactTel","homeLink","footerNote"].forEach(function(k){ var e=$(k); if(e) e.textContent = t(k); });
   fillList("advList", t0("adv")); fillList("howList", t0("how")); fillList("docsList", t0("docs")); fillList("nextList", t0("nextSteps"));
   fillFaq();
-  $("contactWa").href = "https://wa.me/213560788497?text=" + encodeURIComponent(t("waMsg") + LAST_NUM);
+  $("contactWa").href = "https://wa.me/" + MT_CONTACT.whatsapp + "?text=" + encodeURIComponent(t("waMsg") + LAST_NUM);
 }
 
 function toggleLanguage(){
@@ -417,7 +418,7 @@ document.addEventListener("DOMContentLoaded", function(){
         LAST_NUM = data.numero || "";
         $("numBox").classList.toggle("hidden", !LAST_NUM);
         $("numVal").textContent = LAST_NUM;
-        $("contactWa").href = "https://wa.me/213560788497?text=" + encodeURIComponent(t("waMsg") + LAST_NUM);
+        $("contactWa").href = "https://wa.me/" + MT_CONTACT.whatsapp + "?text=" + encodeURIComponent(t("waMsg") + LAST_NUM);
         $("formCard").classList.add("hidden");
         $("successCard").classList.remove("hidden");
         window.scrollTo(0, 0);
