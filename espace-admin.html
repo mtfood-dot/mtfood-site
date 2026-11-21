@@ -357,6 +357,48 @@
 
   .footer-note{max-width:960px;margin:24px auto 0;padding:0 16px;text-align:center;
     color:var(--muted);font-size:11.5px;font-weight:500;}
+
+  /* ===== Coque admin (menu latéral, barre fine) ===== */
+  header.top{display:flex;align-items:center;gap:12px;padding:6px 70px 6px 14px;text-align:start;overflow:visible;min-height:52px;position:sticky;top:0;z-index:40;}
+  html[dir="rtl"] header.top{padding:6px 14px 6px 70px;}
+  header.top .brand{flex-direction:row;width:auto;gap:10px;}
+  header.top .brand .logo-img{width:auto;height:34px;max-width:none;margin:0;}
+  header.top .tagline{font-size:12.5px;}
+  header.top .lang-toggle{top:50%;transform:translateY(-50%);}
+  .burger{order:-1;background:#fff;border:1px solid var(--border);border-radius:10px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;color:var(--blue-900);cursor:pointer;flex:none;}
+  .burger.hidden{display:none;}
+  main.wide{max-width:1280px;}
+  #appScreen{display:block;}
+  #appScreen.shell{display:flex;gap:20px;align-items:flex-start;}
+  #appScreen.hidden{display:none;}
+  .scontent{flex:1 1 auto;min-width:0;max-width:980px;width:100%;}
+  .snav{flex:0 0 250px;position:sticky;top:64px;max-height:calc(100vh - 76px);overflow-y:auto;background:#fff;border:1px solid var(--border);border-radius:var(--radius-md);padding:8px 8px 12px;box-shadow:var(--shadow-sm);}
+  #appScreen.collapsed .snav{display:none;}
+  .snav .sgt{font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);padding:12px 10px 5px;}
+  .snav .sit{display:flex;align-items:center;gap:10px;width:100%;height:40px;padding:0 10px;border:0;border-radius:10px;background:transparent;color:var(--text);font:inherit;font-weight:600;font-size:13.5px;cursor:pointer;text-align:start;}
+  .snav .sit:hover{background:#f3f5f9;}
+  .snav .sit .sd{width:7px;height:7px;border-radius:2px;background:#B8C2CC;flex:none;}
+  .snav .sit.on{background:var(--blue-100);color:var(--blue-700);font-weight:800;box-shadow:inset 3px 0 0 var(--gold-500);}
+  html[dir="rtl"] .snav .sit.on{box-shadow:inset -3px 0 0 var(--gold-500);}
+  .snav .sit.on .sd{background:var(--blue-700);}
+  .snav .sit .sb{margin-inline-start:auto;background:#b3261e;color:#fff;font-size:11px;font-weight:800;border-radius:999px;padding:1px 7px;min-width:20px;text-align:center;}
+  .snav .sit .sb.hidden{display:none;}
+  .snav-veil{display:none;}
+  .pt-title{margin:0;font-size:21px;font-weight:800;flex:1 1 auto;min-width:140px;}
+  .pt-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+  .refresh-row .pt-title{order:-1;}
+  .refresh-row{flex-wrap:wrap;}
+  .session-bar{padding:8px 12px;margin-bottom:12px;border-radius:var(--radius-md);}
+  .tab-bar{display:none;}
+  @media (max-width:900px){
+    #appScreen.shell{display:block;}
+    .snav{position:fixed;inset-block:0;inset-inline-start:0;width:280px;max-height:none;z-index:60;border-radius:0;transform:translateX(-105%);transition:transform .2s;padding-top:14px;}
+    html[dir="rtl"] .snav{transform:translateX(105%);}
+    #appScreen.navopen .snav{transform:none;}
+    #appScreen.collapsed .snav{display:block;}
+    #appScreen.navopen .snav-veil{display:block;position:fixed;inset:0;background:rgba(38,50,56,.45);z-index:50;}
+    main.wide{max-width:640px;}
+  }
 </style>
 <script src="/form-validate.js" defer></script>
 <script src="/toast.js"></script>
@@ -389,6 +431,7 @@ if ("serviceWorker" in navigator) {
     <a href="index.html" aria-label="Retour à l'accueil" style="display:block;"><img class="logo-img" src="branding/mt-food-logo-v3.png" alt="MT Food by MT Delivery" width="190" height="95" loading="eager"></a>
     <div class="tagline" id="tagline">Espace admin</div>
   </div>
+  <button class="burger hidden" id="navToggle" type="button" aria-label="Menu" aria-expanded="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
   <button class="lang-toggle" id="langToggle" type="button">AR</button>
 </header>
 
@@ -408,6 +451,9 @@ if ("serviceWorker" in navigator) {
 
   <!-- ================= ESPACE CONNECTÉ ================= -->
   <div id="appScreen" class="hidden">
+  <aside class="snav" id="snav" aria-label="Navigation principale"></aside>
+  <div class="snav-veil" id="snavVeil"></div>
+  <div class="scontent">
 
     <div class="session-bar">
       <div>
@@ -695,6 +741,7 @@ if ("serviceWorker" in navigator) {
       <div id="listZones"></div>
     </div>
 
+  </div>
   </div>
 
 </main>
@@ -1391,6 +1438,7 @@ function applyLanguage() {
   $("lblPassword").textContent = t("lblPassword");
   $("loginBtn").textContent = t("loginBtn");
   $("logoutBtn").textContent = t("logoutBtn");
+  if (typeof buildNav === "function" && $("snav") && $("snav").children.length) buildNav();
   $("whoText").textContent = SESSION_NAME ? (t("whoText") + " : " + SESSION_NAME) : t("whoText");
   $("refreshLabel").textContent = t("refreshLabel");
   $("footerNote").textContent = t("footerNote");
@@ -1593,6 +1641,8 @@ function enterApp() {
   loadPartners();
   loadDuplicates();
   loadBoostAdmin();
+  shellEnter();
+  switchTab("dashboard");
 }
 
 $("refreshBtn").addEventListener("click", loadOrders);
@@ -1651,6 +1701,67 @@ $("refreshFraudBtn").addEventListener("click", () => loadFraudAdmin());
 $("fraudD30").addEventListener("click", () => { FRAUD_DAYS = 30; $("fraudD30").classList.add("active"); $("fraudD90").classList.remove("active"); loadFraudAdmin(); });
 $("fraudD90").addEventListener("click", () => { FRAUD_DAYS = 90; $("fraudD90").classList.add("active"); $("fraudD30").classList.remove("active"); loadFraudAdmin(); });
 
+
+/* ============================================================
+   COQUE : menu latéral organisé (réutilise les onglets existants)
+   ============================================================ */
+const NAV_GROUPS = [
+  { fr: "", ar: "", items: [["dashboard", "Tableau de bord", "لوحة القيادة"]] },
+  { fr: "Opérations", ar: "العمليات", items: [["orders", "Commandes", "الطلبات"], ["live", "Suivi en direct", "المتابعة المباشرة"], ["map", "Livreurs en direct", "السائقون مباشرة"], ["zones", "Zones de livraison", "مناطق التوصيل"], ["caisse", "Caisse du jour", "صندوق اليوم"]] },
+  { fr: "Réseau", ar: "الشبكة", items: [["partners", "Restaurants et livreurs", "المطاعم والسائقون"], ["cand", "Candidatures", "الترشحات"], ["moderation", "Plats à valider", "أطباق للمراجعة"], ["ratings", "Avis et modération", "التقييمات"]] },
+  { fr: "Finance", ar: "المالية", items: [["compta", "Comptabilité", "المحاسبة"], ["fraud", "Fraude et annulations", "الاحتيال والإلغاءات"]] },
+  { fr: "Pilotage", ar: "القيادة", items: [["boost", "À la une", "في الواجهة"], ["pub", "Publicités et bannières", "الإعلانات واللافتات"], ["stats", "Statistiques", "الإحصائيات"]] }
+];
+const NAV_BTN = { orders: "tabOrdersBtn", live: "tabLiveBtn", moderation: "tabModerationBtn", partners: "tabPartnersBtn", cand: "tabCandBtn", dashboard: "tabDashboardBtn", compta: "tabComptaBtn", pub: "tabPubBtn", boost: "tabBoostBtn", zones: "tabZonesBtn", ratings: "tabRatingsBtn", map: "tabMapBtn", fraud: "tabFraudBtn", caisse: "tabCaisseBtn", stats: "tabStatsBtn" };
+const NAV_BADGE = { live: "liveBadge", moderation: "modBadge", cand: "candBadge" };
+function navLabel(tab) { for (const g of NAV_GROUPS) for (const it of g.items) if (it[0] === tab) return LANG === "ar" ? it[2] : it[1]; return ""; }
+function buildNav() {
+  const nav = $("snav"); if (!nav) return;
+  nav.innerHTML = NAV_GROUPS.map(g => (g.fr ? '<div class="sgt">' + escapeHtml(LANG === "ar" ? g.ar : g.fr) + "</div>" : "") +
+    g.items.map(it => '<button type="button" class="sit" data-nav="' + it[0] + '"><span class="sd"></span><span>' + escapeHtml(LANG === "ar" ? it[2] : it[1]) + '</span><span class="sb hidden" data-navb="' + it[0] + '"></span></button>').join("")).join("");
+  nav.querySelectorAll("[data-nav]").forEach(b => b.addEventListener("click", () => {
+    $(NAV_BTN[b.dataset.nav]).click();
+    $("appScreen").classList.remove("navopen"); $("navToggle").setAttribute("aria-expanded", "false");
+    window.scrollTo({ top: 0 });
+  }));
+  syncNav();
+}
+function syncNav() {
+  const nav = $("snav"); if (!nav) return;
+  nav.querySelectorAll("[data-nav]").forEach(b => b.classList.toggle("on", b.dataset.nav === CURRENT_TAB));
+  Object.keys(NAV_BADGE).forEach(k => {
+    const src = $(NAV_BADGE[k]), dst = nav.querySelector('[data-navb="' + k + '"]');
+    if (!src || !dst) return;
+    const n = parseInt(src.textContent, 10) || 0;
+    const show = n > 0 && !src.classList.contains("hidden");
+    dst.textContent = show ? String(n) : ""; dst.classList.toggle("hidden", !show);
+  });
+  // Titre de page sur la même ligne que la date et Actualiser
+  const viewId = { orders: "ordersView", live: "liveView", moderation: "moderationView", partners: "partnersView", dashboard: "dashboardView", compta: "comptaView", pub: "pubView", boost: "boostView", zones: "zonesView", ratings: "ratingsView", cand: "candView", fraud: "fraudView", caisse: "caisseView", stats: "statsView", map: "mapView" }[CURRENT_TAB];
+  const view = viewId && $(viewId); if (!view) return;
+  let h = view.querySelector(".pt-title");
+  if (!h) {
+    h = document.createElement("h1"); h.className = "pt-title";
+    const row = view.querySelector(".refresh-row");
+    if (row) row.insertBefore(h, row.firstChild);
+    else { const r = document.createElement("div"); r.className = "pt-row"; r.appendChild(h); view.insertBefore(r, view.firstChild); }
+  }
+  h.textContent = navLabel(CURRENT_TAB);
+}
+function shellEnter() {
+  document.querySelector("main").classList.add("wide");
+  $("appScreen").classList.add("shell");
+  $("navToggle").classList.remove("hidden");
+  buildNav();
+}
+$("navToggle").addEventListener("click", () => {
+  const a = $("appScreen");
+  if (window.matchMedia("(max-width:900px)").matches) { a.classList.toggle("navopen"); $("navToggle").setAttribute("aria-expanded", a.classList.contains("navopen") ? "true" : "false"); }
+  else a.classList.toggle("collapsed");
+});
+$("snavVeil").addEventListener("click", () => { $("appScreen").classList.remove("navopen"); $("navToggle").setAttribute("aria-expanded", "false"); });
+setInterval(() => { if (!$("appScreen").classList.contains("hidden")) syncNav(); }, 3000);
+
 function switchTab(tab) {
   CURRENT_TAB = tab;
   $("tabOrdersBtn").classList.toggle("active", tab === "orders");
@@ -1699,6 +1810,7 @@ function switchTab(tab) {
   if (tab === "map") mapStart(); else mapStop();
   if (tab === "caisse") loadCaisseAdmin();
   if (tab === "stats") loadStatsAdmin();
+  syncNav();
 }
 
 /* ============================================================
