@@ -399,6 +399,28 @@
     #appScreen.navopen .snav-veil{display:block;position:fixed;inset:0;background:rgba(38,50,56,.45);z-index:50;}
     main.wide{max-width:640px;}
   }
+
+  /* ===== Recherche globale + filtres commandes ===== */
+  .gsearch{position:relative;flex:1 1 260px;max-width:520px;margin-inline-start:8px;}
+  .gsearch.hidden{display:none;}
+  .gsearch input{width:100%;height:38px;border:1px solid var(--border);border-radius:10px;background:#f3f5f9;padding:0 12px;font:inherit;font-size:13.5px;color:var(--text);}
+  .gs-res{position:absolute;top:44px;inset-inline:0;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);max-height:60vh;overflow:auto;z-index:70;padding:6px;}
+  .gs-res.hidden{display:none;}
+  .gs-res .gh{font-size:11px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);padding:8px 8px 3px;}
+  .gs-res button{display:flex;flex-direction:column;align-items:flex-start;width:100%;border:0;background:transparent;text-align:start;padding:8px 10px;border-radius:9px;cursor:pointer;font:inherit;color:var(--text);}
+  .gs-res button:hover,.gs-res button:focus{background:var(--blue-100);outline:0;}
+  .gs-res button b{font-size:13.5px;}.gs-res button span{font-size:12px;color:var(--muted);}
+  .gs-res .none{padding:12px;color:var(--muted);font-size:13px;}
+  .ofilters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+  .ofilters input,.ofilters select{height:36px;border:1px solid var(--border);border-radius:10px;background:#fff;padding:0 10px;font:inherit;font-size:13px;color:var(--text);min-width:0;}
+  .ofilters #ofQ{flex:1 1 200px;}.ofilters select{flex:1 1 130px;}.ofilters .ofnum{flex:0 1 92px;}
+  .ochips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;}
+  .ochip{border:1.5px solid var(--border);background:#fff;border-radius:999px;padding:6px 12px;font:inherit;font-weight:700;font-size:12.5px;cursor:pointer;color:var(--text);}
+  .ochip.on{background:var(--blue-700);border-color:var(--blue-700);color:#fff;}
+  .note-count{font-size:12px;color:var(--muted);font-weight:700;margin-bottom:8px;}
+  .eq-bar{display:flex;align-items:center;gap:10px;background:var(--gold-100);border-radius:10px;padding:8px 12px;margin-bottom:10px;font-weight:700;font-size:13px;}
+  .eq-bar.hidden{display:none;}
+  .eq-bar button{margin-inline-start:auto;border:0;background:#fff;border-radius:999px;padding:4px 12px;font:inherit;font-weight:800;font-size:12px;cursor:pointer;}
 </style>
 <script src="/form-validate.js" defer></script>
 <script src="/toast.js"></script>
@@ -431,6 +453,7 @@ if ("serviceWorker" in navigator) {
     <a href="index.html" aria-label="Retour à l'accueil" style="display:block;"><img class="logo-img" src="branding/mt-food-logo-v3.png" alt="MT Food by MT Delivery" width="190" height="95" loading="eager"></a>
     <div class="tagline" id="tagline">Espace admin</div>
   </div>
+  <div class="gsearch hidden" id="gsearch"><input type="search" id="gsInput" autocomplete="off" aria-label="Recherche globale"><div class="gs-res hidden" id="gsRes"></div></div>
   <button class="burger hidden" id="navToggle" type="button" aria-label="Menu" aria-expanded="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
   <button class="lang-toggle" id="langToggle" type="button">AR</button>
 </header>
@@ -488,6 +511,18 @@ if ("serviceWorker" in navigator) {
         <input type="date" class="date-input" id="ordersDate">
         <button class="btn-refresh" id="refreshBtn" type="button"><span id="refreshLabel">↻ Actualiser</span></button>
       </div>
+      <div class="ofilters" id="ofilters">
+        <input type="search" id="ofQ" autocomplete="off">
+        <select id="ofStatut" aria-label="Statut"></select>
+        <select id="ofResto" aria-label="Restaurant"></select>
+        <select id="ofZone" aria-label="Zone"></select>
+        <select id="ofDrv" aria-label="Livreur"></select>
+        <input type="text" id="ofMin" inputmode="numeric" class="ofnum">
+        <input type="text" id="ofMax" inputmode="numeric" class="ofnum">
+        <button type="button" class="btn-refresh" id="ofReset"></button>
+      </div>
+      <div class="ochips" id="ochips"></div>
+      <div class="note-count" id="ofCount"></div>
       <div id="listOrders"></div>
     </div>
 
@@ -513,6 +548,7 @@ if ("serviceWorker" in navigator) {
     </div>
 
     <div id="partnersView" class="hidden">
+      <div class="eq-bar hidden" id="eqBar"></div>
       <div class="refresh-row">
         <div></div>
         <button class="btn-refresh" id="refreshPartnersBtn" type="button"><span id="refreshPartnersLabel">↻ Actualiser</span></button>
@@ -1438,7 +1474,7 @@ function applyLanguage() {
   $("lblPassword").textContent = t("lblPassword");
   $("loginBtn").textContent = t("loginBtn");
   $("logoutBtn").textContent = t("logoutBtn");
-  if (typeof buildNav === "function" && $("snav") && $("snav").children.length) buildNav();
+  if (typeof buildNav === "function" && $("snav") && $("snav").children.length) { buildNav(); ofLabels(); ofFillSelects(); ofSyncInputs(); ofChips(); }
   $("whoText").textContent = SESSION_NAME ? (t("whoText") + " : " + SESSION_NAME) : t("whoText");
   $("refreshLabel").textContent = t("refreshLabel");
   $("footerNote").textContent = t("footerNote");
@@ -1702,6 +1738,100 @@ $("fraudD30").addEventListener("click", () => { FRAUD_DAYS = 30; $("fraudD30").c
 $("fraudD90").addEventListener("click", () => { FRAUD_DAYS = 90; $("fraudD90").classList.add("active"); $("fraudD30").classList.remove("active"); loadFraudAdmin(); });
 
 
+
+/* ============================================================
+   RECHERCHE GLOBALE + FILTRES COMMANDES (données déjà chargées)
+   ============================================================ */
+const OF_L = {
+  fr: { q: "N°, client, téléphone, adresse…", statut: "Tous les statuts", resto: "Tous les restaurants", zone: "Toutes les zones", drv: "Tous les livreurs", noDrv: "Sans livreur", min: "Min DA", max: "Max DA", reset: "Réinitialiser", all: "Toutes", noDrvChip: "Sans livreur", confirm: "À confirmer", deliv: "En livraison", canc: "Annulées", count: "{a} sur {b} commandes", gs: "Rechercher : commande, client, restaurant, livreur, téléphone…", gOrders: "Commandes (date affichée)", gPartners: "Restaurants", gDrivers: "Livreurs", gNone: "Aucun résultat", eq: "Filtre : {x}", eqOff: "Tout afficher" },
+  ar: { q: "الرقم، الزبون، الهاتف، العنوان…", statut: "كل الحالات", resto: "كل المطاعم", zone: "كل المناطق", drv: "كل السائقين", noDrv: "بدون سائق", min: "أدنى د.ج", max: "أقصى د.ج", reset: "إعادة ضبط", all: "الكل", noDrvChip: "بدون سائق", confirm: "للتأكيد", deliv: "قيد التوصيل", canc: "ملغاة", count: "{a} من {b} طلب", gs: "بحث: طلب، زبون، مطعم، سائق، هاتف…", gOrders: "الطلبات (التاريخ المعروض)", gPartners: "المطاعم", gDrivers: "السائقون", gNone: "لا نتائج", eq: "تصفية: {x}", eqOff: "عرض الكل" }
+};
+function ofl(k) { return (OF_L[LANG] || OF_L.fr)[k]; }
+let OF = { q: "", statut: "", resto: "", zone: "", drv: "", min: "", max: "" };
+try { Object.assign(OF, JSON.parse(localStorage.getItem("mt_admin_order_filters") || "{}")); } catch (e) { /* ignore */ }
+let ENTITY_Q = "";
+const norm_ = (x) => String(x == null ? "" : x).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+function orderDriverName(o) { const m = /^(.*?)\s*\(([^)]*)\)\s*$/.exec(String(o.livreur || "")); return (m ? m[1] : String(o.livreur || "")).trim(); }
+function orderMatches(o) {
+  if (OF.q) { const hay = norm_([o.numero, o.client, o.telephone, o.adresse, o.partenaire, o.livreur].join(" ")); if (!hay.includes(norm_(OF.q))) return false; }
+  if (OF.statut && String(o.statut || "") !== OF.statut) return false;
+  if (OF.resto && String(o.partenaire || "") !== OF.resto) return false;
+  if (OF.zone && String(o.zone || "") !== OF.zone) return false;
+  if (OF.drv === "__none") { if (orderDriverName(o)) return false; }
+  else if (OF.drv && orderDriverName(o) !== OF.drv) return false;
+  const tot = Number(o.total) || 0;
+  if (OF.min !== "" && tot < Number(OF.min)) return false;
+  if (OF.max !== "" && tot > Number(OF.max)) return false;
+  return true;
+}
+function filteredOrders() { return ORDERS.filter(orderMatches); }
+function ofSaveAndRender() { try { localStorage.setItem("mt_admin_order_filters", JSON.stringify(OF)); } catch (e) { /* ignore */ } renderOrders(); }
+function ofFillSelects() {
+  const uniq = (f) => Array.from(new Set(ORDERS.map(f).filter(Boolean))).sort((a, b) => String(a).localeCompare(String(b)));
+  const fill = (id, first, vals, cur, extra) => {
+    const el = $(id); if (!el) return;
+    el.innerHTML = '<option value="">' + escapeHtml(first) + "</option>" + (extra || "") + vals.map(v => '<option value="' + escapeAttr(v) + '">' + escapeHtml(v) + "</option>").join("");
+    el.value = cur;
+    if (el.value !== cur) { el.value = ""; }
+  };
+  fill("ofStatut", ofl("statut"), uniq(o => o.statut), OF.statut);
+  fill("ofResto", ofl("resto"), uniq(o => o.partenaire), OF.resto);
+  fill("ofZone", ofl("zone"), uniq(o => o.zone), OF.zone);
+  fill("ofDrv", ofl("drv"), uniq(orderDriverName), OF.drv, '<option value="__none">' + escapeHtml(ofl("noDrv")) + "</option>");
+  OF.statut = $("ofStatut").value; OF.resto = $("ofResto").value; OF.zone = $("ofZone").value; OF.drv = $("ofDrv").value;
+}
+function ofChips() {
+  const chips = [["", ofl("all")], ["nodrv", ofl("noDrvChip")], ["conf", ofl("confirm")], ["deliv", ofl("deliv")], ["canc", ofl("canc")]];
+  const on = OF.drv === "__none" && !OF.statut ? "nodrv" : (OF.statut === "À confirmer" ? "conf" : (OF.statut === "En livraison" ? "deliv" : (/annul/i.test(OF.statut) ? "canc" : (!OF.statut && !OF.drv ? "" : "x"))));
+  $("ochips").innerHTML = chips.map(c => '<button type="button" class="ochip' + (on === c[0] ? " on" : "") + '" data-oc="' + c[0] + '">' + escapeHtml(c[1]) + "</button>").join("");
+  $("ochips").querySelectorAll("[data-oc]").forEach(b => b.addEventListener("click", () => {
+    const k = b.dataset.oc;
+    OF.statut = ""; OF.drv = "";
+    if (k === "nodrv") OF.drv = "__none";
+    if (k === "conf") OF.statut = "À confirmer";
+    if (k === "deliv") OF.statut = "En livraison";
+    if (k === "canc") { const a = ORDERS.map(o => o.statut).find(x => /annul/i.test(String(x))); OF.statut = a || "Annulée"; }
+    ofFillSelects(); ofSyncInputs(); ofSaveAndRender();
+  }));
+}
+function ofSyncInputs() { $("ofQ").value = OF.q; $("ofMin").value = OF.min; $("ofMax").value = OF.max; $("ofStatut").value = OF.statut; $("ofResto").value = OF.resto; $("ofZone").value = OF.zone; $("ofDrv").value = OF.drv; }
+function ofLabels() { $("ofQ").placeholder = ofl("q"); $("ofMin").placeholder = ofl("min"); $("ofMax").placeholder = ofl("max"); $("ofReset").textContent = ofl("reset"); $("gsInput").placeholder = ofl("gs"); }
+["ofQ", "ofMin", "ofMax"].forEach(id => $(id).addEventListener("input", () => { OF.q = $("ofQ").value.trim(); OF.min = $("ofMin").value.replace(/\D/g, ""); OF.max = $("ofMax").value.replace(/\D/g, ""); ofSaveAndRender(); }));
+["ofStatut", "ofResto", "ofZone", "ofDrv"].forEach(id => $(id).addEventListener("change", () => { OF.statut = $("ofStatut").value; OF.resto = $("ofResto").value; OF.zone = $("ofZone").value; OF.drv = $("ofDrv").value; ofSaveAndRender(); }));
+$("ofReset").addEventListener("click", () => { OF = { q: "", statut: "", resto: "", zone: "", drv: "", min: "", max: "" }; ofFillSelects(); ofSyncInputs(); ofSaveAndRender(); });
+
+/* Recherche globale */
+function gsSearch() {
+  const q = norm_($("gsInput").value.trim()); const box = $("gsRes");
+  if (q.length < 2) { box.classList.add("hidden"); return; }
+  const oList = ORDERS.filter(o => norm_([o.numero, o.client, o.telephone, o.adresse, o.partenaire].join(" ")).includes(q)).slice(0, 6);
+  const pList = PARTNERS.filter(x => norm_([x.nom, x.telephone, x.zone].join(" ")).includes(q)).slice(0, 6);
+  const dList = DRIVERS.filter(x => norm_([x.nom, x.telephone, x.zone].join(" ")).includes(q)).slice(0, 6);
+  let h = "";
+  if (oList.length) h += '<div class="gh">' + escapeHtml(ofl("gOrders")) + "</div>" + oList.map(o => '<button type="button" data-g="o" data-v="' + escapeAttr(o.numero) + '"><b>' + escapeHtml(o.numero) + " · " + escapeHtml(o.client || "") + "</b><span>" + escapeHtml((o.partenaire || "") + " · " + (o.statut || "") + " · " + (o.total || 0) + " DA") + "</span></button>").join("");
+  if (pList.length) h += '<div class="gh">' + escapeHtml(ofl("gPartners")) + "</div>" + pList.map(x => '<button type="button" data-g="p" data-v="' + escapeAttr(x.nom) + '"><b>' + escapeHtml(x.nom) + "</b><span>" + escapeHtml(fmtPhone(x.telephone)) + "</span></button>").join("");
+  if (dList.length) h += '<div class="gh">' + escapeHtml(ofl("gDrivers")) + "</div>" + dList.map(x => '<button type="button" data-g="d" data-v="' + escapeAttr(x.nom) + '"><b>' + escapeHtml(x.nom) + "</b><span>" + escapeHtml(fmtPhone(x.telephone)) + "</span></button>").join("");
+  box.innerHTML = h || '<div class="none">' + escapeHtml(ofl("gNone")) + "</div>";
+  box.classList.remove("hidden");
+  box.querySelectorAll("[data-g]").forEach(b => b.addEventListener("click", () => {
+    const k = b.dataset.g, v = b.dataset.v;
+    box.classList.add("hidden"); $("gsInput").value = "";
+    if (k === "o") { OF = { q: v, statut: "", resto: "", zone: "", drv: "", min: "", max: "" }; ofFillSelects(); ofSyncInputs(); switchTab("orders"); ofSaveAndRender(); }
+    else { ENTITY_Q = v; switchTab("partners"); renderPartners(); renderDrivers(); }
+  }));
+}
+$("gsInput").addEventListener("input", gsSearch);
+$("gsInput").addEventListener("keydown", (e) => { if (e.key === "Escape") { $("gsRes").classList.add("hidden"); $("gsInput").blur(); } });
+document.addEventListener("click", (e) => { if (!e.target.closest("#gsearch")) $("gsRes").classList.add("hidden"); });
+function eqRender() {
+  const bar = $("eqBar");
+  if (!ENTITY_Q) { bar.classList.add("hidden"); return; }
+  bar.classList.remove("hidden");
+  bar.innerHTML = "<span>" + escapeHtml(ofl("eq").replace("{x}", ENTITY_Q)) + '</span><button type="button" id="eqOff">' + escapeHtml(ofl("eqOff")) + "</button>";
+  $("eqOff").addEventListener("click", () => { ENTITY_Q = ""; renderPartners(); renderDrivers(); });
+}
+function entMatch(x) { return !ENTITY_Q || norm_([x.nom, x.telephone].join(" ")).includes(norm_(ENTITY_Q)); }
+
 /* ============================================================
    COQUE : menu latéral organisé (réutilise les onglets existants)
    ============================================================ */
@@ -1752,6 +1882,8 @@ function shellEnter() {
   document.querySelector("main").classList.add("wide");
   $("appScreen").classList.add("shell");
   $("navToggle").classList.remove("hidden");
+  $("gsearch").classList.remove("hidden");
+  ofLabels();
   buildNav();
 }
 $("navToggle").addEventListener("click", () => {
@@ -2188,6 +2320,7 @@ async function loadOrders() {
     const data = await apiGet({ action: "getAllOrders", password: SESSION_PASSWORD, date: date });
     if (data.success) {
       ORDERS = data.orders;
+      ofFillSelects(); ofSyncInputs(); ofLabels();
       renderOrders();
     } else {
       showError($("errorBox"), data.error || t("loadFailedGeneric"));
@@ -2201,9 +2334,12 @@ async function loadOrders() {
 }
 
 function renderOrders() {
-  $("listOrders").innerHTML = ORDERS.length
-    ? ORDERS.map(orderCardHtml).join("")
+  const shown = filteredOrders();
+  $("listOrders").innerHTML = shown.length
+    ? shown.map(orderCardHtml).join("")
     : emptyStateHtml(t("noOrders"), "📦");
+  $("ofCount").textContent = ofl("count").replace("{a}", shown.length).replace("{b}", ORDERS.length);
+  ofChips();
 
   document.querySelectorAll("[data-action-order]").forEach(btn => {
     btn.addEventListener("click", () => onUpdateStatus(btn.dataset.actionOrder, btn.dataset.newStatus, btn));
@@ -3327,8 +3463,10 @@ function updateRequestsUi() {
 }
 
 function renderPartners() {
-  $("listPartners").innerHTML = PARTNERS.length
-    ? PARTNERS.map(partnerCardHtml).join("")
+  eqRender();
+  const pShown = PARTNERS.filter(entMatch);
+  $("listPartners").innerHTML = pShown.length
+    ? pShown.map(partnerCardHtml).join("")
     : emptyStateHtml(t("noPartners"), "🏪");
   wireEntityButtons("listPartners");
 }
@@ -3379,8 +3517,9 @@ function renderCandidatures() {
 }
 
 function renderDrivers() {
-  $("listDrivers").innerHTML = DRIVERS.length
-    ? DRIVERS.map(driverCardHtml).join("")
+  const dShown = DRIVERS.filter(entMatch);
+  $("listDrivers").innerHTML = dShown.length
+    ? dShown.map(driverCardHtml).join("")
     : emptyStateHtml(t("noDrivers"), "🛵");
   wireEntityButtons("listDrivers");
   wireDriverEditButtons("listDrivers");
