@@ -466,7 +466,7 @@ const I18N = {
     cashTitle: "Espèces à reverser à MT", cashCollected: "Encaissé sur tes livraisons", cashPaid: "Déjà versé", cashDue: "Reste à verser",
     cashLimit: "⚠️ Tu dépasses le plafond de {n} DA : passe verser tes espèces.", earnNote: "Les gains = les frais de livraison que tu gardes. Les plats encaissés reviennent à MT.", earnLoadFail: "Impossible de charger tes gains.",
     stAccepted: "Acceptée", stResto: "Au restaurant", stPicked: "Récupérée", stDelivered: "Livrée",
-    stepArrived: "📍 Je suis arrivé au restaurant", stepPicked: "🛍️ Commande récupérée", stepFail: "Impossible d'enregistrer l'étape. Réessaie.",
+    stepArrived: "📍 Je suis arrivé au restaurant", stepWaitReady: "⏳ Attends que le restaurant termine la commande", stepPicked: "🛍️ Commande récupérée", stepFail: "Impossible d'enregistrer l'étape. Réessaie.",
     toCollect: "💵 À encaisser", collectSub: "Plats {p} DA + livraison {f} DA", clientNote: "📝 Note du client :",
     histTitle: "Historique par jour", histNone: "Aucune livraison sur cette période.", histCancelled: "annulée",
     histDay: "{n} livrée(s)",
@@ -541,7 +541,7 @@ const I18N = {
     cashTitle: "المبلغ المستحق لـ MT", cashCollected: "المحصَّل من توصيلاتك", cashPaid: "تم دفعه", cashDue: "المتبقي للدفع",
     cashLimit: "⚠️ تجاوزت السقف {n} دج: مرّ لتسليم المبلغ.", earnNote: "الأرباح = رسوم التوصيل التي تحتفظ بها. ثمن الأطباق يعود إلى MT.", earnLoadFail: "تعذر تحميل أرباحك.",
     stAccepted: "مقبول", stResto: "في المطعم", stPicked: "تم الاستلام", stDelivered: "تم التسليم",
-    stepArrived: "📍 وصلت إلى المطعم", stepPicked: "🛍️ تم استلام الطلب", stepFail: "تعذر حفظ المرحلة. أعد المحاولة.",
+    stepArrived: "📍 وصلت إلى المطعم", stepWaitReady: "⏳ انتظر حتى ينهي المطعم تحضير الطلب", stepPicked: "🛍️ تم استلام الطلب", stepFail: "تعذر حفظ المرحلة. أعد المحاولة.",
     toCollect: "💵 المبلغ المطلوب تحصيله", collectSub: "الأطباق {p} دج + التوصيل {f} دج", clientNote: "📝 ملاحظة الزبون:",
     histTitle: "السجل حسب اليوم", histNone: "لا توجد توصيلات في هذه الفترة.", histCancelled: "ملغاة",
     histDay: "{n} موصّلة",
@@ -1091,7 +1091,9 @@ function orderCardHtml(o, kind) {
   const actionBtn = kind === "available"
     ? `<button class="btn-accept" data-accept="${escapeAttr(o.numero)}">${escapeHtml(t("accept"))}</button>`
     : ((Number(o.etape) || 0) < 2
-        ? `<button class="btn-step" data-step="picked" data-num="${escapeAttr(o.numero)}">${escapeHtml(t("stepPicked"))}</button>`
+        ? (o.prete === false
+            ? `<button class="btn-step" disabled style="opacity:.55;cursor:not-allowed;">${escapeHtml(t("stepWaitReady"))}</button>`
+            : `<button class="btn-step" data-step="picked" data-num="${escapeAttr(o.numero)}">${escapeHtml(t("stepPicked"))}</button>`)
         : `<button class="btn-delivered" data-deliver="${escapeAttr(o.numero)}">${escapeHtml(t("markDelivered"))}</button>`);
   return `
     <div class="order-card">
