@@ -1957,7 +1957,9 @@ function restoList() {
     const id = n.toLowerCase();
     if (!map[id]) out.push({ key: n, name: n, slug: restoSlug(n), items: [], cats: [], soon: true });
   });
-  return out.sort((x, y) => x.name.localeCompare(y.name));
+  /* Noms arabes d'abord, puis les noms latins ; ordre alphabétique dans chaque groupe */
+  const ar = n => /[\u0600-\u06FF]/.test(String(n || "")) ? 0 : 1;
+  return out.sort((x, y) => ar(x.name) - ar(y.name) || x.name.localeCompare(y.name));
 }
 function currentResto() {
   if (ACTIVE_RESTO === null) return null;
