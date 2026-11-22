@@ -200,7 +200,9 @@ const I18N = {
 function t(k){ return (I18N[LANG] && I18N[LANG][k]) || I18N.fr[k] || k; }
 function $(id){ return document.getElementById(id); }
 
-const NEXT_PARAM = new URLSearchParams(window.location.search).get("next");
+/* Redirection après connexion : seulement une page .html du site (jamais un autre site ni javascript:) */
+function safeNext(v, fallback){ v = String(v || ""); return /^[A-Za-z0-9_-]+\.html(\?[A-Za-z0-9_=&%.-]*)?$/.test(v) ? v : fallback; }
+const NEXT_PARAM = (function(){ var n = new URLSearchParams(window.location.search).get("next"); return n ? safeNext(n, "") : ""; })();
 function signupHref(){ return NEXT_PARAM ? "inscription.html?next=" + encodeURIComponent(NEXT_PARAM) : "inscription.html"; }
 
 function applyLang(){
