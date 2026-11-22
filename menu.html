@@ -1969,7 +1969,7 @@ function menuForResto() {
   return r ? r.items : MENU.filter(isActiveResto);
 }
 const DRIVE_ID_RE = /^https:\/\/drive\.google\.com\/thumbnail\?[^#]*?id=([\w-]+)/;
-const LOCAL_LOGOS = { "mc-maho": 1, "mister-maho": 1, "mr-maho": 1 };
+const LOCAL_LOGOS = { "mc-maho": 1, "mister-maho": 1, "mr-maho": 1, "mimo-food": "photos/logos/mimo-food.jpg", "batha-grillades": "photos/logos/batha-grillades.jpg", "khaima-ennaqa": "photos/logos/khaima-ennaqa.jpg", "khaima-oummi": "photos/logos/khaima-oummi.jpg" };
 function driveAlt(u, w) { return String(u || "").replace(/^(https:\/\/drive\.google\.com\/thumbnail\?[^#]*?sz=w)\d+/, "$1" + w); }
 function smallDrive(u, w) { u = String(u || ""); const m = u.match(DRIVE_ID_RE); return m ? "https://lh3.googleusercontent.com/d/" + m[1] + "=w" + w : u; }
 function restoLogoRaw(name) { return RESTO_LOGO[norm(name || "")] || ""; }
@@ -1977,7 +1977,8 @@ function restoLogoSrc(name, w) {
   const raw = restoLogoRaw(name);
   if (raw) return smallDrive(raw, w || 200);
   const slug = restoSlug(name);
-  return LOCAL_LOGOS[slug] ? "branding/restos/" + slug + ".png" : "";
+  const L = LOCAL_LOGOS[slug];
+  return L ? (typeof L === "string" ? L : "branding/restos/" + slug + ".png") : "";
 }
 const PRELOADED = {};
 function preloadLogos() { try { Object.keys(RESTO_LOGO).forEach(k => { const u = smallDrive(RESTO_LOGO[k], 200); if (PRELOADED[u]) return; PRELOADED[u] = 1; const im = new Image(); im.decoding = "async"; im.src = u; }); } catch (e) {} }
