@@ -934,6 +934,7 @@ const I18N = {
     createDriverFailedGeneric: "Impossible d'ajouter le livreur. Réessaie.",
     updateDriverFailedGeneric: "Impossible de modifier le livreur. Réessaie.",
     comptaModePartners: "Partenaires",
+    cdShow: "Voir le détail des commandes", cdHide: "Masquer le détail", cdLoading: "Chargement des commandes…", cdNone: "Aucune commande livrée.", cdDate: "Date", cdOrder: "Commande", cdDishes: "Plats", cdAmount: "Montant plats", cdComm: "Commission", cdTotal: "Total", cdFail: "Impossible de charger le détail.", cdLimit: "Période limitée aux 62 derniers jours affichés.",
     comptaModeDrivers: "Livreurs",
     noComptaDriversData: "Aucune livraison sur cette période.",
     loadDriverStatsFailedGeneric: "Impossible de charger les statistiques livreurs. Réessaie.",
@@ -1251,6 +1252,7 @@ const I18N = {
     createDriverFailedGeneric: "تعذرت إضافة السائق. أعد المحاولة.",
     updateDriverFailedGeneric: "تعذر تعديل السائق. أعد المحاولة.",
     comptaModePartners: "الشركاء",
+    cdShow: "عرض تفاصيل الطلبات", cdHide: "إخفاء التفاصيل", cdLoading: "جارٍ تحميل الطلبات…", cdNone: "لا توجد طلبات موصّلة.", cdDate: "التاريخ", cdOrder: "الطلب", cdDishes: "الأطباق", cdAmount: "مبلغ الأطباق", cdComm: "العمولة", cdTotal: "المجموع", cdFail: "تعذر تحميل التفاصيل.", cdLimit: "الفترة محدودة بآخر 62 يومًا.",
     comptaModeDrivers: "السائقون",
     noComptaDriversData: "لا توجد عمليات توصيل خلال هذه الفترة.",
     loadDriverStatsFailedGeneric: "تعذر تحميل إحصائيات السائقين. أعد المحاولة.",
@@ -4201,6 +4203,7 @@ function renderDashboardStats() {
    ============================================================ */
 async function loadCompta() {
   hideError($("errorBox"));
+  for (const k in CD_CACHE) delete CD_CACHE[k];
   try {
     const ds = $("comptaDateStart").value || "";
     const de = $("comptaDateEnd").value || "";
@@ -4225,9 +4228,70 @@ function comptaCardHtml(p) {
         <div class="total">${total.toLocaleString("fr-FR")} DA</div>
       </div>
       <div class="meta">${Number(p.nbCommandes) || 0} ${escapeHtml(t("statNbCommandesShort"))} · ${Number(p.nbPlats) || 0} ${escapeHtml(t("statNbPlatsShort"))}</div>
+      <button type="button" class="btn-refresh cd-toggle" data-nom="${escapeAttr(p.nom || "")}" style="margin-top:10px;">${escapeHtml(t("cdShow"))}</button>
+      <div class="cd-box hidden" style="margin-top:10px;overflow-x:auto;"></div>
     </div>
   `;
 }
+
+/* Détail des commandes d'un restaurant : date, plats, commission (calculé à partir des commandes livrées de la période) */
+let CD_MENU_MAP = null, CD_PCT = null;
+const CD_CACHE = {};
+function cdDays(ds, de) {
+  const out = [], a = new Date((ds || todayStr()) + "T12:00:00"), b = new Date((de || todayStr()) + "T12:00:00");
+  for (let d = new Date(a); d <= b && out.length < 62; d.setDate(d.getDate() + 1)) out.push(liveDateStr(d));
+  return out;
+}
+async function cdLoadRefs() {
+  if (CD_PCT === null) { try { const c = await apiGet({ action: "csCaisse", password: SESSION_PASSWORD }); CD_PCT = c && c.success && c.params ? Number(c.params.commission) || 0 : 0; } catch (e) { CD_PCT = 0; } }
+  if (!CD_MENU_MAP) { try { const m = await apiGet({ action: "menu" }); const map = {}; ((m && m.items) || []).forEach(it => { const n = String(it.nom || "").trim().toLowerCase(), pa = String(it.partenaire || "").trim().toLowerCase(); if (n && pa) map[n] = pa; }); CD_MENU_MAP = map; } catch (e) { CD_MENU_MAP = {}; } }
+}
+async function cdFetchOrders(ds, de) {
+  const key = ds + "|" + de;
+  if (CD_CACHE[key]) return CD_CACHE[key];
+  const days = cdDays(ds, de), all = [];
+  for (let i = 0; i < days.length; i += 6) {
+    const rs = await Promise.all(days.slice(i, i + 6).map(d => apiGet({ action: "getAllOrders", password: SESSION_PASSWORD, date: d }).catch(() => null)));
+    rs.forEach(r => { if (r && r.success && Array.isArray(r.orders)) all.push.apply(all, r.orders); });
+  }
+  CD_CACHE[key] = all;
+  return all;
+}
+function cdRows(nom, orders) {
+  const me = String(nom || "").trim().toLowerCase(), rows = [];
+  orders.forEach(o => {
+    if (!/livr/i.test(String(o.statut || ""))) return;
+    const items = String(o.articles || "").split("|").map(x => { const m = /^\s*(\d+)\s*x\s+(.+?)\s*\((\d+(?:[.,]\d+)?)/i.exec(x); return m ? { qty: +m[1], nom: m[2].trim(), prix: parseFloat(String(m[3]).replace(",", ".")) } : null; }).filter(Boolean);
+    const mine = items.filter(i => CD_MENU_MAP[i.nom.toLowerCase()] === me);
+    let use = mine;
+    if (!use.length && String(o.partenaire || "").trim().toLowerCase() === me) use = items;
+    if (!use.length) return;
+    const plats = use.reduce((a, i) => a + i.qty * i.prix, 0);
+    rows.push({ date: String(o.horodatage || ""), numero: String(o.numero || ""), dishes: use.map(i => i.qty + "× " + i.nom).join(", "), plats, comm: Math.round(plats * CD_PCT) });
+  });
+  return rows;
+}
+function cdHtml(rows) {
+  if (!rows.length) return '<div class="meta">' + escapeHtml(t("cdNone")) + "</div>";
+  const th = (x) => '<th style="text-align:start;padding:6px 8px;border-bottom:1px solid #cfd8e3;white-space:nowrap;">' + escapeHtml(t(x)) + "</th>";
+  const td = (x, nw) => '<td style="padding:6px 8px;border-bottom:1px solid #eef1f4;vertical-align:top;' + (nw ? "white-space:nowrap;" : "") + '">' + x + "</td>";
+  const sp = rows.reduce((a, r) => a + r.plats, 0), sc = rows.reduce((a, r) => a + r.comm, 0);
+  return '<table style="width:100%;border-collapse:collapse;font-size:12.5px;"><thead><tr>' + th("cdDate") + th("cdOrder") + th("cdDishes") + th("cdAmount") + th("cdComm") + "</tr></thead><tbody>" +
+    rows.map(r => "<tr>" + td(escapeHtml(r.date), 1) + td(escapeHtml(r.numero), 1) + td(escapeHtml(r.dishes)) + td("<bdi dir=\"ltr\">" + da(r.plats) + " DA</bdi>", 1) + td("<b><bdi dir=\"ltr\">" + da(r.comm) + " DA</bdi></b>", 1) + "</tr>").join("") +
+    '<tr><td colspan="3" style="padding:8px;font-weight:800;">' + escapeHtml(t("cdTotal")) + " · " + rows.length + '</td><td style="padding:8px;font-weight:800;white-space:nowrap;"><bdi dir="ltr">' + da(sp) + ' DA</bdi></td><td style="padding:8px;font-weight:800;white-space:nowrap;"><bdi dir="ltr">' + da(sc) + " DA</bdi></td></tr></tbody></table>";
+}
+$("listCompta").addEventListener("click", async (e) => {
+  const b = e.target.closest(".cd-toggle"); if (!b) return;
+  const box = b.parentNode.querySelector(".cd-box");
+  if (!box.classList.contains("hidden")) { box.classList.add("hidden"); b.textContent = t("cdShow"); return; }
+  box.classList.remove("hidden"); b.textContent = t("cdHide");
+  box.innerHTML = '<div class="meta">' + escapeHtml(t("cdLoading")) + "</div>";
+  try {
+    await cdLoadRefs();
+    const orders = await cdFetchOrders($("comptaDateStart").value || "", $("comptaDateEnd").value || "");
+    box.innerHTML = cdHtml(cdRows(b.dataset.nom, orders));
+  } catch (err) { box.innerHTML = '<div class="meta">' + escapeHtml(t("cdFail")) + "</div>"; }
+});
 
 function renderCompta() {
   const totalDA = COMPTA_PARTNERS.reduce((sum, p) => sum + (Number(p.totalDA) || 0), 0);
