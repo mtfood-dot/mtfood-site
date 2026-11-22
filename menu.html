@@ -3364,7 +3364,8 @@ let ORDER_REQUEST_ID = "";
 let SUBMIT_CHECKED = false;
 function submitOrder() {
   /* Vérifie l'état du restaurant à jour juste avant d'envoyer */
-  if (!SUBMIT_CHECKED) {
+  const freshInfo = Date.now() - RESTO_INFO_LAST < 60000;   // état du restaurant récent (<60 s) : pas d'appel de plus, le serveur revérifie à la commande
+  if (!SUBMIT_CHECKED && !freshInfo) {
     const bt = $("confirmOrderBtn"); if (bt) { bt.disabled = true; bt.textContent = t("sending"); }   // retour immédiat au clic
     loadRestoInfo(true).catch(() => {}).then(() => {
       if (bt) { bt.disabled = false; bt.textContent = t("confirmOrder"); }
