@@ -238,7 +238,9 @@ try {
 } catch(e) {}
 
 const INSCRIPTION_PARAMS = new URLSearchParams(window.location.search);
-const INSCRIPTION_NEXT = INSCRIPTION_PARAMS.get("next") || "espace-client.html";
+/* Redirection après connexion : seulement une page .html du site (jamais un autre site ni javascript:) */
+function safeNext(v, fallback){ v = String(v || ""); return /^[A-Za-z0-9_-]+\.html(\?[A-Za-z0-9_=&%.-]*)?$/.test(v) ? v : fallback; }
+const INSCRIPTION_NEXT = safeNext(INSCRIPTION_PARAMS.get("next"), "espace-client.html");
 
 function togglePwd(inputId, btnId){
   const input = $(inputId);
